@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FuelTracker Pro — Gestão de Combustível</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg:#0f1117;--bg2:#171b26;--bg3:#1e2333;--border:#2a2f45;
+  --accent:#4f8ef7;--accent2:#7c5cfc;--green:#22c55e;--red:#ef4444;
+  --yellow:#f59e0b;--text:#e8eaf0;--text2:#8b90a7;--text3:#555a75;
+  --card-shadow:0 4px 24px rgba(0,0,0,0.4);--radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+.sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;}
+.logo{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.logo-text{font-size:15px;font-weight:700;letter-spacing:-0.3px;}
+.logo-sub{font-size:11px;color:var(--text2);}
+.nav{padding:16px 12px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .2s;margin-bottom:4px;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(124,92,252,.15));color:var(--accent);border:1px solid rgba(79,142,247,.2);}
+.nav-item .icon{font-size:18px;width:22px;text-align:center;}
+.sync-status{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;display:flex;align-items:center;gap:8px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);}
+.sync-dot.connected{background:var(--green);}
+.sync-dot.syncing{background:var(--yellow);animation:pulse 1s infinite;}
+.sync-dot.error{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.main{margin-left:220px;flex:1;padding:28px 32px;min-height:100vh;}
+.page{display:none;}
+.page.active{display:block;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;}
+.page-title{font-size:26px;font-weight:700;letter-spacing:-0.5px;}
+.page-sub{font-size:14px;color:var(--text2);margin-top:4px;}
+.header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.filter-select{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;outline:none;}
+.filter-select:focus{border-color:var(--accent);}
+.filter-input{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;}
+.filter-input:focus{border-color:var(--accent);}
+.filter-label{font-size:12px;color:var(--text2);font-weight:500;}
+.filter-sep{width:1px;height:28px;background:var(--border);}
+.tab-group{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.tab-btn{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);transition:all .2s;font-family:'DM Sans',sans-serif;}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:.3s;}
+.kpi-card:hover::before{opacity:1;}
+.kpi-label{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:10px;}
+.kpi-icon{position:absolute;right:16px;top:16px;font-size:22px;opacity:.4;}
+.kpi-value{font-size:28px;font-weight:700;letter-spacing:-1px;color:var(--text);}
+.kpi-unit{font-size:14px;color:var(--text2);margin-left:2px;}
+.kpi-delta{font-size:12px;margin-top:8px;display:flex;align-items:center;gap:4px;}
+.kpi-delta.up{color:var(--green);}
+.kpi-delta.down{color:var(--red);}
+.charts-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:24px;}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;}
+.chart-title{font-size:15px;font-weight:600;margin-bottom:18px;}
+.bar-chart{display:flex;align-items:flex-end;gap:14px;height:180px;padding-top:10px;}
+.bar-group{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;}
+.bars{display:flex;align-items:flex-end;gap:3px;height:160px;}
+.bar{border-radius:4px 4px 0 0;min-width:22px;transition:opacity .2s;cursor:pointer;}
+.bar:hover{opacity:.8;}
+.bar-litros{background:linear-gradient(180deg,var(--accent),rgba(79,142,247,.5));}
+.bar-media{background:linear-gradient(180deg,var(--yellow),rgba(245,158,11,.5));}
+.bar-label{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;}
+.chart-legend{display:flex;gap:14px;margin-top:12px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);}
+.legend-dot{width:10px;height:10px;border-radius:2px;}
+.ranking-list{display:flex;flex-direction:column;gap:10px;}
+.ranking-item{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg3);border-radius:10px;}
+.rank-num{font-size:13px;font-weight:700;color:var(--text3);width:20px;font-family:'DM Mono',monospace;}
+.rank-placa{font-size:13px;font-weight:600;font-family:'DM Mono',monospace;color:var(--text);flex:1;}
+.rank-value{font-size:13px;font-weight:600;color:var(--accent);font-family:'DM Mono',monospace;}
+.rank-litros{font-size:11px;color:var(--text2);}
+/* COMPARATIVO */
+.comp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+.comp-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.comp-card-title{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);margin-bottom:12px;}
+.comp-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(42,47,69,.5);}
+.comp-row:last-child{border-bottom:none;}
+.comp-semana{font-size:12px;font-weight:600;color:var(--text2);font-family:'DM Mono',monospace;}
+.comp-val{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;}
+.comp-diff{font-size:11px;font-weight:600;display:flex;align-items:center;gap:3px;}
+.comp-diff.up{color:var(--green);}
+.comp-diff.down{color:var(--red);}
+.comp-maq-table{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
+.comp-maq-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+.comp-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(79,142,247,.15);color:var(--accent);}
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 16px rgba(79,142,247,.3);}
+.btn-secondary{background:var(--bg2);border:1px solid var(--border);color:var(--text);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(239,68,68,.2);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+/* TABLE */
+.table-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.table-toolbar{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.table-toolbar-left{display:flex;align-items:center;gap:10px;}
+.selected-count{font-size:13px;font-weight:600;color:var(--accent);}
+table{width:100%;border-collapse:collapse;}
+th{padding:11px 16px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border);background:var(--bg3);}
+th.col-check{width:40px;text-align:center;}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(42,47,69,.5);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(79,142,247,.03);}
+tr.selected-row td{background:rgba(79,142,247,.06);}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;}
+.badge-blue{background:rgba(79,142,247,.15);color:var(--accent);}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green);}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red);}
+.badge-yellow{background:rgba(245,158,11,.15);color:var(--yellow);}
+.placa-tag{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;}
+.btn-icon{background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:4px 6px;border-radius:6px;transition:.2s;}
+.btn-icon:hover{color:var(--accent);background:rgba(79,142,247,.1);}
+.btn-icon.del:hover{color:var(--red);background:rgba(239,68,68,.1);}
+.check-input{width:15px;height:15px;cursor:pointer;accent-color:var(--accent);}
+/* MACHINES */
+.machines-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.machine-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;cursor:pointer;}
+.machine-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px rgba(79,142,247,.1);}
+.machine-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.machine-icon{width:40px;height:40px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.machine-placa{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;}
+.machine-model{font-size:12px;color:var(--text2);margin-top:2px;}
+.machine-op{font-size:12px;color:var(--accent);margin-top:4px;font-weight:500;}
+.machine-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.stat{text-align:center;}
+.stat-value{font-size:18px;font-weight:700;font-family:'DM Mono',monospace;}
+.stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.status{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.status::before{content:'';width:6px;height:6px;border-radius:50%;}
+.status-ativa{background:rgba(34,197,94,.12);color:var(--green);}
+.status-ativa::before{background:var(--green);}
+.status-manutencao{background:rgba(245,158,11,.12);color:var(--yellow);}
+.status-manutencao::before{background:var(--yellow);}
+.status-inativa{background:rgba(239,68,68,.12);color:var(--red);}
+.status-inativa::before{background:var(--red);}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;width:480px;max-height:85vh;overflow-y:auto;}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:22px;}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:9px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s;}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,142,247,.1);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;}
+/* IMPORT */
+.import-area{border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:20px;}
+.import-area:hover{border-color:var(--accent);background:rgba(79,142,247,.04);}
+.import-icon{font-size:36px;margin-bottom:12px;}
+.import-text{font-size:15px;font-weight:600;margin-bottom:4px;}
+.import-sub{font-size:13px;color:var(--text2);}
+.semana-select-group{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+.semana-opt{padding:10px;border-radius:10px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:.2s;}
+.semana-opt:hover{border-color:var(--accent);}
+.semana-opt.selected{background:rgba(79,142,247,.15);border-color:var(--accent);color:var(--accent);}
+.semana-opt.has-data{border-color:rgba(79,142,247,.3);}
+.semana-opt-num{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;}
+.semana-opt-label{font-size:10px;color:var(--text2);margin-top:2px;}
+/* SHEETS CONFIG */
+.sheets-config{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px;}
+.sheets-config-title{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sheets-url-input{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:12px;font-family:'DM Mono',monospace;outline:none;margin-bottom:8px;}
+.sheets-url-input:focus{border-color:var(--accent);}
+.sheets-hint{font-size:11px;color:var(--text2);line-height:1.6;}
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:10px;box-shadow:var(--card-shadow);}
+.toast.show{transform:none;opacity:1;}
+.toast.success{border-color:var(--green);}
+.toast.error{border-color:var(--red);}
+.empty{text-align:center;padding:60px 20px;color:var(--text2);}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.4;}
+.empty-text{font-size:15px;font-weight:500;}
+.empty-sub{font-size:13px;margin-top:6px;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⛽</div>
+    <div><div class="logo-text">FuelTracker</div><div class="logo-sub">Gestão de Combustível</div></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">⊞</span>Dashboard</div>
+    <div class="nav-item" onclick="showPage('comparativo',this)"><span class="icon">📊</span>Comparativo</div>
+    <div class="nav-item" onclick="showPage('abastecimentos',this)"><span class="icon">⛽</span>Abastecimentos</div>
+    <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon">🚜</span>Máquinas</div>
+    <div class="nav-item" onclick="showPage('config',this)"><span class="icon">⚙️</span>Configurações</div>
+  </nav>
+  <div class="sync-status">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-label" style="color:var(--text2)">Sem sincronização</span>
+  </div>
+</aside>
+
+<main class="main">
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header">
+      <div><div class="page-title">Painel de Consumo</div><div class="page-sub">Visão geral do consumo de combustível</div></div>
+      <div class="header-actions">
+        <select class="filter-select" id="dash-op-filter" onchange="renderDashboard()"><option value="">Todas as Operações</option></select>
+        <select class="filter-select" id="dash-maq-filter" onchange="renderDashboard()"><option value="">Todas as Máquinas</option></select>
+        <div class="tab-group">
+          <button class="tab-btn active" id="tab-semanal" onclick="setTab('semanal')">Semanal</button>
+          <button class="tab-btn" id="tab-mensal" onclick="setTab('mensal')">Mensal</button>
+        </div>
+        <button class="btn btn-secondary" onclick="openImport()">⬆️ Importar</button>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Total de Litros</div><div class="kpi-icon">🛢️</div><div><span class="kpi-value" id="kpi-litros">0</span><span class="kpi-unit">L</span></div><div class="kpi-delta" id="kpi-litros-delta"></div></div>
+      <div class="kpi-card"><div class="kpi-label">Média L/H</div><div class="kpi-icon">📊</div><div><span class="kpi-value" id="kpi-media">0</span><span class="kpi-unit">L/h</span></div><div class="kpi-delta" id="kpi-media-delta"></div></div>
+      <div class="kpi-card"><div class="kpi-label">Horas Trabalhadas</div><div class="kpi-icon">⏱️</div><div><span class="kpi-value" id="kpi-horas">0</span><span class="kpi-unit">h</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">Máquinas Ativas</div><div class="kpi-icon">🚜</div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
+        <div id="bar-chart-container"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
+        <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Ranking de Consumo (L/h)</div>
+        <div id="ranking-list"><div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARATIVO -->
+  <div id="page-comparativo" class="page">
+    <div class="page-header">
+      <div><div class="page-title">Comparativo Semanal</div><div class="page-sub">Compare o consumo entre semanas</div></div>
+      <div class="header-actions">
+        <select class="filter-select" id="comp-op-filter" onchange="renderComparativo()"><option value="">Todas as Operações</option></select>
+        <button class="btn btn-secondary" onclick="openImport()">⬆️ Importar Semana</button>
+      </div>
+    </div>
+    <div id="comparativo-content"></div>
+  </div>
+
+  <!-- ABASTECIMENTOS -->
+  <div id="page-abastecimentos" class="page">
+    <div class="page-header">
+      <div><div class="page-title">Abastecimentos</div><div class="page-sub">Registre e gerencie os abastecimentos</div></div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="openImport()">⬆️ Importar</button>
+        <button class="btn btn-primary" onclick="openNovoAbast()">+ Novo Registro</button>
+      </div>
+    </div>
+    <div class="filters">
+      <span class="filter-label">Operação:</span>
+      <select class="filter-select" id="abast-op-filter" onchange="renderAbastecimentos()"><option value="">Todas</option></select>
+      <span class="filter-label">Máquina:</span>
+      <select class="filter-select" id="abast-maq-filter" onchange="renderAbastecimentos()"><option value="">Todas</option></select>
+      <div class="filter-sep"></div>
+      <span class="filter-label">De:</span>
+      <input type="date" class="filter-input" id="abast-data-ini" onchange="renderAbastecimentos()">
+      <span class="filter-label">Até:</span>
+      <input type="date" class="filter-input" id="abast-data-fim" onchange="renderAbastecimentos()">
+      <button class="btn btn-secondary btn-sm" onclick="limparFiltrosAbast()">✕ Limpar</button>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-toolbar-left">
+          <span id="abast-table-title" style="font-size:15px;font-weight:600">Abastecimentos</span>
+          <span class="selected-count" id="selected-count" style="display:none"></span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-danger btn-sm" id="btn-apagar-selecionados" style="display:none" onclick="apagarSelecionados()">🗑️ Apagar Selecionados</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleSelecionarTodos()" id="btn-sel-todos">☐ Selecionar Todos</button>
+        </div>
+      </div>
+      <div id="abast-table-container"></div>
+    </div>
+  </div>
+
+  <!-- MÁQUINAS -->
+  <div id="page-maquinas" class="page">
+    <div class="page-header">
+      <div><div class="page-title">Máquinas</div><div class="page-sub">Gerencie o cadastro de máquinas</div></div>
+      <div class="header-actions">
+        <select class="filter-select" id="maq-op-filter" onchange="renderMaquinas()"><option value="">Todas as Operações</option></select>
+        <button class="btn btn-primary" onclick="openNovaMaquina()">+ Nova Máquina</button>
+      </div>
+    </div>
+    <div id="maquinas-grid" class="machines-grid"></div>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="page-config" class="page">
+    <div class="page-header">
+      <div><div class="page-title">Configurações</div><div class="page-sub">Sincronização e preferências</div></div>
+    </div>
+    <div style="max-width:600px">
+      <div class="sheets-config">
+        <div class="sheets-config-title">🔗 Sincronização com Google Sheets</div>
+        <input type="text" class="sheets-url-input" id="sheets-url" placeholder="Cole aqui a URL do seu Google Apps Script..." oninput="salvarConfig()">
+        <div class="sheets-hint">
+          Para sincronizar seus dados em qualquer computador:<br>
+          1. Acesse <strong>script.google.com</strong> e crie um novo projeto<br>
+          2. Cole o código do Apps Script (botão abaixo)<br>
+          3. Clique em <strong>Implantar → Novo deployment → App da Web</strong><br>
+          4. Em "Quem tem acesso" selecione <strong>"Qualquer pessoa"</strong><br>
+          5. Copie a URL gerada e cole aqui acima
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="copiarScriptApps()">📋 Copiar código Apps Script</button>
+          <button class="btn btn-primary btn-sm" onclick="testarConexao()">🔌 Testar Conexão</button>
+          <button class="btn btn-primary btn-sm" onclick="sincronizarAgora()">🔄 Sincronizar Agora</button>
+        </div>
+      </div>
+      <div class="sheets-config" style="margin-top:16px">
+        <div class="sheets-config-title">💾 Backup Local</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary btn-sm" onclick="exportarJSON()">⬇️ Exportar dados (JSON)</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-json').click()">⬆️ Importar dados (JSON)</button>
+        </div>
+        <input type="file" id="import-json" accept=".json" style="display:none" onchange="importarJSON(this)">
+        <div class="sheets-hint" style="margin-top:10px">Use o backup JSON para transferir dados entre computadores sem internet.</div>
+      </div>
+      <div class="sheets-config" style="margin-top:16px;border-color:rgba(239,68,68,.3)">
+        <div class="sheets-config-title" style="color:var(--red)">⚠️ Zona de Perigo</div>
+        <button class="btn btn-danger btn-sm" onclick="limparTodosDados()">🗑️ Apagar todos os dados locais</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL ABASTECIMENTO (novo + editar) -->
+<div class="modal-overlay" id="modal-abast">
+  <div class="modal">
+    <div class="modal-title" id="modal-abast-title">Novo Abastecimento</div>
+    <input type="hidden" id="abast-edit-idx" value="-1">
+    <div class="form-group"><label class="form-label">Máquina</label><select class="form-input" id="abast-placa"><option value="">Selecione a máquina</option></select></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="abast-data"></div>
+      <div class="form-group"><label class="form-label">Litros</label><input type="number" class="form-input" id="abast-litros" placeholder="0.0" step="0.1"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Horas Trabalhadas</label><input type="number" class="form-input" id="abast-horas" placeholder="0.0" step="0.1"></div>
+      <div class="form-group"><label class="form-label">Operador</label><input type="text" class="form-input" id="abast-operador" placeholder="Nome do operador"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-abast')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarAbastecimento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVA MÁQUINA -->
+<div class="modal-overlay" id="modal-maquina">
+  <div class="modal">
+    <div class="modal-title">Nova Máquina</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Placa</label><input type="text" class="form-input" id="maq-placa" placeholder="MAQ0000"></div>
+      <div class="form-group"><label class="form-label">Modelo</label><input type="text" class="form-input" id="maq-modelo" placeholder="EC 220 DL"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Tipo</label><input type="text" class="form-input" id="maq-tipo" placeholder="Escavadeira"></div>
+      <div class="form-group"><label class="form-label">Operação</label><input type="text" class="form-input" id="maq-operacao" placeholder="CENIBRA_NOVA_ERA"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="maq-status"><option value="Ativa">Ativa</option><option value="Manutenção">Manutenção</option><option value="Inativa">Inativa</option></select></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-maquina')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMaquina()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal">
+    <div class="modal-title">Importar Relatório Semanal</div>
+    <div style="margin-bottom:16px">
+      <div class="form-label" style="margin-bottom:10px">Selecione a semana:</div>
+      <div class="semana-select-group">
+        <div class="semana-opt selected" onclick="selectSemana(1)" id="sopt-1"><div class="semana-opt-num">S1</div><div class="semana-opt-label" id="sopt-label-1">vazia</div></div>
+        <div class="semana-opt" onclick="selectSemana(2)" id="sopt-2"><div class="semana-opt-num">S2</div><div class="semana-opt-label" id="sopt-label-2">vazia</div></div>
+        <div class="semana-opt" onclick="selectSemana(3)" id="sopt-3"><div class="semana-opt-num">S3</div><div class="semana-opt-label" id="sopt-label-3">vazia</div></div>
+        <div class="semana-opt" onclick="selectSemana(4)" id="sopt-4"><div class="semana-opt-num">S4</div><div class="semana-opt-label" id="sopt-label-4">vazia</div></div>
+        <div class="semana-opt" onclick="selectSemana(5)" id="sopt-5"><div class="semana-opt-num">S5</div><div class="semana-opt-label" id="sopt-label-5">vazia</div></div>
+      </div>
+    </div>
+    <div class="import-area" onclick="document.getElementById('file-input').click()">
+      <div class="import-icon">📂</div>
+      <div class="import-text">Clique para selecionar o arquivo</div>
+      <div class="import-sub">ExportProcessIndicator*.xlsx</div>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="importarRelatorio(this)">
+    <div id="import-preview"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" onclick="limparSemana()">🗑️ Limpar Semana</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-import')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── APPS SCRIPT CODE ──────────────────────────────────────────────────────────
+const APPS_SCRIPT_CODE = `
+// Cole este código no Google Apps Script (script.google.com)
+// Depois implante como App da Web com acesso "Qualquer pessoa"
+
+const SHEET_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
+
+function doGet(e) {
+  const action = e.parameter.action;
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  if (action === 'load') {
+    const data = {};
+    ss.getSheets().forEach(sh => {
+      const rows = sh.getDataRange().getValues();
+      data[sh.getName()] = rows;
+    });
+    return ContentService.createTextOutput(JSON.stringify({ok:true,data}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:false}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const payload = JSON.parse(e.postData.contents);
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const sheetName = payload.sheet || 'FuelTracker';
+  let sh = ss.getSheetByName(sheetName);
+  if (!sh) sh = ss.insertSheet(sheetName);
+  sh.clearContents();
+  if (payload.rows && payload.rows.length > 0) {
+    sh.getRange(1,1,payload.rows.length,payload.rows[0].length).setValues(payload.rows);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+`;
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', semanaImport:1, sheetsUrl:'' };
+let selectedIds = new Set();
+let abastFiltrados = [];
+
+function loadState() {
+  try { const s=localStorage.getItem('fueltracker_v3'); if(s) state=JSON.parse(s); } catch(e){}
+  const url = localStorage.getItem('sheets_url');
+  if (url) { state.sheetsUrl=url; document.getElementById('sheets-url').value=url; }
+  updateSyncStatus('idle');
+}
+function saveState() {
+  localStorage.setItem('fueltracker_v3', JSON.stringify(state));
+  if (state.sheetsUrl) sincronizarBackground();
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function showPage(page,el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el) el.classList.add('active');
+  const renders = {dashboard:renderDashboard,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
+  if(renders[page]) renders[page]();
+}
+
+function setTab(tab) {
+  state.tab=tab;
+  document.getElementById('tab-semanal').classList.toggle('active',tab==='semanal');
+  document.getElementById('tab-mensal').classList.toggle('active',tab==='mensal');
+  document.getElementById('chart-period-label').textContent=tab==='semanal'?'Semanal':'Mensal';
+  renderDashboard();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getOperacoes() {
+  return [...new Set([...state.maquinas.map(m=>m.operacao),...state.abastecimentos.map(a=>getMaquina(a.placa)?.operacao||a.operacao||'')])].filter(Boolean).sort();
+}
+function getMaquina(placa) { return state.maquinas.find(m=>m.placa===placa); }
+
+function updateFilters() {
+  const ops=getOperacoes();
+  ['dash-op-filter','abast-op-filter','maq-op-filter','comp-op-filter'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const val=sel.value;
+    sel.innerHTML='<option value="">Todas as Operações</option>'+ops.map(o=>`<option value="${o}">${o.replace(/_/g,' ')}</option>`).join('');
+    sel.value=val;
+  });
+  ['dash-maq-filter','abast-maq-filter'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const val=sel.value;
+    sel.innerHTML='<option value="">Todas as Máquinas</option>'+state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
+    sel.value=val;
+  });
+  const sel=document.getElementById('abast-placa');
+  if(sel) sel.innerHTML='<option value="">Selecione a máquina</option>'+state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
+}
+
+function getFilteredAbast(opF,maqF) {
+  const now=new Date();
+  let list=[...state.abastecimentos];
+  if(state.tab==='semanal') { const w=new Date(now-7*24*60*60*1000); list=list.filter(a=>new Date(a.data)>=w); }
+  else { const m=new Date(now.getFullYear(),now.getMonth(),1); list=list.filter(a=>new Date(a.data)>=m); }
+  if(opF) list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
+  if(maqF) list=list.filter(a=>a.placa===maqF);
+  return list;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  updateFilters();
+  const opF=document.getElementById('dash-op-filter')?.value||'';
+  const maqF=document.getElementById('dash-maq-filter')?.value||'';
+  const list=getFilteredAbast(opF,maqF);
+  const totalL=list.reduce((s,a)=>s+(a.litros||0),0);
+  const totalH=list.reduce((s,a)=>s+(a.horas||0),0);
+  const media=totalH>0?totalL/totalH:0;
+  const maqAtivas=new Set(list.map(a=>a.placa)).size;
+  document.getElementById('kpi-litros').textContent=totalL.toFixed(0);
+  document.getElementById('kpi-media').textContent=media.toFixed(2);
+  document.getElementById('kpi-horas').textContent=totalH.toFixed(0);
+  document.getElementById('kpi-maquinas').textContent=maqAtivas;
+  document.getElementById('kpi-maq-delta').textContent=`${state.maquinas.length} total`;
+  renderBarChart(list); renderRanking(list);
+}
+
+function renderBarChart(list) {
+  const c=document.getElementById('bar-chart-container');
+  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div></div>';return;}
+  const byMaq={};
+  list.forEach(a=>{if(!byMaq[a.placa])byMaq[a.placa]={litros:0,horas:0};byMaq[a.placa].litros+=a.litros||0;byMaq[a.placa].horas+=a.horas||0;});
+  const pl=Object.keys(byMaq).sort().slice(0,8);
+  const maxL=Math.max(...pl.map(p=>byMaq[p].litros));
+  const maxM=Math.max(...pl.map(p=>byMaq[p].horas>0?byMaq[p].litros/byMaq[p].horas:0));
+  const H=160;
+  c.innerHTML='<div class="bar-chart">'+pl.map(p=>{
+    const l=byMaq[p].litros,m=byMaq[p].horas>0?byMaq[p].litros/byMaq[p].horas:0;
+    const hL=maxL>0?(l/maxL)*H:0,hM=maxM>0?(m/maxM)*H:0;
+    return `<div class="bar-group"><div class="bars"><div class="bar bar-litros" style="height:${Math.max(hL,2)}px" title="${l.toFixed(0)}L"></div><div class="bar bar-media" style="height:${Math.max(hM,2)}px" title="${m.toFixed(2)}L/h"></div></div><div class="bar-label">${p.replace('MAQ','').replace('TRA','T')}</div></div>`;
+  }).join('')+'</div>';
+}
+
+function renderRanking(list) {
+  const c=document.getElementById('ranking-list');
+  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div>';return;}
+  const byMaq={};
+  list.forEach(a=>{if(!byMaq[a.placa])byMaq[a.placa]={litros:0,horas:0};byMaq[a.placa].litros+=a.litros||0;byMaq[a.placa].horas+=a.horas||0;});
+  const sorted=Object.entries(byMaq).map(([p,d])=>({placa:p,litros:d.litros,media:d.horas>0?d.litros/d.horas:0})).sort((a,b)=>b.media-a.media);
+  c.innerHTML='<div class="ranking-list">'+sorted.slice(0,6).map((item,i)=>`
+    <div class="ranking-item"><div class="rank-num">${i+1}</div>
+    <div><div class="rank-placa">${item.placa}</div><div class="rank-litros">${item.litros.toFixed(0)}L total</div></div>
+    <div class="rank-value">${item.media.toFixed(2)} L/h</div>
+    <div style="font-size:14px;color:${item.media>10?'var(--green)':'var(--red)'}">${item.media>10?'↗':'↘'}</div>
+    </div>`).join('')+'</div>';
+}
+
+// ── COMPARATIVO ───────────────────────────────────────────────────────────────
+function renderComparativo() {
+  updateFilters();
+  const opF=document.getElementById('comp-op-filter')?.value||'';
+  const semanas=Object.keys(state.semanas).map(Number).sort();
+  const c=document.getElementById('comparativo-content');
+  if(!semanas.length){c.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Nenhuma semana importada</div><div class="empty-sub">Importe pelo menos uma semana</div></div>';return;}
+  const dadosSemana={};
+  semanas.forEach(s=>{
+    let rows=state.semanas[s]||[];
+    if(opF) rows=rows.filter(r=>r.operacao===opF);
+    const tL=rows.reduce((a,r)=>a+(r.litros||0),0),tH=rows.reduce((a,r)=>a+(r.horas||0),0);
+    dadosSemana[s]={rows,totalL:tL,totalH:tH,media:tH>0?tL/tH:0,maquinas:new Set(rows.map(r=>r.placa)).size};
+  });
+  let html='<div class="comp-grid">';
+  semanas.forEach(s=>{
+    const d=dadosSemana[s],prev=dadosSemana[s-1];
+    const dL=prev?((d.totalL-prev.totalL)/prev.totalL*100):null;
+    const dM=prev?((d.media-prev.media)/prev.media*100):null;
+    html+=`<div class="comp-card"><div class="comp-card-title">Semana ${s}</div>
+      <div class="comp-row"><span class="comp-semana">Litros</span><span class="comp-val">${d.totalL.toFixed(0)}L</span>${dL!==null?`<span class="comp-diff ${dL>0?'down':'up'}">${dL>0?'▲':'▼'}${Math.abs(dL).toFixed(1)}%</span>`:''}</div>
+      <div class="comp-row"><span class="comp-semana">Média L/h</span><span class="comp-val">${d.media.toFixed(2)}</span>${dM!==null?`<span class="comp-diff ${dM>=0?'up':'down'}">${dM>=0?'▲':'▼'}${Math.abs(dM).toFixed(1)}%</span>`:''}</div>
+      <div class="comp-row"><span class="comp-semana">Máquinas</span><span class="comp-val">${d.maquinas}</span></div>
+      <div class="comp-row"><span class="comp-semana">Horas</span><span class="comp-val">${d.totalH.toFixed(0)}h</span></div>
+    </div>`;
+  });
+  html+='</div>';
+  const todasPlacas=[...new Set(semanas.flatMap(s=>(state.semanas[s]||[]).filter(r=>!opF||r.operacao===opF).map(r=>r.placa)))].sort();
+  html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>Consumo por Máquina</span><span class="comp-badge">${todasPlacas.length} máquinas</span></div>
+  <table><thead><tr><th>Máquina</th><th>Operação</th>${semanas.map(s=>`<th>S${s} — L</th><th>S${s} — L/h</th>`).join('')}${semanas.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
+  todasPlacas.forEach(placa=>{
+    let op='';
+    const vals=semanas.map(s=>{const row=(state.semanas[s]||[]).find(r=>r.placa===placa);if(row)op=row.operacao||'';const l=row?.litros||0,h=row?.horas||0,m=h>0?l/h:0;return{l,h,m};});
+    html+=`<tr><td><span class="placa-tag">${placa}</span></td><td style="font-size:11px;color:var(--text2)">${op.replace(/_/g,' ')}</td>`;
+    vals.forEach(v=>{
+      html+=`<td>${v.l>0?v.l.toFixed(0)+'L':'—'}</td>`;
+      const cls=v.m>=10?'badge-green':v.m>=7?'badge-blue':v.m>0?'badge-red':'';
+      html+=`<td>${v.m>0?`<span class="badge ${cls}">${v.m.toFixed(2)}</span>`:'—'}</td>`;
+    });
+    if(semanas.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  c.innerHTML=html;
+}
+
+// ── ABASTECIMENTOS ────────────────────────────────────────────────────────────
+function limparFiltrosAbast() {
+  ['abast-op-filter','abast-maq-filter'].forEach(id=>document.getElementById(id).value='');
+  ['abast-data-ini','abast-data-fim'].forEach(id=>document.getElementById(id).value='');
+  renderAbastecimentos();
+}
+
+function renderAbastecimentos() {
+  updateFilters();
+  selectedIds.clear();
+  atualizarBotoesSelecao();
+  const opF=document.getElementById('abast-op-filter')?.value||'';
+  const maqF=document.getElementById('abast-maq-filter')?.value||'';
+  const dIni=document.getElementById('abast-data-ini')?.value||'';
+  const dFim=document.getElementById('abast-data-fim')?.value||'';
+  let list=[...state.abastecimentos];
+  if(opF)  list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
+  if(maqF) list=list.filter(a=>a.placa===maqF);
+  if(dIni) list=list.filter(a=>a.data>=dIni);
+  if(dFim) list=list.filter(a=>a.data<=dFim);
+  list.sort((a,b)=>new Date(b.data)-new Date(a.data));
+  abastFiltrados=list;
+  document.getElementById('abast-table-title').textContent=`Abastecimentos (${list.length} registro${list.length!==1?'s':''})`;
+  const c=document.getElementById('abast-table-container');
+  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">⛽</div><div class="empty-text">Nenhum resultado</div><div class="empty-sub">Tente ajustar os filtros</div></div>';return;}
+  const rows=list.map((a)=>{
+    const idx=state.abastecimentos.indexOf(a);
+    const media=a.horas>0?(a.litros/a.horas).toFixed(2):'—';
+    const mN=a.horas>0?a.litros/a.horas:0;
+    const cls=mN>12?'badge-green':mN>8?'badge-blue':'badge-red';
+    const dataFmt=a.data?new Date(a.data+'T00:00:00').toLocaleDateString('pt-BR'):'—';
+    return `<tr id="row-${idx}" class="${selectedIds.has(idx)?'selected-row':''}">
+      <td class="col-check"><input type="checkbox" class="check-input" ${selectedIds.has(idx)?'checked':''} onchange="toggleSelecionar(${idx},this)"></td>
+      <td><span class="placa-tag">${a.placa}</span></td>
+      <td>${dataFmt}</td>
+      <td>${(a.litros||0).toFixed(1)}L</td>
+      <td>${(a.horas||0).toFixed(1)}h</td>
+      <td><span class="badge ${cls}">${media} L/h</span></td>
+      <td>${a.operador||'—'}</td>
+      <td>
+        <button class="btn-icon" onclick="editarAbast(${idx})" title="Editar">✏️</button>
+        <button class="btn-icon del" onclick="excluirAbast(${idx})" title="Excluir">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+  c.innerHTML=`<table><thead><tr><th class="col-check"></th><th>Máquina</th><th>Data</th><th>Litros</th><th>Horas</th><th>L/h</th><th>Operador</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// Seleção em massa
+function toggleSelecionar(idx,checkbox) {
+  if(checkbox.checked) selectedIds.add(idx); else selectedIds.delete(idx);
+  const row=document.getElementById(`row-${idx}`);
+  if(row) row.classList.toggle('selected-row',checkbox.checked);
+  atualizarBotoesSelecao();
+}
+
+function atualizarBotoesSelecao() {
+  const n=selectedIds.size;
+  const countEl=document.getElementById('selected-count');
+  const btnApagar=document.getElementById('btn-apagar-selecionados');
+  const btnSel=document.getElementById('btn-sel-todos');
+  countEl.style.display=n>0?'inline':'none';
+  countEl.textContent=`${n} selecionado${n!==1?'s':''}`;
+  btnApagar.style.display=n>0?'inline-flex':'none';
+  btnSel.textContent=selectedIds.size===abastFiltrados.length?'☑ Desmarcar Todos':'☐ Selecionar Todos';
+}
+
+function toggleSelecionarTodos() {
+  if(selectedIds.size===abastFiltrados.length) {
+    selectedIds.clear();
+  } else {
+    abastFiltrados.forEach(a=>selectedIds.add(state.abastecimentos.indexOf(a)));
+  }
+  renderAbastecimentos();
+}
+
+function apagarSelecionados() {
+  const n=selectedIds.size;
+  if(!confirm(`Apagar ${n} abastecimento${n!==1?'s':''} selecionado${n!==1?'s':''}?`)) return;
+  const indices=[...selectedIds].sort((a,b)=>b-a);
+  indices.forEach(idx=>state.abastecimentos.splice(idx,1));
+  selectedIds.clear();
+  saveState(); renderAbastecimentos(); renderDashboard();
+  showToast(`${n} abastecimento${n!==1?'s':''} apagado${n!==1?'s':''}!`,'success');
+}
+
+function excluirAbast(idx) {
+  if(!confirm('Excluir este abastecimento?')) return;
+  state.abastecimentos.splice(idx,1);
+  saveState(); renderAbastecimentos(); renderDashboard();
+  showToast('Abastecimento excluído','success');
+}
+
+function editarAbast(idx) {
+  const a=state.abastecimentos[idx];
+  updateFilters();
+  document.getElementById('modal-abast-title').textContent='Editar Abastecimento';
+  document.getElementById('abast-edit-idx').value=idx;
+  document.getElementById('abast-placa').value=a.placa;
+  document.getElementById('abast-data').value=a.data;
+  document.getElementById('abast-litros').value=a.litros;
+  document.getElementById('abast-horas').value=a.horas;
+  document.getElementById('abast-operador').value=a.operador||'';
+  document.getElementById('modal-abast').classList.add('open');
+}
+
+// ── MÁQUINAS ──────────────────────────────────────────────────────────────────
+function renderMaquinas() {
+  updateFilters();
+  const opF=document.getElementById('maq-op-filter')?.value||'';
+  let list=[...state.maquinas];
+  if(opF) list=list.filter(m=>m.operacao===opF);
+  const c=document.getElementById('maquinas-grid');
+  if(!list.length){c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🚜</div><div class="empty-text">Nenhuma máquina cadastrada</div></div>';return;}
+  c.innerHTML=list.map(m=>{
+    const abasts=state.abastecimentos.filter(a=>a.placa===m.placa);
+    const tL=abasts.reduce((s,a)=>s+(a.litros||0),0);
+    const tH=abasts.reduce((s,a)=>s+(a.horas||0),0);
+    const media=tH>0?(tL/tH).toFixed(2):'—';
+    const sCls=m.status==='Ativa'?'status-ativa':m.status==='Manutenção'?'status-manutencao':'status-inativa';
+    return `<div class="machine-card"><div class="machine-top"><div class="machine-icon">🚜</div><span class="status ${sCls}">${m.status||'Ativa'}</span></div>
+      <div class="machine-placa">${m.placa}</div><div class="machine-model">${m.modelo||'—'}</div>
+      <div class="machine-op">${(m.operacao||'').replace(/_/g,' ')}</div>
+      <div class="machine-stats">
+        <div class="stat"><div class="stat-value" style="font-size:16px">${media}</div><div class="stat-label">L/H</div></div>
+        <div class="stat"><div class="stat-value" style="font-size:16px">${tL.toFixed(0)}</div><div class="stat-label">Litros</div></div>
+        <div class="stat"><div class="stat-value" style="font-size:16px">${abasts.length}</div><div class="stat-label">Abast.</div></div>
+      </div></div>`;
+  }).join('');
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function openNovoAbast() {
+  updateFilters();
+  document.getElementById('modal-abast-title').textContent='Novo Abastecimento';
+  document.getElementById('abast-edit-idx').value='-1';
+  document.getElementById('abast-placa').value='';
+  document.getElementById('abast-data').value=new Date().toISOString().split('T')[0];
+  document.getElementById('abast-litros').value='';
+  document.getElementById('abast-horas').value='';
+  document.getElementById('abast-operador').value='';
+  document.getElementById('modal-abast').classList.add('open');
+}
+function openNovaMaquina() { document.getElementById('modal-maquina').classList.add('open'); }
+function openImport() {
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById(`sopt-${i}`);
+    const label=document.getElementById(`sopt-label-${i}`);
+    const hasData=state.semanas[i]&&state.semanas[i].length>0;
+    el.classList.toggle('has-data',hasData);
+    label.textContent=hasData?`${state.semanas[i].length} maq.`:'vazia';
+  }
+  selectSemana(state.semanaImport||1);
+  document.getElementById('import-preview').innerHTML='';
+  document.getElementById('modal-import').classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
+
+function selectSemana(n) {
+  state.semanaImport=n;
+  document.querySelectorAll('.semana-opt').forEach(el=>el.classList.remove('selected'));
+  document.getElementById(`sopt-${n}`).classList.add('selected');
+}
+
+function limparSemana() {
+  const s=state.semanaImport;
+  if(!confirm(`Limpar Semana ${s}?`)) return;
+  delete state.semanas[s];
+  saveState(); openImport();
+  showToast(`Semana ${s} limpa!`,'success');
+}
+
+function salvarAbastecimento() {
+  const placa=document.getElementById('abast-placa').value;
+  const data=document.getElementById('abast-data').value;
+  const litros=parseFloat(document.getElementById('abast-litros').value);
+  const horas=parseFloat(document.getElementById('abast-horas').value);
+  const operador=document.getElementById('abast-operador').value;
+  const editIdx=parseInt(document.getElementById('abast-edit-idx').value);
+  if(!placa||!data||isNaN(litros)||isNaN(horas)){showToast('Preencha todos os campos','error');return;}
+  const entry={placa,data,litros,horas,operador};
+  if(editIdx>=0) {
+    const op=state.abastecimentos[editIdx]?.operacao||getMaquina(placa)?.operacao||'';
+    state.abastecimentos[editIdx]={...entry,operacao:op};
+    showToast('Abastecimento atualizado!','success');
+  } else {
+    state.abastecimentos.push({...entry,operacao:getMaquina(placa)?.operacao||''});
+    showToast('Abastecimento salvo!','success');
+  }
+  saveState(); closeModal('modal-abast'); renderAbastecimentos(); renderDashboard();
+}
+
+function salvarMaquina() {
+  const placa=document.getElementById('maq-placa').value.trim().toUpperCase();
+  const modelo=document.getElementById('maq-modelo').value.trim();
+  const tipo=document.getElementById('maq-tipo').value.trim();
+  const operacao=document.getElementById('maq-operacao').value.trim();
+  const status=document.getElementById('maq-status').value;
+  if(!placa){showToast('Informe a placa','error');return;}
+  if(state.maquinas.find(m=>m.placa===placa)){showToast('Placa já cadastrada','error');return;}
+  state.maquinas.push({placa,modelo,tipo,operacao,status});
+  saveState(); closeModal('modal-maquina'); renderMaquinas(); updateFilters();
+  showToast(`Máquina ${placa} cadastrada!`,'success');
+}
+
+// ── IMPORTAR ──────────────────────────────────────────────────────────────────
+function importarRelatorio(input) {
+  const file=input.files[0]; if(!file) return;
+  const numSemana=state.semanaImport||1;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try {
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+      const rows=data.filter(r=>r['Operação']||r['Placa']||r['placa']);
+      let novaMaq=0,dadosSemana=[];
+      rows.forEach(row=>{
+        const placa=String(row['Placa']||row['placa']||'').trim().toUpperCase();
+        const operacao=String(row['Operação']||row['operacao']||'').trim();
+        const modelo=String(row['Modelo']||row['modelo']||'').trim();
+        const tipo=String(row['Tipo']||row['tipo']||'').trim();
+        const kmReal=parseFloat(row['Km Real']||row['km_real']||0);
+        const volReal=parseFloat(row['Vol. Real']||row['vol_real']||0);
+        if(!placa||!placa.match(/[A-Z]{2,}/)) return;
+        if(!state.maquinas.find(m=>m.placa===placa)){state.maquinas.push({placa,modelo,tipo,operacao,status:'Ativa'});novaMaq++;}
+        if(volReal>0&&kmReal>0){
+          const hoje=new Date().toISOString().split('T')[0];
+          const entry={placa,data:hoje,litros:volReal,horas:kmReal,operador:row['Gestor']||'',operacao,modelo,tipo};
+          dadosSemana.push(entry);
+          state.abastecimentos.push(entry);
+        }
+      });
+      state.semanas[numSemana]=dadosSemana;
+      saveState();
+      const label=document.getElementById(`sopt-label-${numSemana}`);
+      if(label){label.textContent=`${dadosSemana.length} maq.`;document.getElementById(`sopt-${numSemana}`).classList.add('has-data');}
+      document.getElementById('import-preview').innerHTML=`
+        <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px;margin-top:12px">
+          <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">✅ Semana ${numSemana} importada!</div>
+          <div style="font-size:13px;color:var(--text2)">🚜 ${novaMaq} nova(s) máquina(s)</div>
+          <div style="font-size:13px;color:var(--text2);margin-top:4px">⛽ ${dadosSemana.length} registro(s)</div>
+          ${Object.keys(state.semanas).length>1?'<div style="font-size:12px;color:var(--accent);margin-top:8px">📊 Veja o Comparativo para ver a evolução!</div>':''}
+        </div>`;
+      updateFilters(); renderDashboard();
+      showToast(`Semana ${numSemana}: ${dadosSemana.length} registros!`,'success');
+    } catch(err){showToast('Erro: '+err.message,'error');}
+    input.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── GOOGLE SHEETS SYNC ────────────────────────────────────────────────────────
+function salvarConfig() {
+  const url=document.getElementById('sheets-url').value.trim();
+  state.sheetsUrl=url;
+  localStorage.setItem('sheets_url',url);
+  updateSyncStatus(url?'idle':'disconnected');
+}
+
+function updateSyncStatus(status) {
+  const dot=document.getElementById('sync-dot');
+  const label=document.getElementById('sync-label');
+  const configs={
+    connected:{cls:'connected',text:'Sincronizado'},
+    syncing:{cls:'syncing',text:'Sincronizando...'},
+    error:{cls:'error',text:'Erro na sincronização'},
+    idle:{cls:'connected',text:'Google Sheets ativo'},
+    disconnected:{cls:'',text:'Sem sincronização'}
+  };
+  const c=configs[status]||configs.disconnected;
+  dot.className='sync-dot'+(c.cls?' '+c.cls:'');
+  label.textContent=c.text;
+}
+
+async function testarConexao() {
+  const url=document.getElementById('sheets-url').value.trim();
+  if(!url){showToast('Cole a URL do Apps Script primeiro','error');return;}
+  updateSyncStatus('syncing');
+  try {
+    const r=await fetch(url+'?action=load');
+    if(r.ok){updateSyncStatus('connected');showToast('Conexão OK! Google Sheets funcionando ✅','success');}
+    else throw new Error('HTTP '+r.status);
+  } catch(e){updateSyncStatus('error');showToast('Erro de conexão. Verifique a URL.','error');}
+}
+
+async function sincronizarAgora() {
+  const url=state.sheetsUrl;
+  if(!url){showToast('Configure o Google Sheets primeiro em Configurações','error');return;}
+  updateSyncStatus('syncing');
+  try {
+    // Salvar abastecimentos
+    const rows=[['placa','data','litros','horas','operador','operacao'],...state.abastecimentos.map(a=>[a.placa,a.data,a.litros,a.horas,a.operador||'',a.operacao||''])];
+    await fetch(url,{method:'POST',body:JSON.stringify({sheet:'Abastecimentos',rows})});
+    // Salvar máquinas
+    const rowsM=[['placa','modelo','tipo','operacao','status'],...state.maquinas.map(m=>[m.placa,m.modelo||'',m.tipo||'',m.operacao||'',m.status||'Ativa'])];
+    await fetch(url,{method:'POST',body:JSON.stringify({sheet:'Maquinas',rows:rowsM})});
+    updateSyncStatus('connected');
+    showToast('Dados sincronizados com Google Sheets!','success');
+  } catch(e){updateSyncStatus('error');showToast('Erro ao sincronizar: '+e.message,'error');}
+}
+
+async function sincronizarBackground() {
+  if(!state.sheetsUrl) return;
+  try {
+    const rows=[['placa','data','litros','horas','operador','operacao'],...state.abastecimentos.map(a=>[a.placa,a.data,a.litros,a.horas,a.operador||'',a.operacao||''])];
+    await fetch(state.sheetsUrl,{method:'POST',body:JSON.stringify({sheet:'Abastecimentos',rows})});
+  } catch(e){}
+}
+
+// ── BACKUP JSON ───────────────────────────────────────────────────────────────
+function exportarJSON() {
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`fueltracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast('Backup exportado!','success');
+}
+
+function importarJSON(input) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try {
+      const imported=JSON.parse(e.target.result);
+      if(!imported.maquinas||!imported.abastecimentos) throw new Error('Arquivo inválido');
+      Object.assign(state,imported);
+      saveState(); updateFilters(); renderDashboard();
+      showToast(`${state.abastecimentos.length} registros importados!`,'success');
+    } catch(err){showToast('Arquivo inválido: '+err.message,'error');}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+function limparTodosDados() {
+  if(!confirm('Tem certeza? Isso apagará TODOS os dados locais permanentemente!')) return;
+  if(!confirm('Confirme novamente: apagar tudo?')) return;
+  state={maquinas:[],abastecimentos:[],semanas:{},tab:'semanal',semanaImport:1,sheetsUrl:state.sheetsUrl};
+  saveState(); updateFilters(); renderDashboard();
+  showToast('Todos os dados foram apagados','success');
+}
+
+function copiarScriptApps() {
+  navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(()=>showToast('Código copiado! Cole no Apps Script','success')).catch(()=>showToast('Erro ao copiar','error'));
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function showToast(msg,type='success') {
+  const t=document.getElementById('toast');
+  t.textContent=(type==='success'?'✅ ':'❌ ')+msg;
+  t.className=`toast ${type} show`;
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadState();
+updateFilters();
+renderDashboard();
+if(state.sheetsUrl) updateSyncStatus('idle');
+</script>
+</body>
+</html>
