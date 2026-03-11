@@ -6,6 +6,40 @@
 <title>FuelTracker Pro — Gestão de Combustível</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBdfrSrif-vThP3WqWJF76hhKE7FXGFpL0",
+  authDomain: "fueltracker-adee5.firebaseapp.com",
+  projectId: "fueltracker-adee5",
+  storageBucket: "fueltracker-adee5.firebasestorage.app",
+  messagingSenderId: "488178201286",
+  appId: "1:488178201286:web:ecde03cc0488f4c3ffddc7",
+  measurementId: "G-SZGSK5DQMB"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.fbSave = async function(data) {
+  try {
+    await setDoc(doc(db, "fueltracker", "dados"), data);
+    return true;
+  } catch(e) { console.error("Firebase save error:", e); return false; }
+};
+
+window.fbLoad = async function() {
+  try {
+    const snap = await getDoc(doc(db, "fueltracker", "dados"));
+    return snap.exists() ? snap.data() : null;
+  } catch(e) { console.error("Firebase load error:", e); return null; }
+};
+
+window.firebaseReady = true;
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
 <style>
 :root {
   --bg:#0f1117;--bg2:#171b26;--bg3:#1e2333;--border:#2a2f45;
@@ -461,15 +495,47 @@ let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', semanaI
 let selectedIds = new Set();
 let abastFiltrados = [];
 
-function loadState() {
+async function loadState() {
   try { const s=localStorage.getItem('fueltracker_v3'); if(s) state=JSON.parse(s); } catch(e){}
-  const url = localStorage.getItem('sheets_url');
-  if (url) { state.sheetsUrl=url; document.getElementById('sheets-url').value=url; }
+  // Tentar carregar do Firebase
+  if (window.firebaseReady) {
+    await syncFromFirebase();
+  } else {
+    window.addEventListener('firebaseReady', async () => {
+      await syncFromFirebase();
+    });
+  }
   updateSyncStatus('idle');
 }
+
+async function syncFromFirebase() {
+  try {
+    updateSyncStatus('syncing');
+    const data = await window.fbLoad();
+    if (data && data.abastecimentos) {
+      state = { ...state, ...data };
+      localStorage.setItem('fueltracker_v3', JSON.stringify(state));
+      updateFilters();
+      renderDashboard();
+      updateSyncStatus('connected');
+      showToast('Dados sincronizados do Firebase! ☁️', 'success');
+    } else {
+      updateSyncStatus('connected');
+    }
+  } catch(e) {
+    updateSyncStatus('error');
+  }
+}
+
 function saveState() {
   localStorage.setItem('fueltracker_v3', JSON.stringify(state));
-  if (state.sheetsUrl) sincronizarBackground();
+  // Salvar no Firebase em background
+  if (window.firebaseReady && window.fbSave) {
+    window.fbSave(state).then(ok => {
+      if (ok) updateSyncStatus('connected');
+      else updateSyncStatus('error');
+    });
+  }
 }
 
 // ── NAV ───────────────────────────────────────────────────────────────────────
@@ -976,10 +1042,9 @@ function showToast(msg,type='success') {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-loadState();
 updateFilters();
 renderDashboard();
-if(state.sheetsUrl) updateSyncStatus('idle');
+loadState();
 </script>
 </body>
 </html>
