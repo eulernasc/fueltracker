@@ -253,7 +253,19 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     <div class="page-header">
       <div class="page-header-title"><div class="page-title">Painel de Consumo</div><div class="page-sub">Visão geral do consumo de combustível</div></div>
       <div class="header-actions">
-        <select class="filter-select" id="dash-op-filter" onchange="renderDashboard()"><option value="">Todas as Operações</option></select>
+        <!-- Multi-select operações -->
+        <div style="position:relative" id="op-dropdown-wrap">
+          <button class="filter-select" id="op-dropdown-btn" onclick="toggleOpDropdown()" style="cursor:pointer;text-align:left;min-width:180px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span id="op-dropdown-label">Todas as Operações</span>
+            <span style="font-size:10px">▼</span>
+          </button>
+          <div id="op-dropdown-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:240px;overflow-y:auto">
+            <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">
+              <input type="checkbox" id="op-all-check" checked onchange="toggleAllOps(this)"> Todas as Operações
+            </label>
+            <div id="op-checkboxes"></div>
+          </div>
+        </div>
         <select class="filter-select" id="dash-maq-filter" onchange="renderDashboard()"><option value="">Todas as Máquinas</option></select>
         <div class="tab-group">
           <button class="tab-btn active" id="tab-semanal" onclick="setTab('semanal')">Semanal</button>
@@ -633,7 +645,18 @@ function getMaquina(placa) { return state.maquinas.find(m=>m.placa===placa); }
 
 function updateFilters() {
   const ops=getOperacoes();
-  ['dash-op-filter','abast-op-filter','maq-op-filter','comp-op-filter'].forEach(id=>{
+  // Multi-select operações do dashboard
+  const cb=document.getElementById('op-checkboxes');
+  if(cb){
+    const selected=getSelectedOps();
+    cb.innerHTML=ops.map(o=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;hover:background:var(--bg3)">
+        <input type="checkbox" class="op-check" value="${o}" ${selected.size===0||selected.has(o)?'checked':''} onchange="onOpCheckChange()">
+        ${o.replace(/_/g,' ')}
+      </label>`).join('');
+  }
+  // Filtro operação único nos outros lugares
+  ['abast-op-filter','maq-op-filter','comp-op-filter'].forEach(id=>{
     const sel=document.getElementById(id); if(!sel) return;
     const val=sel.value;
     sel.innerHTML='<option value="">Todas as Operações</option>'+ops.map(o=>`<option value="${o}">${o.replace(/_/g,' ')}</option>`).join('');
@@ -649,6 +672,40 @@ function updateFilters() {
   if(sel) sel.innerHTML='<option value="">Selecione a máquina</option>'+state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
 }
 
+function getSelectedOps() {
+  const checks=document.querySelectorAll('.op-check:checked');
+  return new Set([...checks].map(c=>c.value));
+}
+
+function toggleOpDropdown() {
+  const menu=document.getElementById('op-dropdown-menu');
+  menu.style.display=menu.style.display==='none'?'block':'none';
+}
+
+function toggleAllOps(cb) {
+  document.querySelectorAll('.op-check').forEach(c=>c.checked=cb.checked);
+  onOpCheckChange();
+}
+
+function onOpCheckChange() {
+  const all=document.querySelectorAll('.op-check');
+  const checked=document.querySelectorAll('.op-check:checked');
+  document.getElementById('op-all-check').checked=all.length===checked.length;
+  const n=checked.length;
+  const allCount=all.length;
+  document.getElementById('op-dropdown-label').textContent=
+    n===0||n===allCount?'Todas as Operações':
+    n===1?[...checked][0].value.replace(/_/g,' '):
+    `${n} operações`;
+  renderDashboard();
+}
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', e=>{
+  const wrap=document.getElementById('op-dropdown-wrap');
+  if(wrap && !wrap.contains(e.target)) document.getElementById('op-dropdown-menu').style.display='none';
+});
+
 function getFilteredAbast(opF,maqF) {
   const now=new Date();
   let list=[...state.abastecimentos];
@@ -660,7 +717,11 @@ function getFilteredAbast(opF,maqF) {
     if(ini) list=list.filter(a=>a.data>=ini);
     if(fim) list=list.filter(a=>a.data<=fim);
   }
-  if(opF) list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
+  if(opF instanceof Set && opF.size>0) {
+    list=list.filter(a=>opF.has(getMaquina(a.placa)?.operacao||a.operacao||''));
+  } else if(typeof opF==='string' && opF) {
+    list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
+  }
   if(maqF) list=list.filter(a=>a.placa===maqF);
   return list;
 }
@@ -668,9 +729,9 @@ function getFilteredAbast(opF,maqF) {
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 function renderDashboard() {
   updateFilters();
-  const opF=document.getElementById('dash-op-filter')?.value||'';
+  const opsSelec=getSelectedOps();
   const maqF=document.getElementById('dash-maq-filter')?.value||'';
-  const list=getFilteredAbast(opF,maqF);
+  const list=getFilteredAbast(opsSelec,maqF);
   const totalL=list.reduce((s,a)=>s+(a.litros||0),0);
   const totalH=list.reduce((s,a)=>s+(a.horas||0),0);
   const media=totalH>0?totalL/totalH:0;
@@ -680,7 +741,6 @@ function renderDashboard() {
   document.getElementById('kpi-horas').textContent=totalH.toFixed(0);
   document.getElementById('kpi-maquinas').textContent=maqAtivas;
   document.getElementById('kpi-maq-delta').textContent=`${state.maquinas.length} total`;
-  // Meta média ponderada das máquinas na lista
   const maqsComMeta=list.map(a=>getMaquina(a.placa)).filter(m=>m&&m.meta>0);
   const metaMedia=maqsComMeta.length>0?(maqsComMeta.reduce((s,m)=>s+m.meta,0)/maqsComMeta.length):0;
   const metaEl=document.getElementById('kpi-media-meta');
@@ -689,10 +749,8 @@ function renderDashboard() {
     const cor=desvio<=0?'var(--green)':desvio<=10?'#f59e0b':'var(--red)';
     const seta=desvio<=0?'✅':'⚠️';
     metaEl.innerHTML=`${seta} meta: <strong style="color:${cor}">${metaMedia.toFixed(2)} L/h</strong> <span style="color:${cor}">(${desvio>0?'+':''}${desvio.toFixed(1)}%)</span>`;
-  } else {
-    metaEl.innerHTML='';
-  }
-  const lbl=state.tab==='semanal'?'Semanal':'Mensal';
+  } else { metaEl.innerHTML=''; }
+  const lbl=state.tab==='semanal'?'Semanal':state.tab==='mensal'?'Mensal':'Período';
   if(document.getElementById('chart-period-label2')) document.getElementById('chart-period-label2').textContent=lbl;
   renderOpChart(list); renderBarChart(list); renderRanking(list);
 }
@@ -713,13 +771,22 @@ function renderOpChart(list) {
   const maxL=Math.max(...ops.map(o=>byOp[o].litros));
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
   const H=120;
-  c.style.height='';
-  c.style.overflowX='';
-  c.style.overflowY='';
-  c.innerHTML=`<div style="display:inline-flex;align-items:flex-end;gap:16px;padding-top:28px;padding-bottom:4px;min-width:100%;height:100%">`+ops.map(op=>{
+  // Meta média geral para linha de referência
+  const todasMetas=state.maquinas.filter(m=>m.meta>0).map(m=>m.meta);
+  const metaGeral=todasMetas.length>0?(todasMetas.reduce((a,b)=>a+b,0)/todasMetas.length):0;
+  const metaH=metaGeral>0&&maxM>0?(metaGeral/maxM)*H:0;
+
+  c.innerHTML=`<div style="display:flex;justify-content:center;align-items:flex-end;gap:16px;padding-top:28px;padding-bottom:4px;min-width:100%;position:relative">`+
+    // Linha de meta no eixo da média L/h
+    (metaGeral>0?`<div style="position:absolute;left:0;right:0;bottom:${24+metaH}px;border-top:2px dashed rgba(251,191,36,.5);pointer-events:none;z-index:1">
+      <span style="position:absolute;right:8px;top:-16px;font-size:9px;color:var(--yellow);opacity:.8;font-family:'DM Mono',monospace">meta ${metaGeral.toFixed(1)}</span>
+    </div>`:'') +
+    ops.map(op=>{
     const d=byOp[op];
     const l=d.litros, m=d.horas>0?d.litros/d.horas:0;
     const hL=maxL>0?(l/maxL)*H:0, hM=maxM>0?(m/maxM)*H:0;
+    const desvio=metaGeral>0&&m>0?((m-metaGeral)/metaGeral*100):null;
+    const mColor=desvio===null?'var(--yellow)':desvio<=0?'var(--green)':desvio<=10?'#f59e0b':'var(--red)';
     return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;overflow:visible">
       <div style="display:flex;align-items:flex-end;gap:3px;overflow:visible">
         <div style="display:flex;flex-direction:column;align-items:center;overflow:visible">
@@ -727,8 +794,8 @@ function renderOpChart(list) {
           <div class="bar bar-litros" style="height:${Math.max(hL,2)}px;width:26px"></div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;overflow:visible">
-          <span style="font-size:10px;color:var(--yellow);font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${m.toFixed(2)}</span>
-          <div class="bar bar-media" style="height:${Math.max(hM,2)}px;width:26px"></div>
+          <span style="font-size:10px;color:${mColor};font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${m.toFixed(2)}</span>
+          <div class="bar" style="height:${Math.max(hM,2)}px;width:26px;background:${mColor};border-radius:4px 4px 0 0"></div>
         </div>
       </div>
       <div style="font-size:10px;color:var(--text2);font-family:'DM Mono',monospace;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center" title="${op}">${op}</div>
