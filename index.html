@@ -267,7 +267,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="kpi-card"><div class="kpi-label">Máquinas Ativas</div><div class="kpi-icon">🚜</div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
     </div>
     <!-- Consumo por Operação -->
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px;align-items:start">
       <div class="chart-card">
         <div class="chart-title">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
         <div id="op-chart-container"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
@@ -672,7 +672,7 @@ function renderOpChart(list) {
   const maxL=Math.max(...ops.map(o=>byOp[o].litros));
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
   const H=120;
-  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px;display:flex;justify-content:center"><div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:32px;overflow:visible">`+ops.map(op=>{
+  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:4px;display:flex;justify-content:center"><div style="display:inline-flex;align-items:flex-end;gap:16px;padding-top:28px;overflow:visible">`+ops.map(op=>{
     const d=byOp[op];
     const l=d.litros, m=d.horas>0?d.litros/d.horas:0;
     const hL=maxL>0?(l/maxL)*H:0, hM=maxM>0?(m/maxM)*H:0;
