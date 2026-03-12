@@ -30,79 +30,101 @@ const GRUPOS = [
 const LIMITE_EFICIENCIA = 98;
 const DIAS_JANELA = 30;
 
-async function firestoreGetAll(collection) {
+// ── Busca o documento único do Firebase ──────────────────────
+async function carregarDados() {
   const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
   const API_KEY = process.env.FIREBASE_API_KEY;
-  let docs = [];
-  let pageToken = '';
-  do {
-    const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${collection}?key=${API_KEY}&pageSize=300${pageToken ? '&pageToken=' + pageToken : ''}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Firestore error ${collection}: ${res.status} ${await res.text()}`);
-    const data = await res.json();
-    docs = docs.concat((data.documents || []).map(parseDoc));
-    pageToken = data.nextPageToken || '';
-  } while (pageToken);
-  return docs;
-}
 
-function parseDoc(doc) {
-  const fields = doc.fields || {};
-  const obj = {};
-  for (const [k, v] of Object.entries(fields)) {
-    if (v.stringValue !== undefined) obj[k] = v.stringValue;
-    else if (v.integerValue !== undefined) obj[k] = parseFloat(v.integerValue);
-    else if (v.doubleValue !== undefined) obj[k] = parseFloat(v.doubleValue);
-    else if (v.booleanValue !== undefined) obj[k] = v.booleanValue;
-    else obj[k] = null;
+  // Os dados ficam em: collection "fueltracker" → document "dados"
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/fueltracker/dados?key=${API_KEY}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Firestore error: ${res.status} ${await res.text()}`);
+  const doc = await res.json();
+
+  if (!doc.fields) throw new Error('Documento "fueltracker/dados" não encontrado ou vazio');
+
+  // O state inteiro está serializado como string JSON no campo ou como map
+  // Tenta extrair os campos do documento
+  const fields = doc.fields;
+
+  // Função para converter valor Firestore para JS
+  function parseValue(v) {
+    if (!v) return null;
+    if (v.stringValue !== undefined) return v.stringValue;
+    if (v.integerValue !== undefined) return parseFloat(v.integerValue);
+    if (v.doubleValue !== undefined) return parseFloat(v.doubleValue);
+    if (v.booleanValue !== undefined) return v.booleanValue;
+    if (v.nullValue !== undefined) return null;
+    if (v.arrayValue) return (v.arrayValue.values || []).map(parseValue);
+    if (v.mapValue) {
+      const obj = {};
+      for (const [k, val] of Object.entries(v.mapValue.fields || {})) {
+        obj[k] = parseValue(val);
+      }
+      return obj;
+    }
+    return null;
   }
-  return obj;
+
+  const state = {};
+  for (const [k, v] of Object.entries(fields)) {
+    state[k] = parseValue(v);
+  }
+  return state;
 }
 
+// ── Lógica principal ──────────────────────────────────────────
 async function gerarRelatorio() {
   console.log('📊 Iniciando relatório...');
-  const [abastecimentos, maquinas] = await Promise.all([
-    firestoreGetAll('abastecimentos'),
-    firestoreGetAll('maquinas'),
-  ]);
-  console.log(`✅ ${abastecimentos.length} abastecimentos, ${maquinas.length} máquinas`);
+
+  const state = await carregarDados();
+
+  const abastecimentos = state.abastecimentos || [];
+  const maquinas = state.maquinas || [];
+
+  console.log(`✅ ${abastecimentos.length} abastecimentos, ${maquinas.length} máquinas carregados`);
 
   const maqMap = {};
-  maquinas.forEach(m => { if (m.placa) maqMap[m.placa] = m; });
+  maquinas.forEach(m => { if (m && m.placa) maqMap[m.placa] = m; });
 
+  // Filtra pela janela de tempo
   const dataCorte = new Date();
   dataCorte.setDate(dataCorte.getDate() - DIAS_JANELA);
   const dataCorteStr = dataCorte.toISOString().split('T')[0];
-  const recentes = abastecimentos.filter(a => a.data && a.data >= dataCorteStr);
+  const recentes = abastecimentos.filter(a => a && a.data && a.data >= dataCorteStr);
   console.log(`📅 ${recentes.length} registros nos últimos ${DIAS_JANELA} dias`);
 
+  // Agrupa por máquina
   const byMaq = {};
   recentes.forEach(a => {
-    if (!a.placa) return;
+    if (!a || !a.placa) return;
     if (!byMaq[a.placa]) byMaq[a.placa] = { litros: 0, horas: 0 };
-    byMaq[a.placa].litros += a.litros || 0;
-    byMaq[a.placa].horas += a.horas || 0;
+    byMaq[a.placa].litros += parseFloat(a.litros) || 0;
+    byMaq[a.placa].horas += parseFloat(a.horas) || 0;
   });
 
+  // Calcula eficiência vs meta
   const maquinasComProblema = [];
   for (const [placa, dados] of Object.entries(byMaq)) {
     const maq = maqMap[placa];
-    if (!maq || !maq.meta || maq.meta <= 0 || dados.horas <= 0) continue;
+    if (!maq || !maq.meta || parseFloat(maq.meta) <= 0 || dados.horas <= 0) continue;
     const mediaReal = dados.litros / dados.horas;
-    const eficiencia = (maq.meta / mediaReal) * 100;
+    const meta = parseFloat(maq.meta);
+    const eficiencia = (meta / mediaReal) * 100;
     if (eficiencia < LIMITE_EFICIENCIA) {
       maquinasComProblema.push({
         placa,
         operacao: (maq.operacao || 'Sem Operação').replace(/_/g, ' '),
         mediaReal: mediaReal.toFixed(2),
-        meta: parseFloat(maq.meta).toFixed(1),
+        meta: meta.toFixed(1),
         eficiencia: eficiencia.toFixed(1),
-        desvio: ((mediaReal - maq.meta) / maq.meta * 100).toFixed(1),
+        desvio: ((mediaReal - meta) / meta * 100).toFixed(1),
       });
     }
   }
 
   console.log(`⚠️  ${maquinasComProblema.length} máquinas abaixo de ${LIMITE_EFICIENCIA}%`);
+
   if (maquinasComProblema.length === 0) {
     console.log('✅ Todas dentro do limite — nenhum e-mail enviado');
     return;
@@ -132,7 +154,7 @@ async function gerarRelatorio() {
         subject: `⚠️ FuelTracker — Alerta de Eficiência ${grupo.nome} · ${mes}`,
         html,
       });
-      console.log(`📧 Enviado: ${grupo.nome}`);
+      console.log(`📧 Enviado: ${grupo.nome} → ${grupo.destinatarios.join(', ')}`);
     } catch (err) {
       console.error(`❌ Erro ${grupo.nome}:`, err.message);
     }
@@ -140,6 +162,7 @@ async function gerarRelatorio() {
   console.log('🏁 Concluído');
 }
 
+// ── Template HTML ─────────────────────────────────────────────
 function gerarHTML(nomeGrupo, maquinas, mes) {
   const linhas = maquinas.map(m => {
     const cor = parseFloat(m.eficiencia) < 90 ? '#ef4444' :
