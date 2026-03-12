@@ -671,19 +671,19 @@ function renderOpChart(list) {
   const ops=Object.keys(byOp).sort();
   const maxL=Math.max(...ops.map(o=>byOp[o].litros));
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
-  const H=160;
-  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px"><div class="bar-chart" style="min-width:${ops.length*120}px">`+ops.map(op=>{
+  const H=120;
+  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px"><div class="bar-chart" style="min-width:${ops.length*120}px;overflow:visible;padding-top:32px">`+ops.map(op=>{
     const d=byOp[op];
     const l=d.litros, m=d.horas>0?d.litros/d.horas:0;
     const hL=maxL>0?(l/maxL)*H:0, hM=maxM>0?(m/maxM)*H:0;
-    return `<div class="bar-group">
-      <div class="bars" style="position:relative;align-items:flex-end">
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <span style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace">${l.toFixed(0)}L</span>
+    return `<div class="bar-group" style="overflow:visible">
+      <div class="bars" style="position:relative;align-items:flex-end;overflow:visible">
+        <div style="display:flex;flex-direction:column;align-items:center;overflow:visible">
+          <span style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${l.toFixed(0)}L</span>
           <div class="bar bar-litros" style="height:${Math.max(hL,2)}px;width:26px"></div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center">
-          <span style="font-size:10px;color:var(--yellow);font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace">${m.toFixed(2)}</span>
+        <div style="display:flex;flex-direction:column;align-items:center;overflow:visible">
+          <span style="font-size:10px;color:var(--yellow);font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${m.toFixed(2)}</span>
           <div class="bar bar-media" style="height:${Math.max(hM,2)}px;width:26px"></div>
         </div>
       </div>
