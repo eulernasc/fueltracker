@@ -282,7 +282,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px;align-items:start">
       <div class="chart-card" style="height:280px;display:flex;flex-direction:column;overflow:hidden;width:0;min-width:100%">
         <div class="chart-title" style="flex-shrink:0">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
-        <div id="bar-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
+        <div id="bar-chart-container" style="flex:1;width:0;min-width:100%;min-height:0;overflow-x:auto;overflow-y:hidden"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
         <div class="chart-legend" style="flex-shrink:0"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
       </div>
       <div class="chart-card">
@@ -749,7 +749,7 @@ function renderBarChart(list) {
   c.style.height='';
   c.style.overflowX='';
   c.style.overflowY='';
-  c.innerHTML=`<div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:28px;padding-bottom:4px;min-width:max-content;height:100%">`+pl.map(p=>{
+  c.innerHTML=`<div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:28px;padding-bottom:4px;min-width:max-content">`+pl.map(p=>{
     const l=byMaq[p].litros,m=byMaq[p].horas>0?byMaq[p].litros/byMaq[p].horas:0;
     const hL=maxL>0?(l/maxL)*H:0,hM=maxM>0?(m/maxM)*H:0;
     return `<div class="bar-group">
