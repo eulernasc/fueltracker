@@ -1,8 +1,9 @@
 // ============================================================
 //  FuelTracker Pro — Relatório Mensal Automático de Eficiência
+//  Envio via Gmail SMTP (nodemailer)
 // ============================================================
 
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 const GRUPOS = [
   {
@@ -35,7 +36,6 @@ async function carregarDados() {
   const PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
   const API_KEY = process.env.FIREBASE_API_KEY;
 
-  // Os dados ficam em: collection "fueltracker" → document "dados"
   const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/fueltracker/dados?key=${API_KEY}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Firestore error: ${res.status} ${await res.text()}`);
@@ -43,11 +43,6 @@ async function carregarDados() {
 
   if (!doc.fields) throw new Error('Documento "fueltracker/dados" não encontrado ou vazio');
 
-  // O state inteiro está serializado como string JSON no campo ou como map
-  // Tenta extrair os campos do documento
-  const fields = doc.fields;
-
-  // Função para converter valor Firestore para JS
   function parseValue(v) {
     if (!v) return null;
     if (v.stringValue !== undefined) return v.stringValue;
@@ -58,18 +53,14 @@ async function carregarDados() {
     if (v.arrayValue) return (v.arrayValue.values || []).map(parseValue);
     if (v.mapValue) {
       const obj = {};
-      for (const [k, val] of Object.entries(v.mapValue.fields || {})) {
-        obj[k] = parseValue(val);
-      }
+      for (const [k, val] of Object.entries(v.mapValue.fields || {})) obj[k] = parseValue(val);
       return obj;
     }
     return null;
   }
 
   const state = {};
-  for (const [k, v] of Object.entries(fields)) {
-    state[k] = parseValue(v);
-  }
+  for (const [k, v] of Object.entries(doc.fields)) state[k] = parseValue(v);
   return state;
 }
 
@@ -78,23 +69,19 @@ async function gerarRelatorio() {
   console.log('📊 Iniciando relatório...');
 
   const state = await carregarDados();
-
   const abastecimentos = state.abastecimentos || [];
   const maquinas = state.maquinas || [];
-
   console.log(`✅ ${abastecimentos.length} abastecimentos, ${maquinas.length} máquinas carregados`);
 
   const maqMap = {};
   maquinas.forEach(m => { if (m && m.placa) maqMap[m.placa] = m; });
 
-  // Filtra pela janela de tempo
   const dataCorte = new Date();
   dataCorte.setDate(dataCorte.getDate() - DIAS_JANELA);
   const dataCorteStr = dataCorte.toISOString().split('T')[0];
   const recentes = abastecimentos.filter(a => a && a.data && a.data >= dataCorteStr);
   console.log(`📅 ${recentes.length} registros nos últimos ${DIAS_JANELA} dias`);
 
-  // Agrupa por máquina
   const byMaq = {};
   recentes.forEach(a => {
     if (!a || !a.placa) return;
@@ -103,7 +90,6 @@ async function gerarRelatorio() {
     byMaq[a.placa].horas += parseFloat(a.horas) || 0;
   });
 
-  // Calcula eficiência vs meta
   const maquinasComProblema = [];
   for (const [placa, dados] of Object.entries(byMaq)) {
     const maq = maqMap[placa];
@@ -130,7 +116,15 @@ async function gerarRelatorio() {
     return;
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  // Configura Gmail SMTP
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASS,
+    },
+  });
+
   const mes = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
   for (const grupo of GRUPOS) {
@@ -148,9 +142,9 @@ async function gerarRelatorio() {
 
     const html = gerarHTML(grupo.nome, maqsDoGrupo, mes);
     try {
-      await resend.emails.send({
-        from: process.env.EMAIL_REMETENTE,
-        to: grupo.destinatarios,
+      await transporter.sendMail({
+        from: `FuelTracker Pro <${process.env.GMAIL_USER}>`,
+        to: grupo.destinatarios.join(', '),
         subject: `⚠️ FuelTracker — Alerta de Eficiência ${grupo.nome} · ${mes}`,
         html,
       });
