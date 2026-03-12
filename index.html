@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FuelTracker Pro — Gestão de Combustível</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛽</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
@@ -278,17 +279,16 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="chart-title" style="flex-shrink:0">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
       <div id="op-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
     </div>
-    <!-- Consumo por Máquina + Ranking (linha 2) -->
-    <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px;align-items:start">
-      <div class="chart-card" style="height:280px;display:flex;flex-direction:column;width:0;min-width:100%">
-        <div class="chart-title" style="flex-shrink:0">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
-        <div id="bar-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:28px;box-sizing:border-box"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
-        <div class="chart-legend" style="flex-shrink:0;margin-top:4px"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Ranking de Consumo (L/h)</div>
-        <div id="ranking-list"><div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div></div>
-      </div>
+    <!-- Consumo por Máquina (largura total) -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-title">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
+      <div id="bar-chart-container" style="overflow-x:auto"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
+      <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
+    </div>
+    <!-- Ranking abaixo -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-title">Ranking de Consumo (L/h)</div>
+      <div id="ranking-list"><div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div></div>
     </div>
   </div>
 
@@ -785,7 +785,7 @@ function renderRanking(list) {
     const db=b.desvio!==null?b.desvio:b.media;
     return db-da;
   });
-  c.innerHTML='<div class="ranking-list">'+sorted.slice(0,8).map((item,i)=>{
+  c.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">'+sorted.slice(0,8).map((item,i)=>{
     let alertColor, alertIcon, alertLabel, barColor;
     if(item.desvio===null){
       // Sem meta cadastrada — usa lógica antiga
