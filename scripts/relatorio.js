@@ -9,22 +9,22 @@ const GRUPOS = [
   {
     nome: 'CENIBRA',
     operacoes: ['CENIBRA COCAIS/RIO DOCE','CENIBRA NOVA ERA','CENIBRA SANTA BARBARA'],
-    destinatarios: ['eulernascimento@expressonepomuceno.com.br'],
+    destinatarios: ['eulernasc2015@gmail.com'],
   },
   {
     nome: 'CMPC FLORESTAL',
     operacoes: ['CMPC FLORESTAL'],
-    destinatarios: ['eulernascimento@expressonepomuceno.com.br'],
+    destinatarios: ['eulernasc2015@gmail.com'],
   },
   {
     nome: 'SUZANO ARACRUZ',
     operacoes: ['SUZANO ARACRUZ'],
-    destinatarios: ['eulernascimento@expressonepomuceno.com.br'],
+    destinatarios: ['eulernasc2015@gmail.com'],
   },
   {
     nome: 'SUZANO RIBAS',
     operacoes: ['SUZANO RIBAS'],
-    destinatarios: ['eulernascimento@expressonepomuceno.com.br'],
+    destinatarios: ['eulernasc2015@gmail.com'],
   },
 ];
 
