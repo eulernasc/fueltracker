@@ -28,6 +28,6 @@ jobs:
         env:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
+          OUTLOOK_USER: ${{ secrets.OUTLOOK_USER }}
+          OUTLOOK_PASS: ${{ secrets.OUTLOOK_PASS }}
         run: node relatorio.js
