@@ -97,7 +97,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .charts-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:24px;}
 .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;}
 .chart-title{font-size:15px;font-weight:600;margin-bottom:18px;}
-.bar-chart{display:flex;align-items:flex-end;gap:14px;height:180px;padding-top:10px;}
+.bar-chart{display:flex;align-items:flex-end;gap:14px;padding-top:10px;}
 .bar-group{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;}
 .bars{display:flex;align-items:flex-end;gap:3px;height:160px;}
 .bar{border-radius:4px 4px 0 0;min-width:22px;transition:opacity .2s;cursor:pointer;}
@@ -672,12 +672,12 @@ function renderOpChart(list) {
   const maxL=Math.max(...ops.map(o=>byOp[o].litros));
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
   const H=120;
-  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px"><div class="bar-chart" style="min-width:${ops.length*120}px;overflow:visible;padding-top:32px">`+ops.map(op=>{
+  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px"><div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:32px;overflow:visible">`+ops.map(op=>{
     const d=byOp[op];
     const l=d.litros, m=d.horas>0?d.litros/d.horas:0;
     const hL=maxL>0?(l/maxL)*H:0, hM=maxM>0?(m/maxM)*H:0;
-    return `<div class="bar-group" style="overflow:visible">
-      <div class="bars" style="position:relative;align-items:flex-end;overflow:visible">
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;overflow:visible">
+      <div style="display:flex;align-items:flex-end;gap:3px;overflow:visible">
         <div style="display:flex;flex-direction:column;align-items:center;overflow:visible">
           <span style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${l.toFixed(0)}L</span>
           <div class="bar bar-litros" style="height:${Math.max(hL,2)}px;width:26px"></div>
@@ -687,7 +687,7 @@ function renderOpChart(list) {
           <div class="bar bar-media" style="height:${Math.max(hM,2)}px;width:26px"></div>
         </div>
       </div>
-      <div class="bar-label" style="max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px" title="${op}">${op}</div>
+      <div style="font-size:10px;color:var(--text2);font-family:'DM Mono',monospace;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center" title="${op}">${op}</div>
     </div>`;
   }).join('')+'</div></div>';
 }
