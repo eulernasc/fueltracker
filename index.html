@@ -688,14 +688,17 @@ function toggleAllOps(cb) {
 }
 
 function onOpCheckChange() {
-  const all=document.querySelectorAll('.op-check');
-  const checked=document.querySelectorAll('.op-check:checked');
-  document.getElementById('op-all-check').checked=all.length===checked.length;
+  const all=[...document.querySelectorAll('.op-check')];
+  const checked=all.filter(c=>c.checked);
+  const allCheck=document.getElementById('op-all-check');
+  // "Todas" fica marcado só se todas estiverem marcadas
+  allCheck.checked=checked.length===all.length;
+  allCheck.indeterminate=checked.length>0&&checked.length<all.length;
   const n=checked.length;
-  const allCount=all.length;
   document.getElementById('op-dropdown-label').textContent=
-    n===0||n===allCount?'Todas as Operações':
-    n===1?[...checked][0].value.replace(/_/g,' '):
+    n===0?'Nenhuma operação':
+    n===all.length?'Todas as Operações':
+    n===1?checked[0].value.replace(/_/g,' '):
     `${n} operações`;
   renderDashboard();
 }
@@ -767,38 +770,41 @@ function renderOpChart(list) {
     byOp[op].horas+=a.horas||0;
     byOp[op].maquinas.add(a.placa);
   });
+  // Meta por operação = média das metas das máquinas da operação
+  ops.forEach(op=>{
+    const maqsDaOp=[...byOp[op].maquinas].map(p=>getMaquina(p)).filter(m=>m&&m.meta>0);
+    byOp[op].meta=maqsDaOp.length>0?(maqsDaOp.reduce((s,m)=>s+m.meta,0)/maqsDaOp.length):0;
+  });
   const ops=Object.keys(byOp).sort();
   const maxL=Math.max(...ops.map(o=>byOp[o].litros));
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
   const H=120;
-  // Meta média geral para linha de referência
-  const todasMetas=state.maquinas.filter(m=>m.meta>0).map(m=>m.meta);
-  const metaGeral=todasMetas.length>0?(todasMetas.reduce((a,b)=>a+b,0)/todasMetas.length):0;
-  const metaH=metaGeral>0&&maxM>0?(metaGeral/maxM)*H:0;
 
-  c.innerHTML=`<div style="display:flex;justify-content:center;align-items:flex-end;gap:16px;padding-top:28px;padding-bottom:4px;min-width:100%;position:relative">`+
-    // Linha de meta no eixo da média L/h
-    (metaGeral>0?`<div style="position:absolute;left:0;right:0;bottom:${24+metaH}px;border-top:2px dashed rgba(251,191,36,.5);pointer-events:none;z-index:1">
-      <span style="position:absolute;right:8px;top:-16px;font-size:9px;color:var(--yellow);opacity:.8;font-family:'DM Mono',monospace">meta ${metaGeral.toFixed(1)}</span>
-    </div>`:'') +
+  c.innerHTML=`<div style="display:flex;justify-content:center;align-items:flex-end;gap:24px;padding-top:28px;padding-bottom:4px;min-width:100%;position:relative">`+
     ops.map(op=>{
     const d=byOp[op];
     const l=d.litros, m=d.horas>0?d.litros/d.horas:0;
     const hL=maxL>0?(l/maxL)*H:0, hM=maxM>0?(m/maxM)*H:0;
-    const desvio=metaGeral>0&&m>0?((m-metaGeral)/metaGeral*100):null;
+    const meta=d.meta||0;
+    const desvio=meta>0&&m>0?((m-meta)/meta*100):null;
     const mColor=desvio===null?'var(--yellow)':desvio<=0?'var(--green)':desvio<=10?'#f59e0b':'var(--red)';
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;overflow:visible">
-      <div style="display:flex;align-items:flex-end;gap:3px;overflow:visible">
-        <div style="display:flex;flex-direction:column;align-items:center;overflow:visible">
+    const metaH=meta>0&&maxM>0?(meta/maxM)*H:0;
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;position:relative">
+      <div style="display:flex;align-items:flex-end;gap:3px;position:relative">
+        <div style="display:flex;flex-direction:column;align-items:center">
           <span style="font-size:10px;color:var(--accent);font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${l.toFixed(0)}L</span>
           <div class="bar bar-litros" style="height:${Math.max(hL,2)}px;width:26px"></div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center;overflow:visible">
+        <div style="display:flex;flex-direction:column;align-items:center;position:relative">
           <span style="font-size:10px;color:${mColor};font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${m.toFixed(2)}</span>
-          <div class="bar" style="height:${Math.max(hM,2)}px;width:26px;background:${mColor};border-radius:4px 4px 0 0"></div>
+          <div class="bar" style="height:${Math.max(hM,2)}px;width:26px;background:${mColor};border-radius:4px 4px 0 0;position:relative">
+            ${meta>0?`<div style="position:absolute;left:-4px;right:-4px;bottom:${metaH-hM}px;border-top:2px dashed rgba(251,191,36,.7);pointer-events:none" title="Meta: ${meta.toFixed(1)} L/h"></div>`:''}
+          </div>
         </div>
       </div>
+      ${desvio!==null?`<div style="font-size:9px;color:${mColor};font-weight:600;font-family:'DM Mono',monospace">${desvio>0?'+':''}${desvio.toFixed(1)}%</div>`:''}
       <div style="font-size:10px;color:var(--text2);font-family:'DM Mono',monospace;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center" title="${op}">${op}</div>
+      ${meta>0?`<div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace">meta ${meta.toFixed(1)}</div>`:''}
     </div>`;
   }).join('')+'</div>';
 }
