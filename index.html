@@ -257,6 +257,12 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         <div class="tab-group">
           <button class="tab-btn active" id="tab-semanal" onclick="setTab('semanal')">Semanal</button>
           <button class="tab-btn" id="tab-mensal" onclick="setTab('mensal')">Mensal</button>
+          <button class="tab-btn" id="tab-custom" onclick="setTab('custom')">Período</button>
+        </div>
+        <div id="dash-date-range" style="display:none;align-items:center;gap:6px">
+          <input type="date" class="form-input" id="dash-data-ini" style="padding:6px 10px;font-size:13px;width:140px" onchange="renderDashboard()">
+          <span style="color:var(--text2);font-size:12px">até</span>
+          <input type="date" class="form-input" id="dash-data-fim" style="padding:6px 10px;font-size:13px;width:140px" onchange="renderDashboard()">
         </div>
         <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar</button>
       </div>
@@ -611,7 +617,11 @@ function setTab(tab) {
   state.tab=tab;
   document.getElementById('tab-semanal').classList.toggle('active',tab==='semanal');
   document.getElementById('tab-mensal').classList.toggle('active',tab==='mensal');
-  document.getElementById('chart-period-label').textContent=tab==='semanal'?'Semanal':'Mensal';
+  document.getElementById('tab-custom').classList.toggle('active',tab==='custom');
+  const dateRange=document.getElementById('dash-date-range');
+  dateRange.style.display=tab==='custom'?'flex':'none';
+  const lbl=tab==='semanal'?'Semanal':tab==='mensal'?'Mensal':'Período';
+  document.getElementById('chart-period-label').textContent=lbl;
   renderDashboard();
 }
 
@@ -643,7 +653,13 @@ function getFilteredAbast(opF,maqF) {
   const now=new Date();
   let list=[...state.abastecimentos];
   if(state.tab==='semanal') { const w=new Date(now-7*24*60*60*1000); list=list.filter(a=>new Date(a.data)>=w); }
-  else { const m=new Date(now.getFullYear(),now.getMonth(),1); list=list.filter(a=>new Date(a.data)>=m); }
+  else if(state.tab==='mensal') { const m=new Date(now.getFullYear(),now.getMonth(),1); list=list.filter(a=>new Date(a.data)>=m); }
+  else {
+    const ini=document.getElementById('dash-data-ini')?.value||'';
+    const fim=document.getElementById('dash-data-fim')?.value||'';
+    if(ini) list=list.filter(a=>a.data>=ini);
+    if(fim) list=list.filter(a=>a.data<=fim);
+  }
   if(opF) list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
   if(maqF) list=list.filter(a=>a.placa===maqF);
   return list;
