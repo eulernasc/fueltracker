@@ -749,7 +749,7 @@ function renderBarChart(list) {
   c.style.height='';
   c.style.overflowX='';
   c.style.overflowY='';
-  c.innerHTML=`<div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:28px;padding-bottom:4px;min-width:100%;height:100%">`+pl.map(p=>{
+  c.innerHTML=`<div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:28px;padding-bottom:4px;min-width:max-content;height:100%">`+pl.map(p=>{
     const l=byMaq[p].litros,m=byMaq[p].horas>0?byMaq[p].litros/byMaq[p].horas:0;
     const hL=maxL>0?(l/maxL)*H:0,hM=maxM>0?(m/maxM)*H:0;
     return `<div class="bar-group">
