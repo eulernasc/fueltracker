@@ -20,29 +20,28 @@ const GRUPOS = [
       'CENIBRA SANTA BARBARA',
     ],
     destinatarios: [
-      'responsavel.cenibra@email.com',   // ← substitua pelo e-mail real
-      'supervisor.cenibra@email.com',    // ← adicione quantos quiser
+      'eulernascimento@expressonepomuceno.com.br',
     ],
   },
   {
     nome: 'CMPC FLORESTAL',
     operacoes: ['CMPC FLORESTAL'],
     destinatarios: [
-      'responsavel.cmpc@email.com',
+      'eulernascimento@expressonepomuceno.com.br',
     ],
   },
   {
     nome: 'SUZANO ARACRUZ',
     operacoes: ['SUZANO ARACRUZ'],
     destinatarios: [
-      'responsavel.suzano.aracruz@email.com',
+      'eulernascimento@expressonepomuceno.com.br',
     ],
   },
   {
     nome: 'SUZANO RIBAS',
     operacoes: ['SUZANO RIBAS'],
     destinatarios: [
-      'responsavel.suzano.ribas@email.com',
+      'eulernascimento@expressonepomuceno.com.br',
     ],
   },
   // ← adicione mais grupos conforme necessário
