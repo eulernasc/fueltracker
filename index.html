@@ -650,10 +650,17 @@ function updateFilters() {
   if(cb){
     const selected=getSelectedOps();
     cb.innerHTML=ops.map(o=>`
-      <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;hover:background:var(--bg3)">
-        <input type="checkbox" class="op-check" value="${o}" ${selected.size===0||selected.has(o)?'checked':''} onchange="onOpCheckChange()">
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px">
+        <input type="checkbox" class="op-check" value="${o}" ${selected.has(o)?'checked':''} onchange="onOpCheckChange()">
         ${o.replace(/_/g,' ')}
       </label>`).join('');
+    // Sincroniza o "Todas" checkbox
+    const allCheck=document.getElementById('op-all-check');
+    if(allCheck){
+      const total=ops.length, nChecked=selected.size;
+      allCheck.checked=nChecked===total;
+      allCheck.indeterminate=nChecked>0&&nChecked<total;
+    }
   }
   // Filtro operação único nos outros lugares
   ['abast-op-filter','maq-op-filter','comp-op-filter'].forEach(id=>{
@@ -691,13 +698,11 @@ function onOpCheckChange() {
   const all=[...document.querySelectorAll('.op-check')];
   const checked=all.filter(c=>c.checked);
   const allCheck=document.getElementById('op-all-check');
-  // "Todas" fica marcado só se todas estiverem marcadas
   allCheck.checked=checked.length===all.length;
   allCheck.indeterminate=checked.length>0&&checked.length<all.length;
   const n=checked.length;
   document.getElementById('op-dropdown-label').textContent=
-    n===0?'Nenhuma operação':
-    n===all.length?'Todas as Operações':
+    n===0||n===all.length?'Todas as Operações':
     n===1?checked[0].value.replace(/_/g,' '):
     `${n} operações`;
   renderDashboard();
@@ -797,9 +802,7 @@ function renderOpChart(list) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;position:relative">
           <span style="font-size:10px;color:${mColor};font-weight:700;margin-bottom:3px;font-family:'DM Mono',monospace;white-space:nowrap">${m.toFixed(2)}</span>
-          <div class="bar" style="height:${Math.max(hM,2)}px;width:26px;background:${mColor};border-radius:4px 4px 0 0;position:relative">
-            ${meta>0?`<div style="position:absolute;left:-4px;right:-4px;bottom:${metaH-hM}px;border-top:2px dashed rgba(251,191,36,.7);pointer-events:none" title="Meta: ${meta.toFixed(1)} L/h"></div>`:''}
-          </div>
+          <div class="bar" style="height:${Math.max(hM,2)}px;width:26px;background:${mColor};border-radius:4px 4px 0 0"></div>
         </div>
       </div>
       ${desvio!==null?`<div style="font-size:9px;color:${mColor};font-weight:600;font-family:'DM Mono',monospace">${desvio>0?'+':''}${desvio.toFixed(1)}%</div>`:''}
