@@ -273,22 +273,22 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="kpi-card"><div class="kpi-label">Horas Trabalhadas</div><div class="kpi-icon">⏱️</div><div><span class="kpi-value" id="kpi-horas">0</span><span class="kpi-unit">h</span></div></div>
       <div class="kpi-card"><div class="kpi-label">Máquinas Ativas</div><div class="kpi-icon">🚜</div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
     </div>
-    <!-- Consumo por Operação -->
+    <!-- Consumo por Operação (linha 1, largura total) -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-title">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
+      <div id="op-chart-container"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
+    </div>
+    <!-- Consumo por Máquina + Ranking (linha 2) -->
     <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px;align-items:start">
       <div class="chart-card">
-        <div class="chart-title">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
-        <div id="op-chart-container"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
+        <div class="chart-title">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
+        <div id="bar-chart-container" style="overflow-x:auto;overflow-y:hidden"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
+        <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Ranking de Consumo (L/h)</div>
         <div id="ranking-list"><div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div></div>
       </div>
-    </div>
-    <!-- Consumo por Máquina (todas) -->
-    <div class="chart-card" style="margin-bottom:24px">
-      <div class="chart-title">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
-      <div id="bar-chart-container" style="overflow-x:auto;overflow-y:hidden"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
-      <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
     </div>
   </div>
 
