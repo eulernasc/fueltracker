@@ -84,68 +84,89 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .mob-nav-item .mob-icon{font-size:20px;line-height:1;}
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
-  /* Topbar e sidebar */
+  /* ── Topbar e sidebar ── */
   .mob-topbar{display:flex;}
   .mob-bottom-nav{display:block;}
   .sidebar{transform:translateX(-100%);transition:transform .3s ease;z-index:150;}
   .sidebar.open{transform:translateX(0);}
-  /* Layout geral */
-  .main{margin-left:0;padding:66px 12px 74px;overflow-x:hidden;}
-  /* KPIs 2x2 */
-  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
-  .kpi-card{padding:12px 14px;}
-  .kpi-value{font-size:20px;}
-  .kpi-label{font-size:10px;margin-bottom:5px;}
-  .kpi-icon{font-size:15px;top:10px;right:10px;}
-  /* Page header: título em cima, ações embaixo */
-  .page-header{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:14px;}
-  .page-title{font-size:18px;}
+
+  /* ── Layout base ── */
+  body{overflow-x:hidden;}
+  .main{margin-left:0;padding:66px 14px 76px;overflow-x:hidden;}
+
+  /* ── KPIs: 1 coluna estilo Base44 ── */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .kpi-card{padding:14px 16px;border-radius:14px;}
+  .kpi-value{font-size:24px;letter-spacing:-0.5px;}
+  .kpi-label{font-size:10px;letter-spacing:1.2px;margin-bottom:6px;}
+  .kpi-icon{font-size:16px;top:12px;right:12px;}
+  .kpi-delta{font-size:11px;}
+
+  /* ── Page header ── */
+  .page-title{font-size:20px;font-weight:700;}
   .page-sub{font-size:12px;}
-  /* Header actions: coluna, cada item 100% */
-  .header-actions{display:flex;flex-direction:column;gap:8px;width:100%;}
+  .page-header{flex-direction:column;align-items:stretch;gap:12px;margin-bottom:16px;}
+
+  /* ── Header actions: coluna limpa ── */
+  .header-actions{display:flex;flex-direction:column;gap:10px;width:100%;}
   .header-actions > *{width:100%;box-sizing:border-box;}
-  /* Tabs ocupam largura toda */
-  .tab-group{width:100%;display:flex;}
-  .tab-btn{flex:1;text-align:center;padding:10px 2px;font-size:12px;}
-  /* Dropdowns e selects */
-  .filter-select{width:100%;box-sizing:border-box;}
+
+  /* ── Tabs estilo Base44 ── */
+  .tab-group{width:100%;display:flex;border-radius:12px;}
+  .tab-btn{flex:1;text-align:center;padding:11px 4px;font-size:13px;font-weight:600;}
+
+  /* ── Selects e dropdowns ── */
+  .filter-select{width:100%;box-sizing:border-box;padding:10px 14px;border-radius:10px;font-size:13px;}
   #op-dropdown-wrap{width:100%;}
-  #op-dropdown-btn{width:100%;box-sizing:border-box;}
+  #op-dropdown-btn{width:100%;box-sizing:border-box;padding:10px 14px;border-radius:10px;font-size:13px;}
   #op-dropdown-menu{width:100%;left:0;right:0;box-sizing:border-box;}
-  #dash-date-range{flex-direction:column;width:100%;gap:6px;}
+  #dash-date-range{flex-direction:column;width:100%;gap:8px;}
   #dash-date-range input{width:100%!important;box-sizing:border-box;}
-  /* Filtros abastecimentos: grid 2 colunas */
-  .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+
+  /* ── Filtros abastecimentos ── */
+  .filters{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
   .filters .filter-sep{display:none;}
   .filters .filter-label{display:none;}
-  .filters .filter-select,.filters .filter-input{width:100%;box-sizing:border-box;}
-  .filters .btn{grid-column:1/-1;}
-  /* Charts */
-  .chart-card{padding:14px;margin-bottom:12px;}
-  .chart-title{font-size:13px;margin-bottom:10px;}
-  /* Comparativo */
+  .filters .filter-select,.filters .filter-input{width:100%;box-sizing:border-box;padding:10px 14px;border-radius:10px;font-size:13px;}
+  .filters .btn{width:100%;justify-content:center;}
+
+  /* ── Charts ── */
+  .chart-card{padding:16px;margin-bottom:12px;border-radius:14px;}
+  .chart-title{font-size:14px;font-weight:600;margin-bottom:12px;}
+  #op-chart-container{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  #bar-chart-container{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* ── Comparativo ── */
   .comp-grid{grid-template-columns:1fr;}
-  .comp-maq-table{overflow:hidden;}
-  .comp-maq-table > div:last-child{overflow-x:auto;}
-  /* Tabelas */
-  .table-card{border-radius:10px;overflow:hidden;}
-  .table-toolbar{flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px;}
-  table{font-size:11px;width:100%;}
-  th{padding:7px 6px;font-size:9px;}
-  td{padding:7px 6px;}
-  /* Modal sobe de baixo */
+  .comp-card{border-radius:12px;padding:14px;}
+  .comp-maq-table{border-radius:12px;overflow:hidden;}
+  .comp-maq-table > div:last-child,.comp-maq-table > div > div{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  #comp-periodo-checkboxes{display:flex;flex-wrap:wrap;gap:6px;}
+
+  /* ── Tabelas ── */
+  .table-card{border-radius:12px;overflow:hidden;}
+  .table-toolbar{flex-direction:column;align-items:flex-start;gap:8px;padding:12px 14px;}
+  table{font-size:11px;}
+  th{padding:8px 8px;font-size:9px;letter-spacing:.6px;}
+  td{padding:9px 8px;}
+
+  /* ── Modal sobe de baixo ── */
   .modal-overlay{align-items:flex-end;}
-  .modal{width:100%;max-width:100%;border-radius:20px 20px 0 0;padding:24px 18px;margin:0;max-height:90vh;}
-  .form-row{grid-template-columns:1fr;}
-  /* Máquinas */
+  .modal{width:100%;max-width:100%;border-radius:22px 22px 0 0;padding:24px 18px;margin:0;max-height:92vh;}
+  .form-row{grid-template-columns:1fr;gap:12px;}
+  .form-input{padding:11px 14px;border-radius:10px;font-size:14px;}
+
+  /* ── Máquinas ── */
   .machines-grid{grid-template-columns:1fr;}
-  /* Botões */
-  .btn{font-size:12px;padding:8px 12px;}
-  .btn-sm{font-size:11px;padding:6px 10px;}
-  /* Config */
-  .sheets-config{padding:14px;}
-  /* Período selector no comparativo */
-  #comp-periodo-checkboxes{gap:6px;}
+  .machine-card{border-radius:14px;padding:18px;}
+
+  /* ── Botões ── */
+  .btn{font-size:13px;padding:10px 16px;border-radius:10px;}
+  .btn-sm{font-size:12px;padding:7px 12px;}
+
+  /* ── Config ── */
+  .sheets-config{padding:16px;border-radius:12px;}
+  .sheets-url-input{font-size:12px;}
 }
 .page{display:none;}
 .page.active{display:block;animation:fadeIn .3s ease;}
