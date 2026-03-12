@@ -84,62 +84,58 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .mob-nav-item .mob-icon{font-size:20px;line-height:1;}
 /* ── RESPONSIVE ── */
 @media(max-width:768px){
+  /* Topbar e sidebar */
   .mob-topbar{display:flex;}
   .mob-bottom-nav{display:block;}
   .sidebar{transform:translateX(-100%);transition:transform .3s ease;z-index:150;}
   .sidebar.open{transform:translateX(0);}
-  .main{margin-left:0;padding:68px 12px 76px;}
-  /* KPIs: 2 colunas compactas */
-  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+  /* Layout geral */
+  .main{margin-left:0;padding:66px 12px 74px;overflow-x:hidden;}
+  /* KPIs 2x2 */
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
   .kpi-card{padding:12px 14px;}
-  .kpi-value{font-size:22px;}
-  .kpi-label{font-size:10px;margin-bottom:6px;}
-  .kpi-icon{font-size:16px;top:10px;right:10px;}
-  /* Page header */
+  .kpi-value{font-size:20px;}
+  .kpi-label{font-size:10px;margin-bottom:5px;}
+  .kpi-icon{font-size:15px;top:10px;right:10px;}
+  /* Page header: título em cima, ações embaixo */
+  .page-header{flex-direction:column;align-items:stretch;gap:10px;margin-bottom:14px;}
   .page-title{font-size:18px;}
   .page-sub{font-size:12px;}
-  .page-header{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:14px;}
-  /* Filtros do dashboard em coluna */
-  .header-actions{width:100%;display:flex;flex-direction:column;gap:8px;}
-  .header-actions .tab-group{width:100%;display:flex;}
-  .header-actions .tab-btn{flex:1;text-align:center;padding:10px 4px;font-size:13px;}
-  .header-actions .filter-select{width:100%;box-sizing:border-box;}
+  /* Header actions: coluna, cada item 100% */
+  .header-actions{display:flex;flex-direction:column;gap:8px;width:100%;}
+  .header-actions > *{width:100%;box-sizing:border-box;}
+  /* Tabs ocupam largura toda */
+  .tab-group{width:100%;display:flex;}
+  .tab-btn{flex:1;text-align:center;padding:10px 2px;font-size:12px;}
+  /* Dropdowns e selects */
+  .filter-select{width:100%;box-sizing:border-box;}
   #op-dropdown-wrap{width:100%;}
   #op-dropdown-btn{width:100%;box-sizing:border-box;}
-  #op-dropdown-menu{width:100%;left:0;right:0;}
-  #dash-date-range{flex-wrap:wrap;width:100%;gap:6px;}
+  #op-dropdown-menu{width:100%;left:0;right:0;box-sizing:border-box;}
+  #dash-date-range{flex-direction:column;width:100%;gap:6px;}
   #dash-date-range input{width:100%!important;box-sizing:border-box;}
-  /* Filtros de outras páginas - grid 2 colunas */
-  .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;}
-  .filters .filter-label{grid-column:1/-1;margin-bottom:-4px;font-size:11px;}
+  /* Filtros abastecimentos: grid 2 colunas */
+  .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+  .filters .filter-sep{display:none;}
+  .filters .filter-label{display:none;}
   .filters .filter-select,.filters .filter-input{width:100%;box-sizing:border-box;}
-  .filters .btn{grid-column:1/-1;width:100%;justify-content:center;}
-  .filter-sep{display:none;}
-  /* Esconde labels inline dos filtros no mobile */
-  .filters > .filter-label{display:none;}
-  /* Filtros abast em grid 2x2 */
-  #page-abastecimentos .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  #page-abastecimentos .filters .btn{grid-column:1/-1;}
-  #page-abastecimentos .filters .filter-sep{display:none;}
-  /* Filtros maquinas */
-  #page-maquinas .header-actions{flex-direction:row;flex-wrap:wrap;}
-  #page-maquinas .header-actions .filter-select{flex:1;min-width:140px;}
+  .filters .btn{grid-column:1/-1;}
   /* Charts */
   .chart-card{padding:14px;margin-bottom:12px;}
   .chart-title{font-size:13px;margin-bottom:10px;}
-  /* Op chart: scroll horizontal */
-  #op-chart-container{overflow-x:auto;}
   /* Comparativo */
   .comp-grid{grid-template-columns:1fr;}
+  .comp-maq-table{overflow:hidden;}
+  .comp-maq-table > div:last-child{overflow-x:auto;}
   /* Tabelas */
-  .table-card{border-radius:10px;}
+  .table-card{border-radius:10px;overflow:hidden;}
   .table-toolbar{flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px;}
-  table{font-size:11px;}
-  th{padding:8px 8px;font-size:10px;}
-  td{padding:8px 8px;}
-  /* Modal */
+  table{font-size:11px;width:100%;}
+  th{padding:7px 6px;font-size:9px;}
+  td{padding:7px 6px;}
+  /* Modal sobe de baixo */
   .modal-overlay{align-items:flex-end;}
-  .modal{width:100%;max-width:100%;border-radius:20px 20px 0 0;padding:24px 18px;margin:0;}
+  .modal{width:100%;max-width:100%;border-radius:20px 20px 0 0;padding:24px 18px;margin:0;max-height:90vh;}
   .form-row{grid-template-columns:1fr;}
   /* Máquinas */
   .machines-grid{grid-template-columns:1fr;}
@@ -148,6 +144,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   .btn-sm{font-size:11px;padding:6px 10px;}
   /* Config */
   .sheets-config{padding:14px;}
+  /* Período selector no comparativo */
+  #comp-periodo-checkboxes{gap:6px;}
 }
 .page{display:none;}
 .page.active{display:block;animation:fadeIn .3s ease;}
