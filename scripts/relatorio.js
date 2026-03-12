@@ -118,11 +118,14 @@ async function gerarRelatorio() {
 
   // Configura Gmail SMTP
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.office365.com',
+    port: 587,
+    secure: false,
     auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_PASS,
+      user: process.env.OUTLOOK_USER,
+      pass: process.env.OUTLOOK_PASS,
     },
+    tls: { ciphers: 'SSLv3' },
   });
 
   const mes = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
@@ -143,7 +146,7 @@ async function gerarRelatorio() {
     const html = gerarHTML(grupo.nome, maqsDoGrupo, mes);
     try {
       await transporter.sendMail({
-        from: `FuelTracker Pro <${process.env.GMAIL_USER}>`,
+        from: `FuelTracker Pro <${process.env.OUTLOOK_USER}>`,
         to: grupo.destinatarios.join(', '),
         subject: `⚠️ FuelTracker — Alerta de Eficiência ${grupo.nome} · ${mes}`,
         html,
