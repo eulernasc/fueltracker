@@ -289,11 +289,16 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
   <!-- COMPARATIVO -->
   <div id="page-comparativo" class="page">
     <div class="page-header">
-      <div><div class="page-title">Comparativo Semanal</div><div class="page-sub">Compare o consumo entre semanas</div></div>
+      <div class="page-header-title"><div class="page-title">Comparativo de Períodos</div><div class="page-sub">Selecione os períodos para comparar</div></div>
       <div class="header-actions">
         <select class="filter-select" id="comp-op-filter" onchange="renderComparativo()"><option value="">Todas as Operações</option></select>
-        <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar Semana</button>
+        <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar Período</button>
       </div>
+    </div>
+    <!-- Seletor de períodos -->
+    <div id="comp-periodo-selector" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Selecione até 5 períodos para comparar:</div>
+      <div id="comp-periodo-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px"></div>
     </div>
     <div id="comparativo-content"></div>
   </div>
@@ -460,7 +465,10 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="form-group"><label class="form-label">Tipo</label><input type="text" class="form-input" id="maq-tipo" placeholder="Escavadeira"></div>
       <div class="form-group"><label class="form-label">Operação</label><input type="text" class="form-input" id="maq-operacao" placeholder="CENIBRA_NOVA_ERA"></div>
     </div>
-    <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="maq-status"><option value="Ativa">Ativa</option><option value="Manutenção">Manutenção</option><option value="Inativa">Inativa</option></select></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Status</label><select class="form-input" id="maq-status"><option value="Ativa">Ativa</option><option value="Manutenção">Manutenção</option><option value="Inativa">Inativa</option></select></div>
+      <div class="form-group"><label class="form-label">Meta L/h (ideal)</label><input type="number" class="form-input" id="maq-meta" placeholder="ex: 12.00" step="0.1"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-maquina')">Cancelar</button>
       <button class="btn btn-primary" onclick="verificarSenha(salvarMaquina)">Salvar</button>
@@ -470,18 +478,16 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 
 <!-- MODAL IMPORTAR -->
 <div class="modal-overlay" id="modal-import">
-  <div class="modal">
-    <div class="modal-title">Importar Relatório Semanal</div>
-    <div style="margin-bottom:16px">
-      <div class="form-label" style="margin-bottom:10px">Selecione a semana:</div>
-      <div class="semana-select-group">
-        <div class="semana-opt selected" onclick="selectSemana(1)" id="sopt-1"><div class="semana-opt-num">S1</div><div class="semana-opt-label" id="sopt-label-1">vazia</div></div>
-        <div class="semana-opt" onclick="selectSemana(2)" id="sopt-2"><div class="semana-opt-num">S2</div><div class="semana-opt-label" id="sopt-label-2">vazia</div></div>
-        <div class="semana-opt" onclick="selectSemana(3)" id="sopt-3"><div class="semana-opt-num">S3</div><div class="semana-opt-label" id="sopt-label-3">vazia</div></div>
-        <div class="semana-opt" onclick="selectSemana(4)" id="sopt-4"><div class="semana-opt-num">S4</div><div class="semana-opt-label" id="sopt-label-4">vazia</div></div>
-        <div class="semana-opt" onclick="selectSemana(5)" id="sopt-5"><div class="semana-opt-num">S5</div><div class="semana-opt-label" id="sopt-label-5">vazia</div></div>
-      </div>
+  <div class="modal" style="width:540px">
+    <div class="modal-title">⬆️ Importar Relatório</div>
+
+    <!-- Nome do período -->
+    <div class="form-group">
+      <label class="form-label">Nome do Período</label>
+      <input type="text" class="form-input" id="import-periodo-nome" placeholder="ex: Semana 10 · Mar/2026">
+      <div style="font-size:11px;color:var(--text2);margin-top:5px">Dê um nome que identifique este relatório no histórico.</div>
     </div>
+
     <div class="import-area" onclick="document.getElementById('file-input').click()">
       <div class="import-icon">📂</div>
       <div class="import-text">Clique para selecionar o arquivo</div>
@@ -489,8 +495,14 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     </div>
     <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="importarRelatorio(this)">
     <div id="import-preview"></div>
+
+    <!-- Histórico de períodos -->
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">📋 Histórico de Períodos</div>
+      <div id="historico-periodos" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto"></div>
+    </div>
+
     <div class="modal-actions">
-      <button class="btn btn-danger" onclick="verificarSenha(limparSemana)">🗑️ Limpar Semana</button>
       <button class="btn btn-secondary" onclick="closeModal('modal-import')">Fechar</button>
     </div>
   </div>
@@ -538,7 +550,7 @@ function doPost(e) {
 `;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', semanaImport:1, sheetsUrl:'' };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'' };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -727,35 +739,112 @@ function renderRanking(list) {
   if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div>';return;}
   const byMaq={};
   list.forEach(a=>{if(!byMaq[a.placa])byMaq[a.placa]={litros:0,horas:0};byMaq[a.placa].litros+=a.litros||0;byMaq[a.placa].horas+=a.horas||0;});
-  const sorted=Object.entries(byMaq).map(([p,d])=>({placa:p,litros:d.litros,media:d.horas>0?d.litros/d.horas:0})).sort((a,b)=>b.media-a.media);
-  c.innerHTML='<div class="ranking-list">'+sorted.slice(0,6).map((item,i)=>`
-    <div class="ranking-item"><div class="rank-num">${i+1}</div>
-    <div><div class="rank-placa">${item.placa}</div><div class="rank-litros">${item.litros.toFixed(0)}L total</div></div>
-    <div class="rank-value">${item.media.toFixed(2)} L/h</div>
-    <div style="font-size:14px;color:${item.media>10?'var(--green)':'var(--red)'}">${item.media>10?'↗':'↘'}</div>
-    </div>`).join('')+'</div>';
+  const sorted=Object.entries(byMaq).map(([p,d])=>{
+    const media=d.horas>0?d.litros/d.horas:0;
+    const maq=getMaquina(p);
+    const meta=maq?.meta||0;
+    const desvio=meta>0?((media-meta)/meta*100):null;
+    return {placa:p,litros:d.litros,media,meta,desvio};
+  }).sort((a,b)=>{
+    // Ordenar por desvio acima da meta (pior primeiro), sem meta vai pelo absoluto
+    const da=a.desvio!==null?a.desvio:a.media;
+    const db=b.desvio!==null?b.desvio:b.media;
+    return db-da;
+  });
+  c.innerHTML='<div class="ranking-list">'+sorted.slice(0,8).map((item,i)=>{
+    let alertColor, alertIcon, alertLabel, barColor;
+    if(item.desvio===null){
+      // Sem meta cadastrada — usa lógica antiga
+      alertColor='var(--text3)'; alertIcon='—'; alertLabel=''; barColor='var(--accent)';
+    } else if(item.desvio<=0){
+      alertColor='var(--green)'; alertIcon='✓'; alertLabel='Dentro da meta'; barColor='var(--green)';
+    } else if(item.desvio<=10){
+      alertColor='var(--yellow)'; alertIcon='⚠'; alertLabel=`+${item.desvio.toFixed(1)}% acima`; barColor='var(--yellow)';
+    } else {
+      alertColor='var(--red)'; alertIcon='🔴'; alertLabel=`+${item.desvio.toFixed(1)}% acima`; barColor='var(--red)';
+    }
+    const barW=item.meta>0?Math.min(Math.max((item.media/item.meta)*60,8),100):0;
+    return `<div class="ranking-item" style="flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="rank-num">${i+1}</div>
+        <div style="flex:1">
+          <div class="rank-placa">${item.placa}</div>
+          <div class="rank-litros">${item.litros.toFixed(0)}L total${item.meta>0?' · meta: '+item.meta.toFixed(1)+' L/h':''}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="rank-value" style="color:${alertColor}">${item.media.toFixed(2)} L/h</div>
+          ${alertLabel?`<div style="font-size:10px;color:${alertColor};font-weight:600">${alertIcon} ${alertLabel}</div>`:`<div style="font-size:10px;color:var(--text3)">sem meta</div>`}
+        </div>
+      </div>
+      ${item.meta>0?`<div style="height:4px;background:var(--bg);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${barW}%;background:${barColor};border-radius:2px;transition:width .4s"></div>
+      </div>`:''}
+    </div>`;
+  }).join('')+'</div>';
 }
 
 // ── COMPARATIVO ───────────────────────────────────────────────────────────────
+let _periodosSelec = new Set();
+
 function renderComparativo() {
   updateFilters();
-  const opF=document.getElementById('comp-op-filter')?.value||'';
-  const semanas=Object.keys(state.semanas).map(Number).sort();
-  const c=document.getElementById('comparativo-content');
-  if(!semanas.length){c.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Nenhuma semana importada</div><div class="empty-sub">Importe pelo menos uma semana</div></div>';return;}
-  const dadosSemana={};
-  semanas.forEach(s=>{
-    let rows=state.semanas[s]||[];
-    if(opF) rows=rows.filter(r=>r.operacao===opF);
-    const tL=rows.reduce((a,r)=>a+(r.litros||0),0),tH=rows.reduce((a,r)=>a+(r.horas||0),0);
-    dadosSemana[s]={rows,totalL:tL,totalH:tH,media:tH>0?tL/tH:0,maquinas:new Set(rows.map(r=>r.placa)).size};
+  const opF = document.getElementById('comp-op-filter')?.value||'';
+  const c = document.getElementById('comparativo-content');
+  const selectorDiv = document.getElementById('comp-periodo-selector');
+  const checkboxDiv = document.getElementById('comp-periodo-checkboxes');
+
+  // Todos os períodos ordenados por data de importação
+  const todosPeriodos = Object.entries(state.semanas)
+    .sort((a,b) => (a[1].importedAt||'').localeCompare(b[1].importedAt||''));
+
+  if(!todosPeriodos.length) {
+    selectorDiv.style.display='none';
+    c.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Nenhum período importado</div><div class="empty-sub">Importe pelo menos um relatório para começar</div></div>';
+    return;
+  }
+
+  // Mostrar seletor de períodos
+  selectorDiv.style.display='block';
+
+  // Inicializar seleção com os 2 mais recentes se vazia
+  if(_periodosSelec.size===0) {
+    todosPeriodos.slice(-2).forEach(([id])=>_periodosSelec.add(id));
+  }
+
+  // Renderizar checkboxes
+  checkboxDiv.innerHTML = todosPeriodos.map(([id, p])=>`
+    <label style="display:inline-flex;align-items:center;gap:7px;padding:7px 12px;background:${_periodosSelec.has(id)?'rgba(79,142,247,.15)':'var(--bg3)'};border:1px solid ${_periodosSelec.has(id)?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;transition:.2s">
+      <input type="checkbox" style="accent-color:var(--accent)" ${_periodosSelec.has(id)?'checked':''} onchange="togglePeriodoComp('${id}',this)">
+      ${p.label||id}
+      <span style="color:var(--text3);font-size:10px">${(p.registros||[]).length} maq.</span>
+    </label>`).join('');
+
+  // Períodos selecionados para comparar
+  const selecionados = todosPeriodos.filter(([id])=>_periodosSelec.has(id));
+
+  if(!selecionados.length) {
+    c.innerHTML='<div class="empty"><div class="empty-icon">☝️</div><div class="empty-text">Selecione períodos acima para comparar</div></div>';
+    return;
+  }
+
+  // Calcular dados por período
+  const dadosPeriodo={};
+  selecionados.forEach(([id, p])=>{
+    let rows = (p.registros||[]);
+    if(opF) rows = rows.filter(r=>r.operacao===opF);
+    const tL=rows.reduce((a,r)=>a+(r.litros||0),0), tH=rows.reduce((a,r)=>a+(r.horas||0),0);
+    dadosPeriodo[id]={label:p.label||id, rows, totalL:tL, totalH:tH, media:tH>0?tL/tH:0, maquinas:new Set(rows.map(r=>r.placa)).size};
   });
-  let html='<div class="comp-grid">';
-  semanas.forEach(s=>{
-    const d=dadosSemana[s],prev=dadosSemana[s-1];
-    const dL=prev?((d.totalL-prev.totalL)/prev.totalL*100):null;
-    const dM=prev?((d.media-prev.media)/prev.media*100):null;
-    html+=`<div class="comp-card"><div class="comp-card-title">Semana ${s}</div>
+
+  // Cards de resumo
+  let html='<div class="comp-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">';
+  selecionados.forEach(([id],i)=>{
+    const d=dadosPeriodo[id];
+    const prev=i>0?dadosPeriodo[selecionados[i-1][0]]:null;
+    const dL=prev&&prev.totalL>0?((d.totalL-prev.totalL)/prev.totalL*100):null;
+    const dM=prev&&prev.media>0?((d.media-prev.media)/prev.media*100):null;
+    html+=`<div class="comp-card">
+      <div class="comp-card-title">${d.label}</div>
       <div class="comp-row"><span class="comp-semana">Litros</span><span class="comp-val">${d.totalL.toFixed(0)}L</span>${dL!==null?`<span class="comp-diff ${dL>0?'down':'up'}">${dL>0?'▲':'▼'}${Math.abs(dL).toFixed(1)}%</span>`:''}</div>
       <div class="comp-row"><span class="comp-semana">Média L/h</span><span class="comp-val">${d.media.toFixed(2)}</span>${dM!==null?`<span class="comp-diff ${dM>=0?'up':'down'}">${dM>=0?'▲':'▼'}${Math.abs(dM).toFixed(1)}%</span>`:''}</div>
       <div class="comp-row"><span class="comp-semana">Máquinas</span><span class="comp-val">${d.maquinas}</span></div>
@@ -764,54 +853,66 @@ function renderComparativo() {
   });
   html+='</div>';
 
-  // ── RESUMO POR OPERAÇÃO ──
-  const todasOps=[...new Set(semanas.flatMap(s=>(state.semanas[s]||[]).map(r=>(r.operacao||'').replace(/_/g,' ')).filter(Boolean)))].sort();
-  if(todasOps.length>0 && !opF) {
+  // Tabela por Operação
+  const todasOps=[...new Set(selecionados.flatMap(([id])=>dadosPeriodo[id].rows.map(r=>(r.operacao||'').replace(/_/g,' ')).filter(Boolean)))].sort();
+  if(todasOps.length>0 && !opF){
     html+=`<div class="comp-maq-table" style="margin-bottom:16px">
       <div class="comp-maq-header"><span>📍 Consumo por Operação</span><span class="comp-badge">${todasOps.length} operações</span></div>
-      <table><thead><tr><th>Operação</th>${semanas.map(s=>`<th>S${s} — L</th><th>S${s} — L/h</th><th>S${s} — Maq.</th>`).join('')}${semanas.length>1?'<th>Variação L/h</th>':''}</tr></thead><tbody>`;
+      <div style="overflow-x:auto"><table><thead><tr><th>Operação</th>${selecionados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>L/h</th><th>Maq.</th>`).join('')}${selecionados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
     todasOps.forEach(op=>{
-      const vals=semanas.map(s=>{
-        const rows=(state.semanas[s]||[]).filter(r=>(r.operacao||'').replace(/_/g,' ')===op);
-        const l=rows.reduce((a,r)=>a+(r.litros||0),0);
-        const h=rows.reduce((a,r)=>a+(r.horas||0),0);
-        const m=h>0?l/h:0;
-        return{l,h,m,maq:new Set(rows.map(r=>r.placa)).size};
+      const vals=selecionados.map(([id])=>{
+        const rows=dadosPeriodo[id].rows.filter(r=>(r.operacao||'').replace(/_/g,' ')===op);
+        const l=rows.reduce((a,r)=>a+(r.litros||0),0),h=rows.reduce((a,r)=>a+(r.horas||0),0);
+        return{l,h,m:h>0?l/h:0,maq:new Set(rows.map(r=>r.placa)).size};
       });
       html+=`<tr><td style="font-weight:600">${op}</td>`;
       vals.forEach(v=>{
         html+=`<td>${v.l>0?v.l.toFixed(0)+'L':'—'}</td>`;
         const cls=v.m>=12?'badge-green':v.m>=9?'badge-blue':v.m>0?'badge-red':'';
         html+=`<td>${v.m>0?`<span class="badge ${cls}">${v.m.toFixed(2)}</span>`:'—'}</td>`;
-        html+=`<td style="color:var(--text2)">${v.maq>0?v.maq:'—'}</td>`;
+        html+=`<td style="color:var(--text2)">${v.maq||'—'}</td>`;
       });
-      if(semanas.length>1){
-        const f=vals[0],l=vals[vals.length-1];
-        if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}
-        else html+='<td>—</td>';
-      }
+      if(selecionados.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
       html+='</tr>';
     });
-    html+='</tbody></table></div>';
+    html+='</tbody></table></div></div>';
   }
 
-  const todasPlacas=[...new Set(semanas.flatMap(s=>(state.semanas[s]||[]).filter(r=>!opF||r.operacao===opF).map(r=>r.placa)))].sort();
-  html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>Consumo por Máquina</span><span class="comp-badge">${todasPlacas.length} máquinas</span></div>
-  <table><thead><tr><th>Máquina</th><th>Operação</th>${semanas.map(s=>`<th>S${s} — L</th><th>S${s} — L/h</th>`).join('')}${semanas.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
+  // Tabela por Máquina
+  const todasPlacas=[...new Set(selecionados.flatMap(([id])=>dadosPeriodo[id].rows.filter(r=>!opF||r.operacao===opF).map(r=>r.placa)))].sort();
+  html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>🚜 Consumo por Máquina</span><span class="comp-badge">${todasPlacas.length} máquinas</span></div>
+  <div style="overflow-x:auto"><table><thead><tr><th>Máquina</th><th>Operação</th>${selecionados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>L/h</th>`).join('')}${selecionados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
   todasPlacas.forEach(placa=>{
     let op='';
-    const vals=semanas.map(s=>{const row=(state.semanas[s]||[]).find(r=>r.placa===placa);if(row)op=row.operacao||'';const l=row?.litros||0,h=row?.horas||0,m=h>0?l/h:0;return{l,h,m};});
+    const vals=selecionados.map(([id])=>{
+      const row=dadosPeriodo[id].rows.find(r=>r.placa===placa);
+      if(row) op=row.operacao||'';
+      return{l:row?.litros||0,h:row?.horas||0,m:row&&row.horas>0?row.litros/row.horas:0};
+    });
     html+=`<tr><td><span class="placa-tag">${placa}</span></td><td style="font-size:11px;color:var(--text2)">${op.replace(/_/g,' ')}</td>`;
     vals.forEach(v=>{
       html+=`<td>${v.l>0?v.l.toFixed(0)+'L':'—'}</td>`;
-      const cls=v.m>=10?'badge-green':v.m>=7?'badge-blue':v.m>0?'badge-red':'';
+      const maq=getMaquina(placa);
+      const meta=maq?.meta||0;
+      const desvio=meta>0&&v.m>0?((v.m-meta)/meta*100):null;
+      const cls=desvio===null?(v.m>=10?'badge-green':v.m>0?'badge-red':''):(desvio<=0?'badge-green':desvio<=10?'badge-yellow':'badge-red');
       html+=`<td>${v.m>0?`<span class="badge ${cls}">${v.m.toFixed(2)}</span>`:'—'}</td>`;
     });
-    if(semanas.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
+    if(selecionados.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
     html+='</tr>';
   });
-  html+='</tbody></table></div>';
+  html+='</tbody></table></div></div>';
   c.innerHTML=html;
+}
+
+function togglePeriodoComp(id, checkbox) {
+  if(checkbox.checked) {
+    if(_periodosSelec.size>=5){checkbox.checked=false;showToast('Máximo 5 períodos por vez','error');return;}
+    _periodosSelec.add(id);
+  } else {
+    _periodosSelec.delete(id);
+  }
+  renderComparativo();
 }
 
 // ── ABASTECIMENTOS ────────────────────────────────────────────────────────────
@@ -960,33 +1061,49 @@ function openNovoAbast() {
 function openNovaMaquina() { document.getElementById('modal-maquina').classList.add('open'); }
 
 function openImport() {
-  for(let i=1;i<=5;i++){
-    const el=document.getElementById(`sopt-${i}`);
-    const label=document.getElementById(`sopt-label-${i}`);
-    const hasData=state.semanas[i]&&state.semanas[i].length>0;
-    el.classList.toggle('has-data',hasData);
-    label.textContent=hasData?`${state.semanas[i].length} maq.`:'vazia';
-  }
-  selectSemana(state.semanaImport||1);
-  document.getElementById('import-preview').innerHTML='';
+  // Sugerir nome baseado na semana atual
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const weekNum = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+  const mes = now.toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
+  document.getElementById('import-periodo-nome').value = `Semana ${weekNum} · ${mes.charAt(0).toUpperCase()+mes.slice(1)}`;
+  document.getElementById('import-preview').innerHTML = '';
+  renderHistoricoPeriodos();
   document.getElementById('modal-import').classList.add('open');
 }
+
+function renderHistoricoPeriodos() {
+  const c = document.getElementById('historico-periodos');
+  const periodos = Object.entries(state.semanas).sort((a,b) => (b[1].importedAt||'').localeCompare(a[1].importedAt||''));
+  if(!periodos.length){
+    c.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:16px">Nenhum período importado ainda</div>';
+    return;
+  }
+  c.innerHTML = periodos.map(([id, p])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${p.label||id}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${(p.registros||[]).length} máquinas · importado em ${p.importedAt||'—'}</div>
+      </div>
+      <button class="btn-icon del" onclick="verificarSenha(()=>limparPeriodo('${id}'))" title="Apagar período">🗑️</button>
+    </div>`).join('');
+}
+
+function limparPeriodo(id) {
+  const p = state.semanas[id];
+  if(!p) return;
+  if(!confirm(`Apagar o período "${p.label||id}"? Os abastecimentos deste período também serão removidos.`)) return;
+  const registros = p.registros || [];
+  const chaves = new Set(registros.map(r=>`${r.placa}|${r.data}|${r.litros}|${r.horas}`));
+  state.abastecimentos = state.abastecimentos.filter(a => !chaves.has(`${a.placa}|${a.data}|${a.litros}|${a.horas}`));
+  delete state.semanas[id];
+  saveState();
+  renderHistoricoPeriodos();
+  showToast(`Período "${p.label||id}" apagado!`, 'success');
+}
+
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});});
-
-function selectSemana(n) {
-  state.semanaImport=n;
-  document.querySelectorAll('.semana-opt').forEach(el=>el.classList.remove('selected'));
-  document.getElementById(`sopt-${n}`).classList.add('selected');
-}
-
-function limparSemana() {
-  const s=state.semanaImport;
-  if(!confirm(`Limpar Semana ${s}?`)) return;
-  delete state.semanas[s];
-  saveState(); openImport();
-  showToast(`Semana ${s} limpa!`,'success');
-}
 
 function salvarAbastecimento() {
   const placa=document.getElementById('abast-placa').value;
@@ -1014,9 +1131,10 @@ function salvarMaquina() {
   const tipo=document.getElementById('maq-tipo').value.trim();
   const operacao=document.getElementById('maq-operacao').value.trim();
   const status=document.getElementById('maq-status').value;
+  const meta=parseFloat(document.getElementById('maq-meta').value)||0;
   if(!placa){showToast('Informe a placa','error');return;}
   if(state.maquinas.find(m=>m.placa===placa)){showToast('Placa já cadastrada','error');return;}
-  state.maquinas.push({placa,modelo,tipo,operacao,status});
+  state.maquinas.push({placa,modelo,tipo,operacao,status,meta});
   saveState(); closeModal('modal-maquina'); renderMaquinas(); updateFilters();
   showToast(`Máquina ${placa} cadastrada!`,'success');
 }
@@ -1024,7 +1142,9 @@ function salvarMaquina() {
 // ── IMPORTAR ──────────────────────────────────────────────────────────────────
 function importarRelatorio(input) {
   const file=input.files[0]; if(!file) return;
-  const numSemana=state.semanaImport||1;
+  const nomePeriodo = document.getElementById('import-periodo-nome').value.trim() || `Importação ${new Date().toLocaleDateString('pt-BR')}`;
+  // Gerar ID único baseado no nome (slug simples)
+  const periodoId = nomePeriodo.toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').substring(0,40) + '_' + Date.now();
   const reader=new FileReader();
   reader.onload=function(e){
     try {
@@ -1032,7 +1152,17 @@ function importarRelatorio(input) {
       const ws=wb.Sheets[wb.SheetNames[0]];
       const data=XLSX.utils.sheet_to_json(ws,{defval:''});
       const rows=data.filter(r=>r['Operação']||r['Placa']||r['placa']);
-      let novaMaq=0,dadosSemana=[];
+
+      // Remove registros antigos se já existe período com mesmo nome (reimportação)
+      const periodoExistente = Object.entries(state.semanas).find(([,p])=>p.label===nomePeriodo);
+      if(periodoExistente) {
+        const registrosAntigos = periodoExistente[1].registros || [];
+        const chavesAntigas = new Set(registrosAntigos.map(r=>`${r.placa}|${r.data}|${r.litros}|${r.horas}`));
+        state.abastecimentos = state.abastecimentos.filter(a => !chavesAntigas.has(`${a.placa}|${a.data}|${a.litros}|${a.horas}`));
+        delete state.semanas[periodoExistente[0]];
+      }
+
+      let novaMaq=0,metaAtualizada=0,dadosSemana=[];
       rows.forEach(row=>{
         const placa=String(row['Placa']||row['placa']||'').trim().toUpperCase();
         const operacao=String(row['Operação']||row['operacao']||'').trim();
@@ -1040,28 +1170,42 @@ function importarRelatorio(input) {
         const tipo=String(row['Tipo']||row['tipo']||'').trim();
         const kmReal=parseFloat(row['Km Real']||row['km_real']||0);
         const volReal=parseFloat(row['Vol. Real']||row['vol_real']||0);
+        const mediaIdeal=parseFloat(row['Média Ideal']||row['Media Ideal']||row['média ideal']||row['media_ideal']||0);
         if(!placa||!placa.match(/[A-Z]{2,}/)) return;
-        if(!state.maquinas.find(m=>m.placa===placa)){state.maquinas.push({placa,modelo,tipo,operacao,status:'Ativa'});novaMaq++;}
+        const maqExistente=state.maquinas.find(m=>m.placa===placa);
+        if(!maqExistente){
+          state.maquinas.push({placa,modelo,tipo,operacao,status:'Ativa',meta:mediaIdeal||0});
+          novaMaq++;
+        } else if(mediaIdeal>0 && maqExistente.meta!==mediaIdeal) {
+          maqExistente.meta=mediaIdeal;
+          metaAtualizada++;
+        }
         if(volReal>0&&kmReal>0){
           const hoje=new Date().toISOString().split('T')[0];
-          const entry={placa,data:hoje,litros:volReal,horas:kmReal,operador:row['Gestor']||'',operacao,modelo,tipo};
+          const entry={placa,data:hoje,litros:volReal,horas:kmReal,operador:row['Gestor']||'',operacao,modelo,tipo,periodoId};
           dadosSemana.push(entry);
           state.abastecimentos.push(entry);
         }
       });
-      state.semanas[numSemana]=dadosSemana;
+
+      // Salvar período no novo formato
+      state.semanas[periodoId] = {
+        label: nomePeriodo,
+        registros: dadosSemana,
+        importedAt: new Date().toLocaleDateString('pt-BR')
+      };
+
       saveState();
-      const label=document.getElementById(`sopt-label-${numSemana}`);
-      if(label){label.textContent=`${dadosSemana.length} maq.`;document.getElementById(`sopt-${numSemana}`).classList.add('has-data');}
+      renderHistoricoPeriodos();
       document.getElementById('import-preview').innerHTML=`
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px;margin-top:12px">
-          <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">✅ Semana ${numSemana} importada!</div>
-          <div style="font-size:13px;color:var(--text2)">🚜 ${novaMaq} nova(s) máquina(s)</div>
-          <div style="font-size:13px;color:var(--text2);margin-top:4px">⛽ ${dadosSemana.length} registro(s)</div>
-          ${Object.keys(state.semanas).length>1?'<div style="font-size:12px;color:var(--accent);margin-top:8px">📊 Veja o Comparativo para ver a evolução!</div>':''}
+          <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">✅ "${nomePeriodo}" importado!</div>
+          <div style="font-size:13px;color:var(--text2)">🚜 ${novaMaq} nova(s) máquina(s) · ⛽ ${dadosSemana.length} registro(s)</div>
+          ${metaAtualizada>0?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">🎯 ${metaAtualizada} meta(s) L/h atualizada(s)</div>`:''}
+          <div style="font-size:12px;color:var(--accent);margin-top:8px">📊 Acesse o Comparativo para analisar os períodos!</div>
         </div>`;
       updateFilters(); renderDashboard();
-      showToast(`Semana ${numSemana}: ${dadosSemana.length} registros!`,'success');
+      showToast(`"${nomePeriodo}": ${dadosSemana.length} registros importados!`,'success');
     } catch(err){showToast('Erro: '+err.message,'error');}
     input.value='';
   };
@@ -1155,7 +1299,8 @@ function importarJSON(input) {
 function limparTodosDados() {
   if(!confirm('Tem certeza? Isso apagará TODOS os dados locais permanentemente!')) return;
   if(!confirm('Confirme novamente: apagar tudo?')) return;
-  state={maquinas:[],abastecimentos:[],semanas:{},tab:'semanal',semanaImport:1,sheetsUrl:state.sheetsUrl};
+  state={maquinas:[],abastecimentos:[],semanas:{},tab:'semanal',sheetsUrl:state.sheetsUrl};
+  _periodosSelec=new Set();
   saveState(); updateFilters(); renderDashboard();
   showToast('Todos os dados foram apagados','success');
 }
