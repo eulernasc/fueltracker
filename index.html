@@ -266,16 +266,22 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="kpi-card"><div class="kpi-label">Horas Trabalhadas</div><div class="kpi-icon">⏱️</div><div><span class="kpi-value" id="kpi-horas">0</span><span class="kpi-unit">h</span></div></div>
       <div class="kpi-card"><div class="kpi-label">Máquinas Ativas</div><div class="kpi-icon">🚜</div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
     </div>
-    <div class="charts-grid">
+    <!-- Consumo por Operação -->
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px">
       <div class="chart-card">
-        <div class="chart-title">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
-        <div id="bar-chart-container"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
-        <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
+        <div class="chart-title">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
+        <div id="op-chart-container"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
       </div>
       <div class="chart-card">
         <div class="chart-title">Ranking de Consumo (L/h)</div>
         <div id="ranking-list"><div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div></div>
       </div>
+    </div>
+    <!-- Consumo por Máquina (todas) -->
+    <div class="chart-card" style="margin-bottom:24px">
+      <div class="chart-title">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
+      <div id="bar-chart-container"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
+      <div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
     </div>
   </div>
 
@@ -645,7 +651,47 @@ function renderDashboard() {
   document.getElementById('kpi-horas').textContent=totalH.toFixed(0);
   document.getElementById('kpi-maquinas').textContent=maqAtivas;
   document.getElementById('kpi-maq-delta').textContent=`${state.maquinas.length} total`;
-  renderBarChart(list); renderRanking(list);
+  const lbl=state.tab==='semanal'?'Semanal':'Mensal';
+  if(document.getElementById('chart-period-label2')) document.getElementById('chart-period-label2').textContent=lbl;
+  renderOpChart(list); renderBarChart(list); renderRanking(list);
+}
+
+function renderOpChart(list) {
+  const c=document.getElementById('op-chart-container');
+  if(!c) return;
+  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div>';return;}
+  const byOp={};
+  list.forEach(a=>{
+    const op=(getMaquina(a.placa)?.operacao||a.operacao||'Sem Operação').replace(/_/g,' ');
+    if(!byOp[op])byOp[op]={litros:0,horas:0,maquinas:new Set()};
+    byOp[op].litros+=a.litros||0;
+    byOp[op].horas+=a.horas||0;
+    byOp[op].maquinas.add(a.placa);
+  });
+  const ops=Object.keys(byOp).sort();
+  const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
+  const H=160;
+  let html='<div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">';
+  ops.forEach(op=>{
+    const d=byOp[op];
+    const media=d.horas>0?d.litros/d.horas:0;
+    const pct=maxM>0?(media/maxM)*100:0;
+    const cls=media>=12?'var(--green)':media>=9?'var(--accent)':media>0?'var(--red)':'var(--text3)';
+    html+=`<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">${op}</span>
+        <div style="display:flex;gap:16px;align-items:center">
+          <span style="font-size:11px;color:var(--text2)">${d.litros.toFixed(0)}L · ${d.horas.toFixed(0)}h · ${d.maquinas.size} maq.</span>
+          <span style="font-size:15px;font-weight:700;color:${cls};font-family:'DM Mono',monospace">${media.toFixed(2)} L/h</span>
+        </div>
+      </div>
+      <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${cls};border-radius:4px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  c.innerHTML=html;
 }
 
 function renderBarChart(list) {
@@ -653,15 +699,16 @@ function renderBarChart(list) {
   if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div></div>';return;}
   const byMaq={};
   list.forEach(a=>{if(!byMaq[a.placa])byMaq[a.placa]={litros:0,horas:0};byMaq[a.placa].litros+=a.litros||0;byMaq[a.placa].horas+=a.horas||0;});
-  const pl=Object.keys(byMaq).sort().slice(0,8);
+  const pl=Object.keys(byMaq).sort(); // TODAS as máquinas, sem slice
   const maxL=Math.max(...pl.map(p=>byMaq[p].litros));
   const maxM=Math.max(...pl.map(p=>byMaq[p].horas>0?byMaq[p].litros/byMaq[p].horas:0));
   const H=160;
-  c.innerHTML='<div class="bar-chart">'+pl.map(p=>{
+  const barW=Math.max(16, Math.min(28, Math.floor(600/pl.length)-8));
+  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px"><div class="bar-chart" style="min-width:${pl.length*60}px">`+pl.map(p=>{
     const l=byMaq[p].litros,m=byMaq[p].horas>0?byMaq[p].litros/byMaq[p].horas:0;
     const hL=maxL>0?(l/maxL)*H:0,hM=maxM>0?(m/maxM)*H:0;
-    return `<div class="bar-group"><div class="bars"><div class="bar bar-litros" style="height:${Math.max(hL,2)}px" title="${l.toFixed(0)}L"></div><div class="bar bar-media" style="height:${Math.max(hM,2)}px" title="${m.toFixed(2)}L/h"></div></div><div class="bar-label">${p.replace('MAQ','').replace('TRA','T')}</div></div>`;
-  }).join('')+'</div>';
+    return `<div class="bar-group"><div class="bars"><div class="bar bar-litros" style="height:${Math.max(hL,2)}px;width:${barW}px" title="${l.toFixed(0)}L"></div><div class="bar bar-media" style="height:${Math.max(hM,2)}px;width:${barW}px" title="${m.toFixed(2)}L/h"></div></div><div class="bar-label">${p.replace('MAQ','').replace('TRA','T')}</div></div>`;
+  }).join('')+'</div></div>';
 }
 
 function renderRanking(list) {
@@ -705,6 +752,38 @@ function renderComparativo() {
     </div>`;
   });
   html+='</div>';
+
+  // ── RESUMO POR OPERAÇÃO ──
+  const todasOps=[...new Set(semanas.flatMap(s=>(state.semanas[s]||[]).map(r=>(r.operacao||'').replace(/_/g,' ')).filter(Boolean)))].sort();
+  if(todasOps.length>0 && !opF) {
+    html+=`<div class="comp-maq-table" style="margin-bottom:16px">
+      <div class="comp-maq-header"><span>📍 Consumo por Operação</span><span class="comp-badge">${todasOps.length} operações</span></div>
+      <table><thead><tr><th>Operação</th>${semanas.map(s=>`<th>S${s} — L</th><th>S${s} — L/h</th><th>S${s} — Maq.</th>`).join('')}${semanas.length>1?'<th>Variação L/h</th>':''}</tr></thead><tbody>`;
+    todasOps.forEach(op=>{
+      const vals=semanas.map(s=>{
+        const rows=(state.semanas[s]||[]).filter(r=>(r.operacao||'').replace(/_/g,' ')===op);
+        const l=rows.reduce((a,r)=>a+(r.litros||0),0);
+        const h=rows.reduce((a,r)=>a+(r.horas||0),0);
+        const m=h>0?l/h:0;
+        return{l,h,m,maq:new Set(rows.map(r=>r.placa)).size};
+      });
+      html+=`<tr><td style="font-weight:600">${op}</td>`;
+      vals.forEach(v=>{
+        html+=`<td>${v.l>0?v.l.toFixed(0)+'L':'—'}</td>`;
+        const cls=v.m>=12?'badge-green':v.m>=9?'badge-blue':v.m>0?'badge-red':'';
+        html+=`<td>${v.m>0?`<span class="badge ${cls}">${v.m.toFixed(2)}</span>`:'—'}</td>`;
+        html+=`<td style="color:var(--text2)">${v.maq>0?v.maq:'—'}</td>`;
+      });
+      if(semanas.length>1){
+        const f=vals[0],l=vals[vals.length-1];
+        if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}
+        else html+='<td>—</td>';
+      }
+      html+='</tr>';
+    });
+    html+='</tbody></table></div>';
+  }
+
   const todasPlacas=[...new Set(semanas.flatMap(s=>(state.semanas[s]||[]).filter(r=>!opF||r.operacao===opF).map(r=>r.placa)))].sort();
   html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>Consumo por Máquina</span><span class="comp-badge">${todasPlacas.length} máquinas</span></div>
   <table><thead><tr><th>Máquina</th><th>Operação</th>${semanas.map(s=>`<th>S${s} — L</th><th>S${s} — L/h</th>`).join('')}${semanas.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
