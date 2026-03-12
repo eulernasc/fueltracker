@@ -274,15 +274,15 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="kpi-card"><div class="kpi-label">Máquinas Ativas</div><div class="kpi-icon">🚜</div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
     </div>
     <!-- Consumo por Operação (linha 1, largura total) -->
-    <div class="chart-card" style="margin-bottom:16px;height:280px;display:flex;flex-direction:column;min-height:0">
+    <div class="chart-card" style="margin-bottom:16px;height:280px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
       <div class="chart-title" style="flex-shrink:0">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
       <div id="op-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
     </div>
     <!-- Consumo por Máquina + Ranking (linha 2) -->
     <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;margin-bottom:16px;align-items:start">
-      <div class="chart-card" style="height:280px;display:flex;flex-direction:column;min-width:0;min-height:0">
+      <div class="chart-card" style="height:280px;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden">
         <div class="chart-title" style="flex-shrink:0">Consumo por Máquina — <span id="chart-period-label">Semanal</span></div>
-        <div id="bar-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
+        <div id="bar-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;position:relative"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
         <div class="chart-legend" style="flex-shrink:0"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média L/h</div></div>
       </div>
       <div class="chart-card">
