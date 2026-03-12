@@ -770,12 +770,12 @@ function renderOpChart(list) {
     byOp[op].horas+=a.horas||0;
     byOp[op].maquinas.add(a.placa);
   });
+  const ops=Object.keys(byOp).sort();
   // Meta por operação = média das metas das máquinas da operação
   ops.forEach(op=>{
     const maqsDaOp=[...byOp[op].maquinas].map(p=>getMaquina(p)).filter(m=>m&&m.meta>0);
     byOp[op].meta=maqsDaOp.length>0?(maqsDaOp.reduce((s,m)=>s+m.meta,0)/maqsDaOp.length):0;
   });
-  const ops=Object.keys(byOp).sort();
   const maxL=Math.max(...ops.map(o=>byOp[o].litros));
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
   const H=120;
