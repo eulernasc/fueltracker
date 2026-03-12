@@ -49,7 +49,7 @@ window.dispatchEvent(new Event('firebaseReady'));
   --card-shadow:0 4px 24px rgba(0,0,0,0.4);--radius:14px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;overflow-x:hidden;}
 .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;}
 .logo{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
 .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
@@ -101,18 +101,29 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   .page-header{flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:14px;}
   /* Filtros do dashboard em coluna */
   .header-actions{width:100%;display:flex;flex-direction:column;gap:8px;}
-  .header-actions .tab-group{width:100%;}
-  .header-actions .tab-btn{flex:1;text-align:center;padding:9px 4px;font-size:13px;}
-  .header-actions .filter-select{width:100%;}
+  .header-actions .tab-group{width:100%;display:flex;}
+  .header-actions .tab-btn{flex:1;text-align:center;padding:10px 4px;font-size:13px;}
+  .header-actions .filter-select{width:100%;box-sizing:border-box;}
   #op-dropdown-wrap{width:100%;}
   #op-dropdown-btn{width:100%;box-sizing:border-box;}
-  #op-dropdown-menu{width:100%;}
-  #dash-date-range{flex-wrap:wrap;width:100%;}
-  #dash-date-range input{width:100%!important;}
-  /* Filtros de outras páginas */
-  .filters{flex-direction:column;gap:6px;align-items:flex-start;}
-  .filters .filter-select,.filters .filter-input{width:100%;max-width:100%;}
+  #op-dropdown-menu{width:100%;left:0;right:0;}
+  #dash-date-range{flex-wrap:wrap;width:100%;gap:6px;}
+  #dash-date-range input{width:100%!important;box-sizing:border-box;}
+  /* Filtros de outras páginas - grid 2 colunas */
+  .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;}
+  .filters .filter-label{grid-column:1/-1;margin-bottom:-4px;font-size:11px;}
+  .filters .filter-select,.filters .filter-input{width:100%;box-sizing:border-box;}
+  .filters .btn{grid-column:1/-1;width:100%;justify-content:center;}
   .filter-sep{display:none;}
+  /* Esconde labels inline dos filtros no mobile */
+  .filters > .filter-label{display:none;}
+  /* Filtros abast em grid 2x2 */
+  #page-abastecimentos .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  #page-abastecimentos .filters .btn{grid-column:1/-1;}
+  #page-abastecimentos .filters .filter-sep{display:none;}
+  /* Filtros maquinas */
+  #page-maquinas .header-actions{flex-direction:row;flex-wrap:wrap;}
+  #page-maquinas .header-actions .filter-select{flex:1;min-width:140px;}
   /* Charts */
   .chart-card{padding:14px;margin-bottom:12px;}
   .chart-title{font-size:13px;margin-bottom:10px;}
@@ -434,15 +445,10 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       </div>
     </div>
     <div class="filters">
-      <span class="filter-label">Operação:</span>
-      <select class="filter-select" id="abast-op-filter" onchange="renderAbastecimentos()"><option value="">Todas</option></select>
-      <span class="filter-label">Máquina:</span>
-      <select class="filter-select" id="abast-maq-filter" onchange="renderAbastecimentos()"><option value="">Todas</option></select>
-      <div class="filter-sep"></div>
-      <span class="filter-label">De:</span>
-      <input type="date" class="filter-input" id="abast-data-ini" onchange="renderAbastecimentos()">
-      <span class="filter-label">Até:</span>
-      <input type="date" class="filter-input" id="abast-data-fim" onchange="renderAbastecimentos()">
+      <select class="filter-select" id="abast-op-filter" onchange="renderAbastecimentos()" style="flex:1;min-width:130px"><option value="">Todas as Operações</option></select>
+      <select class="filter-select" id="abast-maq-filter" onchange="renderAbastecimentos()" style="flex:1;min-width:130px"><option value="">Todas as Máquinas</option></select>
+      <input type="date" class="filter-input" id="abast-data-ini" onchange="renderAbastecimentos()" style="flex:1;min-width:130px">
+      <input type="date" class="filter-input" id="abast-data-fim" onchange="renderAbastecimentos()" style="flex:1;min-width:130px">
       <button class="btn btn-secondary btn-sm" onclick="limparFiltrosAbast()">✕ Limpar</button>
     </div>
     <div class="table-card">
