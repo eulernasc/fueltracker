@@ -2,13 +2,15 @@ name: Relatório Mensal de Eficiência
 
 on:
   schedule:
-    # Roda todo dia 15 às 08:00 horário de Brasília (11:00 UTC)
-    - cron: '0 11 15 * *'
-  workflow_dispatch: # Permite rodar manualmente pelo GitHub para testar
+    - cron: '0 11 15 * *'   # dia 15, 08h horário de Brasília
+  workflow_dispatch:          # permite rodar manualmente
 
 jobs:
   enviar-relatorio:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scripts
 
     steps:
       - name: Checkout repositório
@@ -20,14 +22,12 @@ jobs:
           node-version: '20'
 
       - name: Instalar dependências
-        working-directory: scripts
         run: npm install
 
       - name: Rodar relatório e enviar e-mails
-        working-directory: scripts
         env:
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_REMETENTE: ${{ secrets.EMAIL_REMETENTE }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_PASS: ${{ secrets.GMAIL_PASS }}
         run: node relatorio.js
