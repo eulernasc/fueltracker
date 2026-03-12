@@ -69,8 +69,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .page{display:none;}
 .page.active{display:block;animation:fadeIn .3s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;}
-.page-title{font-size:26px;font-weight:700;letter-spacing:-0.5px;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:16px;}
+.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-shrink:0;}.page-title{font-size:26px;font-weight:700;letter-spacing:-0.5px;}
 .page-sub{font-size:14px;color:var(--text2);margin-top:4px;}
 .header-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .filters{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
@@ -672,7 +672,7 @@ function renderOpChart(list) {
   const maxL=Math.max(...ops.map(o=>byOp[o].litros));
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
   const H=120;
-  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px"><div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:32px;overflow:visible">`+ops.map(op=>{
+  c.innerHTML=`<div style="overflow-x:auto;padding-bottom:8px;display:flex;justify-content:center"><div style="display:inline-flex;align-items:flex-end;gap:12px;padding-top:32px;overflow:visible">`+ops.map(op=>{
     const d=byOp[op];
     const l=d.litros, m=d.horas>0?d.litros/d.horas:0;
     const hL=maxL>0?(l/maxL)*H:0, hM=maxM>0?(m/maxM)*H:0;
