@@ -575,15 +575,15 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="form-row" style="margin-bottom:12px">
         <div class="form-group">
           <label class="form-label">Data Inicial</label>
-          <input type="date" class="form-input" id="rel-data-ini" onchange="renderRelatorio()">
+          <input type="date" class="form-input" id="rel-data-ini">
         </div>
         <div class="form-group">
           <label class="form-label">Data Final</label>
-          <input type="date" class="form-input" id="rel-data-fim" onchange="renderRelatorio()">
+          <input type="date" class="form-input" id="rel-data-fim">
         </div>
         <div class="form-group">
           <label class="form-label">Meta de Eficiência (%)</label>
-          <input type="number" class="form-input" id="rel-meta" value="98" min="1" max="100" onchange="renderRelatorio()">
+          <input type="number" class="form-input" id="rel-meta" value="98" min="1" max="100">
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
@@ -606,6 +606,9 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
             <div id="rel-op-checks"></div>
           </div>
         </div>
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="renderRelatorio()">🔍 Analisar Período</button>
       </div>
       <div id="rel-email-bloco" style="margin-top:8px"></div>
     </div>
@@ -806,7 +809,7 @@ function showPage(page,el) {
   if(el) el.classList.add('active');
   const renders = {dashboard:renderDashboard,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
   if(renders[page]) renders[page]();
-  if(page==='relatorio') { relPopularOps(); renderRelatorio(); }
+  if(page==='relatorio') { relPopularOps(); }
 }
 
 function setTab(tab) {
@@ -1737,7 +1740,6 @@ document.addEventListener('click', e => {
 function relOpToggleAll(cb) {
   document.querySelectorAll('.rel-op-check').forEach(c => c.checked = cb.checked);
   relOpUpdateLabel();
-  renderRelatorio();
 }
 function relOpUpdateLabel() {
   const all = document.getElementById('rel-op-all');
@@ -1842,7 +1844,7 @@ function renderRelatorio() {
     '<div class="kpi-card"><div class="kpi-label">Período</div><div style="font-size:13px;font-weight:700;margin-top:4px;color:var(--accent)">' + labelPeriodo + '</div></div>' +
     '<div class="kpi-card"><div class="kpi-label">Registros</div><div class="kpi-value" style="font-size:26px">' + registros.length + '</div></div>' +
     '<div class="kpi-card"><div class="kpi-label">Máquinas</div><div class="kpi-value" style="font-size:26px">' + Object.keys(byMaq).length + '</div></div>' +
-    '<div class="kpi-card"><div class="kpi-label">Abaixo de ' + meta + '%</div><div class="kpi-value" style="font-size:26px;color:' + (maquinasProblema.length>0?'var(--red)':'var(--green)') + '">' + maquinasProblema.length + '</div></div>' +
+    '<div class="kpi-card"><div class="kpi-label">Abaixo da Meta (' + limite + '%)</div><div class="kpi-value" style="font-size:26px;color:' + (maquinasProblema.length>0?'var(--red)':'var(--green)') + '">' + maquinasProblema.length + '</div></div>' +
     '<div class="kpi-card"><div class="kpi-label">Dentro da Meta</div><div class="kpi-value" style="font-size:26px;color:var(--green)">' + maquinasOk.length + '</div></div>' +
   '</div>';
 
