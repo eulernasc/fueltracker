@@ -874,14 +874,19 @@ function updateFilters() {
   // Popular multi-select do Comparativo
   const compCb=document.getElementById('comp-op-checkboxes');
   if(compCb){
-    const selComp=getSelectedCompOps();
+    const hasExisting=document.querySelectorAll('.comp-op-check').length>0;
+    const currentChecked=new Set([...document.querySelectorAll('.comp-op-check:checked')].map(c=>c.value));
     compCb.innerHTML=ops.map(o=>`
       <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px">
-        <input type="checkbox" class="comp-op-check" value="${o}" ${selComp.size===0||selComp.has(o)?'checked':''} onchange="onCompOpCheckChange()">
+        <input type="checkbox" class="comp-op-check" value="${o}" ${!hasExisting||currentChecked.has(o)?'checked':''} onchange="onCompOpCheckChange()">
         ${o.replace(/_/g,' ')}
       </label>`).join('');
     const allCheck=document.getElementById('comp-op-all-check');
-    if(allCheck){ allCheck.checked=true; allCheck.indeterminate=false; }
+    if(allCheck){
+      const nChecked=hasExisting?currentChecked.size:ops.length;
+      allCheck.checked=nChecked===ops.length;
+      allCheck.indeterminate=nChecked>0&&nChecked<ops.length;
+    }
   }
   ['dash-maq-filter','abast-maq-filter'].forEach(id=>{
     const sel=document.getElementById(id); if(!sel) return;
