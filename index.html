@@ -350,6 +350,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     <div class="nav-item" onclick="showPage('comparativo',this)"><span class="icon">📊</span>Comparativo</div>
     <div class="nav-item" onclick="showPage('abastecimentos',this)"><span class="icon">⛽</span>Abastecimentos</div>
     <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon">🚜</span>Máquinas</div>
+    <div class="nav-item" onclick="showPage('relatorio',this)"><span class="icon">📧</span>Relatório</div>
     <div class="nav-item" onclick="showPage('config',this)"><span class="icon">⚙️</span>Configurações</div>
   </nav>
   <div class="sync-status">
@@ -372,6 +373,9 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     </div>
     <div class="mob-nav-item" id="mob-nav-maquinas" onclick="showPage('maquinas',this);updateMobNav('maquinas')">
       <span class="mob-icon">🚜</span>Máquinas
+    </div>
+    <div class="mob-nav-item" id="mob-nav-relatorio" onclick="showPage('relatorio',this);updateMobNav('relatorio')">
+      <span class="mob-icon">📧</span>Relatório
     </div>
     <div class="mob-nav-item" id="mob-nav-config" onclick="showPage('config',this);updateMobNav('config')">
       <span class="mob-icon">⚙️</span>Config
@@ -557,6 +561,37 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         <span id="senha-msg" style="font-size:12px;margin-left:10px;color:var(--green)"></span>
       </div>
     </div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div id="page-relatorio" class="page">
+    <div class="page-header">
+      <div class="page-header-title"><div class="page-title">Relatório de Eficiência</div><div class="page-sub">Analise um período e envie alertas por e-mail</div></div>
+    </div>
+
+    <!-- Seletor de período + destinatário -->
+    <div class="sheets-config" style="margin-bottom:16px">
+      <div class="sheets-config-title">📋 Configurar Análise</div>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group">
+          <label class="form-label">Período</label>
+          <select class="form-input" id="rel-periodo-select" onchange="renderRelatorio()">
+            <option value="">Selecione um período...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Limite de Eficiência (%)</label>
+          <input type="number" class="form-input" id="rel-limite" value="98" min="1" max="100" onchange="renderRelatorio()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail do Destinatário</label>
+        <input type="email" class="form-input" id="rel-email-dest" placeholder="destinatario@empresa.com.br">
+      </div>
+    </div>
+
+    <!-- Resultado da análise -->
+    <div id="relatorio-resultado"></div>
   </div>
 
 </main>
@@ -1654,6 +1689,179 @@ function salvarSenha() {
   document.getElementById('nova-senha').value = '';
   document.getElementById('confirmar-nova-senha').value = '';
   setTimeout(() => msg.textContent = '', 3000);
+}
+
+// ── RELATÓRIO DE EFICIÊNCIA ───────────────────────────────────────────────────
+function renderRelatorio() {
+  // Popula o select de períodos
+  const sel = document.getElementById('rel-periodo-select');
+  if (!sel) return;
+  const periodos = Object.entries(state.semanas).sort((a,b)=>(b[1].importedAt||'').localeCompare(a[1].importedAt||''));
+  const val = sel.value;
+  sel.innerHTML = '<option value="">Selecione um período...</option>' +
+    periodos.map(([id,p])=>`<option value="${id}">${p.label||id}</option>`).join('');
+  if (val) sel.value = val;
+
+  const periodoId = sel.value;
+  const limite = parseFloat(document.getElementById('rel-limite')?.value||98);
+  const c = document.getElementById('relatorio-resultado');
+  if (!c) return;
+
+  if (!periodoId) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">📧</div><div class="empty-text">Selecione um período acima</div></div>';
+    return;
+  }
+
+  const periodo = state.semanas[periodoId];
+  if (!periodo) return;
+
+  const registros = periodo.registros || [];
+
+  // Agrupa por máquina
+  const byMaq = {};
+  registros.forEach(r => {
+    if (!r || !r.placa) return;
+    if (!byMaq[r.placa]) byMaq[r.placa] = { litros:0, horas:0 };
+    byMaq[r.placa].litros += parseFloat(r.litros)||0;
+    byMaq[r.placa].horas  += parseFloat(r.horas)||0;
+  });
+
+  // Calcula eficiência vs meta
+  const maquinasProblema = [];
+  const maquinasOk = [];
+  for (const [placa, dados] of Object.entries(byMaq)) {
+    const maq = getMaquina(placa);
+    const meta = maq?.meta || 0;
+    const mediaReal = dados.horas > 0 ? dados.litros / dados.horas : 0;
+    const eficiencia = meta > 0 && mediaReal > 0 ? (meta / mediaReal) * 100 : null;
+    const desvio = meta > 0 && mediaReal > 0 ? ((mediaReal - meta) / meta * 100) : null;
+    const operacao = (maq?.operacao || r?.operacao || 'Sem Operação').replace(/_/g,' ');
+    const item = { placa, operacao, mediaReal, meta, eficiencia, desvio };
+    if (eficiencia !== null && eficiencia < limite) maquinasProblema.push(item);
+    else maquinasOk.push(item);
+  }
+  maquinasProblema.sort((a,b) => (a.eficiencia||0) - (b.eficiencia||0));
+
+  // Agrupa problemas por operação
+  const byOp = {};
+  maquinasProblema.forEach(m => {
+    if (!byOp[m.operacao]) byOp[m.operacao] = [];
+    byOp[m.operacao].push(m);
+  });
+
+  let html = '';
+
+  // Resumo
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+    <div class="kpi-card"><div class="kpi-label">Período</div><div style="font-size:14px;font-weight:700;margin-top:4px">${periodo.label||periodoId}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Máquinas Analisadas</div><div class="kpi-value" style="font-size:26px">${Object.keys(byMaq).length}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Abaixo de ${limite}%</div><div class="kpi-value" style="font-size:26px;color:${maquinasProblema.length>0?'var(--red)':'var(--green)'}">${maquinasProblema.length}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Dentro do Limite</div><div class="kpi-value" style="font-size:26px;color:var(--green)">${maquinasOk.length}</div></div>
+  </div>`;
+
+  if (maquinasProblema.length === 0) {
+    html += `<div class="chart-card" style="text-align:center;padding:40px">
+      <div style="font-size:48px;margin-bottom:12px">✅</div>
+      <div style="font-size:16px;font-weight:700;color:var(--green)">Todas as máquinas dentro do limite!</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:6px">Nenhum alerta para enviar.</div>
+    </div>`;
+    c.innerHTML = html;
+    return;
+  }
+
+  // Tabela por operação
+  for (const [op, maquinas] of Object.entries(byOp)) {
+    html += `<div class="chart-card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="chart-title" style="margin-bottom:0">📍 ${op}</div>
+        <span class="badge badge-red">${maquinas.length} máquina${maquinas.length>1?'s':''}</span>
+      </div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text2);text-transform:uppercase">Máquina</th>
+          <th style="padding:8px 12px;text-align:center;font-size:11px;color:var(--text2);text-transform:uppercase">Meta</th>
+          <th style="padding:8px 12px;text-align:center;font-size:11px;color:var(--text2);text-transform:uppercase">Real</th>
+          <th style="padding:8px 12px;text-align:center;font-size:11px;color:var(--text2);text-transform:uppercase">Desvio</th>
+          <th style="padding:8px 12px;text-align:center;font-size:11px;color:var(--text2);text-transform:uppercase">Eficiência</th>
+        </tr></thead><tbody>` +
+      maquinas.map(m => {
+        const cor = m.eficiencia < 90 ? 'var(--red)' : m.eficiencia < 95 ? '#f97316' : 'var(--yellow)';
+        return `<tr style="border-bottom:1px solid rgba(42,47,69,.5)">
+          <td style="padding:10px 12px;font-weight:600"><span class="placa-tag">${m.placa}</span></td>
+          <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;color:var(--accent)">${m.meta>0?m.meta.toFixed(1)+' L/h':'—'}</td>
+          <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;color:${cor};font-weight:700">${m.mediaReal.toFixed(2)} L/h</td>
+          <td style="padding:10px 12px;text-align:center;font-family:'DM Mono',monospace;color:${cor}">+${m.desvio.toFixed(1)}%</td>
+          <td style="padding:10px 12px;text-align:center"><span style="background:${cor};color:#fff;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700">${m.eficiencia.toFixed(1)}%</span></td>
+        </tr>`;
+      }).join('') +
+      `</tbody></table></div></div>`;
+  }
+
+  // Botão enviar
+  html += `<div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-primary" onclick="enviarRelatorioEmail()">📧 Enviar por E-mail</button>
+    <button class="btn btn-secondary" onclick="copiarRelatorio()">📋 Copiar Resumo</button>
+  </div>`;
+
+  c.innerHTML = html;
+  // Guarda dados para uso no envio
+  window._relDados = { periodo, maquinasProblema, byOp, limite };
+}
+
+function enviarRelatorioEmail() {
+  const dest = document.getElementById('rel-email-dest')?.value?.trim();
+  if (!dest) { showToast('Informe o e-mail do destinatário!', 'error'); return; }
+  if (!window._relDados) return;
+  const { periodo, byOp, limite } = window._relDados;
+  const mes = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+  // Monta assunto e corpo do e-mail
+  const assunto = encodeURIComponent(`⚠️ FuelTracker — Alerta de Eficiência · ${periodo.label||'Relatório'}`);
+
+  let corpo = `Relatório de Eficiência — ${periodo.label||'Período'}
+`;
+  corpo += `Limite: ${limite}%
+
+`;
+
+  for (const [op, maquinas] of Object.entries(byOp)) {
+    corpo += `📍 ${op}
+`;
+    corpo += `${'─'.repeat(40)}
+`;
+    maquinas.forEach(m => {
+      corpo += `• ${m.placa} | Meta: ${m.meta>0?m.meta.toFixed(1):'-'} L/h | Real: ${m.mediaReal.toFixed(2)} L/h | Desvio: +${m.desvio.toFixed(1)}% | Eficiência: ${m.eficiencia.toFixed(1)}%
+`;
+    });
+    corpo += '
+';
+  }
+  corpo += `
+Acesse o FuelTracker: https://eulernasc.github.io/fueltracker`;
+
+  const link = `mailto:${dest}?subject=${assunto}&body=${encodeURIComponent(corpo)}`;
+  window.location.href = link;
+  showToast('Abrindo e-mail...', 'success');
+}
+
+function copiarRelatorio() {
+  if (!window._relDados) return;
+  const { periodo, byOp, limite } = window._relDados;
+  let texto = `Relatório de Eficiência — ${periodo.label||'Período'}
+Limite: ${limite}%
+
+`;
+  for (const [op, maquinas] of Object.entries(byOp)) {
+    texto += `📍 ${op}
+`;
+    maquinas.forEach(m => {
+      texto += `• ${m.placa} | Meta: ${m.meta>0?m.meta.toFixed(1):'-'} L/h | Real: ${m.mediaReal.toFixed(2)} L/h | +${m.desvio.toFixed(1)}% | ${m.eficiencia.toFixed(1)}%
+`;
+    });
+    texto += '
+';
+  }
+  navigator.clipboard.writeText(texto).then(()=>showToast('Copiado!','success')).catch(()=>showToast('Erro ao copiar','error'));
 }
 
 // ── MOBILE NAV ───────────────────────────────────────────────────────────────
