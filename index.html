@@ -1938,7 +1938,7 @@ function renderRelEmailBloco(operacoes) {
         '</div>' +
         '<div style="display:flex;gap:8px">' +
           '<input type="text" class="form-input" style="flex:1" id="rel-email-bloco-' + encodeURIComponent(b.id) + '" placeholder="email1@empresa.com, email2@empresa.com">' +
-          '<button class="btn btn-primary btn-sm" onclick="enviarBloco(' + JSON.stringify(b.id) + ')">📧 Enviar</button>' +
+          '<button class="btn btn-primary btn-sm" data-bloco-id="' + b.id.replace(/"/g,'&quot;') + '" onclick="enviarBloco(this.dataset.blocoId)">📧 Enviar</button>' +
         '</div>' +
       '</div>'
     ).join('') +
@@ -1979,7 +1979,8 @@ function enviarBloco(blocoId) {
   const dests = destRaw.split(',').map(e => e.trim()).filter(Boolean).join(',');
   const assunto = encodeURIComponent('FuelTracker — Alerta de Eficiencia · ' + bloco.label.replace(/_/g,' '));
   const corpo = buildCorpoTexto(bloco.ops, byOp, labelPeriodo, limite);
-  window.location.href = 'mailto:' + dests + '?subject=' + assunto + '&body=' + encodeURIComponent(corpo);
+  const link = 'mailto:' + dests + '?subject=' + assunto + '&body=' + encodeURIComponent(corpo);
+  window.open(link, '_blank');
   showToast('Abrindo e-mail: ' + bloco.label + '...', 'success');
 }
 
@@ -2001,7 +2002,7 @@ function copiarRelatorio() {
   if (!window._relDados) return;
   const { labelPeriodo, byOp, limite } = window._relDados;
   let texto = 'Relatorio de Eficiencia - ' + (labelPeriodo||'Periodo') + '\n';
-  texto += 'Meta: ' + meta + '%\n\n';
+  texto += 'Meta: ' + limite + '%\n\n';
   for (const [op, maquinas] of Object.entries(byOp)) {
     texto += '📍 ' + op + '\n';
     maquinas.forEach(m => {
