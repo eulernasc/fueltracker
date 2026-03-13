@@ -594,9 +594,18 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       </div>
       <div class="form-group">
         <label class="form-label">Operação (filtra análise e destinatário)</label>
-        <select class="form-input" id="rel-operacao" onchange="renderRelatorio()">
-          <option value="">Todas as Operações</option>
-        </select>
+        <div id="rel-op-dropdown-wrap" style="position:relative">
+          <button type="button" class="form-input" id="rel-op-btn" onclick="toggleRelOpMenu()" style="width:100%;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+            <span id="rel-op-label">Todas as Operações</span>
+            <span>▾</span>
+          </button>
+          <div id="rel-op-menu" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;z-index:200;padding:6px;max-height:220px;overflow-y:auto;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+              <input type="checkbox" id="rel-op-all" onchange="relOpToggleAll(this)" checked style="accent-color:var(--accent)"> Todas as Operações
+            </label>
+            <div id="rel-op-checks"></div>
+          </div>
+        </div>
       </div>
       <div id="rel-email-bloco" style="margin-top:8px"></div>
     </div>
@@ -1713,23 +1722,67 @@ function relSetRange(opt) {
   renderRelatorio();
 }
 
+function toggleRelOpMenu() {
+  const m = document.getElementById('rel-op-menu');
+  m.style.display = m.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('rel-op-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const m = document.getElementById('rel-op-menu');
+    if (m) m.style.display = 'none';
+  }
+});
+function relOpToggleAll(cb) {
+  document.querySelectorAll('.rel-op-check').forEach(c => c.checked = cb.checked);
+  relOpUpdateLabel();
+  renderRelatorio();
+}
+function relOpUpdateLabel() {
+  const all = document.getElementById('rel-op-all');
+  const checks = [...document.querySelectorAll('.rel-op-check')];
+  const sel = checks.filter(c => c.checked);
+  const lbl = document.getElementById('rel-op-label');
+  if (!lbl) return;
+  if (sel.length === 0 || sel.length === checks.length) {
+    lbl.textContent = 'Todas as Operações';
+    if (all) all.checked = true;
+  } else {
+    lbl.textContent = sel.length + ' operação' + (sel.length > 1 ? 'ões' : '') + ' selecionada' + (sel.length > 1 ? 's' : '');
+    if (all) all.checked = false;
+  }
+}
+function getRelOpSelecionadas() {
+  const checks = [...document.querySelectorAll('.rel-op-check')];
+  const sel = checks.filter(c => c.checked).map(c => c.value);
+  return sel.length === checks.length || sel.length === 0 ? [] : sel;
+}
+function relPopularOps() {
+  const cont = document.getElementById('rel-op-checks');
+  if (!cont) return;
+  const ops = getOperacoes();
+  const atuais = new Set([...document.querySelectorAll('.rel-op-check:checked')].map(c => c.value));
+  cont.innerHTML = ops.map(o =>
+    '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:13px" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
+      '<input type="checkbox" class="rel-op-check" value="' + o + '" ' + (atuais.size===0||atuais.has(o)?'checked':'') + ' onchange="relOpUpdateLabel();renderRelatorio()" style="accent-color:var(--accent)"> ' +
+      o.replace(/_/g,' ') +
+    '</label>'
+  ).join('');
+  relOpUpdateLabel();
+}
+
 function renderRelatorio() {
   const ini   = document.getElementById('rel-data-ini')?.value;
   const fim   = document.getElementById('rel-data-fim')?.value;
   const limite = parseFloat(document.getElementById('rel-limite')?.value||98);
-  const opFiltro = document.getElementById('rel-operacao')?.value || '';
   const c = document.getElementById('relatorio-resultado');
   if (!c) return;
 
-  // Popula select de operações
-  const selOp = document.getElementById('rel-operacao');
-  if (selOp) {
-    const ops = getOperacoes();
-    const cur = selOp.value;
-    selOp.innerHTML = '<option value="">Todas as Operações</option>' +
-      ops.map(o => '<option value="' + o + '"' + (o===cur?' selected':'') + '>' + o + '</option>').join('');
-    if (cur) selOp.value = cur;
-  }
+  // Popula checkboxes de operações (só se vazio)
+  const cont = document.getElementById('rel-op-checks');
+  if (cont && cont.children.length === 0) relPopularOps();
+
+  const opsFiltro = getRelOpSelecionadas(); // [] = todas
 
   if (!ini || !fim) {
     c.innerHTML = '<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Selecione o período acima</div><div class="empty-sub">Escolha a data inicial e final ou use os atalhos</div></div>';
@@ -1742,7 +1795,7 @@ function renderRelatorio() {
 
   // Filtra abastecimentos
   let registros = state.abastecimentos.filter(a => a.data >= ini && a.data <= fim);
-  if (opFiltro) registros = registros.filter(a => (getMaquina(a.placa)?.operacao || a.operacao || '') === opFiltro);
+  if (opsFiltro.length) registros = registros.filter(a => opsFiltro.includes(getMaquina(a.placa)?.operacao || a.operacao || ''));
 
   if (!registros.length) {
     c.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum registro no período</div></div>';
