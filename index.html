@@ -806,6 +806,7 @@ function showPage(page,el) {
   if(el) el.classList.add('active');
   const renders = {dashboard:renderDashboard,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
   if(renders[page]) renders[page]();
+  if(page==='relatorio') { relPopularOps(); renderRelatorio(); }
 }
 
 function setTab(tab) {
@@ -1778,9 +1779,8 @@ function renderRelatorio() {
   const c = document.getElementById('relatorio-resultado');
   if (!c) return;
 
-  // Popula checkboxes de operações (só se vazio)
-  const cont = document.getElementById('rel-op-checks');
-  if (cont && cont.children.length === 0) relPopularOps();
+  // Sempre repopula operações para ter dados frescos
+  relPopularOps();
 
   const opsFiltro = getRelOpSelecionadas(); // [] = todas
 
@@ -1795,7 +1795,7 @@ function renderRelatorio() {
 
   // Filtra abastecimentos
   let registros = state.abastecimentos.filter(a => a.data >= ini && a.data <= fim);
-  if (opsFiltro.length) registros = registros.filter(a => opsFiltro.includes(getMaquina(a.placa)?.operacao || a.operacao || ''));
+  if (opsFiltro.length) registros = registros.filter(a => { const op = (getMaquina(a.placa)?.operacao || a.operacao || '').replace(/_/g,' '); return opsFiltro.includes(op); });
 
   if (!registros.length) {
     c.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum registro no período</div></div>';
@@ -1807,7 +1807,7 @@ function renderRelatorio() {
   const byMaq = {};
   registros.forEach(r => {
     if (!r || !r.placa) return;
-    const op = getMaquina(r.placa)?.operacao || r.operacao || 'Sem Operação';
+    const op = (getMaquina(r.placa)?.operacao || r.operacao || 'Sem Operação').replace(/_/g,' ');
     if (!byMaq[r.placa]) byMaq[r.placa] = { litros:0, horas:0, operacao: op };
     byMaq[r.placa].litros += parseFloat(r.litros)||0;
     byMaq[r.placa].horas  += parseFloat(r.horas)||0;
