@@ -610,11 +610,11 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div style="margin-top:14px">
         <button class="btn btn-primary" style="width:100%;padding:12px" onclick="renderRelatorio()">🔍 Analisar Período</button>
       </div>
-      <div id="rel-email-bloco" style="margin-top:8px"></div>
     </div>
 
     <!-- Resultado da análise -->
     <div id="relatorio-resultado"></div>
+    <div id="rel-email-bloco" style="margin-top:16px"></div>
   </div>
 
 </main>
@@ -1885,7 +1885,6 @@ function renderRelatorio() {
   }
 
   html += '<div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap">' +
-    '<button class="btn btn-primary" onclick="enviarRelatorioEmail()">📧 Enviar por E-mail</button>' +
     '<button class="btn btn-secondary" onclick="copiarRelatorio()">📋 Copiar Resumo</button>' +
   '</div>';
 
@@ -1926,17 +1925,14 @@ function relGetBlocos(operacoes) {
 function renderRelEmailBloco(operacoes) {
   const bloco = document.getElementById('rel-email-bloco');
   if (!bloco) return;
-  const dica = '<div style="font-size:11px;color:var(--text3);margin-bottom:10px">💡 Para múltiplos destinatários, separe com vírgula: <span style="color:var(--accent)">joao@empresa.com, maria@empresa.com</span></div>';
-  if (!operacoes.length) {
-    bloco.innerHTML = dica + '<div class="form-group"><label class="form-label">E-mail do Destinatário</label><input type="text" class="form-input" id="rel-email-dest" placeholder="email1@empresa.com, email2@empresa.com"></div>';
-    return;
-  }
+  if (!operacoes.length) { bloco.innerHTML = ''; return; }
+  const dica = '<div style="font-size:11px;color:var(--text3);margin-bottom:12px">💡 Para múltiplos destinatários, separe com vírgula: <span style="color:var(--accent)">joao@empresa.com, maria@empresa.com</span></div>';
   const blocos = relGetBlocos(operacoes);
-  bloco.innerHTML = dica +
-    '<label class="form-label" style="margin-bottom:8px;display:block">Destinatários por Envio</label>' +
+  bloco.innerHTML = '<div class="chart-card">' +
+    '<div class="chart-title" style="margin-bottom:14px">📧 Enviar Alertas por E-mail</div>' + dica +
     blocos.map(b =>
-      '<div style="margin-bottom:12px">' +
-        '<div style="font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text2)">' +
+      '<div style="margin-bottom:14px">' +
+        '<div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2)">' +
           (b.isGrupo ? '🗂 ' : '📍 ') + b.label +
           (b.isGrupo ? '<span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:6px">(' + b.ops.join(', ') + ')</span>' : '') +
         '</div>' +
@@ -1946,14 +1942,14 @@ function renderRelEmailBloco(operacoes) {
         '</div>' +
       '</div>'
     ).join('') +
-    '<div style="margin-top:12px"><button class="btn btn-primary" onclick="enviarTodosEmails()">📧 Enviar Todos</button></div>';
-  // Guarda blocos no estado global
+    (blocos.length > 1 ? '<div style="margin-top:6px"><button class="btn btn-primary" onclick="enviarTodosEmails()">📧 Enviar Todos</button></div>' : '') +
+  '</div>';
   window._relBlocos = blocos;
 }
 
 function buildCorpoTexto(blocoOps, byOp, labelPeriodo, limite) {
   const sep = '----------------------------------------';
-  let corpo = 'FUELTRACKER PRO - ALERTA DE EFICIENCIA\n' + sep + '\nPeriodo: ' + labelPeriodo + ' | Meta: ' + meta + '%\n\n';
+  let corpo = 'FUELTRACKER PRO - ALERTA DE EFICIENCIA\n' + sep + '\nPeriodo: ' + labelPeriodo + ' | Meta: ' + limite + '%\n\n';
   for (const op of blocoOps) {
     const maquinas = byOp[op];
     if (!maquinas) continue;
