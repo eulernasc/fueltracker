@@ -1238,24 +1238,23 @@ function renderComparativo() {
   if(clearBtn) clearBtn.style.display = (compDtIni||compDtFim) ? 'inline-flex' : 'none';
 
   // Filtrar períodos pela data de referência do período (não dos registros individuais)
-  const selecionadosFiltradosFiltrados = selecionadosFiltrados.filter(([id, p])=>{
+  const selecionadosFiltrados = selecionados.filter(([id, p])=>{
     if(!compDtIni && !compDtFim) return true;
     const pIni = p.dataIni||'';
     const pFim = p.dataFim||'';
     if(!pIni && !pFim) return true; // período sem data de ref: sempre mostra
-    // O período tem intersecção com o filtro se não termina antes do início ou começa depois do fim
     if(compDtIni && pFim && pFim < compDtIni) return false;
     if(compDtFim && pIni && pIni > compDtFim) return false;
     return true;
   });
 
-  if(!selecionadosFiltradosFiltrados.length) {
+  if(!selecionadosFiltrados.length) {
     c.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Nenhum período no intervalo selecionado</div><div class="empty-sub">Ajuste as datas ou limpe o filtro</div></div>';
     return;
   }
 
   const dadosPeriodo={};
-  selecionadosFiltradosFiltrados.forEach(([id, p])=>{
+  selecionadosFiltrados.forEach(([id, p])=>{
     let rows = (p.registros||[]);
     if(opF.size>0) rows = rows.filter(r=>opF.has(r.operacao));
     const tL=rows.reduce((a,r)=>a+(r.litros||0),0), tH=rows.reduce((a,r)=>a+(r.horas||0),0);
@@ -1425,7 +1424,7 @@ function toggleSelecionar(idx,checkbox) {
 function atualizarBotoesSelecao() {
   const n=selectedIds.size;
   const countEl=document.getElementById('selected-count');
-  const btnApagar=document.getElementById('btn-apagar-selecionadosFiltrados');
+  const btnApagar=document.getElementById('btn-apagar-selecionados');
   const btnSel=document.getElementById('btn-sel-todos');
   countEl.style.display=n>0?'inline':'none';
   countEl.textContent=`${n} selecionado${n!==1?'s':''}`;
