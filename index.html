@@ -718,6 +718,18 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div style="font-size:11px;color:var(--text2);margin-top:5px">Dê um nome que identifique este relatório no histórico.</div>
     </div>
 
+    <!-- Datas de referência -->
+    <div class="form-row" style="margin-bottom:16px">
+      <div class="form-group">
+        <label class="form-label">Início do Período</label>
+        <input type="date" class="form-input" id="import-data-ini">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fim do Período</label>
+        <input type="date" class="form-input" id="import-data-fim">
+      </div>
+    </div>
+
     <div class="import-area" onclick="document.getElementById('file-input').click()">
       <div class="import-icon">📂</div>
       <div class="import-text">Clique para selecionar o arquivo</div>
@@ -1047,7 +1059,7 @@ function renderOpChart(list) {
   const maxM=Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0));
   const H=120;
 
-  c.innerHTML=`<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:12px;padding:12px 8px;min-width:100%">`+
+  c.innerHTML=`<div style="display:flex;justify-content:flex-start;flex-wrap:wrap;gap:12px;padding:12px 8px;min-width:100%">`+
     ops.map(op=>{
     const d=byOp[op];
     const l=d.litros, m=d.horas>0?d.litros/d.horas:0;
@@ -1225,21 +1237,36 @@ function renderComparativo() {
   const clearBtn = document.getElementById('comp-date-clear');
   if(clearBtn) clearBtn.style.display = (compDtIni||compDtFim) ? 'inline-flex' : 'none';
 
+  // Filtrar períodos pela data de referência do período (não dos registros individuais)
+  const selecionadosFiltradosFiltrados = selecionadosFiltrados.filter(([id, p])=>{
+    if(!compDtIni && !compDtFim) return true;
+    const pIni = p.dataIni||'';
+    const pFim = p.dataFim||'';
+    if(!pIni && !pFim) return true; // período sem data de ref: sempre mostra
+    // O período tem intersecção com o filtro se não termina antes do início ou começa depois do fim
+    if(compDtIni && pFim && pFim < compDtIni) return false;
+    if(compDtFim && pIni && pIni > compDtFim) return false;
+    return true;
+  });
+
+  if(!selecionadosFiltradosFiltrados.length) {
+    c.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-text">Nenhum período no intervalo selecionado</div><div class="empty-sub">Ajuste as datas ou limpe o filtro</div></div>';
+    return;
+  }
+
   const dadosPeriodo={};
-  selecionados.forEach(([id, p])=>{
+  selecionadosFiltradosFiltrados.forEach(([id, p])=>{
     let rows = (p.registros||[]);
     if(opF.size>0) rows = rows.filter(r=>opF.has(r.operacao));
-    if(compDtIni) rows = rows.filter(r=>r.data>=compDtIni);
-    if(compDtFim) rows = rows.filter(r=>r.data<=compDtFim);
     const tL=rows.reduce((a,r)=>a+(r.litros||0),0), tH=rows.reduce((a,r)=>a+(r.horas||0),0);
     dadosPeriodo[id]={label:p.label||id, rows, totalL:tL, totalH:tH, media:tH>0?tL/tH:0, maquinas:new Set(rows.map(r=>r.placa)).size};
   });
 
   // Cards de resumo
   let html='<div class="comp-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">';
-  selecionados.forEach(([id],i)=>{
+  selecionadosFiltrados.forEach(([id],i)=>{
     const d=dadosPeriodo[id];
-    const prev=i>0?dadosPeriodo[selecionados[i-1][0]]:null;
+    const prev=i>0?dadosPeriodo[selecionadosFiltrados[i-1][0]]:null;
     const dL=prev&&prev.totalL>0?((d.totalL-prev.totalL)/prev.totalL*100):null;
     const dM=prev&&prev.media>0?((d.media-prev.media)/prev.media*100):null;
     html+=`<div class="comp-card">
@@ -1253,16 +1280,16 @@ function renderComparativo() {
   html+='</div>';
 
   // Tabela por Operação
-  const todasOps=[...new Set(selecionados.flatMap(([id])=>dadosPeriodo[id].rows.map(r=>(r.operacao||'').replace(/_/g,' ')).filter(Boolean)))].sort();
+  const todasOps=[...new Set(selecionadosFiltrados.flatMap(([id])=>dadosPeriodo[id].rows.map(r=>(r.operacao||'').replace(/_/g,' ')).filter(Boolean)))].sort();
   if(todasOps.length>0 && opF.size===0){
     html+=`<div class="comp-maq-table" style="margin-bottom:16px">
       <div class="comp-maq-header"><span>📍 Consumo por Operação</span><span class="comp-badge">${todasOps.length} operações</span></div>
-      <div style="overflow-x:auto"><table><thead><tr><th>Operação</th><th style="color:var(--text2)">Meta</th>${selecionados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>L/h</th><th>Maq.</th>`).join('')}${selecionados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
+      <div style="overflow-x:auto"><table><thead><tr><th>Operação</th><th style="color:var(--text2)">Meta</th>${selecionadosFiltrados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>L/h</th><th>Maq.</th>`).join('')}${selecionadosFiltrados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
     todasOps.forEach(op=>{
       // Calcular meta média das máquinas desta operação
       const maqsDaOp=state.maquinas.filter(m=>(m.operacao||'').replace(/_/g,' ')===op&&m.meta>0);
       const metaOp=maqsDaOp.length>0?(maqsDaOp.reduce((s,m)=>s+m.meta,0)/maqsDaOp.length):0;
-      const vals=selecionados.map(([id])=>{
+      const vals=selecionadosFiltrados.map(([id])=>{
         const rows=dadosPeriodo[id].rows.filter(r=>(r.operacao||'').replace(/_/g,' ')===op);
         const l=rows.reduce((a,r)=>a+(r.litros||0),0),h=rows.reduce((a,r)=>a+(r.horas||0),0);
         return{l,h,m:h>0?l/h:0,maq:new Set(rows.map(r=>r.placa)).size};
@@ -1277,21 +1304,21 @@ function renderComparativo() {
         html+=`<td>${v.m>0?`<span class="badge ${cls}">${v.m.toFixed(2)}${tip}</span>`:'—'}</td>`;
         html+=`<td style="color:var(--text2)">${v.maq||'—'}</td>`;
       });
-      if(selecionados.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
+      if(selecionadosFiltrados.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
       html+='</tr>';
     });
     html+='</tbody></table></div></div>';
   }
 
   // Tabela por Máquina
-  const todasPlacas=[...new Set(selecionados.flatMap(([id])=>dadosPeriodo[id].rows.filter(r=>opF.size===0||opF.has(r.operacao)).map(r=>r.placa)))].sort();
+  const todasPlacas=[...new Set(selecionadosFiltrados.flatMap(([id])=>dadosPeriodo[id].rows.filter(r=>opF.size===0||opF.has(r.operacao)).map(r=>r.placa)))].sort();
   html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>🚜 Consumo por Máquina</span><span class="comp-badge">${todasPlacas.length} máquinas</span></div>
-  <div style="overflow-x:auto"><table><thead><tr><th>Máquina</th><th>Operação</th><th style="color:var(--text2)">Meta</th>${selecionados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>L/h</th>`).join('')}${selecionados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
+  <div style="overflow-x:auto"><table><thead><tr><th>Máquina</th><th>Operação</th><th style="color:var(--text2)">Meta</th>${selecionadosFiltrados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>L/h</th>`).join('')}${selecionadosFiltrados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
   todasPlacas.forEach(placa=>{
     let op='';
     const maq=getMaquina(placa);
     const meta=maq?.meta||0;
-    const vals=selecionados.map(([id])=>{
+    const vals=selecionadosFiltrados.map(([id])=>{
       const row=dadosPeriodo[id].rows.find(r=>r.placa===placa);
       if(row) op=row.operacao||'';
       return{l:row?.litros||0,h:row?.horas||0,m:row&&row.horas>0?row.litros/row.horas:0};
@@ -1305,7 +1332,7 @@ function renderComparativo() {
       const tip=desvio!==null?` · ${desvio>0?'+':''}${desvio.toFixed(0)}%`:'';
       html+=`<td>${v.m>0?`<span class="badge ${cls}">${v.m.toFixed(2)}${tip}</span>`:'—'}</td>`;
     });
-    if(selecionados.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
+    if(selecionadosFiltrados.length>1){const f=vals[0],l=vals[vals.length-1];if(f.m>0&&l.m>0){const d=((l.m-f.m)/f.m*100);html+=`<td><span class="badge ${d>=0?'badge-green':'badge-red'}">${d>=0?'▲':'▼'}${Math.abs(d).toFixed(1)}%</span></td>`;}else html+='<td>—</td>';}
     html+='</tr>';
   });
   html+='</tbody></table></div></div>';
@@ -1398,7 +1425,7 @@ function toggleSelecionar(idx,checkbox) {
 function atualizarBotoesSelecao() {
   const n=selectedIds.size;
   const countEl=document.getElementById('selected-count');
-  const btnApagar=document.getElementById('btn-apagar-selecionados');
+  const btnApagar=document.getElementById('btn-apagar-selecionadosFiltrados');
   const btnSel=document.getElementById('btn-sel-todos');
   countEl.style.display=n>0?'inline':'none';
   countEl.textContent=`${n} selecionado${n!==1?'s':''}`;
@@ -1522,6 +1549,14 @@ function openImport() {
   const weekNum = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
   const mes = now.toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
   document.getElementById('import-periodo-nome').value = `Semana ${weekNum} · ${mes.charAt(0).toUpperCase()+mes.slice(1)}`;
+  // Sugerir início da semana (segunda) e fim (domingo)
+  const day = now.getDay();
+  const diffMon = day===0 ? -6 : 1-day;
+  const mon = new Date(now); mon.setDate(now.getDate()+diffMon);
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const fmt = d => d.toISOString().split('T')[0];
+  document.getElementById('import-data-ini').value = fmt(mon);
+  document.getElementById('import-data-fim').value = fmt(sun);
   document.getElementById('import-preview').innerHTML = '';
   renderHistoricoPeriodos();
   document.getElementById('modal-import').classList.add('open');
@@ -1538,7 +1573,7 @@ function renderHistoricoPeriodos() {
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
       <div style="flex:1">
         <div style="font-size:13px;font-weight:600">${p.label||id}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${(p.registros||[]).length} máquinas · importado em ${p.importedAt||'—'}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${(p.registros||[]).length} máquinas · importado em ${p.importedAt||'—'}${p.dataIni?` · ref: ${p.dataIni.split('-').reverse().join('/')} a ${(p.dataFim||p.dataIni).split('-').reverse().join('/')}`:''}  </div>
       </div>
       <button class="btn-icon del" onclick="verificarSenha(()=>limparPeriodo('${id}'))" title="Apagar período">🗑️</button>
     </div>`).join('');
@@ -1677,10 +1712,14 @@ function importarRelatorio(input) {
       });
 
       // Salvar período no novo formato
+      const dataIniRef = document.getElementById('import-data-ini')?.value||'';
+      const dataFimRef = document.getElementById('import-data-fim')?.value||'';
       state.semanas[periodoId] = {
         label: nomePeriodo,
         registros: dadosSemana,
-        importedAt: new Date().toLocaleDateString('pt-BR')
+        importedAt: new Date().toLocaleDateString('pt-BR'),
+        dataIni: dataIniRef,
+        dataFim: dataFimRef
       };
 
       saveState();
