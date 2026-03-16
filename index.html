@@ -144,6 +144,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   #comp-op-dropdown-wrap{width:100%;}
   #comp-op-dropdown-btn{width:100%;box-sizing:border-box;padding:10px 14px;border-radius:10px;font-size:13px;}
   #comp-op-dropdown-menu{width:100%;left:0;right:0;box-sizing:border-box;}
+  #comp-date-range{width:100%;flex-direction:row;}
+  #comp-date-range input{flex:1;min-width:0;box-sizing:border-box;}
   #comp-periodo-checkboxes{display:flex;flex-wrap:wrap;gap:6px;}
 
   /* ── Tabelas ── */
@@ -460,6 +462,12 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
             </label>
             <div id="comp-op-checkboxes"></div>
           </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap" id="comp-date-range">
+          <input type="date" class="filter-input" id="comp-data-ini" onchange="renderComparativo()" style="font-size:13px;padding:8px 10px" title="Data inicial">
+          <span style="color:var(--text2);font-size:12px">até</span>
+          <input type="date" class="filter-input" id="comp-data-fim" onchange="renderComparativo()" style="font-size:13px;padding:8px 10px" title="Data final">
+          <button class="btn btn-secondary btn-sm" onclick="limparFiltroDataComp()" id="comp-date-clear" style="display:none">✕</button>
         </div>
         <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar Período</button>
       </div>
@@ -1211,10 +1219,18 @@ function renderComparativo() {
   }
 
   // Calcular dados por período
+  const compDtIni = document.getElementById('comp-data-ini')?.value||'';
+  const compDtFim = document.getElementById('comp-data-fim')?.value||'';
+  // Mostrar/esconder botão de limpar
+  const clearBtn = document.getElementById('comp-date-clear');
+  if(clearBtn) clearBtn.style.display = (compDtIni||compDtFim) ? 'inline-flex' : 'none';
+
   const dadosPeriodo={};
   selecionados.forEach(([id, p])=>{
     let rows = (p.registros||[]);
     if(opF.size>0) rows = rows.filter(r=>opF.has(r.operacao));
+    if(compDtIni) rows = rows.filter(r=>r.data>=compDtIni);
+    if(compDtFim) rows = rows.filter(r=>r.data<=compDtFim);
     const tL=rows.reduce((a,r)=>a+(r.litros||0),0), tH=rows.reduce((a,r)=>a+(r.horas||0),0);
     dadosPeriodo[id]={label:p.label||id, rows, totalL:tL, totalH:tH, media:tH>0?tL/tH:0, maquinas:new Set(rows.map(r=>r.placa)).size};
   });
@@ -1303,6 +1319,13 @@ function togglePeriodoComp(id, checkbox) {
   } else {
     _periodosSelec.delete(id);
   }
+  renderComparativo();
+}
+
+function limparFiltroDataComp() {
+  document.getElementById('comp-data-ini').value='';
+  document.getElementById('comp-data-fim').value='';
+  document.getElementById('comp-date-clear').style.display='none';
   renderComparativo();
 }
 
