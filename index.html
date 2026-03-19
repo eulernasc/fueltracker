@@ -7,7 +7,6 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛽</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -67,7 +66,6 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .sync-dot.syncing{background:var(--yellow);animation:pulse 1s infinite;}
 .sync-dot.error{background:var(--red);}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-@keyframes spin{to{transform:rotate(360deg)}}
 .main{margin-left:220px;flex:1;padding:22px 28px;min-height:100vh;}
 /* ── MOBILE TOPBAR ── */
 .mob-topbar{display:none;position:fixed;top:0;left:0;right:0;height:54px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:200;align-items:center;padding:0 16px;gap:12px;}
@@ -332,24 +330,23 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-/* ── EXCLUIR PAGE ── */
-.excluir-upload-area{border:2px dashed rgba(239,68,68,.4);border-radius:14px;padding:36px;text-align:center;cursor:pointer;transition:.3s;background:rgba(239,68,68,.03);margin-bottom:20px;}
-.excluir-upload-area:hover{border-color:var(--red);background:rgba(239,68,68,.07);}
-.excluir-upload-area.drag{border-color:var(--red);background:rgba(239,68,68,.1);}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ── A EXCLUIR ── */
 .excl-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;margin-left:4px;vertical-align:middle;line-height:1;}
-.excl-card{background:var(--bg2);border:1px solid rgba(239,68,68,.3);border-radius:12px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:.2s;}
-.excl-card:hover{border-color:var(--red);background:rgba(239,68,68,.04);}
-.excl-card-icon{width:40px;height:40px;background:rgba(239,68,68,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.excl-card-info{flex:1;min-width:0;}
-.excl-card-placa{font-size:15px;font-weight:700;font-family:monospace;color:var(--text);}
-.excl-card-det{font-size:12px;color:var(--text2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.excl-card-tag{display:inline-block;background:rgba(239,68,68,.15);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;font-family:monospace;}
 .excl-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
 .excl-sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;text-align:center;}
 .excl-sum-val{font-size:28px;font-weight:700;color:var(--red);font-family:monospace;}
 .excl-sum-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-top:4px;}
+.excl-card{background:var(--bg2);border:1px solid rgba(239,68,68,.3);border-radius:0;padding:14px 18px;display:flex;align-items:center;gap:14px;transition:.2s;}
+.excl-card:hover{background:rgba(239,68,68,.04);}
+.excl-card-icon{width:36px;height:36px;background:rgba(239,68,68,.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.excl-card-info{flex:1;min-width:0;}
+.excl-card-placa{font-size:14px;font-weight:700;font-family:monospace;}
+.excl-card-det{font-size:12px;color:var(--text2);margin-top:3px;}
+.excl-card-tag{display:inline-block;background:rgba(239,68,68,.15);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;}
 .excl-col-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;padding:8px 16px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);}
-@media(max-width:768px){.excl-summary{grid-template-columns:1fr 1fr;}.excl-col-header{display:none;}.excl-card{flex-direction:column;align-items:flex-start;gap:8px;}}
+@media(max-width:768px){.excl-summary{grid-template-columns:1fr 1fr;}.excl-col-header{display:none;}}
+
 </style>
 </head>
 <body>
@@ -583,30 +580,8 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         <div class="sheets-config-title" style="color:var(--red)">⚠️ Zona de Perigo</div>
         <button class="btn btn-danger btn-sm" onclick="verificarSenha(limparTodosDados)">🗑️ Apagar todos os dados locais</button>
       </div>
-      <div class="sheets-config" style="margin-top:16px;border-color:rgba(99,102,241,.4)" id="ms-config-section">
-        <div class="sheets-config-title">☁️ Microsoft 365 — Busca automática do SharePoint</div>
-        <div class="sheets-hint" style="margin-bottom:12px">
-          Configure uma vez para buscar a planilha de abastecimentos a excluir automaticamente, sem precisar baixar o arquivo.
-        </div>
-        <div class="form-group" style="margin-bottom:10px">
-          <label class="form-label">Client ID do Azure AD</label>
-          <input type="text" class="form-input" id="ms-client-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="salvarMSConfig()" style="font-family:monospace;font-size:13px">
-        </div>
-        <div style="background:var(--bg2);border-radius:10px;padding:14px;font-size:12px;color:var(--text2);line-height:1.9;margin-bottom:12px">
-          <strong style="color:var(--text)">📋 Como obter o Client ID (3 minutos):</strong><br>
-          1. Acesse <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" style="color:var(--accent)">portal.azure.com → App registrations</a><br>
-          2. Clique em <strong>+ New registration</strong><br>
-          3. Name: <code style="background:var(--bg3);padding:1px 5px;border-radius:4px">FuelTracker</code> · Tipo: <strong>Single tenant</strong><br>
-          4. Redirect URI: <strong>Single-page application (SPA)</strong> → cole a URL deste sistema<br>
-          5. Após criar, copie o <strong>Application (client) ID</strong> e cole acima<br>
-          6. Vá em <strong>API permissions → Add → Microsoft Graph → Delegated → Files.Read → Add</strong>
-        </div>
-        <div id="ms-config-status" style="font-size:12px;color:var(--green);margin-bottom:10px;display:none">✅ Client ID salvo!</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" onclick="testarConexaoMS()">🔌 Testar Conexão</button>
-          <button class="btn btn-secondary btn-sm" onclick="showPage('excluir',document.getElementById('nav-excluir'))">🗑️ Ir para A Excluir</button>
-        </div>
-      </div>
+      <div class="sheets-config" style="margin-top:16px;border-color:rgba(99,102,241,.4)">
+        <div class="sheets-config-title">🔐 Controle de Acesso</div>
         <div class="sheets-hint" style="margin-bottom:12px">Defina uma senha para proteger importação, edição e exclusão de dados. Quem não tiver a senha só poderá visualizar.</div>
         <div class="form-row">
           <div class="form-group">
@@ -690,63 +665,46 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     <div class="page-header">
       <div class="page-header-title">
         <div class="page-title">🗑️ Abastecimentos a Excluir</div>
-        <div class="page-sub">Busca automática via link de compartilhamento do SharePoint</div>
+        <div class="page-sub">Cola o link de compartilhamento do SharePoint — busca automática</div>
       </div>
       <div class="header-actions">
-        <button class="btn btn-secondary btn-sm" onclick="limparExcluir()" id="btn-limpar-excluir" style="display:none">✕ Limpar</button>
         <button class="btn btn-secondary btn-sm" id="btn-excluir-atualizar" style="display:none" onclick="buscarPlanilhaSP()">🔄 Atualizar</button>
+        <button class="btn btn-secondary btn-sm" onclick="limparExcluir()" id="btn-limpar-excluir" style="display:none">✕ Limpar</button>
       </div>
     </div>
 
-    <!-- Setup: colar link de compartilhamento -->
-    <div id="excluir-setup-panel" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px">
-      <div style="font-size:15px;font-weight:700;margin-bottom:6px">🔗 Link de compartilhamento da planilha</div>
-      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.7">
-        Gere um link <strong style="color:var(--text)">"Qualquer pessoa com o link pode exibir"</strong> no SharePoint e cole abaixo.<br>
-        Isso não requer Azure, não requer TI — funciona só com o link! ✅
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:20px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">🔗 Link de compartilhamento da planilha</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.7">
+        No SharePoint: <strong style="color:var(--text)">Compartilhar → Copiar link → "Qualquer pessoa com o link pode exibir"</strong>. Cole abaixo e clique em Buscar. O link é salvo automaticamente.
       </div>
-
-      <!-- Instruções visuais -->
-      <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:2">
-        <strong style="color:var(--text);font-size:13px">📋 Como gerar o link (30 segundos):</strong><br>
-        1. Abra sua planilha no SharePoint<br>
-        2. Clique em <strong style="color:var(--text)">Compartilhar</strong> (botão no topo) → <strong style="color:var(--text)">Copiar link</strong><br>
-        3. Mude para <strong style="color:var(--accent)">"Qualquer pessoa com o link pode exibir"</strong><br>
-        4. Clique em <strong style="color:var(--text)">Copiar</strong> e cole o link abaixo 👇
-      </div>
-
-      <div style="display:flex;gap:10px;align-items:stretch;flex-wrap:wrap">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
         <input type="text" class="form-input" id="excluir-link-input"
-          placeholder="https://expressonepomucenobr-my.sharepoint.com/:x:/g/personal/..."
+          placeholder="https://empresa-my.sharepoint.com/:x:/g/personal/..."
           style="flex:1;min-width:200px;font-size:12px;font-family:monospace"
-          oninput="salvarLinkSP()">
-        <button class="btn btn-primary" onclick="buscarPlanilhaSP()" style="white-space:nowrap">
-          🔄 Buscar Planilha
-        </button>
+          oninput="localStorage.setItem('sp_sharing_link',this.value)">
+        <button class="btn btn-primary" onclick="buscarPlanilhaSP()">🔄 Buscar Planilha</button>
       </div>
       <div id="excluir-link-status" style="margin-top:10px;font-size:12px;display:none"></div>
-    </div>
-
-    <!-- Loading -->
-    <div id="excluir-loading-bar" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:center;gap:12px;font-size:13px;color:var(--text2)">
-        <div style="width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0"></div>
-        <span id="excluir-loading-txt">Buscando planilha…</span>
+      <div id="excluir-loading-bar" style="display:none;margin-top:12px;display:none">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)">
+          <div style="width:15px;height:15px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0"></div>
+          <span id="excluir-loading-txt">Buscando…</span>
+        </div>
       </div>
     </div>
 
-    <!-- Resumo (oculto até ter dados) -->
     <div id="excluir-resumo" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:12px;color:var(--text3)">⏱ Última atualização: <span id="excl-ultima-atualizacao">—</span></div>
+        <div style="font-size:12px;color:var(--text3)">⏱ Atualizado: <span id="excl-ultima-atualizacao">—</span></div>
         <button class="btn btn-secondary btn-sm" onclick="buscarPlanilhaSP()">🔄 Atualizar agora</button>
       </div>
       <div class="excl-summary">
         <div class="excl-sum-card"><div class="excl-sum-val" id="excl-total">0</div><div class="excl-sum-label">Total a Excluir</div></div>
         <div class="excl-sum-card"><div class="excl-sum-val" id="excl-maquinas" style="color:var(--yellow)">0</div><div class="excl-sum-label">Máquinas</div></div>
-        <div class="excl-sum-card"><div class="excl-sum-val" id="excl-arquivo" style="font-size:13px;color:var(--accent);margin-top:4px">SharePoint</div><div class="excl-sum-label">Fonte</div></div>
+        <div class="excl-sum-card"><div class="excl-sum-val" id="excl-linhas" style="color:var(--accent);font-size:14px;padding-top:6px">SharePoint</div><div class="excl-sum-label">Fonte</div></div>
       </div>
-      <div class="filters" style="margin-bottom:16px">
+      <div class="filters" style="margin-bottom:14px">
         <input type="text" class="filter-input" id="excluir-busca" placeholder="🔍 Buscar placa, operação..." oninput="renderExcluirLista()" style="flex:1;min-width:180px">
         <select class="filter-select" id="excluir-filter-op" onchange="renderExcluirLista()"><option value="">Todas as Operações</option></select>
         <button class="btn btn-secondary btn-sm" onclick="copiarListaExcluir()">📋 Copiar Lista</button>
@@ -754,13 +712,12 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="excl-col-header" style="background:var(--bg3);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none">
         <span>Placa</span><span>Operação</span><span>Data</span><span>Litros</span><span>Motivo</span>
       </div>
-      <div id="excluir-lista"></div>
+      <div id="excluir-lista" style="border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;overflow:hidden"></div>
     </div>
 
-    <!-- Upload manual como fallback -->
-    <div id="excluir-fallback" style="margin-top:20px;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;text-align:center">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">Prefere carregar manualmente?</div>
-      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('excluir-file-input').click()">📂 Carregar arquivo .xlsx</button>
+    <div style="margin-top:16px;text-align:center;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Prefere carregar manualmente?</div>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('excluir-file-input').click()">📂 Carregar .xlsx</button>
       <input type="file" id="excluir-file-input" accept=".xlsx,.xls" style="display:none" onchange="excluirCarregarArquivo(this)">
     </div>
   </div>
@@ -2412,34 +2369,16 @@ document.querySelectorAll('.nav-item').forEach(el => {
   el.addEventListener('click', () => { if(window.innerWidth <= 768) closeSidebar(); });
 });
 
-// ── SHAREPOINT SHARING LINK ───────────────────────────────────────────────────
+
+// ── A EXCLUIR ─────────────────────────────────────────────────────────────────
 window._excluirDados = [];
 
-function salvarLinkSP() {
-  const link = (document.getElementById('excluir-link-input')?.value || '').trim();
-  if (link) localStorage.setItem('sp_sharing_link', link);
-}
-
-function carregarLinkSP() {
-  const saved = localStorage.getItem('sp_sharing_link') || '';
-  const inp = document.getElementById('excluir-link-input');
-  if (inp && saved) inp.value = saved;
-}
-
-function converterLinkSPParaDownload(url) {
-  if (url.includes('download=1') || url.includes('/_layouts/15/download')) return url;
-  try {
-    if (url.includes('/:x:/') || url.includes('/:f:/') || url.includes('/:b:/')) {
-      const base = url.split('?')[0];
-      return base + '?download=1';
-    }
-    if (url.includes('sourcedoc') || url.includes('Doc.aspx')) {
-      return url + (url.includes('?') ? '&' : '?') + 'download=1';
-    }
-    return url + (url.includes('?') ? '&' : '?') + 'download=1';
-  } catch {
-    return url + (url.includes('?') ? '&' : '?') + 'download=1';
-  }
+function converterLinkSP(url) {
+  if (!url) return '';
+  if (url.includes('download=1')) return url;
+  const base = url.split('?')[0];
+  if (url.includes('/:x:/') || url.includes('/:f:/')) return base + '?download=1';
+  return url + (url.includes('?') ? '&' : '?') + 'download=1';
 }
 
 async function buscarPlanilhaSP() {
@@ -2448,48 +2387,41 @@ async function buscarPlanilhaSP() {
   if (!rawLink) { showToast('Cole o link de compartilhamento primeiro', 'error'); return; }
   localStorage.setItem('sp_sharing_link', rawLink);
 
-  const loading = document.getElementById('excluir-loading-bar');
-  const loadingTxt = document.getElementById('excluir-loading-txt');
+  const bar = document.getElementById('excluir-loading-bar');
   const statusEl = document.getElementById('excluir-link-status');
-  loading.style.display = '';
-  loadingTxt.textContent = 'Baixando planilha do SharePoint…';
+  bar.style.display = 'block';
   statusEl.style.display = 'none';
+  document.getElementById('excluir-loading-txt').textContent = 'Baixando planilha…';
 
   try {
-    const downloadUrl = converterLinkSPParaDownload(rawLink);
-    const res = await fetch(downloadUrl, { mode: 'cors' });
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' — Verifique a permissão do link');
+    const res = await fetch(converterLinkSP(rawLink));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const buffer = await res.arrayBuffer();
-    loading.style.display = 'none';
+    bar.style.display = 'none';
     processarExcluirBuffer(buffer);
     const agora = new Date().toLocaleString('pt-BR');
-    const el = document.getElementById('excl-ultima-atualizacao');
-    if (el) el.textContent = agora;
+    document.getElementById('excl-ultima-atualizacao').textContent = agora;
     document.getElementById('btn-excluir-atualizar').style.display = '';
     statusEl.style.display = '';
     statusEl.style.color = 'var(--green)';
-    statusEl.textContent = '\u2705 Planilha carregada! Última atualização: ' + agora;
+    statusEl.textContent = '✅ Carregado em ' + agora;
   } catch(e) {
-    loading.style.display = 'none';
-    console.error(e);
-    const isCors = e.message.includes('Failed to fetch') || e.name === 'TypeError';
+    bar.style.display = 'none';
     statusEl.style.display = '';
     statusEl.style.color = 'var(--red)';
-    if (isCors) {
-      statusEl.innerHTML = '<strong>&#10060; Bloqueado pelo navegador (CORS).</strong> O link precisa ser do tipo <strong>"Qualquer pessoa com o link pode exibir"</strong>.<br><span style="font-size:11px">No SharePoint: Compartilhar &rarr; altere a permiss&atilde;o &rarr; copie o novo link.</span>';
-    } else {
-      statusEl.innerHTML = '&#10060; ' + (e.message || 'Erro ao buscar planilha');
-    }
-    showToast(isCors ? 'Link precisa ser público (Qualquer pessoa)' : e.message, 'error');
+    const cors = e.message.includes('fetch') || e.name === 'TypeError';
+    statusEl.innerHTML = cors
+      ? '❌ CORS bloqueado. O link precisa ser <strong>"Qualquer pessoa com o link pode exibir"</strong>.'
+      : '❌ ' + e.message;
+    showToast(cors ? 'Link precisa ser público no SharePoint' : e.message, 'error');
   }
 }
 
 function excluirCarregarArquivo(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => { try { processarExcluirBuffer(e.target.result); } catch(err) { showToast('Erro ao ler arquivo', 'error'); } };
-  reader.readAsArrayBuffer(file);
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => { try { processarExcluirBuffer(e.target.result); } catch(err) { showToast('Erro ao ler arquivo','error'); } };
+  r.readAsArrayBuffer(file);
   input.value = '';
 }
 
@@ -2497,9 +2429,9 @@ function processarExcluirBuffer(buffer) {
   const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
-  if (!data.length) { showToast('Planilha vazia ou sem dados reconhecíveis', 'error'); return; }
-  const get = (row, ...nomes) => {
-    const k = Object.keys(row).find(k => nomes.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n.toLowerCase().replace(/[^a-z]/g,''))));
+  if (!data.length) { showToast('Planilha vazia','error'); return; }
+  const get = (row, ...ns) => {
+    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n.replace(/[^a-z]/g,''))));
     return k !== undefined && row[k] !== '' ? String(row[k]).trim() : '';
   };
   window._excluirDados = data.map(row => ({
@@ -2512,7 +2444,7 @@ function processarExcluirBuffer(buffer) {
     operador: get(row,'operador','motorista','condutor'),
   })).filter(r => r.placa || r.operacao);
   atualizarExcluirUI();
-  showToast('\u2705 ' + window._excluirDados.length + ' registros carregados!', 'success');
+  showToast('✅ ' + window._excluirDados.length + ' registros carregados!', 'success');
 }
 
 function atualizarExcluirUI() {
@@ -2520,83 +2452,75 @@ function atualizarExcluirUI() {
   if (!dados.length) return;
   document.getElementById('excluir-resumo').style.display = 'block';
   document.getElementById('btn-limpar-excluir').style.display = '';
-  const placas = new Set(dados.map(r => r.placa).filter(Boolean));
   document.getElementById('excl-total').textContent = dados.length;
-  document.getElementById('excl-maquinas').textContent = placas.size;
-  const ops = [...new Set(dados.map(r => r.operacao).filter(Boolean))].sort();
-  const sel = document.getElementById('excluir-filter-op');
-  sel.innerHTML = '<option value="">Todas as Operações</option>' + ops.map(o => '<option value="' + o + '">' + o + '</option>').join('');
+  document.getElementById('excl-maquinas').textContent = new Set(dados.map(r=>r.placa).filter(Boolean)).size;
+  const ops = [...new Set(dados.map(r=>r.operacao).filter(Boolean))].sort();
+  document.getElementById('excluir-filter-op').innerHTML =
+    '<option value="">Todas as Operações</option>' + ops.map(o=>`<option value="${o}">${o}</option>`).join('');
   const badge = document.getElementById('excluir-nav-badge');
-  badge.textContent = dados.length;
-  badge.style.display = dados.length ? '' : 'none';
+  badge.textContent = dados.length; badge.style.display = dados.length ? '' : 'none';
   renderExcluirLista();
 }
 
 function renderExcluirLista() {
-  const busca = (document.getElementById('excluir-busca')?.value || '').toLowerCase();
-  const opFiltro = document.getElementById('excluir-filter-op')?.value || '';
-  const lista = document.getElementById('excluir-lista');
-  if (!lista) return;
-  const filtrados = window._excluirDados.filter(r => {
-    const txt = (r.placa+r.operacao+r.data+r.motivo+r.operador).toLowerCase();
-    return (!busca || txt.includes(busca)) && (!opFiltro || r.operacao === opFiltro);
+  const busca = (document.getElementById('excluir-busca')?.value||'').toLowerCase();
+  const opF = document.getElementById('excluir-filter-op')?.value||'';
+  const lista = document.getElementById('excluir-lista'); if(!lista) return;
+  const f = window._excluirDados.filter(r => {
+    const t = (r.placa+r.operacao+r.data+r.motivo+r.operador).toLowerCase();
+    return (!busca||t.includes(busca))&&(!opF||r.operacao===opF);
   });
-  if (!filtrados.length) {
-    lista.innerHTML = '<div class="empty" style="padding:40px 20px"><div class="empty-icon">\uD83D\uDD0D</div><div class="empty-text">Nenhum registro encontrado</div></div>';
-    return;
-  }
-  lista.innerHTML = filtrados.map((r, i) =>
-    '<div class="excl-card" style="border-radius:' + (i===filtrados.length-1?'0 0 12px 12px':'0') + ';border-top:' + (i===0?'':'none') + '">' +
-    '<div class="excl-card-icon">\uD83D\uDDD1\uFE0F</div>' +
-    '<div class="excl-card-info">' +
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
-    '<span class="excl-card-placa">' + (r.placa||'—') + '</span>' +
-    (r.operacao ? '<span style="font-size:12px;color:var(--accent);font-weight:500">' + r.operacao + '</span>' : '') +
-    (r.motivo ? '<span class="excl-card-tag">' + r.motivo + '</span>' : '') +
-    '</div>' +
-    '<div class="excl-card-det">' +
-    (r.data ? '\uD83D\uDCC5 ' + r.data : '') +
-    (r.litros ? ' &middot; \uD83D\uDEE2\uFE0F ' + r.litros + ' L' : '') +
-    (r.horas ? ' &middot; \u23F1\uFE0F ' + r.horas + ' h' : '') +
-    (r.operador ? ' &middot; \uD83D\uDC64 ' + r.operador : '') +
-    '</div></div>' +
-    '<button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('' + (r.placa+' '+r.data+' '+r.litros+'L').trim() + '').then(()=>showToast('Copiado!','success'))" style="flex-shrink:0">\uD83D\uDCCB</button>' +
-    '</div>'
+  if (!f.length) { lista.innerHTML='<div class="empty" style="padding:36px"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum registro</div></div>'; return; }
+  lista.innerHTML = f.map((r,i)=>
+    `<div class="excl-card" style="${i===f.length-1?'border-radius:0 0 12px 12px':''}">
+      <div class="excl-card-icon">🗑️</div>
+      <div class="excl-card-info">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span class="excl-card-placa">${r.placa||'—'}</span>
+          ${r.operacao?`<span style="font-size:12px;color:var(--accent);font-weight:500">${r.operacao}</span>`:''}
+          ${r.motivo?`<span class="excl-card-tag">${r.motivo}</span>`:''}
+        </div>
+        <div class="excl-card-det">
+          ${r.data?'📅 '+r.data:''}${r.litros?' · 🛢️ '+r.litros+' L':''}${r.horas?' · ⏱️ '+r.horas+' h':''}${r.operador?' · 👤 '+r.operador:''}
+        </div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${r.placa} ${r.data} ${r.litros}L'.trim()).then(()=>showToast('Copiado!','success'))" style="flex-shrink:0">📋</button>
+    </div>`
   ).join('');
 }
 
 function copiarListaExcluir() {
   const busca = (document.getElementById('excluir-busca')?.value||'').toLowerCase();
-  const opFiltro = document.getElementById('excluir-filter-op')?.value||'';
-  const filtrados = window._excluirDados.filter(r => {
-    const txt = (r.placa+r.operacao+r.data+r.motivo).toLowerCase();
-    return (!busca||txt.includes(busca))&&(!opFiltro||r.operacao===opFiltro);
+  const opF = document.getElementById('excluir-filter-op')?.value||'';
+  const f = window._excluirDados.filter(r => {
+    const t = (r.placa+r.operacao+r.data+r.motivo).toLowerCase();
+    return (!busca||t.includes(busca))&&(!opF||r.operacao===opF);
   });
-  const texto = filtrados.map(r => (r.placa||'—') + ' | ' + (r.operacao||'—') + ' | ' + (r.data||'—') + ' | ' + (r.litros?r.litros+' L':'—') + ' | ' + (r.motivo||'—')).join('\n');
-  navigator.clipboard.writeText(texto).then(()=>showToast('\u2705 ' + filtrados.length + ' registros copiados!','success')).catch(()=>showToast('Erro ao copiar','error'));
+  navigator.clipboard.writeText(f.map(r=>`${r.placa||'—'} | ${r.operacao||'—'} | ${r.data||'—'} | ${r.litros?r.litros+' L':'—'} | ${r.motivo||'—'}`).join('\n'))
+    .then(()=>showToast('✅ '+f.length+' registros copiados!','success')).catch(()=>showToast('Erro ao copiar','error'));
 }
 
 function limparExcluir() {
-  window._excluirDados = [];
-  document.getElementById('excluir-resumo').style.display = 'none';
-  document.getElementById('btn-limpar-excluir').style.display = 'none';
-  document.getElementById('btn-excluir-atualizar').style.display = 'none';
-  document.getElementById('excluir-nav-badge').style.display = 'none';
-  const b = document.getElementById('excluir-busca'); if(b) b.value='';
+  window._excluirDados=[];
+  document.getElementById('excluir-resumo').style.display='none';
+  document.getElementById('btn-limpar-excluir').style.display='none';
+  document.getElementById('btn-excluir-atualizar').style.display='none';
+  document.getElementById('excluir-nav-badge').style.display='none';
+  const b=document.getElementById('excluir-busca'); if(b) b.value='';
   showToast('Lista limpa','success');
 }
 
 function onShowExcluir() {
-  carregarLinkSP();
-  const link = localStorage.getItem('sp_sharing_link') || '';
-  if (link && !window._excluirDados.length) buscarPlanilhaSP();
+  const saved = localStorage.getItem('sp_sharing_link')||'';
+  const inp = document.getElementById('excluir-link-input');
+  if (inp && saved && !inp.value) inp.value = saved;
+  if (saved && !window._excluirDados.length) buscarPlanilhaSP();
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 updateFilters();
 renderDashboard();
 loadState();
-
 </script>
 </body>
 </html>
