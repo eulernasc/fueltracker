@@ -2482,63 +2482,172 @@ function excluirCarregarArquivo(input) {
 function processarExcluirBuffer(buffer) {
   const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
-  const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
-  if (!data.length) { showToast('Planilha vazia','error'); return; }
-  const get = (row, ...ns) => {
-    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n.replace(/[^a-z]/g,''))));
-    return k !== undefined && row[k] !== '' ? String(row[k]).trim() : '';
-  };
-  window._excluirDados = data.map(row => ({
-    placa:    get(row,'placa','maquina','equipamento'),
-    operacao: get(row,'operacao','operação','frente','obra'),
-    data:     get(row,'data','dt','date'),
-    litros:   get(row,'litros','litro','volume','vol','quantidade'),
-    horas:    get(row,'horas','hora','horim'),
-    motivo:   get(row,'motivo','razao','razão','obs','observacao','justif'),
-    operador: get(row,'operador','motorista','condutor'),
-  })).filter(r => r.placa || r.operacao);
+
+  // Cabeçalho na linha 3 (índice 2), dados a partir da linha 4
+  const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+  // Acha a linha de cabeçalho: primeira linha que contém "PLACA" ou "DATA"
+  let headerIdx = 0;
+  for (let i = 0; i < Math.min(raw.length, 6); i++) {
+    const row = raw[i].map(c => String(c).toUpperCase());
+    if (row.some(c => c.includes('PLACA') || c.includes('DATA DO ABAST'))) { headerIdx = i; break; }
+  }
+  const headers = raw[headerIdx].map(c => String(c).trim());
+  const rows = raw.slice(headerIdx + 1).filter(r => r.some(c => c !== ''));
+
+  const col = (...ns) => headers.findIndex(h => ns.some(n => h.toLowerCase().replace(/[^a-z]/g,'').includes(n.toLowerCase().replace(/[^a-z]/g,''))));
+
+  const iPlaca    = col('placa');
+  const iData     = col('data do abast','data abast','dataabast');
+  const iHora     = col('hora');
+  const iStatus   = col('status');
+  const iDataExcl = col('data de exclus','dataexclus');
+  const iColab    = col('colaborador','excluiu');
+  const iMotivo   = col('motivo');
+  const iCombust  = col('combust','combustivel');
+
+  function parseData(val) {
+    if (!val) return null;
+    if (val instanceof Date) return val;
+    // Número serial do Excel
+    if (typeof val === 'number') {
+      return new Date((val - 25569) * 86400000);
+    }
+    const s = String(val).trim();
+    // DD/MM/YYYY
+    const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+    if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+    return new Date(s);
+  }
+
+  const agora = new Date();
+  const H72 = 72 * 60 * 60 * 1000;
+
+  window._excluirDados = rows.map(r => {
+    const placa   = iPlaca   >= 0 ? String(r[iPlaca]||'').trim() : '';
+    const dataVal = iData    >= 0 ? r[iData] : '';
+    const status  = iStatus  >= 0 ? String(r[iStatus]||'').trim().toUpperCase() : '';
+    const motivo  = iMotivo  >= 0 ? String(r[iMotivo]||'').trim() : '';
+    const colab   = iColab   >= 0 ? String(r[iColab]||'').trim() : '';
+    const combust = iCombust >= 0 ? String(r[iCombust]||'').trim() : '';
+    const dataExcl= iDataExcl>= 0 ? String(r[iDataExcl]||'').trim() : '';
+    const hora    = iHora    >= 0 ? String(r[iHora]||'').trim() : '';
+
+    const dataObj = parseData(dataVal);
+    const dataStr = dataObj ? dataObj.toLocaleDateString('pt-BR') : String(dataVal||'').trim();
+
+    // Calcula horas passadas desde o abastecimento
+    let horasPassadas = null;
+    if (dataObj && !isNaN(dataObj)) {
+      horasPassadas = (agora - dataObj) / (1000 * 60 * 60);
+    }
+
+    // Alerta 72h: status AGUARDANDO e passou 72h
+    const isAguardando = status.includes('AGUARDANDO');
+    const passou72h = horasPassadas !== null && horasPassadas >= 72;
+    const alerta72h = isAguardando && passou72h;
+
+    return { placa, data: dataStr, dataObj, hora, status, motivo, operador: colab, combustivel: combust, dataExcl, horasPassadas, alerta72h };
+  }).filter(r => r.placa);
+
+  // Filtra: só mostra AGUARDANDO 48H com mais de 72h
+  window._excluirDadosTodos = window._excluirDados;
+  window._excluirDados72h = window._excluirDados.filter(r => r.alerta72h);
+
   atualizarExcluirUI();
   showToast('✅ ' + window._excluirDados.length + ' registros carregados!', 'success');
 }
 
 function atualizarExcluirUI() {
-  const dados = window._excluirDados;
-  if (!dados.length) return;
+  const todos = window._excluirDadosTodos || window._excluirDados;
+  const alertas = window._excluirDados72h || [];
+  if (!todos.length) return;
+
   document.getElementById('excluir-resumo').style.display = 'block';
   document.getElementById('btn-limpar-excluir').style.display = '';
-  document.getElementById('excl-total').textContent = dados.length;
-  document.getElementById('excl-maquinas').textContent = new Set(dados.map(r=>r.placa).filter(Boolean)).size;
-  const ops = [...new Set(dados.map(r=>r.operacao).filter(Boolean))].sort();
-  document.getElementById('excluir-filter-op').innerHTML =
-    '<option value="">Todas as Operações</option>' + ops.map(o=>`<option value="${o}">${o}</option>`).join('');
+  document.getElementById('excl-total').textContent = todos.length;
+  document.getElementById('excl-maquinas').textContent = new Set(todos.map(r=>r.placa).filter(Boolean)).size;
+
+  // Badge vermelho: só os de 72h
   const badge = document.getElementById('excluir-nav-badge');
-  badge.textContent = dados.length; badge.style.display = dados.length ? '' : 'none';
+  badge.textContent = alertas.length; badge.style.display = alertas.length ? '' : 'none';
+
+  // Banner de alerta 72h
+  let banner = document.getElementById('excluir-alerta-72h');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'excluir-alerta-72h';
+    const resumo = document.getElementById('excluir-resumo');
+    resumo.insertBefore(banner, resumo.firstChild);
+  }
+  if (alertas.length) {
+    const concluidos = JSON.parse(localStorage.getItem('excluir_concluidos') || '[]');
+    const pendentes = alertas.filter(r => !concluidos.includes(r.placa + '|' + r.data));
+    if (pendentes.length) {
+      banner.style.display = '';
+      let html = '<div style="background:rgba(239,68,68,.12);border:1.5px solid rgba(239,68,68,.5);border-radius:12px;padding:16px 18px;margin-bottom:16px">';
+      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+      html += '<span style="font-size:22px">🚨</span><div>';
+      html += '<div style="font-size:14px;font-weight:700;color:var(--red)">' + pendentes.length + ' abastecimento' + (pendentes.length>1?'s':'') + ' aguardando exclusão há mais de 72h!</div>';
+      html += '<div style="font-size:12px;color:var(--text2);margin-top:2px">Status: AGUARDANDO 48H — prazo vencido</div>';
+      html += '</div></div>';
+      pendentes.forEach(r => {
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:6px;flex-wrap:wrap;gap:8px">';
+        html += '<div>';
+        html += '<span style="font-family:monospace;font-weight:700;font-size:14px">' + r.placa + '</span>';
+        html += '<span style="font-size:12px;color:var(--text2);margin-left:8px">📅 ' + r.data + (r.hora ? ' · ⏱ '+r.hora : '') + '</span>';
+        html += '<span style="font-size:12px;color:var(--red);margin-left:8px;font-weight:600">' + Math.floor(r.horasPassadas) + 'h atrás</span>';
+        if (r.combustivel) html += '<span style="font-size:11px;color:var(--text2);margin-left:6px">' + r.combustivel + '</span>';
+        if (r.motivo) html += '<div style="font-size:11px;color:var(--text2);margin-top:3px">📝 ' + r.motivo + '</div>';
+        html += '</div>';
+        html += '<button class="btn btn-danger btn-sm" onclick="marcarConcluido(\'' + r.placa + '\',\'' + r.data + '\')">✓ Concluído</button>';
+        html += '</div>';
+      });
+      html += '</div>';
+      banner.innerHTML = html;
+    } else {
+      banner.style.display = 'none';
+    }
+  } else {
+    banner.style.display = 'none';
+  }
+
   renderExcluirLista();
+}
+
+function marcarConcluido(placa, data) {
+  const concluidos = JSON.parse(localStorage.getItem('excluir_concluidos') || '[]');
+  const key = placa + '|' + data;
+  if (!concluidos.includes(key)) concluidos.push(key);
+  localStorage.setItem('excluir_concluidos', JSON.stringify(concluidos));
+  atualizarExcluirUI();
+  showToast('✅ Marcado como concluído!', 'success');
 }
 
 function renderExcluirLista() {
   const busca = (document.getElementById('excluir-busca')?.value||'').toLowerCase();
-  const opF = document.getElementById('excluir-filter-op')?.value||'';
   const lista = document.getElementById('excluir-lista'); if(!lista) return;
-  const f = window._excluirDados.filter(r => {
-    const t = (r.placa+r.operacao+r.data+r.motivo+r.operador).toLowerCase();
-    return (!busca||t.includes(busca))&&(!opF||r.operacao===opF);
+  const todos = window._excluirDadosTodos || window._excluirDados || [];
+  const f = todos.filter(r => {
+    const t = (r.placa+r.data+r.motivo+r.operador+r.combustivel+r.status).toLowerCase();
+    return !busca||t.includes(busca);
   });
   if (!f.length) { lista.innerHTML='<div class="empty" style="padding:36px"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum registro</div></div>'; return; }
   lista.innerHTML = f.map((r,i)=>
-    `<div class="excl-card" style="${i===f.length-1?'border-radius:0 0 12px 12px':''}">
-      <div class="excl-card-icon">🗑️</div>
+    `<div class="excl-card" style="${i===f.length-1?'border-radius:0 0 12px 12px':''};${r.alerta72h?'border-color:rgba(239,68,68,.6);background:rgba(239,68,68,.05)':''}">
+      <div class="excl-card-icon">${r.alerta72h?'🚨':'🗑️'}</div>
       <div class="excl-card-info">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span class="excl-card-placa">${r.placa||'—'}</span>
-          ${r.operacao?`<span style="font-size:12px;color:var(--accent);font-weight:500">${r.operacao}</span>`:''}
-          ${r.motivo?`<span class="excl-card-tag">${r.motivo}</span>`:''}
+          ${r.combustivel?`<span style="font-size:11px;color:var(--text2)">${r.combustivel}</span>`:''}
+          ${r.alerta72h?`<span class="excl-card-tag" style="background:rgba(239,68,68,.2);color:var(--red)">⚠️ ${Math.floor(r.horasPassadas)}h atrás</span>`:''}
+          ${r.status?`<span style="font-size:11px;color:var(--text2);background:var(--bg3);padding:2px 6px;border-radius:4px">${r.status}</span>`:''}
         </div>
         <div class="excl-card-det">
-          ${r.data?'📅 '+r.data:''}${r.litros?' · 🛢️ '+r.litros+' L':''}${r.horas?' · ⏱️ '+r.horas+' h':''}${r.operador?' · 👤 '+r.operador:''}
+          ${r.data?'📅 '+r.data:''}${r.hora?' '+r.hora:''}${r.operador?' · 👤 '+r.operador:''}
+          ${r.motivo?`<div style="margin-top:2px;font-size:11px">📝 ${r.motivo}</div>`:''}
         </div>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${r.placa} ${r.data} ${r.litros}L'.trim()).then(()=>showToast('Copiado!','success'))" style="flex-shrink:0">📋</button>
+      <button class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${r.placa} ${r.data}'.trim()).then(()=>showToast('Copiado!','success'))" style="flex-shrink:0">📋</button>
     </div>`
   ).join('');
 }
