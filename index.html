@@ -491,6 +491,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
           <button class="btn btn-secondary btn-sm" onclick="limparFiltroDataComp()" id="comp-date-clear" style="display:none">✕</button>
         </div>
         <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar Período</button>
+        <select class="filter-select" id="comp-maq-filter" onchange="renderComparativo()" style="min-width:160px"><option value="">Todas as Máquinas</option><option value="__tratores__">🚜 Somente Tratores</option></select>
       </div>
     </div>
     <!-- Seletor de períodos -->
@@ -1001,7 +1002,10 @@ function updateFilters() {
   ['dash-maq-filter','abast-maq-filter'].forEach(id=>{
     const sel=document.getElementById(id); if(!sel) return;
     const val=sel.value;
-    sel.innerHTML='<option value="">Todas as Máquinas</option>'+state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
+    sel.innerHTML='<option value="">Todas as Máquinas</option>' +
+      '<option value="__tratores__">🚜 Somente Tratores (TRA...)</option>' +
+      '<option disabled style="color:var(--text3);font-size:11px">──────────────</option>' +
+      state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
     sel.value=val;
   });
   const sel=document.getElementById('abast-placa');
@@ -1091,7 +1095,8 @@ function getFilteredAbast(opF,maqF) {
   } else if(typeof opF==='string' && opF) {
     list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
   }
-  if(maqF) list=list.filter(a=>a.placa===maqF);
+  if(maqF === '__tratores__') list=list.filter(a=>a.placa&&a.placa.toUpperCase().startsWith('TRA'));
+  else if(maqF) list=list.filter(a=>a.placa===maqF);
   return list;
 }
 
@@ -1397,7 +1402,10 @@ function renderComparativo() {
   }
 
   // Tabela por Máquina
-  const todasPlacas=[...new Set(selecionadosFiltrados.flatMap(([id])=>dadosPeriodo[id].rows.filter(r=>opF.size===0||opF.has(r.operacao)).map(r=>r.placa)))].sort();
+  const maqCompF = document.getElementById('comp-maq-filter')?.value || '';
+  const todasPlacas=[...new Set(selecionadosFiltrados.flatMap(([id])=>dadosPeriodo[id].rows.filter(r=>opF.size===0||opF.has(r.operacao)).map(r=>r.placa)))]
+    .filter(p => maqCompF === '__tratores__' ? p.toUpperCase().startsWith('TRA') : maqCompF ? p === maqCompF : true)
+    .sort();
   html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>🚜 Consumo por Máquina</span><span class="comp-badge">${todasPlacas.length} máquinas</span></div>
   <div style="overflow-x:auto"><table><thead><tr><th>Máquina</th><th>Operação</th><th style="color:var(--text2)">Meta</th>${selecionadosFiltrados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>L/h</th>`).join('')}${selecionadosFiltrados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
   todasPlacas.forEach(placa=>{
@@ -1457,7 +1465,8 @@ function renderAbastecimentos() {
   const dFim=document.getElementById('abast-data-fim')?.value||'';
   let list=[...state.abastecimentos];
   if(opF)  list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
-  if(maqF) list=list.filter(a=>a.placa===maqF);
+  if(maqF === '__tratores__') list=list.filter(a=>a.placa&&a.placa.toUpperCase().startsWith('TRA'));
+  else if(maqF) list=list.filter(a=>a.placa===maqF);
   if(dIni) list=list.filter(a=>a.data>=dIni);
   if(dFim) list=list.filter(a=>a.data<=dFim);
   list.sort((a,b)=>new Date(b.data)-new Date(a.data));
