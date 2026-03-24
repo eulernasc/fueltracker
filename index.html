@@ -491,7 +491,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
           <button class="btn btn-secondary btn-sm" onclick="limparFiltroDataComp()" id="comp-date-clear" style="display:none">✕</button>
         </div>
         <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar Período</button>
-        <select class="filter-select" id="comp-maq-filter" onchange="renderComparativo()" style="min-width:160px"><option value="">Todas as Máquinas</option><option value="__tratores__">🚜 Somente Tratores</option></select>
+        <select class="filter-select" id="comp-maq-filter" onchange="renderComparativo()" style="min-width:160px"><option value="">Todas (Consolidado)</option><option value="__tratores__">🚜 TRATORES</option><option value="__maquinas__">⚙️ MÁQUINAS</option></select>
       </div>
     </div>
     <!-- Seletor de períodos -->
@@ -1002,8 +1002,9 @@ function updateFilters() {
   ['dash-maq-filter','abast-maq-filter'].forEach(id=>{
     const sel=document.getElementById(id); if(!sel) return;
     const val=sel.value;
-    sel.innerHTML='<option value="">Todas as Máquinas</option>' +
-      '<option value="__tratores__">🚜 Somente Tratores (TRA...)</option>' +
+    sel.innerHTML='<option value="">Todas (Consolidado)</option>' +
+      '<option value="__tratores__">🚜 TRATORES</option>' +
+      '<option value="__maquinas__">⚙️ MÁQUINAS</option>' +
       '<option disabled style="color:var(--text3);font-size:11px">──────────────</option>' +
       state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
     sel.value=val;
@@ -1096,6 +1097,7 @@ function getFilteredAbast(opF,maqF) {
     list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
   }
   if(maqF === '__tratores__') list=list.filter(a=>a.placa&&a.placa.toUpperCase().startsWith('TRA'));
+  else if(maqF === '__maquinas__') list=list.filter(a=>a.placa&&!a.placa.toUpperCase().startsWith('TRA'));
   else if(maqF) list=list.filter(a=>a.placa===maqF);
   return list;
 }
@@ -1351,6 +1353,7 @@ function renderComparativo() {
     let rows = (p.registros||[]);
     if(opF.size>0) rows = rows.filter(r=>opF.has(r.operacao));
     if(maqCompF === '__tratores__') rows = rows.filter(r=>r.placa&&r.placa.toUpperCase().startsWith('TRA'));
+    else if(maqCompF === '__maquinas__') rows = rows.filter(r=>r.placa&&!r.placa.toUpperCase().startsWith('TRA'));
     else if(maqCompF) rows = rows.filter(r=>r.placa===maqCompF);
     const tL=rows.reduce((a,r)=>a+(r.litros||0),0), tH=rows.reduce((a,r)=>a+(r.horas||0),0);
     dadosPeriodo[id]={label:p.label||id, rows, totalL:tL, totalH:tH, media:tH>0?tL/tH:0, maquinas:new Set(rows.map(r=>r.placa)).size};
@@ -1467,6 +1470,7 @@ function renderAbastecimentos() {
   let list=[...state.abastecimentos];
   if(opF)  list=list.filter(a=>(getMaquina(a.placa)?.operacao||a.operacao||'')===opF);
   if(maqF === '__tratores__') list=list.filter(a=>a.placa&&a.placa.toUpperCase().startsWith('TRA'));
+  else if(maqF === '__maquinas__') list=list.filter(a=>a.placa&&!a.placa.toUpperCase().startsWith('TRA'));
   else if(maqF) list=list.filter(a=>a.placa===maqF);
   if(dIni) list=list.filter(a=>a.data>=dIni);
   if(dFim) list=list.filter(a=>a.data<=dFim);
@@ -1575,6 +1579,7 @@ function renderMaquinas() {
   const busca=(document.getElementById('maq-busca')?.value||'').toLowerCase().trim();
   let list=[...state.maquinas];
   if(opF) list=list.filter(m=>m.operacao===opF);
+  const maqTipoF=document.getElementById('maq-op-filter')?.value||'';
   if(busca) list=list.filter(m=>(m.placa+m.modelo+m.tipo).toLowerCase().includes(busca));
   const c=document.getElementById('maquinas-grid');
   if(!list.length){c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🚜</div><div class="empty-text">Nenhuma máquina cadastrada</div></div>';return;}
