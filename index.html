@@ -732,7 +732,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       </div>
       <div class="header-actions" id="arla-header-actions">
         <button class="btn btn-secondary btn-sm" id="btn-arla-excluir-mes" style="display:none" onclick="verificarSenha(arlaAbrirExcluirMes)">🗑️ Excluir Mês</button>
-        <button class="btn btn-primary btn-sm" onclick="verificarSenha(arlaAbrirCarregar)">⬆️ Carregar Relatório</button>
+        <button class="btn btn-primary btn-sm" onclick="arlaVerificarSenhaEMes()">⬆️ Carregar Relatório</button>
         <input type="file" id="arla-file-input" accept=".xlsx,.xls" style="display:none" onchange="arlaCarregarArquivo(this)">
       </div>
     </div>
@@ -754,7 +754,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
           Carregue o arquivo mensal com as colunas:<br>
           <strong>Operação · Placa · Modelo · Vol. Real · Vol. Arla</strong>
         </div>
-        <button class="btn btn-primary" onclick="document.getElementById('arla-file-input').click()">⬆️ Carregar Relatório .xlsx</button>
+        <button class="btn btn-primary" onclick="arlaVerificarSenhaEMes()">⬆️ Carregar Relatório .xlsx</button>
       </div>
 
       <!-- Resultado -->
@@ -2163,6 +2163,19 @@ function verificarSenha(callback) {
   document.getElementById('senha-erro').style.display = 'none';
   document.getElementById('modal-senha').classList.add('open');
   setTimeout(() => document.getElementById('senha-input').focus(), 100);
+}
+
+// Versão Arla — sempre mostra modal de senha SE configurada, depois abre o mês
+function arlaVerificarSenhaEMes() {
+  if (precisaSenha() && !_sessaoAutorizada) {
+    _senhaCallback = arlaAbrirCarregar;
+    document.getElementById('senha-input').value = '';
+    document.getElementById('senha-erro').style.display = 'none';
+    document.getElementById('modal-senha').classList.add('open');
+    setTimeout(() => document.getElementById('senha-input').focus(), 100);
+  } else {
+    arlaAbrirCarregar();
+  }
 }
 
 function confirmarSenha() {
