@@ -3090,8 +3090,8 @@ function arlaExibirResultado() {
 
   // Filtro de operações
   const ops = [...new Set(srcDados.map(r => r.operacao).filter(Boolean))].sort();
-  const sel = document.getElementById('arla-filter-op');
-  sel.innerHTML = '<option value="">Todas as Operações</option>' + ops.map(o => '<option value="' + o + '">' + o.replace(/_/g,' ') + '</option>').join('');
+  const selOp = document.getElementById('arla-filter-op');
+  selOp.innerHTML = '<option value="">Todas as Operações</option>' + ops.map(o => '<option value="' + o + '">' + o.replace(/_/g,' ') + '</option>').join('');
 
   // Atualiza ops no form de grupos
   arlaAtualizarOpsGrupo(ops);
