@@ -836,6 +836,10 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
             <div style="font-size:12px;color:var(--text3)">Carregue um relatório primeiro para ver as operações disponíveis</div>
           </div>
         </div>
+        <div class="form-group">
+          <label class="form-label">Mensagem personalizada (aparece no início do e-mail)</label>
+          <textarea class="form-input" id="arla-grupo-obs" placeholder="Ex: Prezados, segue o relatório de Arla referente ao mês de março..." rows="3" style="resize:vertical;font-size:13px"></textarea>
+        </div>
         <div style="display:flex;gap:10px">
           <button class="btn btn-primary" onclick="arlaSalvarGrupo()">💾 Salvar Grupo</button>
           <button class="btn btn-secondary" onclick="arlaLimparFormGrupo()">✕ Cancelar</button>
@@ -3307,6 +3311,7 @@ function arlaSalvarGrupo() {
   const nome = document.getElementById('arla-grupo-nome').value.trim();
   const emails = document.getElementById('arla-grupo-emails').value.trim();
   const ops = [...document.querySelectorAll('.arla-grupo-op-check:checked')].map(c => c.value);
+  const obs = (document.getElementById('arla-grupo-obs')?.value || '').trim();
   if (!nome) { showToast('Digite um nome para o grupo', 'error'); return; }
   if (!emails) { showToast('Digite pelo menos um e-mail', 'error'); return; }
   if (!ops.length) { showToast('Selecione pelo menos uma operação', 'error'); return; }
@@ -3314,9 +3319,9 @@ function arlaSalvarGrupo() {
   const editId = document.getElementById('arla-grupo-edit-id').value;
   if (editId) {
     const idx = window._arlaState.grupos.findIndex(g => g.id === editId);
-    if (idx >= 0) window._arlaState.grupos[idx] = { id: editId, nome, emails, ops };
+    if (idx >= 0) window._arlaState.grupos[idx] = { id: editId, nome, emails, ops, obs };
   } else {
-    window._arlaState.grupos.push({ id: Date.now().toString(), nome, emails, ops });
+    window._arlaState.grupos.push({ id: Date.now().toString(), nome, emails, ops, obs });
   }
   localStorage.setItem('arla_grupos', JSON.stringify(window._arlaState.grupos));
   arlaLimparFormGrupo();
@@ -3331,6 +3336,8 @@ function arlaLimparFormGrupo() {
   const busca = document.getElementById('arla-grupo-ops-busca');
   if (busca) busca.value = '';
   document.querySelectorAll('.arla-grupo-op-check').forEach(c => c.checked = false);
+  const obsEl = document.getElementById('arla-grupo-obs');
+  if (obsEl) obsEl.value = '';
 }
 
 function arlaEditarGrupo(id) {
@@ -3339,11 +3346,17 @@ function arlaEditarGrupo(id) {
   document.getElementById('arla-grupo-nome').value = g.nome;
   document.getElementById('arla-grupo-emails').value = g.emails;
   document.getElementById('arla-grupo-edit-id').value = id;
+  // Preenche obs se existir
+  const obsEl = document.getElementById('arla-grupo-obs');
+  if (obsEl) obsEl.value = g.obs || '';
   const busca = document.getElementById('arla-grupo-ops-busca');
   if (busca) busca.value = '';
-  const ops = [...new Set(window._arlaState.processados.map(r => r.operacao).filter(Boolean))].sort();
+  // Usa ops do relatório atual OU as ops salvas no grupo como base
+  const opsRelatorio = [...new Set(window._arlaState.processados.map(r => r.operacao).filter(Boolean))].sort();
+  // Combina: ops do relatório + ops do grupo (caso o grupo tenha ops que não estão no relatório atual)
+  const opsSet = new Set([...opsRelatorio, ...g.ops]);
+  const ops = [...opsSet].sort();
   window._arlaOpsDisponiveis = ops;
-  // Renderiza com as ops do grupo já marcadas
   const container = document.getElementById('arla-grupo-ops');
   if (container) {
     container.innerHTML = ops.map(op => {
@@ -3382,6 +3395,7 @@ function arlaRenderGrupos() {
       '<div style="font-size:15px;font-weight:700">' + g.nome + '</div>' +
       '<div style="font-size:12px;color:var(--text2);margin-top:3px">📧 ' + g.emails + '</div>' +
       '<div style="font-size:12px;color:var(--accent);margin-top:3px">' + g.ops.length + ' operação(ões): ' + g.ops.map(o => o.replace(/_/g,' ')).join(', ') + '</div>' +
+      (g.obs ? '<div style="font-size:12px;color:var(--text3);margin-top:3px;font-style:italic">💬 ' + g.obs.substring(0,80) + (g.obs.length>80?'...':'') + '</div>' : '') +
       '</div>' +
       '<div id="arla-grupo-btns-' + g.id + '" style="display:flex;gap:8px"></div>' +
       '</div>';
@@ -3407,7 +3421,7 @@ function arlaRenderGrupos() {
   });
 }
 // ── E-MAIL ────────────────────────────────────────────────────────────────────
-function arlaBuildEmailHTML(registros, nomeGrupo, mesRef) {
+function arlaBuildEmailHTML(registros, nomeGrupo, mesRef, obs) {
   const byOp = {};
   registros.forEach(r => {
     if (!byOp[r.operacao]) byOp[r.operacao] = [];
@@ -3438,6 +3452,7 @@ function arlaBuildEmailHTML(registros, nomeGrupo, mesRef) {
     '<tr><td style="background:#eff6ff;padding:10px 24px;font-size:12px;color:#1d4ed8;border-bottom:1px solid #bfdbfe">' +
     '<strong>⚠️ Atenção:</strong> As placas abaixo estão com consumo de Arla inferior a 5% do Diesel.' +
     '</td></tr>' +
+    (obs ? '<tr><td style="padding:14px 24px;font-size:13px;color:#334155;border-bottom:1px solid #e2e8f0;line-height:1.7;white-space:pre-line">' + obs + '</td></tr>' : '') +
     '<tr><td><table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">' +
     '<thead><tr style="background:#f1f5f9">' +
     '<th style="padding:10px 14px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase">Placa</th>' +
@@ -3456,7 +3471,7 @@ function arlaEnviarEmailGrupo(grupoId) {
   const dados = window._arlaState.processados;
   const registros = dados.filter(r => r.status === 'FAIL' && g.ops.includes(r.operacao));
   if (!registros.length) { showToast('Nenhuma placa abaixo de 5% neste grupo', 'error'); return; }
-  const html = arlaBuildEmailHTML(registros, g.nome, '');
+  const html = arlaBuildEmailHTML(registros, g.nome, '', g.obs || '');
   navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([html], {type:'text/html'})})]).then(() => {
     showToast('✅ Tabela copiada! Cole no e-mail (Ctrl+V)', 'success');
   }).catch(() => showToast('Copie o relatório manualmente', 'error'));
