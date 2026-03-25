@@ -731,7 +731,8 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         <div class="page-sub">Monitoramento do consumo de Arla 32 por frota</div>
       </div>
       <div class="header-actions" id="arla-header-actions">
-        <button class="btn btn-primary btn-sm" onclick="document.getElementById('arla-file-input').click()">⬆️ Carregar Relatório</button>
+        <button class="btn btn-secondary btn-sm" id="btn-arla-excluir-mes" style="display:none" onclick="arlaAbrirExcluirMes()">🗑️ Excluir Mês</button>
+        <button class="btn btn-primary btn-sm" onclick="arlaAbrirCarregar()">⬆️ Carregar Relatório</button>
         <input type="file" id="arla-file-input" accept=".xlsx,.xls" style="display:none" onchange="arlaCarregarArquivo(this)">
       </div>
     </div>
@@ -758,7 +759,13 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 
       <!-- Resultado -->
       <div id="arla-resultado" style="display:none">
-        <!-- KPIs -->
+        <!-- Seletor de mês -->
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <div style="font-size:13px;font-weight:600;color:var(--text2)">Mês de referência:</div>
+          <select class="filter-select" id="arla-mes-sel" onchange="arlaTrocarMes(this.value)" style="min-width:180px"></select>
+          <div style="font-size:12px;color:var(--text3)" id="arla-mes-info"></div>
+        </div>
+      <!-- KPIs -->
         <div class="arla-kpi-grid">
           <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-total" style="color:var(--accent)">0</div><div class="arla-kpi-label">Total SRC Analisadas</div></div>
           <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-fail" style="color:var(--red)">0</div><div class="arla-kpi-label">Abaixo de 5%</div></div>
@@ -937,6 +944,24 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-import')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MÊS ARLA -->
+<div class="modal-overlay" id="arla-modal-mes">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-title">📅 Mês de Referência</div>
+    <div class="form-group">
+      <label class="form-label">Selecione o mês do relatório</label>
+      <input type="month" class="form-input" id="arla-input-mes">
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px">
+      O relatório será salvo com este mês como referência. Você pode ter vários meses carregados ao mesmo tempo.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('arla-modal-mes').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="arlaConfirmarMes()">Selecionar Arquivo →</button>
     </div>
   </div>
 </div>
@@ -2862,10 +2887,12 @@ const ARLA_EGR_DEFAULT = ["LK52LRGP", "LM24FWGP", "LK52NRGP", "LK52LZGP", "LM24G
 
 // Estado Arla
 window._arlaState = {
-  dados: [],        // dados brutos do arquivo
-  processados: [],  // {placa, operacao, modelo, diesel, arla, pct, status}
-  grupos: [],       // grupos de e-mail
-  egrSet: new Set() // placas EGR
+  dados: [],
+  processados: [],
+  meses: [],       // [{id, label, dados, importadoEm}]
+  mesAtual: null,
+  grupos: [],
+  egrSet: new Set()
 };
 
 function arlaInit() {
@@ -2881,9 +2908,25 @@ function arlaInit() {
   // Carrega grupos
   const savedGrupos = localStorage.getItem('arla_grupos');
   if (savedGrupos) { try { window._arlaState.grupos = JSON.parse(savedGrupos); } catch(e) {} }
-  // Restaura dados se existirem
+  // Carrega meses
+  const savedMeses = localStorage.getItem('arla_meses');
+  if (savedMeses) { try { window._arlaState.meses = JSON.parse(savedMeses); } catch(e) {} }
+  // Compatibilidade com formato antigo
   const savedDados = localStorage.getItem('arla_dados');
-  if (savedDados) { try { window._arlaState.processados = JSON.parse(savedDados); } catch(e) {} }
+  if (savedDados && !window._arlaState.meses.length) {
+    try {
+      const dados = JSON.parse(savedDados);
+      if (dados.length) {
+        window._arlaState.meses = [{ id: 'legado', label: 'Importação anterior', dados }];
+        localStorage.setItem('arla_meses', JSON.stringify(window._arlaState.meses));
+      }
+    } catch(e) {}
+  }
+  // Seleciona o mês mais recente como atual
+  if (window._arlaState.meses.length) {
+    window._arlaState.mesAtual = window._arlaState.meses[window._arlaState.meses.length-1].id;
+    window._arlaState.processados = window._arlaState.meses[window._arlaState.meses.length-1].dados;
+  }
 }
 
 function arlaOnShow() {
@@ -2893,6 +2936,9 @@ function arlaOnShow() {
   if (window._arlaState.processados.length) {
     arlaExibirResultado();
   }
+  // Atualiza botão excluir mês
+  const btnExc = document.getElementById('btn-arla-excluir-mes');
+  if (btnExc) btnExc.style.display = window._arlaState.meses.length ? '' : 'none';
 }
 
 function arlaSetTab(tab, el) {
@@ -2904,6 +2950,26 @@ function arlaSetTab(tab, el) {
 }
 
 // ── CARREGAR ARQUIVO ──────────────────────────────────────────────────────────
+function arlaAbrirCarregar() {
+  // Mostra modal de seleção de mês antes de abrir o arquivo
+  document.getElementById('arla-modal-mes').classList.add('open');
+  // Sugere mês atual
+  const now = new Date();
+  document.getElementById('arla-input-mes').value = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+}
+
+function arlaConfirmarMes() {
+  const val = document.getElementById('arla-input-mes').value;
+  if (!val) { showToast('Selecione o mês de referência', 'error'); return; }
+  const [ano, mes] = val.split('-');
+  const label = new Date(+ano, +mes-1, 1).toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const id = 'mes_' + val.replace('-','_');
+  window._arlaState._pendingMesId = id;
+  window._arlaState._pendingMesLabel = label.charAt(0).toUpperCase() + label.slice(1);
+  document.getElementById('arla-modal-mes').classList.remove('open');
+  document.getElementById('arla-file-input').click();
+}
+
 function arlaCarregarArquivo(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
@@ -2943,15 +3009,70 @@ function arlaProcessar(rows) {
     return { placa, operacao, modelo, diesel, arla, pct, status };
   }).filter(r => r.placa);
 
-  localStorage.setItem('arla_dados', JSON.stringify(window._arlaState.processados));
+  // Salva como mês
+  const mesId = window._arlaState._pendingMesId || ('mes_' + Date.now());
+  const mesLabel = window._arlaState._pendingMesLabel || new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  // Remove se já existe mês com mesmo id (reimportação)
+  window._arlaState.meses = window._arlaState.meses.filter(m => m.id !== mesId);
+  window._arlaState.meses.push({ id: mesId, label: mesLabel, dados: window._arlaState.processados, importadoEm: new Date().toLocaleString('pt-BR') });
+  window._arlaState.mesAtual = mesId;
+  localStorage.setItem('arla_meses', JSON.stringify(window._arlaState.meses));
+  window._arlaState._pendingMesId = null;
+  window._arlaState._pendingMesLabel = null;
   arlaExibirResultado();
   showToast('✅ ' + window._arlaState.processados.length + ' registros processados!', 'success');
+}
+
+function arlaTrocarMes(mesId) {
+  const mes = window._arlaState.meses.find(m => m.id === mesId);
+  if (!mes) return;
+  window._arlaState.mesAtual = mesId;
+  window._arlaState.processados = mes.dados;
+  arlaExibirResultado();
+}
+
+function arlaAbrirExcluirMes() {
+  const meses = window._arlaState.meses;
+  if (!meses.length) { showToast('Nenhum mês importado', 'error'); return; }
+  const opcoes = meses.map(m => m.label + ' (' + m.dados.length + ' registros)').join('\n');
+  const sel = prompt('Qual mês deseja excluir?\n\n' + meses.map((m,i) => (i+1) + '. ' + m.label).join('\n') + '\n\nDigite o número:');
+  if (!sel) return;
+  const idx = parseInt(sel) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= meses.length) { showToast('Número inválido', 'error'); return; }
+  const mes = meses[idx];
+  if (!confirm('Excluir o relatório de "' + mes.label + '"?')) return;
+  window._arlaState.meses.splice(idx, 1);
+  localStorage.setItem('arla_meses', JSON.stringify(window._arlaState.meses));
+  if (window._arlaState.meses.length) {
+    window._arlaState.mesAtual = window._arlaState.meses[window._arlaState.meses.length-1].id;
+    window._arlaState.processados = window._arlaState.meses[window._arlaState.meses.length-1].dados;
+    arlaExibirResultado();
+  } else {
+    window._arlaState.processados = [];
+    window._arlaState.mesAtual = null;
+    document.getElementById('arla-resultado').style.display = 'none';
+    document.getElementById('arla-empty').style.display = '';
+    document.getElementById('btn-arla-excluir-mes').style.display = 'none';
+    const badge = document.getElementById('arla-nav-badge');
+    if (badge) { badge.style.display = 'none'; }
+  }
+  showToast('Relatório de ' + mes.label + ' excluído!', 'success');
 }
 
 function arlaExibirResultado() {
   const dados = window._arlaState.processados;
   document.getElementById('arla-empty').style.display = 'none';
   document.getElementById('arla-resultado').style.display = 'block';
+  document.getElementById('btn-arla-excluir-mes').style.display = '';
+
+  // Popula seletor de meses
+  const sel = document.getElementById('arla-mes-sel');
+  sel.innerHTML = window._arlaState.meses.map(m =>
+    '<option value="' + m.id + '"' + (m.id === window._arlaState.mesAtual ? ' selected' : '') + '>' + m.label + '</option>'
+  ).join('');
+  const mesAtual = window._arlaState.meses.find(m => m.id === window._arlaState.mesAtual);
+  const infoEl = document.getElementById('arla-mes-info');
+  if (infoEl && mesAtual) infoEl.textContent = 'Importado em ' + (mesAtual.importadoEm || '—');
 
   const srcDados = dados.filter(r => r.status !== 'EGR' && r.status !== 'SEM_DIESEL');
   const fail = srcDados.filter(r => r.status === 'FAIL');
