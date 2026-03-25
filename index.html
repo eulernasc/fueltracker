@@ -389,7 +389,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     <div class="nav-item" onclick="showPage('comparativo',this)"><span class="icon">📊</span>Comparativo</div>
     <div class="nav-item" onclick="showPage('abastecimentos',this)"><span class="icon">⛽</span>Abastecimentos</div>
     <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon">🚜</span>Máquinas</div>
-    <div class="nav-item" onclick="showPage('relatorio',this)"><span class="icon">📧</span>Relatório</div>
+    <div class="nav-item" id="nav-relatorio" onclick="showPage('relatorio',this)"><span class="icon">📧</span>Relatório<span id="rel-reincidencia-badge" style="display:none" class="excl-badge">!</span></div>
     <div class="nav-item" id="nav-excluir" onclick="showPage('excluir',this)"><span class="icon">🗑️</span>A Excluir<span id="excluir-nav-badge" style="display:none" class="excl-badge">0</span></div>
     <div class="nav-item" id="nav-arla" onclick="showPage('arla',this)"><span class="icon">🧪</span>Controle Arla<span id="arla-nav-badge" style="display:none" class="excl-badge">0</span><span id="arla-lembrete-badge" style="display:none;background:var(--yellow);color:#000;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;margin-left:4px">⏰</span></div>
     <div class="nav-item" onclick="showPage('config',this)"><span class="icon">⚙️</span>Configurações</div>
@@ -464,6 +464,10 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar</button>
       </div>
     </div>
+    <!-- Banner reincidência Dashboard -->
+    <div id="dash-reincidencia-banner" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);border-radius:12px;padding:14px 18px;margin-bottom:16px;cursor:pointer" onclick="showPage('relatorio',document.querySelector('.nav-item:nth-child(5)'))">
+    </div>
+
     <div class="kpi-grid">
       <div class="kpi-card"><div class="kpi-label">Total de Litros</div><div class="kpi-icon">🛢️</div><div><span class="kpi-value" id="kpi-litros">0</span><span class="kpi-unit">L</span></div><div class="kpi-delta" id="kpi-litros-delta"></div></div>
       <div class="kpi-card"><div class="kpi-label">Média L/H</div><div class="kpi-icon">📊</div><div><span class="kpi-value" id="kpi-media">0</span><span class="kpi-unit">L/h</span></div><div class="kpi-delta" id="kpi-media-delta"></div><div id="kpi-media-meta" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
@@ -635,6 +639,17 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div class="page-header-title"><div class="page-title">Relatório de Eficiência</div><div class="page-sub">Analise um período e envie alertas por e-mail</div></div>
     </div>
 
+    <!-- Banner de reincidência -->
+    <div id="rel-reincidencia-banner" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);border-radius:12px;padding:14px 18px;margin-bottom:16px"></div>
+
+    <!-- Tabs do relatório -->
+    <div class="arla-tab-group" style="margin-bottom:20px">
+      <button class="arla-tab active" id="rel-tab-btn-analise" onclick="relSetTab('analise',this)">🔍 Análise</button>
+      <button class="arla-tab" id="rel-tab-btn-grupos" onclick="relSetTab('grupos',this)">📧 Grupos de E-mail</button>
+    </div>
+
+    <!-- ABA ANÁLISE -->
+    <div id="rel-tab-analise">
     <!-- Seletor de período + destinatário -->
     <div class="sheets-config" style="margin-bottom:16px">
       <div class="sheets-config-title">📋 Configurar Análise</div>
@@ -681,6 +696,37 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     <!-- Resultado da análise -->
     <div id="relatorio-resultado"></div>
     <div id="rel-email-bloco" style="margin-top:16px"></div>
+    </div><!-- /rel-tab-analise -->
+
+    <!-- ABA GRUPOS E-MAIL -->
+    <div id="rel-tab-grupos" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">➕ Novo Grupo de E-mail</div>
+        <div class="form-group">
+          <label class="form-label">Nome do Grupo</label>
+          <input type="text" class="form-input" id="relg-nome" placeholder="Ex: Gestores CENIBRA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail(s) — separe por vírgula</label>
+          <input type="text" class="form-input" id="relg-emails" placeholder="gestor@empresa.com, supervisor@empresa.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operações deste grupo</label>
+          <input type="text" class="form-input" id="relg-ops-busca" placeholder="🔍 Buscar operação..." oninput="relgFiltrarOps()" style="margin-bottom:8px;font-size:13px">
+          <div id="relg-ops-container" style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+            <div style="font-size:12px;color:var(--text3)">Importe um período primeiro para ver as operações disponíveis</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="relgSalvar()">💾 Salvar Grupo</button>
+          <button class="btn btn-secondary" onclick="relgLimpar()">✕ Cancelar</button>
+        </div>
+        <input type="hidden" id="relg-edit-id" value="">
+      </div>
+      <div id="relg-lista">
+        <div class="empty" style="padding:40px"><div class="empty-icon">📧</div><div class="empty-text">Nenhum grupo criado ainda</div></div>
+      </div>
+    </div>
   </div>
 
   <!-- A EXCLUIR -->
@@ -1132,7 +1178,7 @@ function showPage(page,el) {
   if(el) el.classList.add('active');
   const renders = {dashboard:renderDashboard,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
   if(renders[page]) renders[page]();
-  if(page==='relatorio') { relPopularOps(); }
+  if(page==='relatorio') { relPopularOps(); relgInit(); relChecarReincidencia(); }
   if(page==='excluir') { onShowExcluir(); }
   if(page==='arla') { arlaOnShow(); }
 }
@@ -1328,6 +1374,7 @@ function renderDashboard() {
   const lbl=state.tab==='semanal'?'Semanal':state.tab==='mensal'?'Mensal':'Período';
   if(document.getElementById('chart-period-label2')) document.getElementById('chart-period-label2').textContent=lbl;
   renderOpChart(list); renderBarChart(list); renderRanking(list);
+  relChecarReincidencia();
 }
 
 function renderOpChart(list) {
@@ -2026,6 +2073,7 @@ function importarRelatorio(input) {
 
       saveState();
       renderHistoricoPeriodos();
+      relChecarReincidencia();
       document.getElementById('import-preview').innerHTML=`
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px;margin-top:12px">
           <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">✅ "${nomePeriodo}" importado!</div>
@@ -2434,10 +2482,15 @@ function renderRelEmailBloco(operacoes) {
   const bloco = document.getElementById('rel-email-bloco');
   if (!bloco) return;
   if (!operacoes.length) { bloco.innerHTML = ''; return; }
-  const dica = '<div style="font-size:11px;color:var(--text3);margin-bottom:12px">💡 Para múltiplos destinatários, separe com vírgula: <span style="color:var(--accent)">joao@empresa.com, maria@empresa.com</span></div>';
-  const blocos = relGetBlocos(operacoes);
+  const dica = '<div style="font-size:11px;color:var(--text3);margin-bottom:12px">💡 Configure grupos em <strong>📧 Grupos de E-mail</strong> para reusar toda semana!</div>';
+  // Usa grupos salvos se existirem, senão usa lógica de REL_GRUPOS
+  const blocosSalvos = relgGetBlocosSalvos(operacoes);
+  const blocos = blocosSalvos || relGetBlocos(operacoes);
   bloco.innerHTML = '<div class="chart-card">' +
-    '<div class="chart-title" style="margin-bottom:14px">📧 Enviar Alertas por E-mail</div>' + dica +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">' +
+    '<div class="chart-title" style="margin-bottom:0">📧 Enviar Alertas por E-mail</div>' +
+    '<button class="btn btn-secondary btn-sm" onclick="relSetTab(\'grupos\',document.getElementById(\'rel-tab-btn-grupos\'))">⚙️ Gerenciar Grupos</button>' +
+    '</div>' + dica +
     blocos.map(b =>
       '<div style="margin-bottom:14px">' +
         '<div style="font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2)">' +
@@ -2445,7 +2498,7 @@ function renderRelEmailBloco(operacoes) {
           (b.isGrupo ? '<span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:6px">(' + b.ops.join(', ') + ')</span>' : '') +
         '</div>' +
         '<div style="display:flex;gap:8px">' +
-          '<input type="text" class="form-input" style="flex:1" id="rel-email-bloco-' + encodeURIComponent(b.id) + '" placeholder="email1@empresa.com, email2@empresa.com">' +
+          '<input type="text" class="form-input" style="flex:1" id="rel-email-bloco-' + encodeURIComponent(b.id) + '" placeholder="email1@empresa.com, email2@empresa.com" value="' + (b.emails || '') + '">' +
           '<button class="btn btn-primary btn-sm" data-bloco-id="' + b.id.replace(/"/g,'&quot;') + '" onclick="enviarBloco(this.dataset.blocoId)">📧 Enviar</button>' +
         '</div>' +
       '</div>'
@@ -2465,8 +2518,9 @@ function buildEmailHTML(blocoOps, byOp, labelPeriodo, limite, labelBloco) {
     const linhas = maquinas.map((m,i) => {
       const cor = corEfic(m.eficiencia);
       const bg  = i%2===0 ? '#ffffff' : '#f8fafc';
+      const isReincidente = window._reincidentesSet && window._reincidentesSet.has(m.placa);
       return '<tr style="background:' + bg + '">' +
-        '<td style="padding:11px 16px;font-weight:700;font-family:monospace;font-size:13px;color:#1e293b;border-bottom:1px solid #e2e8f0">' + m.placa + '</td>' +
+        '<td style="padding:11px 16px;font-weight:700;font-family:monospace;font-size:13px;color:#1e293b;border-bottom:1px solid #e2e8f0">' + m.placa + (isReincidente ? ' <span style="background:#fee2e2;color:#dc2626;font-size:10px;padding:2px 5px;border-radius:4px;font-family:Arial">🔴 REINCID.</span>' : '') + '</td>' +
         '<td style="padding:11px 16px;color:#2563eb;font-weight:600;text-align:center;font-size:13px;border-bottom:1px solid #e2e8f0">' + (m.meta>0?m.meta.toFixed(1)+' L/h':'—') + '</td>' +
         '<td style="padding:11px 16px;font-weight:700;text-align:center;font-size:13px;color:' + cor + ';border-bottom:1px solid #e2e8f0">' + m.mediaReal.toFixed(2) + ' L/h</td>' +
         '<td style="padding:11px 16px;text-align:center;font-size:13px;color:' + cor + ';font-weight:600;border-bottom:1px solid #e2e8f0">+' + m.desvio.toFixed(1) + '%</td>' +
@@ -2534,6 +2588,21 @@ function buildEmailHTML(blocoOps, byOp, labelPeriodo, limite, labelBloco) {
 async function enviarBloco(blocoId) {
   if (!window._relDados || !window._relBlocos) return;
   const { byOp, labelPeriodo, limite } = window._relDados;
+  // Pré-computa set de reincidentes para o HTML do email
+  const limite98 = 98;
+  const periodos = Object.entries(state.semanas).sort((a,b) => (a[1].importedAt||'').localeCompare(b[1].importedAt||''));
+  const maqHist = {};
+  periodos.forEach(([id, p]) => {
+    const byMaq = {};
+    (p.registros||[]).forEach(r => { if(!byMaq[r.placa]) byMaq[r.placa]={l:0,h:0}; byMaq[r.placa].l+=r.litros||0; byMaq[r.placa].h+=r.horas||0; });
+    Object.entries(byMaq).forEach(([placa, d]) => {
+      const maq = getMaquina(placa); const meta = maq?.meta||0;
+      const media = d.h>0?d.l/d.h:0; const efic = meta>0&&media>0?(meta/media)*100:null;
+      if(!maqHist[placa]) maqHist[placa]=[];
+      maqHist[placa].push(efic);
+    });
+  });
+  window._reincidentesSet = new Set(Object.entries(maqHist).filter(([,hist]) => { const ult=hist.slice(-2); return ult.length>=2&&ult.every(e=>e!==null&&e<limite98); }).map(([placa])=>placa));
   const bloco = window._relBlocos.find(b => b.id === blocoId);
   if (!bloco) return;
   const destRaw = document.getElementById('rel-email-bloco-' + encodeURIComponent(blocoId))?.value?.trim();
@@ -3678,6 +3747,261 @@ function arlaEnviarEmail() {
   }).catch(() => showToast('Copie o relatório manualmente', 'error'));
   const assunto = encodeURIComponent('FuelTracker — Alerta Controle Arla');
   setTimeout(() => window.open('mailto:?subject=' + assunto, '_blank'), 500);
+}
+
+// ── RELATÓRIO — TABS ─────────────────────────────────────────────────────────
+function relSetTab(tab, el) {
+  document.getElementById('rel-tab-analise').style.display = tab === 'analise' ? '' : 'none';
+  document.getElementById('rel-tab-grupos').style.display = tab === 'grupos' ? '' : 'none';
+  document.querySelectorAll('#page-relatorio .arla-tab').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (tab === 'grupos') relgRender();
+}
+
+// ── RELATÓRIO — GRUPOS DE E-MAIL ─────────────────────────────────────────────
+window._relGrupos = [];
+
+function relgInit() {
+  const saved = localStorage.getItem('rel_grupos');
+  if (saved) { try { window._relGrupos = JSON.parse(saved); } catch(e) {} }
+}
+
+function relgGetOpsDisponiveis() {
+  return [...new Set(state.abastecimentos.map(a => getMaquina(a.placa)?.operacao || a.operacao || '').filter(Boolean))].sort();
+}
+
+function relgPopularOps(opsChecked) {
+  const container = document.getElementById('relg-ops-container');
+  if (!container) return;
+  const ops = relgGetOpsDisponiveis();
+  if (!ops.length) { container.innerHTML = '<div style="font-size:12px;color:var(--text3)">Importe um período para ver operações</div>'; return; }
+  const busca = (document.getElementById('relg-ops-busca')?.value || '').toLowerCase();
+  const filtradas = busca ? ops.filter(o => o.toLowerCase().includes(busca)) : ops;
+  container.innerHTML = filtradas.map(op => {
+    const checked = opsChecked ? opsChecked.includes(op) : false;
+    return '<label style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;cursor:pointer;font-size:12px">' +
+      '<input type="checkbox" class="relg-op-check" value="' + op + '" ' + (checked ? 'checked' : '') + ' style="accent-color:var(--accent)">' +
+      op.replace(/_/g,' ') + '</label>';
+  }).join('');
+}
+
+function relgFiltrarOps() {
+  const editId = document.getElementById('relg-edit-id').value;
+  const g = editId ? window._relGrupos.find(g => g.id === editId) : null;
+  const currentChecked = [...document.querySelectorAll('.relg-op-check:checked')].map(c => c.value);
+  relgPopularOps(currentChecked.length ? currentChecked : (g ? g.ops : []));
+}
+
+function relgSalvar() {
+  const nome = document.getElementById('relg-nome').value.trim();
+  const emails = document.getElementById('relg-emails').value.trim();
+  const ops = [...document.querySelectorAll('.relg-op-check:checked')].map(c => c.value);
+  if (!nome) { showToast('Digite um nome para o grupo', 'error'); return; }
+  if (!emails) { showToast('Digite pelo menos um e-mail', 'error'); return; }
+  if (!ops.length) { showToast('Selecione pelo menos uma operação', 'error'); return; }
+  const editId = document.getElementById('relg-edit-id').value;
+  if (editId) {
+    const idx = window._relGrupos.findIndex(g => g.id === editId);
+    if (idx >= 0) window._relGrupos[idx] = { id: editId, nome, emails, ops };
+  } else {
+    window._relGrupos.push({ id: Date.now().toString(), nome, emails, ops });
+  }
+  localStorage.setItem('rel_grupos', JSON.stringify(window._relGrupos));
+  relgLimpar();
+  relgRender();
+  showToast('✅ Grupo salvo!', 'success');
+}
+
+function relgLimpar() {
+  document.getElementById('relg-nome').value = '';
+  document.getElementById('relg-emails').value = '';
+  document.getElementById('relg-edit-id').value = '';
+  const b = document.getElementById('relg-ops-busca'); if (b) b.value = '';
+  document.querySelectorAll('.relg-op-check').forEach(c => c.checked = false);
+}
+
+function relgEditar(id) {
+  const g = window._relGrupos.find(g => g.id === id);
+  if (!g) return;
+  document.getElementById('relg-nome').value = g.nome;
+  document.getElementById('relg-emails').value = g.emails;
+  document.getElementById('relg-edit-id').value = id;
+  relgPopularOps(g.ops);
+  document.getElementById('relg-nome')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function relgExcluir(id) {
+  if (!confirm('Excluir este grupo?')) return;
+  window._relGrupos = window._relGrupos.filter(g => g.id !== id);
+  localStorage.setItem('rel_grupos', JSON.stringify(window._relGrupos));
+  relgRender();
+  showToast('Grupo excluído', 'success');
+}
+
+function relgRender() {
+  relgInit();
+  relgPopularOps(null);
+  const lista = document.getElementById('relg-lista');
+  if (!lista) return;
+  if (!window._relGrupos.length) {
+    lista.innerHTML = '<div class="empty" style="padding:40px"><div class="empty-icon">📧</div><div class="empty-text">Nenhum grupo criado ainda</div></div>';
+    return;
+  }
+  lista.innerHTML = '';
+  window._relGrupos.forEach(g => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px';
+    div.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+      '<div>' +
+      '<div style="font-size:15px;font-weight:700">' + g.nome + '</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-top:3px">📧 ' + g.emails + '</div>' +
+      '<div style="font-size:12px;color:var(--accent);margin-top:3px">' + g.ops.length + ' operação(ões): ' + g.ops.map(o => o.replace(/_/g,' ')).join(', ') + '</div>' +
+      '</div>' +
+      '<div id="relg-btns-' + g.id + '" style="display:flex;gap:8px"></div>' +
+      '</div>';
+    lista.appendChild(div);
+    const btns = document.getElementById('relg-btns-' + g.id);
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'btn btn-secondary btn-sm';
+    btnEdit.textContent = '✏️ Editar';
+    btnEdit.addEventListener('click', () => relgEditar(g.id));
+    btns.appendChild(btnEdit);
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn btn-danger btn-sm';
+    btnDel.textContent = '🗑️';
+    btnDel.addEventListener('click', () => relgExcluir(g.id));
+    btns.appendChild(btnDel);
+  });
+}
+
+// Integra grupos na renderRelEmailBloco
+function relgGetBlocosSalvos(operacoes) {
+  relgInit();
+  if (!window._relGrupos.length) return null; // usa lógica antiga
+  const blocos = [];
+  const usadas = new Set();
+  for (const g of window._relGrupos) {
+    const opsGrupo = g.ops.filter(o => operacoes.includes(o));
+    if (!opsGrupo.length) continue;
+    opsGrupo.forEach(o => usadas.add(o));
+    blocos.push({ id: g.id, label: g.nome, ops: opsGrupo, emails: g.emails, isGrupo: true });
+  }
+  // Operações não cobertas por nenhum grupo
+  operacoes.filter(o => !usadas.has(o)).forEach(o => {
+    blocos.push({ id: o, label: o, ops: [o], emails: '', isGrupo: false });
+  });
+  return blocos;
+}
+
+// ── ALERTAS DE REINCIDÊNCIA ───────────────────────────────────────────────────
+function relChecarReincidencia() {
+  const limite = 98;
+  const periodos = Object.entries(state.semanas).sort((a,b) => (a[1].importedAt||'').localeCompare(b[1].importedAt||''));
+  if (periodos.length < 2) {
+    document.getElementById('rel-reincidencia-badge').style.display = 'none';
+    const banner = document.getElementById('rel-reincidencia-banner');
+    if (banner) banner.style.display = 'none';
+    return;
+  }
+
+  // Para cada máquina, calcula eficiência em cada período
+  const maqHistorico = {}; // placa -> [{periodo, eficiencia, label}]
+  periodos.forEach(([id, p]) => {
+    const rows = p.registros || [];
+    const byMaq = {};
+    rows.forEach(r => {
+      if (!byMaq[r.placa]) byMaq[r.placa] = { l: 0, h: 0 };
+      byMaq[r.placa].l += r.litros || 0;
+      byMaq[r.placa].h += r.horas || 0;
+    });
+    Object.entries(byMaq).forEach(([placa, d]) => {
+      const maq = getMaquina(placa);
+      const meta = maq?.meta || 0;
+      const media = d.h > 0 ? d.l / d.h : 0;
+      const efic = meta > 0 && media > 0 ? (meta / media) * 100 : null;
+      if (!maqHistorico[placa]) maqHistorico[placa] = [];
+      maqHistorico[placa].push({ periodoId: id, label: p.label || id, efic, operacao: maq?.operacao || '' });
+    });
+  });
+
+  // Detecta reincidência: 2+ períodos consecutivos abaixo de 98%
+  const reincidentes = [];
+  Object.entries(maqHistorico).forEach(([placa, hist]) => {
+    if (hist.length < 2) return;
+    // Pega os últimos N períodos
+    const ultimos = hist.slice(-3); // últimos 3
+    const abaixo = ultimos.filter(h => h.efic !== null && h.efic < limite);
+    if (abaixo.length >= 2) {
+      const maq = getMaquina(placa);
+      reincidentes.push({
+        placa,
+        operacao: maq?.operacao || '',
+        periodos: abaixo.length,
+        labels: abaixo.map(h => h.label),
+        piorEfic: Math.min(...abaixo.map(h => h.efic))
+      });
+    }
+  });
+
+  reincidentes.sort((a, b) => a.piorEfic - b.piorEfic);
+
+  const badge = document.getElementById('rel-reincidencia-badge');
+  const banner = document.getElementById('rel-reincidencia-banner');
+
+  if (!reincidentes.length) {
+    if (badge) badge.style.display = 'none';
+    if (banner) banner.style.display = 'none';
+    return;
+  }
+
+  if (badge) { badge.textContent = reincidentes.length; badge.style.display = ''; }
+
+  // Atualiza banner do Dashboard
+  const dashBanner = document.getElementById('dash-reincidencia-banner');
+  if (dashBanner) {
+    if (reincidentes.length) {
+      dashBanner.style.display = '';
+      dashBanner.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+        '<div style="display:flex;align-items:center;gap:10px">' +
+        '<span style="font-size:20px">🔴</span>' +
+        '<div><div style="font-size:13px;font-weight:700;color:var(--red)">' + reincidentes.length + ' máquina' + (reincidentes.length > 1 ? 's' : '') + ' reincidente' + (reincidentes.length > 1 ? 's' : '') + ' abaixo de 98%</div>' +
+        '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + reincidentes.map(r => r.placa).slice(0,5).join(', ') + (reincidentes.length > 5 ? (' e mais ' + (reincidentes.length - 5)) : '') + '</div></div>' +
+        '</div>' +
+        '<span style="font-size:12px;color:var(--accent);font-weight:600">Ver Relatório →</span>' +
+        '</div>';
+    } else {
+      dashBanner.style.display = 'none';
+    }
+  }
+
+  if (banner) {
+    banner.style.display = '';
+    const byOp = {};
+    reincidentes.forEach(r => {
+      const op = (r.operacao || 'Sem Operação').replace(/_/g,' ');
+      if (!byOp[op]) byOp[op] = [];
+      byOp[op].push(r);
+    });
+    let html = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' +
+      '<span style="font-size:22px">🔴</span>' +
+      '<div><div style="font-size:14px;font-weight:700;color:var(--red)">' + reincidentes.length + ' máquina' + (reincidentes.length > 1 ? 's' : '') + ' reincidente' + (reincidentes.length > 1 ? 's' : '') + ' abaixo de 98%</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-top:2px">Abaixo da meta em 2 ou mais períodos consecutivos</div></div>' +
+      '</div>';
+    Object.entries(byOp).forEach(([op, maquinas]) => {
+      html += '<div style="font-size:12px;font-weight:700;color:var(--text2);margin:10px 0 6px">' + op + '</div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      maquinas.forEach(r => {
+        html += '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 12px;font-size:12px">' +
+          '<span style="font-family:monospace;font-weight:700">' + r.placa + '</span>' +
+          '<span style="color:var(--red);margin-left:8px;font-weight:600">' + r.piorEfic.toFixed(1) + '%</span>' +
+          '<span style="color:var(--text3);font-size:10px;display:block;margin-top:2px">' + r.periodos + ' períodos: ' + r.labels.join(', ') + '</span>' +
+          '</div>';
+      });
+      html += '</div>';
+    });
+    banner.innerHTML = html;
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
