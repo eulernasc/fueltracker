@@ -347,6 +347,23 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 .excl-col-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px;padding:8px 16px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);}
 @media(max-width:768px){.excl-summary{grid-template-columns:1fr 1fr;}.excl-col-header{display:none;}}
 
+/* ── ARLA ── */
+.arla-tab-group{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;}
+.arla-tab{padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);transition:.2s;font-family:'DM Sans',sans-serif;}
+.arla-tab.active{background:var(--accent);color:#fff;}
+.arla-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.arla-kpi{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;}
+.arla-kpi-val{font-size:26px;font-weight:700;font-family:monospace;}
+.arla-kpi-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;}
+.arla-row{display:grid;grid-template-columns:1fr 1fr 90px 90px 90px 110px;gap:0;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(42,47,69,.5);font-size:13px;}
+.arla-row:last-child{border-bottom:none;}
+.arla-row-header{background:var(--bg3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text2);border-radius:8px 8px 0 0;}
+.arla-badge-ok{background:rgba(34,197,94,.15);color:var(--green);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;text-align:center;}
+.arla-badge-fail{background:rgba(239,68,68,.15);color:var(--red);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;text-align:center;}
+.arla-badge-egr{background:rgba(79,142,247,.12);color:var(--accent);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;text-align:center;}
+.arla-op-header{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.arla-egr-tag{display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;font-family:monospace;margin:3px;}
+@media(max-width:768px){.arla-kpi-grid{grid-template-columns:1fr 1fr;}.arla-row{grid-template-columns:1fr 80px 80px 90px;}.arla-row>*:nth-child(2){display:none;}}
 </style>
 </head>
 <body>
@@ -374,6 +391,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon">🚜</span>Máquinas</div>
     <div class="nav-item" onclick="showPage('relatorio',this)"><span class="icon">📧</span>Relatório</div>
     <div class="nav-item" id="nav-excluir" onclick="showPage('excluir',this)"><span class="icon">🗑️</span>A Excluir<span id="excluir-nav-badge" style="display:none" class="excl-badge">0</span></div>
+    <div class="nav-item" id="nav-arla" onclick="showPage('arla',this)"><span class="icon">🧪</span>Controle Arla<span id="arla-nav-badge" style="display:none" class="excl-badge" style="background:var(--yellow)">0</span></div>
     <div class="nav-item" onclick="showPage('config',this)"><span class="icon">⚙️</span>Configurações</div>
   </nav>
   <div class="sync-status">
@@ -402,6 +420,9 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     </div>
     <div class="mob-nav-item" id="mob-nav-excluir" onclick="showPage('excluir',this);updateMobNav('excluir')">
       <span class="mob-icon">🗑️</span>A Excluir
+    </div>
+    <div class="mob-nav-item" id="mob-nav-arla" onclick="showPage('arla',this);updateMobNav('arla')">
+      <span class="mob-icon">🧪</span>Arla
     </div>
     <div class="mob-nav-item" id="mob-nav-config" onclick="showPage('config',this);updateMobNav('config')">
       <span class="mob-icon">⚙️</span>Config
@@ -702,6 +723,113 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
     </div>
   </div>
 
+  <!-- ARLA -->
+  <div id="page-arla" class="page">
+    <div class="page-header">
+      <div class="page-header-title">
+        <div class="page-title">🧪 Controle de Arla</div>
+        <div class="page-sub">Monitoramento do consumo de Arla 32 por frota</div>
+      </div>
+      <div class="header-actions" id="arla-header-actions">
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('arla-file-input').click()">⬆️ Carregar Relatório</button>
+        <input type="file" id="arla-file-input" accept=".xlsx,.xls" style="display:none" onchange="arlaCarregarArquivo(this)">
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="arla-tab-group">
+      <button class="arla-tab active" onclick="arlaSetTab('relatorio',this)">📊 Relatório</button>
+      <button class="arla-tab" onclick="arlaSetTab('egr',this)">🚛 Banco EGR</button>
+      <button class="arla-tab" onclick="arlaSetTab('grupos',this)">📧 Grupos de E-mail</button>
+    </div>
+
+    <!-- ABA RELATÓRIO -->
+    <div id="arla-tab-relatorio">
+      <!-- Estado vazio -->
+      <div id="arla-empty" style="background:var(--bg2);border:2px dashed var(--border);border-radius:14px;padding:48px;text-align:center">
+        <div style="font-size:42px;margin-bottom:12px">🧪</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px">Nenhum relatório carregado</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.7">
+          Carregue o arquivo mensal com as colunas:<br>
+          <strong>Operação · Placa · Modelo · Vol. Real · Vol. Arla</strong>
+        </div>
+        <button class="btn btn-primary" onclick="document.getElementById('arla-file-input').click()">⬆️ Carregar Relatório .xlsx</button>
+      </div>
+
+      <!-- Resultado -->
+      <div id="arla-resultado" style="display:none">
+        <!-- KPIs -->
+        <div class="arla-kpi-grid">
+          <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-total" style="color:var(--accent)">0</div><div class="arla-kpi-label">Total SRC Analisadas</div></div>
+          <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-fail" style="color:var(--red)">0</div><div class="arla-kpi-label">Abaixo de 5%</div></div>
+          <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-ok" style="color:var(--green)">0</div><div class="arla-kpi-label">Acima de 5%</div></div>
+          <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-egr" style="color:var(--text2)">0</div><div class="arla-kpi-label">Ignoradas (EGR)</div></div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters" style="margin-bottom:16px">
+          <input type="text" class="filter-input" id="arla-busca" placeholder="🔍 Buscar placa ou operação..." oninput="arlaRenderRelatorio()" style="flex:1;min-width:180px">
+          <select class="filter-select" id="arla-filter-op" onchange="arlaRenderRelatorio()"><option value="">Todas as Operações</option></select>
+          <button class="btn btn-secondary btn-sm" onclick="arlaEnviarEmail()">📧 Enviar E-mail</button>
+        </div>
+
+        <!-- Conteúdo -->
+        <div id="arla-conteudo"></div>
+      </div>
+    </div>
+
+    <!-- ABA BANCO EGR -->
+    <div id="arla-tab-egr" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px">➕ Adicionar placa EGR</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <input type="text" class="form-input" id="arla-nova-egr" placeholder="Ex: ABC1D23" style="flex:1;min-width:150px;font-family:monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          <button class="btn btn-primary" onclick="arlaAdicionarEGR()">+ Adicionar</button>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text2)">
+          Placas EGR não precisam de Arla e são ignoradas no relatório.
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div>
+          <input type="text" class="filter-input" id="arla-egr-busca" placeholder="🔍 Buscar placa EGR..." oninput="arlaRenderBancoEGR()" style="min-width:220px">
+        </div>
+        <div style="font-size:13px;color:var(--text2)"><span id="arla-egr-count">0</span> placas no banco</div>
+      </div>
+      <div id="arla-egr-lista" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-wrap:wrap;gap:4px;min-height:60px"></div>
+    </div>
+
+    <!-- ABA GRUPOS E-MAIL -->
+    <div id="arla-tab-grupos" style="display:none">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:16px">➕ Novo Grupo de E-mail</div>
+        <div class="form-group">
+          <label class="form-label">Nome do Grupo</label>
+          <input type="text" class="form-input" id="arla-grupo-nome" placeholder="Ex: Gestores CENIBRA">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail(s) destinatário — separe por vírgula</label>
+          <input type="text" class="form-input" id="arla-grupo-emails" placeholder="gestor@empresa.com, supervisor@empresa.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Operações incluídas neste grupo</label>
+          <div id="arla-grupo-ops" style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px">
+            <div style="font-size:12px;color:var(--text3)">Carregue um relatório primeiro para ver as operações disponíveis</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="arlaSalvarGrupo()">💾 Salvar Grupo</button>
+          <button class="btn btn-secondary" onclick="arlaLimparFormGrupo()">✕ Cancelar</button>
+        </div>
+        <input type="hidden" id="arla-grupo-edit-id" value="">
+      </div>
+
+      <div id="arla-grupos-lista">
+        <div class="empty" style="padding:40px"><div class="empty-icon">📧</div><div class="empty-text">Nenhum grupo criado ainda</div></div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- MODAL SENHA -->
@@ -936,6 +1064,7 @@ function showPage(page,el) {
   if(renders[page]) renders[page]();
   if(page==='relatorio') { relPopularOps(); }
   if(page==='excluir') { onShowExcluir(); }
+  if(page==='arla') { arlaOnShow(); }
 }
 
 function setTab(tab) {
@@ -2726,6 +2855,415 @@ function onShowExcluir() {
       } catch(e) {}
     }
   }
+}
+
+// ── CONTROLE DE ARLA ─────────────────────────────────────────────────────────
+const ARLA_EGR_DEFAULT = ["LK52LRGP", "LM24FWGP", "LK52NRGP", "LK52LZGP", "LM24GCGP", "LK52NYGP", "LK44BCGP", "LK52MWGP", "LK43ZZGP", "LK52MRGP", "LK43ZRGP", "LK52MKGP", "LK52PGGP", "LK52LGGP", "LK44BJGP", "LM34ZHGP", "LM34ZJGP", "LJ39YLGP", "LT85YSGP", "LK16LRGP", "LL20LRGP", "LT85ZNGP", "LT97NKGP", "LT85ZDGP", "LL20KFGP", "LK16LZGP", "LK16KVGP", "LL20HZGP", "LJ39ZNGP", "LW96TCGP", "LT89LGGP", "LT85NNGP", "LJ40DNGP", "LK16KJGP", "LJ49MJGP", "LJ39XHGP", "LT85ZSGP", "LT85RTGP", "LL20LZGP", "LK16DRGP", "LL20LSGP", "LT85ZWGP", "LT85NTGP", "LL20LJGP", "LL20LCGP", "LJ39VFGP", "LT85WBGP", "LT85SLGP", "LT89JHGP", "LJ49LWGP", "LT85XHGP", "LK16GCGP", "LT85YXGP", "LK16MFGP", "LT85NCGP", "LT85TXGP", "LT85YYGP", "LL20KWGP", "LJ39TXGP", "LT85YBGP", "LT85WVGP", "LK16JJGP", "LK16FXGP", "LW96TJGP", "LT85TRGP", "LT89KRGP", "LK16GHGP", "LW96SWGP", "LK16KCGP", "LT85PXGP", "MD05RSGP", "LT85XDGP", "LK16ZCGP", "LL20JNGP", "LW96TNGP", "LT85XSGP", "LJ39TRGP", "LT97PLGP", "LJ39XBGP", "LW96TPGP", "LW96TGGP", "LT85SBGP", "LK16GMGP", "LJ39YYGP", "LK16CWGP", "LJ39WXGP", "LT89KBGP", "LJ40BZGP", "LJ39VLGP", "LL20MBGP", "LK16CJGP", "LT85TCGP", "LJ39WTGP", "LT97NSGP", "LT85TJGP", "LT86BDGP", "LT89HKGP", "LT89JRGP", "LK16JWGP", "LL20HRGP", "LK16DDGP", "LW96STGP", "LT85MKGP", "LK16FRGP", "LK16GKGP", "LW96TLGP", "LT85RLGP", "LT85NGGP", "LJ39ZGGP", "LL20LPGP", "LT89HTGP", "LW96TFGP", "LJ49MFGP", "LL20JLGP", "LL22LSGP", "LK16JBGP", "LT85WLGP", "LW96SZGP", "LK16DSGP", "LK16DMGP", "LT85RRGP", "LT85RGGP", "LT85WKGP", "LT85RFGP", "LT85PTGP", "LT85PFGP", "LJ49LYGP", "LK16LBGP", "LK16DWGP", "LJ40BRGP", "LL20JFGP", "LJ49LZGP", "LT85ZZGP", "LJ49LXGP", "LT85YNGP", "LT85TPGP", "LT85SYGP", "LT85MRGP", "LW96TRGP", "LJ39XZGP", "LJ49MKGP", "LT97MHGP", "LL20LVGP", "LK16FMGP", "LK16LXGP", "LL20JRGP", "LT89LLGP", "LJ39VRGP", "LK16JRGP", "LJ40DCGP", "LT89KYGP", "LT85YFGP", "LJ39WNGP", "LJ40BHGP", "LW96TDGP", "LT85STGP", "LT85XYGP", "LK16HMGP", "LT85VCGP", "LT89KJGP", "LT89LVGP", "LJ39YGGP", "LJ49MLGP", "LK16FFGP", "LJ40CNGP", "ENZ9H39", "EGJ6E55", "FIY8C17", "GHK9A16", "FKG9J56", "FK02J03", "FXG6D19", "GJV3C99", "FSG1D75", "FZJ7I47", "FVW0I23", "FXZ9F06", "FCA1B34", "FZA7I32", "CUK7C34", "FCW6C69", "GCH2C69", "GAT7I65"];
+
+// Estado Arla
+window._arlaState = {
+  dados: [],        // dados brutos do arquivo
+  processados: [],  // {placa, operacao, modelo, diesel, arla, pct, status}
+  grupos: [],       // grupos de e-mail
+  egrSet: new Set() // placas EGR
+};
+
+function arlaInit() {
+  // Carrega EGR do localStorage ou usa defaults
+  const savedEgr = localStorage.getItem('arla_egr');
+  if (savedEgr) {
+    try { window._arlaState.egrSet = new Set(JSON.parse(savedEgr)); }
+    catch(e) { window._arlaState.egrSet = new Set(ARLA_EGR_DEFAULT); }
+  } else {
+    window._arlaState.egrSet = new Set(ARLA_EGR_DEFAULT);
+    localStorage.setItem('arla_egr', JSON.stringify(ARLA_EGR_DEFAULT));
+  }
+  // Carrega grupos
+  const savedGrupos = localStorage.getItem('arla_grupos');
+  if (savedGrupos) { try { window._arlaState.grupos = JSON.parse(savedGrupos); } catch(e) {} }
+  // Restaura dados se existirem
+  const savedDados = localStorage.getItem('arla_dados');
+  if (savedDados) { try { window._arlaState.processados = JSON.parse(savedDados); } catch(e) {} }
+}
+
+function arlaOnShow() {
+  arlaInit();
+  arlaRenderBancoEGR();
+  arlaRenderGrupos();
+  if (window._arlaState.processados.length) {
+    arlaExibirResultado();
+  }
+}
+
+function arlaSetTab(tab, el) {
+  ['relatorio','egr','grupos'].forEach(t => {
+    document.getElementById('arla-tab-' + t).style.display = t === tab ? '' : 'none';
+  });
+  document.querySelectorAll('.arla-tab').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+// ── CARREGAR ARQUIVO ──────────────────────────────────────────────────────────
+function arlaCarregarArquivo(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      if (!raw.length) { showToast('Arquivo vazio', 'error'); return; }
+      arlaProcessar(raw);
+    } catch(err) { showToast('Erro ao ler arquivo', 'error'); console.error(err); }
+  };
+  reader.readAsArrayBuffer(file);
+  input.value = '';
+}
+
+function arlaProcessar(rows) {
+  const egr = window._arlaState.egrSet;
+  const get = (row, ...ns) => {
+    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n)));
+    return k ? String(row[k]).trim() : '';
+  };
+  const getNum = (row, ...ns) => {
+    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n)));
+    return k ? parseFloat(row[k]) || 0 : 0;
+  };
+
+  window._arlaState.processados = rows.map(row => {
+    const placa = get(row, 'placa').toUpperCase();
+    const operacao = get(row, 'operacao', 'operação');
+    const modelo = get(row, 'modelo');
+    const diesel = getNum(row, 'volreal', 'diesel', 'vol.real', 'litrosdiesel');
+    const arla = getNum(row, 'volarla', 'arla', 'vol.arla', 'litrosarla');
+    const isEgr = egr.has(placa);
+    const pct = (!isEgr && diesel > 0) ? (arla / diesel * 100) : null;
+    const status = isEgr ? 'EGR' : (pct === null ? 'SEM_DIESEL' : pct >= 5 ? 'OK' : 'FAIL');
+    return { placa, operacao, modelo, diesel, arla, pct, status };
+  }).filter(r => r.placa);
+
+  localStorage.setItem('arla_dados', JSON.stringify(window._arlaState.processados));
+  arlaExibirResultado();
+  showToast('✅ ' + window._arlaState.processados.length + ' registros processados!', 'success');
+}
+
+function arlaExibirResultado() {
+  const dados = window._arlaState.processados;
+  document.getElementById('arla-empty').style.display = 'none';
+  document.getElementById('arla-resultado').style.display = 'block';
+
+  const srcDados = dados.filter(r => r.status !== 'EGR' && r.status !== 'SEM_DIESEL');
+  const fail = srcDados.filter(r => r.status === 'FAIL');
+  const ok = srcDados.filter(r => r.status === 'OK');
+  const egr = dados.filter(r => r.status === 'EGR');
+
+  document.getElementById('arla-kpi-total').textContent = srcDados.length;
+  document.getElementById('arla-kpi-fail').textContent = fail.length;
+  document.getElementById('arla-kpi-ok').textContent = ok.length;
+  document.getElementById('arla-kpi-egr').textContent = egr.length;
+
+  // Badge no nav
+  const badge = document.getElementById('arla-nav-badge');
+  if (badge) { badge.textContent = fail.length; badge.style.display = fail.length ? '' : 'none'; }
+
+  // Filtro de operações
+  const ops = [...new Set(srcDados.map(r => r.operacao).filter(Boolean))].sort();
+  const sel = document.getElementById('arla-filter-op');
+  sel.innerHTML = '<option value="">Todas as Operações</option>' + ops.map(o => '<option value="' + o + '">' + o.replace(/_/g,' ') + '</option>').join('');
+
+  // Atualiza ops no form de grupos
+  arlaAtualizarOpsGrupo(ops);
+
+  arlaRenderRelatorio();
+}
+
+function arlaRenderRelatorio() {
+  const busca = (document.getElementById('arla-busca')?.value || '').toLowerCase();
+  const opF = document.getElementById('arla-filter-op')?.value || '';
+  const dados = window._arlaState.processados;
+
+  // Só mostra SRC abaixo de 5%
+  let fail = dados.filter(r => r.status === 'FAIL');
+  if (opF) fail = fail.filter(r => r.operacao === opF);
+  if (busca) fail = fail.filter(r => (r.placa + r.operacao + r.modelo).toLowerCase().includes(busca));
+
+  // Agrupa por operação para ranking
+  const byOp = {};
+  fail.forEach(r => {
+    if (!byOp[r.operacao]) byOp[r.operacao] = [];
+    byOp[r.operacao].push(r);
+  });
+
+  const container = document.getElementById('arla-conteudo');
+  if (!fail.length) {
+    container.innerHTML = '<div class="empty" style="padding:40px"><div class="empty-icon">✅</div><div class="empty-text">Nenhuma placa abaixo de 5%' + (opF ? ' nesta operação' : '') + '</div></div>';
+    return;
+  }
+
+  let html = '';
+
+  // Ranking por operação
+  html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">';
+  html += '<div style="padding:14px 18px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between">';
+  html += '<span>📍 Ranking por Operação</span><span class="comp-badge">' + Object.keys(byOp).length + ' operações</span></div>';
+  html += '<div style="overflow-x:auto"><table><thead><tr>';
+  html += '<th>Operação</th><th style="text-align:center">Placas Abaixo</th><th style="text-align:center">Pior %</th><th style="text-align:center">Média %</th>';
+  html += '</tr></thead><tbody>';
+  Object.entries(byOp).sort((a,b) => b[1].length - a[1].length).forEach(([op, rows]) => {
+    const pcts = rows.map(r => r.pct);
+    const pior = Math.min(...pcts);
+    const media = pcts.reduce((a,b)=>a+b,0)/pcts.length;
+    html += '<tr>';
+    html += '<td style="font-weight:600">' + op.replace(/_/g,' ') + '</td>';
+    html += '<td style="text-align:center"><span class="badge badge-red">' + rows.length + '</span></td>';
+    html += '<td style="text-align:center"><span class="badge badge-red">' + pior.toFixed(1) + '%</span></td>';
+    html += '<td style="text-align:center">' + media.toFixed(1) + '%</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Tabela detalhada por operação
+  Object.entries(byOp).sort((a,b) => b[1].length - a[1].length).forEach(([op, rows]) => {
+    const sorted = rows.sort((a,b) => a.pct - b.pct);
+    html += '<div style="margin-bottom:12px">';
+    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px 10px 0 0;padding:11px 16px;font-size:13px;font-weight:700;color:var(--red);display:flex;align-items:center;gap:8px">';
+    html += '⚠️ ' + op.replace(/_/g,' ') + '<span style="font-size:11px;font-weight:400;color:var(--text2);margin-left:4px">' + rows.length + ' placa(s) abaixo de 5%</span></div>';
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden">';
+    html += '<div class="arla-row arla-row-header"><span>Placa</span><span>Modelo</span><span style="text-align:center">Diesel</span><span style="text-align:center">Arla</span><span style="text-align:center">%</span><span style="text-align:center">Status</span></div>';
+    sorted.forEach(r => {
+      html += '<div class="arla-row">';
+      html += '<span style="font-family:monospace;font-weight:700">' + r.placa + '</span>';
+      html += '<span style="font-size:12px;color:var(--text2)">' + (r.modelo||'—') + '</span>';
+      html += '<span style="text-align:center">' + r.diesel.toFixed(0) + 'L</span>';
+      html += '<span style="text-align:center">' + r.arla.toFixed(1) + 'L</span>';
+      html += '<span style="text-align:center;font-weight:700;color:var(--red)">' + (r.pct !== null ? r.pct.toFixed(1)+'%' : '—') + '</span>';
+      html += '<span><div class="arla-badge-fail">⚠️ ABAIXO</div></span>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  container.innerHTML = html;
+}
+
+// ── BANCO EGR ─────────────────────────────────────────────────────────────────
+function arlaRenderBancoEGR() {
+  const egr = [...window._arlaState.egrSet].sort();
+  const busca = (document.getElementById('arla-egr-busca')?.value || '').toLowerCase();
+  const filtrado = busca ? egr.filter(p => p.toLowerCase().includes(busca)) : egr;
+  document.getElementById('arla-egr-count').textContent = egr.length;
+  const lista = document.getElementById('arla-egr-lista');
+  if (!filtrado.length) {
+    lista.innerHTML = '<div style="font-size:12px;color:var(--text3)">Nenhuma placa encontrada</div>';
+    return;
+  }
+  lista.innerHTML = '';
+  filtrado.forEach(p => {
+    const span = document.createElement('span');
+    span.className = 'arla-egr-tag';
+    span.style.cursor = 'pointer';
+    span.title = 'Clique para remover';
+    span.innerHTML = p + ' <span style="color:var(--red);font-size:10px">✕</span>';
+    span.addEventListener('click', () => arlaRemoverEGR(p));
+    lista.appendChild(span);
+  });
+}
+function arlaAdicionarEGR() {
+  const inp = document.getElementById('arla-nova-egr');
+  const placa = inp.value.trim().toUpperCase();
+  if (!placa) { showToast('Digite uma placa', 'error'); return; }
+  if (window._arlaState.egrSet.has(placa)) { showToast('Placa já está no banco EGR', 'error'); return; }
+  window._arlaState.egrSet.add(placa);
+  localStorage.setItem('arla_egr', JSON.stringify([...window._arlaState.egrSet]));
+  inp.value = '';
+  arlaRenderBancoEGR();
+  showToast('✅ Placa ' + placa + ' adicionada ao banco EGR!', 'success');
+}
+
+function arlaRemoverEGR(placa) {
+  if (!confirm('Remover ' + placa + ' do banco EGR?')) return;
+  window._arlaState.egrSet.delete(placa);
+  localStorage.setItem('arla_egr', JSON.stringify([...window._arlaState.egrSet]));
+  arlaRenderBancoEGR();
+  showToast('Placa ' + placa + ' removida', 'success');
+}
+
+// ── GRUPOS DE E-MAIL ──────────────────────────────────────────────────────────
+function arlaAtualizarOpsGrupo(ops) {
+  const container = document.getElementById('arla-grupo-ops');
+  if (!ops || !ops.length) return;
+  const editId = document.getElementById('arla-grupo-edit-id').value;
+  const grupo = editId ? window._arlaState.grupos.find(g => g.id === editId) : null;
+  container.innerHTML = ops.map(op => {
+    const checked = grupo && grupo.ops.includes(op) ? 'checked' : '';
+    return '<label style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap">' +
+      '<input type="checkbox" class="arla-op-check" value="' + op + '" ' + checked + ' style="accent-color:var(--accent)">' +
+      op.replace(/_/g,' ') + '</label>';
+  }).join('');
+}
+
+function arlaSalvarGrupo() {
+  const nome = document.getElementById('arla-grupo-nome').value.trim();
+  const emails = document.getElementById('arla-grupo-emails').value.trim();
+  const ops = [...document.querySelectorAll('.arla-op-check:checked')].map(c => c.value);
+  if (!nome) { showToast('Digite um nome para o grupo', 'error'); return; }
+  if (!emails) { showToast('Digite pelo menos um e-mail', 'error'); return; }
+  if (!ops.length) { showToast('Selecione pelo menos uma operação', 'error'); return; }
+
+  const editId = document.getElementById('arla-grupo-edit-id').value;
+  if (editId) {
+    const idx = window._arlaState.grupos.findIndex(g => g.id === editId);
+    if (idx >= 0) window._arlaState.grupos[idx] = { id: editId, nome, emails, ops };
+  } else {
+    window._arlaState.grupos.push({ id: Date.now().toString(), nome, emails, ops });
+  }
+  localStorage.setItem('arla_grupos', JSON.stringify(window._arlaState.grupos));
+  arlaLimparFormGrupo();
+  arlaRenderGrupos();
+  showToast('✅ Grupo salvo!', 'success');
+}
+
+function arlaLimparFormGrupo() {
+  document.getElementById('arla-grupo-nome').value = '';
+  document.getElementById('arla-grupo-emails').value = '';
+  document.getElementById('arla-grupo-edit-id').value = '';
+  document.querySelectorAll('.arla-op-check').forEach(c => c.checked = false);
+}
+
+function arlaEditarGrupo(id) {
+  const g = window._arlaState.grupos.find(g => g.id === id);
+  if (!g) return;
+  document.getElementById('arla-grupo-nome').value = g.nome;
+  document.getElementById('arla-grupo-emails').value = g.emails;
+  document.getElementById('arla-grupo-edit-id').value = id;
+  const ops = [...new Set(window._arlaState.processados.map(r => r.operacao).filter(Boolean))].sort();
+  arlaAtualizarOpsGrupo(ops);
+  setTimeout(() => {
+    g.ops.forEach(op => {
+      const cb = document.querySelector('.arla-op-check[value="' + op + '"]');
+      if (cb) cb.checked = true;
+    });
+  }, 50);
+  arlaSetTab('grupos', document.querySelectorAll('.arla-tab')[2]);
+}
+
+function arlaExcluirGrupo(id) {
+  if (!confirm('Excluir este grupo?')) return;
+  window._arlaState.grupos = window._arlaState.grupos.filter(g => g.id !== id);
+  localStorage.setItem('arla_grupos', JSON.stringify(window._arlaState.grupos));
+  arlaRenderGrupos();
+  showToast('Grupo excluído', 'success');
+}
+
+function arlaRenderGrupos() {
+  const lista = document.getElementById('arla-grupos-lista');
+  if (!window._arlaState.grupos.length) {
+    lista.innerHTML = '<div class="empty" style="padding:40px"><div class="empty-icon">📧</div><div class="empty-text">Nenhum grupo criado ainda</div></div>';
+    return;
+  }
+  const temDados = window._arlaState.processados.length > 0;
+  lista.innerHTML = '';
+  window._arlaState.grupos.forEach(g => {
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px';
+    div.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+      '<div>' +
+      '<div style="font-size:15px;font-weight:700">' + g.nome + '</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-top:3px">📧 ' + g.emails + '</div>' +
+      '<div style="font-size:12px;color:var(--accent);margin-top:3px">' + g.ops.length + ' operação(ões): ' + g.ops.map(o => o.replace(/_/g,' ')).join(', ') + '</div>' +
+      '</div>' +
+      '<div id="arla-grupo-btns-' + g.id + '" style="display:flex;gap:8px"></div>' +
+      '</div>';
+    lista.appendChild(div);
+    const btns = document.getElementById('arla-grupo-btns-' + g.id);
+    if (temDados) {
+      const btnEnv = document.createElement('button');
+      btnEnv.className = 'btn btn-primary btn-sm';
+      btnEnv.textContent = '📧 Enviar';
+      btnEnv.addEventListener('click', () => arlaEnviarEmailGrupo(g.id));
+      btns.appendChild(btnEnv);
+    }
+    const btnEdit = document.createElement('button');
+    btnEdit.className = 'btn btn-secondary btn-sm';
+    btnEdit.textContent = '✏️ Editar';
+    btnEdit.addEventListener('click', () => arlaEditarGrupo(g.id));
+    btns.appendChild(btnEdit);
+    const btnDel = document.createElement('button');
+    btnDel.className = 'btn btn-danger btn-sm';
+    btnDel.textContent = '🗑️';
+    btnDel.addEventListener('click', () => arlaExcluirGrupo(g.id));
+    btns.appendChild(btnDel);
+  });
+}
+// ── E-MAIL ────────────────────────────────────────────────────────────────────
+function arlaBuildEmailHTML(registros, nomeGrupo, mesRef) {
+  const byOp = {};
+  registros.forEach(r => {
+    if (!byOp[r.operacao]) byOp[r.operacao] = [];
+    byOp[r.operacao].push(r);
+  });
+
+  let secoes = '';
+  Object.entries(byOp).sort((a,b) => b[1].length - a[1].length).forEach(([op, rows]) => {
+    const sorted = rows.sort((a,b) => a.pct - b.pct);
+    secoes += '<tr><td colspan="5" style="background:#1e3a8a;padding:10px 16px;color:#fff;font-weight:700;font-size:13px">⚠️ ' + op.replace(/_/g,' ') + ' — ' + rows.length + ' placa(s) abaixo</td></tr>';
+    sorted.forEach(r => {
+      secoes += '<tr style="border-bottom:1px solid #e2e8f0">' +
+        '<td style="padding:10px 14px;font-family:monospace;font-weight:700;color:#1e293b">' + r.placa + '</td>' +
+        '<td style="padding:10px 14px;color:#475569;font-size:12px">' + (r.modelo||'—') + '</td>' +
+        '<td style="padding:10px 14px;text-align:center;color:#1e293b">' + r.diesel.toFixed(0) + 'L</td>' +
+        '<td style="padding:10px 14px;text-align:center;color:#1e293b">' + r.arla.toFixed(1) + 'L</td>' +
+        '<td style="padding:10px 14px;text-align:center;font-weight:700;color:#dc2626">' + (r.pct !== null ? r.pct.toFixed(1)+'%' : '—') + '</td>' +
+        '</tr>';
+    });
+  });
+
+  return '<!DOCTYPE html><html><body style="margin:0;padding:20px 0;font-family:Arial,sans-serif;background:#e2e8f0">' +
+    '<table width="620" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #cbd5e1">' +
+    '<tr><td style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);padding:22px 24px">' +
+    '<div style="font-size:18px;font-weight:700;color:#fff">🧪 FuelTracker Pro</div>' +
+    '<div style="font-size:12px;color:#93c5fd;margin-top:3px">Controle de Arla — ' + (mesRef || '') + (nomeGrupo ? ' · ' + nomeGrupo : '') + '</div>' +
+    '</td></tr>' +
+    '<tr><td style="background:#eff6ff;padding:10px 24px;font-size:12px;color:#1d4ed8;border-bottom:1px solid #bfdbfe">' +
+    '<strong>⚠️ Atenção:</strong> As placas abaixo estão com consumo de Arla inferior a 5% do Diesel.' +
+    '</td></tr>' +
+    '<tr><td><table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">' +
+    '<thead><tr style="background:#f1f5f9">' +
+    '<th style="padding:10px 14px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase">Placa</th>' +
+    '<th style="padding:10px 14px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase">Modelo</th>' +
+    '<th style="padding:10px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Diesel</th>' +
+    '<th style="padding:10px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Arla</th>' +
+    '<th style="padding:10px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">%</th>' +
+    '</tr></thead><tbody>' + secoes + '</tbody></table></td></tr>' +
+    '<tr><td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;text-align:center;font-size:11px;color:#94a3b8">Gerado pelo FuelTracker Pro</td></tr>' +
+    '</table></body></html>';
+}
+
+function arlaEnviarEmailGrupo(grupoId) {
+  const g = window._arlaState.grupos.find(g => g.id === grupoId);
+  if (!g) return;
+  const dados = window._arlaState.processados;
+  const registros = dados.filter(r => r.status === 'FAIL' && g.ops.includes(r.operacao));
+  if (!registros.length) { showToast('Nenhuma placa abaixo de 5% neste grupo', 'error'); return; }
+  const html = arlaBuildEmailHTML(registros, g.nome, '');
+  navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([html], {type:'text/html'})})]).then(() => {
+    showToast('✅ Tabela copiada! Cole no e-mail (Ctrl+V)', 'success');
+  }).catch(() => showToast('Copie o relatório manualmente', 'error'));
+  const assunto = encodeURIComponent('FuelTracker — Alerta Arla · ' + g.nome);
+  setTimeout(() => window.open('mailto:' + g.emails + '?subject=' + assunto, '_blank'), 500);
+}
+
+function arlaEnviarEmail() {
+  const dados = window._arlaState.processados.filter(r => r.status === 'FAIL');
+  if (!dados.length) { showToast('Nenhum dado para enviar', 'error'); return; }
+  const html = arlaBuildEmailHTML(dados, 'Geral', '');
+  navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([html], {type:'text/html'})})]).then(() => {
+    showToast('✅ Tabela copiada! Cole no e-mail (Ctrl+V)', 'success');
+  }).catch(() => showToast('Copie o relatório manualmente', 'error'));
+  const assunto = encodeURIComponent('FuelTracker — Alerta Controle Arla');
+  setTimeout(() => window.open('mailto:?subject=' + assunto, '_blank'), 500);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
