@@ -2989,11 +2989,11 @@ function arlaCarregarArquivo(input) {
 function arlaProcessar(rows) {
   const egr = window._arlaState.egrSet;
   const get = (row, ...ns) => {
-    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n)));
+    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n.toLowerCase().replace(/[^a-z]/g,''))));
     return k ? String(row[k]).trim() : '';
   };
   const getNum = (row, ...ns) => {
-    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n)));
+    const k = Object.keys(row).find(k => ns.some(n => k.toLowerCase().replace(/[^a-z]/g,'').includes(n.toLowerCase().replace(/[^a-z]/g,''))));
     return k ? parseFloat(row[k]) || 0 : 0;
   };
 
