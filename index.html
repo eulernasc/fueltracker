@@ -731,8 +731,8 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         <div class="page-sub">Monitoramento do consumo de Arla 32 por frota</div>
       </div>
       <div class="header-actions" id="arla-header-actions">
-        <button class="btn btn-secondary btn-sm" id="btn-arla-excluir-mes" style="display:none" onclick="arlaAbrirExcluirMes()">🗑️ Excluir Mês</button>
-        <button class="btn btn-primary btn-sm" onclick="arlaAbrirCarregar()">⬆️ Carregar Relatório</button>
+        <button class="btn btn-secondary btn-sm" id="btn-arla-excluir-mes" style="display:none" onclick="verificarSenha(arlaAbrirExcluirMes)">🗑️ Excluir Mês</button>
+        <button class="btn btn-primary btn-sm" onclick="verificarSenha(arlaAbrirCarregar)">⬆️ Carregar Relatório</button>
         <input type="file" id="arla-file-input" accept=".xlsx,.xls" style="display:none" onchange="arlaCarregarArquivo(this)">
       </div>
     </div>
@@ -793,7 +793,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
               <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">
                 <input type="checkbox" id="arla-op-all-check" checked onchange="arlaToggleAllOps(this)" style="accent-color:var(--accent)"> Todas as Operações
               </label>
-              <div id="arla-op-checkboxes"></div>
+              <div id="arla-op-checkboxes" style="display:flex;flex-direction:column"></div>
               </div>
             </div>
           </div>
@@ -974,6 +974,23 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 </div>
 
 <!-- MODAL MÊS ARLA -->
+<div class="modal-overlay" id="arla-modal-excluir-mes">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">🗑️ Excluir Relatório</div>
+    <div class="form-group">
+      <label class="form-label">Selecione o mês para excluir</label>
+      <select class="form-input" id="arla-excluir-mes-sel"></select>
+    </div>
+    <div style="font-size:12px;color:var(--red);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 14px;margin-bottom:16px">
+      ⚠️ Esta ação não pode ser desfeita. O relatório será removido permanentemente.
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('arla-modal-excluir-mes').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger" onclick="arlaConfirmarExcluirMes()">🗑️ Excluir</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="arla-modal-mes">
   <div class="modal" style="max-width:360px">
     <div class="modal-title">📅 Mês de Referência</div>
@@ -3059,13 +3076,20 @@ function arlaTrocarMes(mesId) {
 function arlaAbrirExcluirMes() {
   const meses = window._arlaState.meses;
   if (!meses.length) { showToast('Nenhum mês importado', 'error'); return; }
-  const opcoes = meses.map(m => m.label + ' (' + m.dados.length + ' registros)').join('\n');
-  const sel = prompt('Qual mês deseja excluir?\n\n' + meses.map((m,i) => (i+1) + '. ' + m.label).join('\n') + '\n\nDigite o número:');
-  if (!sel) return;
-  const idx = parseInt(sel) - 1;
-  if (isNaN(idx) || idx < 0 || idx >= meses.length) { showToast('Número inválido', 'error'); return; }
+  const sel = document.getElementById('arla-excluir-mes-sel');
+  sel.innerHTML = meses.map((m, i) =>
+    '<option value="' + i + '">' + m.label + ' — ' + m.dados.length + ' registros</option>'
+  ).join('');
+  document.getElementById('arla-modal-excluir-mes').classList.add('open');
+}
+
+function arlaConfirmarExcluirMes() {
+  const sel = document.getElementById('arla-excluir-mes-sel');
+  const idx = parseInt(sel.value);
+  const meses = window._arlaState.meses;
+  if (isNaN(idx) || idx < 0 || idx >= meses.length) { showToast('Selecione um mês', 'error'); return; }
   const mes = meses[idx];
-  if (!confirm('Excluir o relatório de "' + mes.label + '"?')) return;
+  document.getElementById('arla-modal-excluir-mes').classList.remove('open');
   window._arlaState.meses.splice(idx, 1);
   localStorage.setItem('arla_meses', JSON.stringify(window._arlaState.meses));
   if (window._arlaState.meses.length) {
@@ -3079,7 +3103,7 @@ function arlaAbrirExcluirMes() {
     document.getElementById('arla-empty').style.display = '';
     document.getElementById('btn-arla-excluir-mes').style.display = 'none';
     const badge = document.getElementById('arla-nav-badge');
-    if (badge) { badge.style.display = 'none'; }
+    if (badge) badge.style.display = 'none';
   }
   showToast('Relatório de ' + mes.label + ' excluído!', 'success');
 }
@@ -3123,8 +3147,8 @@ function arlaExibirResultado() {
   const selOp = document.getElementById('arla-op-checkboxes');
   if (selOp) {
     selOp.innerHTML = ops.map(o =>
-      '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
-      '<input type="checkbox" class="arla-op-check" value="' + o + '" checked onchange="arlaOnOpChange()" style="accent-color:var(--accent)">' +
+      '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;width:100%;box-sizing:border-box" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
+      '<input type="checkbox" class="arla-op-check" value="' + o + '" checked onchange="arlaOnOpChange()" style="accent-color:var(--accent);flex-shrink:0">' +
       o.replace(/_/g,' ') + '</label>'
     ).join('');
   }
