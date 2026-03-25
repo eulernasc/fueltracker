@@ -776,7 +776,18 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         <!-- Filtros -->
         <div class="filters" style="margin-bottom:16px">
           <input type="text" class="filter-input" id="arla-busca" placeholder="🔍 Buscar placa ou operação..." oninput="arlaRenderRelatorio()" style="flex:1;min-width:180px">
-          <select class="filter-select" id="arla-filter-op" onchange="arlaRenderRelatorio()"><option value="">Todas as Operações</option></select>
+          <div style="position:relative" id="arla-op-dropdown-wrap">
+            <button class="filter-select" id="arla-op-dropdown-btn" onclick="arlaToggleOpDropdown()" style="cursor:pointer;text-align:left;min-width:200px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <span id="arla-op-dropdown-label">Todas as Operações</span>
+              <span style="font-size:10px">▼</span>
+            </button>
+            <div id="arla-op-dropdown-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:260px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:280px;overflow-y:auto">
+              <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">
+                <input type="checkbox" id="arla-op-all-check" checked onchange="arlaToggleAllOps(this)" style="accent-color:var(--accent)"> Todas as Operações
+              </label>
+              <div id="arla-op-checkboxes"></div>
+            </div>
+          </div>
           <button class="btn btn-secondary btn-sm" onclick="arlaEnviarEmail()">📧 Enviar E-mail</button>
         </div>
 
@@ -820,7 +831,8 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
         </div>
         <div class="form-group">
           <label class="form-label">Operações incluídas neste grupo</label>
-          <div id="arla-grupo-ops" style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px">
+          <input type="text" class="form-input" id="arla-grupo-ops-busca" placeholder="🔍 Buscar operação..." oninput="arlaFiltrarOpsGrupo()" style="margin-bottom:8px;font-size:13px">
+          <div id="arla-grupo-ops" style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;max-height:220px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px">
             <div style="font-size:12px;color:var(--text3)">Carregue um relatório primeiro para ver as operações disponíveis</div>
           </div>
         </div>
@@ -3090,8 +3102,14 @@ function arlaExibirResultado() {
 
   // Filtro de operações
   const ops = [...new Set(srcDados.map(r => r.operacao).filter(Boolean))].sort();
-  const selOp = document.getElementById('arla-filter-op');
-  selOp.innerHTML = '<option value="">Todas as Operações</option>' + ops.map(o => '<option value="' + o + '">' + o.replace(/_/g,' ') + '</option>').join('');
+  const selOp = document.getElementById('arla-op-checkboxes');
+  if (selOp) {
+    selOp.innerHTML = ops.map(o =>
+      '<label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px" onmouseover="this.style.background=\'var(--bg3)\'" onmouseout="this.style.background=\'\'">' +
+      '<input type="checkbox" class="arla-op-check" value="' + o + '" checked onchange="arlaOnOpChange()" style="accent-color:var(--accent)">' +
+      o.replace(/_/g,' ') + '</label>'
+    ).join('');
+  }
 
   // Atualiza ops no form de grupos
   arlaAtualizarOpsGrupo(ops);
@@ -3099,14 +3117,55 @@ function arlaExibirResultado() {
   arlaRenderRelatorio();
 }
 
+function arlaGetSelectedOps() {
+  const all = document.querySelectorAll('.arla-op-check');
+  const checked = document.querySelectorAll('.arla-op-check:checked');
+  if (!all.length || all.length === checked.length) return new Set(); // vazio = todas
+  return new Set([...checked].map(c => c.value));
+}
+
+function arlaOnOpChange() {
+  const all = document.querySelectorAll('.arla-op-check');
+  const checked = document.querySelectorAll('.arla-op-check:checked');
+  const allCheck = document.getElementById('arla-op-all-check');
+  if (allCheck) {
+    allCheck.checked = checked.length === all.length;
+    allCheck.indeterminate = checked.length > 0 && checked.length < all.length;
+  }
+  const lbl = document.getElementById('arla-op-dropdown-label');
+  if (lbl) lbl.textContent = (!checked.length || checked.length === all.length) ? 'Todas as Operações' : checked.length + ' operações';
+  arlaRenderRelatorio();
+}
+
+function arlaToggleAllOps(cb) {
+  document.querySelectorAll('.arla-op-check').forEach(c => c.checked = cb.checked);
+  const lbl = document.getElementById('arla-op-dropdown-label');
+  if (lbl) lbl.textContent = 'Todas as Operações';
+  arlaRenderRelatorio();
+}
+
+function arlaToggleOpDropdown() {
+  const menu = document.getElementById('arla-op-dropdown-menu');
+  menu.style.display = menu.style.display === 'none' ? '' : 'none';
+}
+
+// Fecha dropdown ao clicar fora
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('arla-op-dropdown-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const menu = document.getElementById('arla-op-dropdown-menu');
+    if (menu) menu.style.display = 'none';
+  }
+});
+
 function arlaRenderRelatorio() {
   const busca = (document.getElementById('arla-busca')?.value || '').toLowerCase();
-  const opF = document.getElementById('arla-filter-op')?.value || '';
+  const opF = arlaGetSelectedOps(); // Set vazio = todas
   const dados = window._arlaState.processados;
 
   // Só mostra SRC abaixo de 5%
   let fail = dados.filter(r => r.status === 'FAIL');
-  if (opF) fail = fail.filter(r => r.operacao === opF);
+  if (opF.size) fail = fail.filter(r => opF.has(r.operacao));
   if (busca) fail = fail.filter(r => (r.placa + r.operacao + r.modelo).toLowerCase().includes(busca));
 
   // Agrupa por operação para ranking
@@ -3211,15 +3270,35 @@ function arlaRemoverEGR(placa) {
 }
 
 // ── GRUPOS DE E-MAIL ──────────────────────────────────────────────────────────
+// Ops disponíveis para o formulário de grupo (salvo para busca)
+window._arlaOpsDisponiveis = [];
+
 function arlaAtualizarOpsGrupo(ops) {
+  window._arlaOpsDisponiveis = ops || [];
+  arlaFiltrarOpsGrupo();
+}
+
+function arlaFiltrarOpsGrupo() {
   const container = document.getElementById('arla-grupo-ops');
-  if (!ops || !ops.length) return;
+  if (!container) return;
+  const busca = (document.getElementById('arla-grupo-ops-busca')?.value || '').toLowerCase();
+  const ops = window._arlaOpsDisponiveis;
+  if (!ops.length) return;
+
   const editId = document.getElementById('arla-grupo-edit-id').value;
   const grupo = editId ? window._arlaState.grupos.find(g => g.id === editId) : null;
-  container.innerHTML = ops.map(op => {
-    const checked = grupo && grupo.ops.includes(op) ? 'checked' : '';
+
+  // Mantém o estado atual dos checks já marcados
+  const jaChecked = new Set([...document.querySelectorAll('.arla-grupo-op-check:checked')].map(c => c.value));
+  // Se editando e ainda não tem nada marcado, usa as ops do grupo
+  const opsGrupo = grupo ? new Set(grupo.ops) : new Set();
+
+  const filtradas = busca ? ops.filter(o => o.toLowerCase().includes(busca)) : ops;
+
+  container.innerHTML = filtradas.map(op => {
+    const checked = jaChecked.has(op) || (!jaChecked.size && opsGrupo.has(op));
     return '<label style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap">' +
-      '<input type="checkbox" class="arla-op-check" value="' + op + '" ' + checked + ' style="accent-color:var(--accent)">' +
+      '<input type="checkbox" class="arla-grupo-op-check" value="' + op + '" ' + (checked ? 'checked' : '') + ' style="accent-color:var(--accent)">' +
       op.replace(/_/g,' ') + '</label>';
   }).join('');
 }
@@ -3227,7 +3306,7 @@ function arlaAtualizarOpsGrupo(ops) {
 function arlaSalvarGrupo() {
   const nome = document.getElementById('arla-grupo-nome').value.trim();
   const emails = document.getElementById('arla-grupo-emails').value.trim();
-  const ops = [...document.querySelectorAll('.arla-op-check:checked')].map(c => c.value);
+  const ops = [...document.querySelectorAll('.arla-grupo-op-check:checked')].map(c => c.value);
   if (!nome) { showToast('Digite um nome para o grupo', 'error'); return; }
   if (!emails) { showToast('Digite pelo menos um e-mail', 'error'); return; }
   if (!ops.length) { showToast('Selecione pelo menos uma operação', 'error'); return; }
@@ -3249,7 +3328,9 @@ function arlaLimparFormGrupo() {
   document.getElementById('arla-grupo-nome').value = '';
   document.getElementById('arla-grupo-emails').value = '';
   document.getElementById('arla-grupo-edit-id').value = '';
-  document.querySelectorAll('.arla-op-check').forEach(c => c.checked = false);
+  const busca = document.getElementById('arla-grupo-ops-busca');
+  if (busca) busca.value = '';
+  document.querySelectorAll('.arla-grupo-op-check').forEach(c => c.checked = false);
 }
 
 function arlaEditarGrupo(id) {
@@ -3258,15 +3339,22 @@ function arlaEditarGrupo(id) {
   document.getElementById('arla-grupo-nome').value = g.nome;
   document.getElementById('arla-grupo-emails').value = g.emails;
   document.getElementById('arla-grupo-edit-id').value = id;
+  const busca = document.getElementById('arla-grupo-ops-busca');
+  if (busca) busca.value = '';
   const ops = [...new Set(window._arlaState.processados.map(r => r.operacao).filter(Boolean))].sort();
-  arlaAtualizarOpsGrupo(ops);
-  setTimeout(() => {
-    g.ops.forEach(op => {
-      const cb = document.querySelector('.arla-op-check[value="' + op + '"]');
-      if (cb) cb.checked = true;
-    });
-  }, 50);
+  window._arlaOpsDisponiveis = ops;
+  // Renderiza com as ops do grupo já marcadas
+  const container = document.getElementById('arla-grupo-ops');
+  if (container) {
+    container.innerHTML = ops.map(op => {
+      const checked = g.ops.includes(op);
+      return '<label style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--bg2);border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap">' +
+        '<input type="checkbox" class="arla-grupo-op-check" value="' + op + '" ' + (checked ? 'checked' : '') + ' style="accent-color:var(--accent)">' +
+        op.replace(/_/g,' ') + '</label>';
+    }).join('');
+  }
   arlaSetTab('grupos', document.querySelectorAll('.arla-tab')[2]);
+  setTimeout(() => document.getElementById('arla-grupo-nome')?.scrollIntoView({behavior:'smooth', block:'start'}), 100);
 }
 
 function arlaExcluirGrupo(id) {
