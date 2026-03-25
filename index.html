@@ -768,11 +768,17 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <!-- KPIs -->
         <div class="arla-kpi-grid">
           <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-total" style="color:var(--accent)">0</div><div class="arla-kpi-label">Total SRC Analisadas</div></div>
-          <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-fail" style="color:var(--red)">0</div><div class="arla-kpi-label">Abaixo de 5%</div></div>
-          <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-ok" style="color:var(--green)">0</div><div class="arla-kpi-label">Acima de 5%</div></div>
+          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(239,68,68,.3)" onclick="arlaSetStatusTab('abaixo',document.getElementById('arla-tab-status-abaixo'))"><div class="arla-kpi-val" id="arla-kpi-fail" style="color:var(--red)">0</div><div class="arla-kpi-label">Abaixo de 5% ↗</div></div>
+          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(34,197,94,.3)" onclick="arlaSetStatusTab('acima',document.getElementById('arla-tab-status-acima'))"><div class="arla-kpi-val" id="arla-kpi-ok" style="color:var(--green)">0</div><div class="arla-kpi-label">Acima de 5% ↗</div></div>
           <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-egr" style="color:var(--text2)">0</div><div class="arla-kpi-label">Ignoradas (EGR)</div></div>
         </div>
 
+        <!-- Tabs de status -->
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="arla-status-tab active" id="arla-tab-status-abaixo" onclick="arlaSetStatusTab('abaixo',this)" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.12);color:var(--red);font-size:13px;font-weight:600;cursor:pointer;transition:.2s">⚠️ Abaixo de 5%</button>
+          <button class="arla-status-tab" id="arla-tab-status-acima" onclick="arlaSetStatusTab('acima',this)" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.2s">✅ Acima de 5%</button>
+          <button class="arla-status-tab" id="arla-tab-status-todos" onclick="arlaSetStatusTab('todos',this)" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.2s">📋 Todos SRC</button>
+        </div>
         <!-- Filtros -->
         <div class="filters" style="margin-bottom:16px">
           <input type="text" class="filter-input" id="arla-busca" placeholder="🔍 Buscar placa ou operação..." oninput="arlaRenderRelatorio()" style="flex:1;min-width:180px">
@@ -3099,6 +3105,11 @@ function arlaExibirResultado() {
   document.getElementById('arla-kpi-fail').textContent = fail.length;
   document.getElementById('arla-kpi-ok').textContent = ok.length;
   document.getElementById('arla-kpi-egr').textContent = egr.length;
+  // Reset status tab to abaixo when loading new data
+  window._arlaStatusTab = 'abaixo';
+  document.querySelectorAll('.arla-status-tab').forEach(b => { b.style.background='none'; b.style.color='var(--text2)'; b.style.borderColor='var(--border)'; });
+  const tabAbaixo = document.getElementById('arla-tab-status-abaixo');
+  if (tabAbaixo) { tabAbaixo.style.background='rgba(239,68,68,.12)'; tabAbaixo.style.color='var(--red)'; tabAbaixo.style.borderColor='rgba(239,68,68,.4)'; }
 
   // Badge no nav
   const badge = document.getElementById('arla-nav-badge');
@@ -3162,15 +3173,45 @@ document.addEventListener('click', e => {
   }
 });
 
+window._arlaStatusTab = 'abaixo';
+
+function arlaSetStatusTab(tab, el) {
+  window._arlaStatusTab = tab;
+  document.querySelectorAll('.arla-status-tab').forEach(b => {
+    b.style.background = 'none';
+    b.style.color = 'var(--text2)';
+    b.style.borderColor = 'var(--border)';
+  });
+  if (el) {
+    const colors = { abaixo: ['rgba(239,68,68,.12)', 'var(--red)', 'rgba(239,68,68,.4)'], acima: ['rgba(34,197,94,.12)', 'var(--green)', 'rgba(34,197,94,.4)'], todos: ['rgba(79,142,247,.12)', 'var(--accent)', 'rgba(79,142,247,.4)'] };
+    const [bg, color, border] = colors[tab] || colors.todos;
+    el.style.background = bg; el.style.color = color; el.style.borderColor = border;
+  }
+  arlaRenderRelatorio();
+}
+
 function arlaRenderRelatorio() {
   const busca = (document.getElementById('arla-busca')?.value || '').toLowerCase();
-  const opF = arlaGetSelectedOps(); // Set vazio = todas
+  const opF = arlaGetSelectedOps();
   const dados = window._arlaState.processados;
+  const tab = window._arlaStatusTab || 'abaixo';
 
-  // Só mostra SRC abaixo de 5%
-  let fail = dados.filter(r => r.status === 'FAIL');
-  if (opF.size) fail = fail.filter(r => opF.has(r.operacao));
-  if (busca) fail = fail.filter(r => (r.placa + r.operacao + r.modelo).toLowerCase().includes(busca));
+  // Atualiza KPIs com base nas operações selecionadas
+  const dadosFiltradosOp = opF.size ? dados.filter(r => opF.has(r.operacao)) : dados;
+  const srcFiltrado = dadosFiltradosOp.filter(r => r.status !== 'EGR' && r.status !== 'SEM_DIESEL');
+  document.getElementById('arla-kpi-total').textContent = srcFiltrado.length;
+  document.getElementById('arla-kpi-fail').textContent = srcFiltrado.filter(r => r.status === 'FAIL').length;
+  document.getElementById('arla-kpi-ok').textContent = srcFiltrado.filter(r => r.status === 'OK').length;
+  document.getElementById('arla-kpi-egr').textContent = dadosFiltradosOp.filter(r => r.status === 'EGR').length;
+
+  // Filtra por status tab
+  let registros = dadosFiltradosOp.filter(r => r.status !== 'EGR' && r.status !== 'SEM_DIESEL');
+  if (tab === 'abaixo') registros = registros.filter(r => r.status === 'FAIL');
+  else if (tab === 'acima') registros = registros.filter(r => r.status === 'OK');
+  if (busca) registros = registros.filter(r => (r.placa + r.operacao + r.modelo).toLowerCase().includes(busca));
+
+  // Para compatibilidade com o código existente
+  let fail = registros;
 
   // Agrupa por operação para ranking
   const byOp = {};
@@ -3181,7 +3222,8 @@ function arlaRenderRelatorio() {
 
   const container = document.getElementById('arla-conteudo');
   if (!fail.length) {
-    container.innerHTML = '<div class="empty" style="padding:40px"><div class="empty-icon">✅</div><div class="empty-text">Nenhuma placa abaixo de 5%' + (opF ? ' nesta operação' : '') + '</div></div>';
+    const emptyMsg = window._arlaStatusTab === 'acima' ? 'Nenhuma placa acima de 5%' : window._arlaStatusTab === 'todos' ? 'Nenhum registro encontrado' : 'Nenhuma placa abaixo de 5%';
+  container.innerHTML = '<div class="empty" style="padding:40px"><div class="empty-icon">✅</div><div class="empty-text">' + emptyMsg + '</div></div>';
     return;
   }
 
@@ -3211,8 +3253,12 @@ function arlaRenderRelatorio() {
   Object.entries(byOp).sort((a,b) => b[1].length - a[1].length).forEach(([op, rows]) => {
     const sorted = rows.sort((a,b) => a.pct - b.pct);
     html += '<div style="margin-bottom:12px">';
-    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px 10px 0 0;padding:11px 16px;font-size:13px;font-weight:700;color:var(--red);display:flex;align-items:center;gap:8px">';
-    html += '⚠️ ' + op.replace(/_/g,' ') + '<span style="font-size:11px;font-weight:400;color:var(--text2);margin-left:4px">' + rows.length + ' placa(s) abaixo de 5%</span></div>';
+    const isAbaixo = window._arlaStatusTab !== 'acima';
+    const headerColor = isAbaixo ? 'var(--red)' : 'var(--green)';
+    const headerIcon = isAbaixo ? '⚠️' : '✅';
+    const headerLabel = isAbaixo ? ' placa(s) abaixo de 5%' : ' placa(s) acima de 5%';
+    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px 10px 0 0;padding:11px 16px;font-size:13px;font-weight:700;color:' + headerColor + ';display:flex;align-items:center;gap:8px">';
+    html += headerIcon + ' ' + op.replace(/_/g,' ') + '<span style="font-size:11px;font-weight:400;color:var(--text2);margin-left:4px">' + rows.length + headerLabel + '</span></div>';
     html += '<div style="background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden">';
     html += '<div class="arla-row arla-row-header"><span>Placa</span><span>Modelo</span><span style="text-align:center">Diesel</span><span style="text-align:center">Arla</span><span style="text-align:center">%</span><span style="text-align:center">Status</span></div>';
     sorted.forEach(r => {
@@ -3222,7 +3268,7 @@ function arlaRenderRelatorio() {
       html += '<span style="text-align:center">' + r.diesel.toFixed(0) + 'L</span>';
       html += '<span style="text-align:center">' + r.arla.toFixed(1) + 'L</span>';
       html += '<span style="text-align:center;font-weight:700;color:var(--red)">' + (r.pct !== null ? r.pct.toFixed(1)+'%' : '—') + '</span>';
-      html += '<span><div class="arla-badge-fail">⚠️ ABAIXO</div></span>';
+      html += '<span><div class="' + (r.status === 'OK' ? 'arla-badge-ok' : 'arla-badge-fail') + '">' + (r.status === 'OK' ? '✅ ACIMA' : '⚠️ ABAIXO') + '</div></span>';
       html += '</div>';
     });
     html += '</div></div>';
