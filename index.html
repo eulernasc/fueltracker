@@ -4597,14 +4597,18 @@ function renderExecutivo() {
     const opId = 'exec-op-' + i;
     html += '<div id="' + opId + '" style="display:none;border-top:1px solid rgba(42,47,69,.4);overflow-x:auto">';
     html += '<table style="width:100%"><thead><tr style="background:var(--bg3)">';
-    html += '<th>Máquina</th><th style="text-align:center">Meta</th><th style="text-align:center">Real</th><th style="text-align:center">Eficiência</th><th style="text-align:right">Desperdício L</th><th style="text-align:right">Custo R$</th><th style="text-align:right">Economizado</th>';
+    html += '<th>Máquina</th><th style="text-align:center">Meta Efetiva</th><th style="text-align:center">Real</th><th style="text-align:center">Eficiência</th><th style="text-align:right">Desperdício L</th><th style="text-align:right">Custo R$</th><th style="text-align:right">Economizado</th>';
     html += '</tr></thead><tbody>';
     d.maquinas.sort((a,b) => b.desperdicadoR - a.desperdicadoR).forEach(m => {
+      const metaCli = opGetMeta(getMaquina(m.placa)?.operacao || '');
+      const metaEfetiva = metaCli > 0 ? metaCli : m.meta;
+      const tunel = opGetTunel(getMaquina(m.placa)?.operacao || '');
+      const limiteLabel = tunel > 0 ? metaEfetiva.toFixed(1) + ' +' + tunel + '%' : (metaEfetiva > 0 ? metaEfetiva.toFixed(1) + ' L/h' : '—');
       const eficCor = !m.efic ? 'var(--text3)' : m.efic >= 98 ? 'var(--green)' : m.efic >= 90 ? 'var(--yellow)' : 'var(--red)';
       const eficBadge = !m.efic ? '' : m.efic >= 98 ? 'badge-green' : m.efic >= 90 ? 'badge-yellow' : 'badge-red';
       html += '<tr>';
       html += '<td><span class="placa-tag">' + m.placa + '</span></td>';
-      html += '<td style="text-align:center;font-family:monospace;color:var(--accent)">' + (m.meta > 0 ? m.meta.toFixed(1) + ' L/h' : '—') + '</td>';
+      html += '<td style="text-align:center;font-family:monospace;color:var(--accent)">' + limiteLabel + '</td>';
       html += '<td style="text-align:center;font-family:monospace;font-weight:700;color:' + eficCor + '">' + m.media.toFixed(2) + ' L/h</td>';
       html += '<td style="text-align:center"><span class="badge ' + eficBadge + '">' + (m.efic ? m.efic.toFixed(1) + '%' : '—') + '</span></td>';
       html += '<td style="text-align:right;font-family:monospace;color:' + (m.desperdicadoL > 0 ? 'var(--red)' : 'var(--text3)') + '">' + (m.desperdicadoL > 0 ? fmtL(m.desperdicadoL) : '—') + '</td>';
