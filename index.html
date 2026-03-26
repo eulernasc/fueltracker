@@ -1720,7 +1720,149 @@ function renderComparativo() {
     html+='</tr>';
   });
   html+='</tbody></table></div></div>';
+
+  // ── EVOLUÇÃO FINANCEIRA ──────────────────────────────────────────────────
+  // Só mostra se houver preços configurados
+  const precos = dieselGetPrecos();
+  const temPrecos = Object.keys(precos).length > 0;
+  if (temPrecos && todosPeriodos.length >= 1) {
+    // Calcula dados financeiros de TODOS os períodos (não só selecionados)
+    const dadosFinanc = todosPeriodos.map(([id, p]) => {
+      let rows = p.registros || [];
+      if (opF.size > 0) rows = rows.filter(r => opF.has(r.operacao));
+      if (maqCompF === '__tratores__') rows = rows.filter(r => r.placa && r.placa.toUpperCase().startsWith('TRA'));
+      else if (maqCompF === '__maquinas__') rows = rows.filter(r => r.placa && !r.placa.toUpperCase().startsWith('TRA'));
+      const byMaqF = {};
+      rows.forEach(r => {
+        if (!byMaqF[r.placa]) byMaqF[r.placa] = { l: 0, h: 0, op: r.operacao || getMaquina(r.placa)?.operacao || '' };
+        byMaqF[r.placa].l += r.litros || 0;
+        byMaqF[r.placa].h += r.horas || 0;
+      });
+      let despR = 0, econR = 0, despL = 0, econL = 0;
+      Object.entries(byMaqF).forEach(([placa, d]) => {
+        const maq = getMaquina(placa);
+        const meta = maq?.meta || 0;
+        const media = d.h > 0 ? d.l / d.h : 0;
+        const preco = dieselGetPreco(d.op);
+        if (!meta || !preco) return;
+        if (media > meta) { const dL = (media - meta) * d.h; despL += dL; despR += dL * preco; }
+        else if (media < meta) { const eL = (meta - media) * d.h; econL += eL; econR += eL * preco; }
+      });
+      // Agrupa por mês (ex: 2026-03)
+      const mesKey = id.match(/mes_(\d{4})_(\d{2})/) ? null : (() => {
+        // Tenta extrair mês da dataIni do período
+        const dataIni = p.dataIni || '';
+        return dataIni ? dataIni.substring(0, 7) : null;
+      })();
+      return { id, label: p.label || id, despR, econR, despL, econL, liquidoR: despR - econR, dataIni: p.dataIni || '', mes: p.dataIni ? p.dataIni.substring(0, 7) : null };
+    });
+
+    const fmtR = v => 'R$ ' + Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:16px">';
+    html += '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">';
+    html += '<div style="font-size:15px;font-weight:700">💰 Evolução Financeira</div>';
+    html += '<div style="display:flex;gap:6px">';
+    html += '<button id="comp-fin-tab-semanal" class="btn btn-primary btn-sm" onclick="compFinSetTab(\'semanal\')">Semanal</button>';
+    html += '<button id="comp-fin-tab-mensal" class="btn btn-secondary btn-sm" onclick="compFinSetTab(\'mensal\')">Mensal</button>';
+    html += '</div></div>';
+    html += '<div id="comp-fin-semanal" style="padding:16px 20px">';
+    html += compFinRenderSemanal(dadosFinanc, fmtR);
+    html += '</div>';
+    html += '<div id="comp-fin-mensal" style="padding:16px 20px;display:none">';
+    html += compFinRenderMensal(dadosFinanc, fmtR);
+    html += '</div>';
+    html += '</div>';
+  }
+
   c.innerHTML=html;
+
+  // Adiciona toggle financeiro após render
+  window.compFinSetTab = function(tab) {
+    document.getElementById('comp-fin-semanal').style.display = tab === 'semanal' ? '' : 'none';
+    document.getElementById('comp-fin-mensal').style.display = tab === 'mensal' ? '' : 'none';
+    const btnS = document.getElementById('comp-fin-tab-semanal');
+    const btnM = document.getElementById('comp-fin-tab-mensal');
+    if (btnS) { btnS.className = 'btn btn-sm ' + (tab === 'semanal' ? 'btn-primary' : 'btn-secondary'); }
+    if (btnM) { btnM.className = 'btn btn-sm ' + (tab === 'mensal' ? 'btn-primary' : 'btn-secondary'); }
+  };
+}
+
+function compFinRenderSemanal(dados, fmtR) {
+  if (!dados.length) return '<div style="color:var(--text3);font-size:13px">Nenhum período disponível</div>';
+  const maxVal = Math.max(...dados.map(d => Math.max(d.despR, d.econR)), 1);
+  let html = '<div style="display:flex;flex-direction:column;gap:10px">';
+  dados.forEach(d => {
+    const liquidoCor = d.liquidoR > 0 ? 'var(--red)' : d.liquidoR < 0 ? 'var(--green)' : 'var(--text3)';
+    const barDesp = Math.max((d.despR / maxVal) * 100, 0);
+    const barEcon = Math.max((d.econR / maxVal) * 100, 0);
+    html += '<div style="background:var(--bg3);border-radius:10px;padding:12px 14px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:4px">';
+    html += '<span style="font-size:13px;font-weight:600">' + d.label + '</span>';
+    html += '<span style="font-size:13px;font-weight:700;color:' + liquidoCor + '">Líquido: ' + (d.liquidoR >= 0 ? '' : '-') + fmtR(d.liquidoR) + '</span>';
+    html += '</div>';
+    // Barras
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    if (d.despR > 0) html += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--red);width:80px;text-align:right">🔴 ' + fmtR(d.despR) + '</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + barDesp + '%;background:var(--red);border-radius:4px"></div></div></div>';
+    if (d.econR > 0) html += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--green);width:80px;text-align:right">🟢 ' + fmtR(d.econR) + '</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + barEcon + '%;background:var(--green);border-radius:4px"></div></div></div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  // Totais
+  const totDesp = dados.reduce((s, d) => s + d.despR, 0);
+  const totEcon = dados.reduce((s, d) => s + d.econR, 0);
+  const totLiq = totDesp - totEcon;
+  html += '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap">';
+  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Total Desperdiçado</div><div style="font-size:16px;font-weight:700;color:var(--red)">' + fmtR(totDesp) + '</div></div>';
+  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Total Economizado</div><div style="font-size:16px;font-weight:700;color:var(--green)">' + fmtR(totEcon) + '</div></div>';
+  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Saldo Líquido</div><div style="font-size:16px;font-weight:700;color:' + (totLiq > 0 ? 'var(--red)' : 'var(--green)') + '">' + fmtR(totLiq) + '</div></div>';
+  html += '</div>';
+  return html;
+}
+
+function compFinRenderMensal(dados, fmtR) {
+  // Agrupa por mês
+  const byMes = {};
+  dados.forEach(d => {
+    const key = d.mes || 'sem-data';
+    const label = key !== 'sem-data' ? (() => {
+      const [ano, mes] = key.split('-');
+      return new Date(+ano, +mes-1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    })() : 'Sem data';
+    if (!byMes[key]) byMes[key] = { label: label.charAt(0).toUpperCase() + label.slice(1), despR: 0, econR: 0, periodos: 0 };
+    byMes[key].despR += d.despR;
+    byMes[key].econR += d.econR;
+    byMes[key].periodos++;
+  });
+  const meses = Object.entries(byMes).sort((a, b) => a[0].localeCompare(b[0]));
+  if (!meses.length) return '<div style="color:var(--text3);font-size:13px">Configure datas de referência nos períodos importados para agrupar por mês</div>';
+  const maxVal = Math.max(...meses.map(([, d]) => Math.max(d.despR, d.econR)), 1);
+  let html = '<div style="display:flex;flex-direction:column;gap:10px">';
+  meses.forEach(([key, d]) => {
+    const liquidoR = d.despR - d.econR;
+    const liquidoCor = liquidoR > 0 ? 'var(--red)' : liquidoR < 0 ? 'var(--green)' : 'var(--text3)';
+    const barDesp = Math.max((d.despR / maxVal) * 100, 0);
+    const barEcon = Math.max((d.econR / maxVal) * 100, 0);
+    html += '<div style="background:var(--bg3);border-radius:10px;padding:12px 14px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:4px">';
+    html += '<div><span style="font-size:13px;font-weight:600">' + d.label + '</span><span style="font-size:11px;color:var(--text3);margin-left:8px">' + d.periodos + ' período(s)</span></div>';
+    html += '<span style="font-size:13px;font-weight:700;color:' + liquidoCor + '">Líquido: ' + (liquidoR >= 0 ? '' : '-') + fmtR(liquidoR) + '</span>';
+    html += '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    if (d.despR > 0) html += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--red);width:80px;text-align:right">🔴 ' + fmtR(d.despR) + '</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + barDesp + '%;background:var(--red);border-radius:4px"></div></div></div>';
+    if (d.econR > 0) html += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--green);width:80px;text-align:right">🟢 ' + fmtR(d.econR) + '</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + barEcon + '%;background:var(--green);border-radius:4px"></div></div></div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  const totDesp = meses.reduce((s, [, d]) => s + d.despR, 0);
+  const totEcon = meses.reduce((s, [, d]) => s + d.econR, 0);
+  const totLiq = totDesp - totEcon;
+  html += '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap">';
+  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Total Desperdiçado</div><div style="font-size:16px;font-weight:700;color:var(--red)">' + fmtR(totDesp) + '</div></div>';
+  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Total Economizado</div><div style="font-size:16px;font-weight:700;color:var(--green)">' + fmtR(totEcon) + '</div></div>';
+  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Saldo Líquido</div><div style="font-size:16px;font-weight:700;color:' + (totLiq > 0 ? 'var(--red)' : 'var(--green)') + '">' + fmtR(totLiq) + '</div></div>';
+  html += '</div>';
+  return html;
 }
 
 function togglePeriodoComp(id, checkbox) {
