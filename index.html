@@ -4042,16 +4042,30 @@ function relChecarReincidencia() {
       html += '<div style="font-size:12px;font-weight:700;color:var(--text2);margin:10px 0 6px">' + op + '</div>';
       html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
       maquinas.forEach(r => {
+        const maq = getMaquina(r.placa);
+        const meta = maq?.meta || 0;
+        // Calcula média e eficiência geral da máquina com todos os abastecimentos
+        const todosDados = state.abastecimentos.filter(a => a.placa === r.placa);
+        const totalL = todosDados.reduce((s, a) => s + (a.litros || 0), 0);
+        const totalH = todosDados.reduce((s, a) => s + (a.horas || 0), 0);
+        const mediaGeral = totalH > 0 ? totalL / totalH : 0;
+        const eficGeral = meta > 0 && mediaGeral > 0 ? (meta / mediaGeral) * 100 : null;
+        const eficCor = !eficGeral ? 'var(--text3)' : eficGeral >= 98 ? 'var(--green)' : eficGeral >= 90 ? 'var(--yellow)' : 'var(--red)';
+
         const periodsHTML = r.detalhesPeriodos.map(p =>
           '<div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px solid rgba(239,68,68,.15)">' +
           '<span style="color:var(--text3);font-size:10px">' + p.label + '</span>' +
           '<span style="font-family:monospace;font-size:11px;font-weight:600;color:var(--red)">' + p.media.toFixed(2) + ' L/h <span style="color:var(--text3);font-weight:400">(' + p.efic.toFixed(1) + '%)</span></span>' +
           '</div>'
         ).join('');
+
         html += '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 12px;font-size:12px;min-width:200px">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
           '<span style="font-family:monospace;font-weight:700">' + r.placa + '</span>' +
-          '<span style="color:var(--red);font-weight:600;font-size:11px">pior: ' + r.piorEfic.toFixed(1) + '%</span>' +
+          '<div style="text-align:right">' +
+          '<span style="font-family:monospace;font-weight:700;color:' + eficCor + ';font-size:12px">' + (mediaGeral > 0 ? mediaGeral.toFixed(2) + ' L/h' : '—') + '</span>' +
+          (eficGeral ? '<span style="color:' + eficCor + ';font-size:10px;margin-left:5px">(' + eficGeral.toFixed(1) + '%)</span>' : '') +
+          '</div>' +
           '</div>' +
           periodsHTML +
           '</div>';
