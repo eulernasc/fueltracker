@@ -4138,19 +4138,26 @@ function renderExecutivo() {
     if (!meta) semMeta.add(placa);
     const efic = meta > 0 && media > 0 ? (meta / media) * 100 : null;
     const desperdicadoL = meta > 0 && media > meta ? (media - meta) * d.h : 0;
-    const economiaL = meta > 0 && media > 0 ? ((media - meta) / media) * d.l : 0;
+    // Economia: litros poupados pelas máquinas que consomem ABAIXO da meta
+    const economiaL = meta > 0 && media > 0 && media < meta ? (meta - media) * d.h : 0;
     const desperdicadoR = desperdicadoL * preco;
-    if (!byOp[op]) byOp[op] = { maquinas: [], totalL: 0, totalH: 0, desperdicadoL: 0, desperdicadoR: 0, economiaL: 0, preco };
-    byOp[op].maquinas.push({ placa, meta, media, efic, desperdicadoL, desperdicadoR, economiaL, litros: d.l, horas: d.h });
+    const economiaR = economiaL * preco;
+    const metaBatida = meta > 0 && media > 0 && media <= meta; // está dentro da meta
+    if (!byOp[op]) byOp[op] = { maquinas: [], totalL: 0, totalH: 0, desperdicadoL: 0, desperdicadoR: 0, economiaL: 0, economiaR: 0, maqNaMeta: 0, preco, semPreco: !preco };
+    byOp[op].maquinas.push({ placa, meta, media, efic, desperdicadoL, desperdicadoR, economiaL, economiaR, metaBatida, litros: d.l, horas: d.h });
     byOp[op].totalL += d.l;
     byOp[op].totalH += d.h;
     byOp[op].desperdicadoL += desperdicadoL;
     byOp[op].desperdicadoR += desperdicadoR;
     byOp[op].economiaL += economiaL;
+    byOp[op].economiaR += economiaR;
+    if (metaBatida) byOp[op].maqNaMeta++;
   });
 
   const totalDesperdicadoR = Object.values(byOp).reduce((s, o) => s + o.desperdicadoR, 0);
   const totalDesperdicadoL = Object.values(byOp).reduce((s, o) => s + o.desperdicadoL, 0);
+  const totalEconomiaR = Object.values(byOp).reduce((s, o) => s + o.economiaR, 0);
+  const totalEconomiaL = Object.values(byOp).reduce((s, o) => s + o.economiaL, 0);
   const totalL = Object.values(byOp).reduce((s, o) => s + o.totalL, 0);
   const pctDesperdicio = totalL > 0 ? (totalDesperdicadoL / totalL * 100) : 0;
 
@@ -4170,11 +4177,12 @@ function renderExecutivo() {
   }
 
   // KPIs executivos
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px">';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:20px">';
   html += kpiExec('📅 Período', labelPeriodo, '', '#8b90a7');
-  html += kpiExec('💸 Custo de Ineficiência', fmtR(totalDesperdicadoR), 'Total no período', 'var(--red)');
+  html += kpiExec('💸 Custo de Ineficiência', fmtR(totalDesperdicadoR), 'máquinas acima da meta', 'var(--red)');
   html += kpiExec('⛽ Litros Desperdiçados', fmtL(totalDesperdicadoL), pctDesperdicio.toFixed(1) + '% do total consumido', 'var(--yellow)');
-  html += kpiExec('✅ Economia Potencial', fmtR(totalDesperdicadoR), 'se todas atingissem 98%', 'var(--green)');
+  html += kpiExec('✅ Economia Realizada', fmtR(totalEconomiaR), fmtL(totalEconomiaL) + ' poupados vs meta', 'var(--green)');
+  html += kpiExec('🎯 Economia Potencial', fmtR(totalDesperdicadoR), 'se todas atingissem 98%', 'var(--accent)');
   html += '</div>';
 
   // Ranking por operação
@@ -4188,18 +4196,38 @@ function renderExecutivo() {
     const pct = d.totalL > 0 ? (d.desperdicadoL / d.totalL * 100) : 0;
     const mediaOp = d.totalH > 0 ? d.totalL / d.totalH : 0;
     const barW = totalDesperdicadoR > 0 ? Math.max((d.desperdicadoR / totalDesperdicadoR) * 100, 2) : 0;
-    const cor = d.desperdicadoR > 0 ? 'var(--red)' : 'var(--green)';
+    const naMeta = d.desperdicadoL === 0 && d.maqNaMeta > 0;
+    const semPrecoCfg = d.semPreco;
+    const cor = d.desperdicadoR > 0 ? 'var(--red)' : naMeta ? 'var(--green)' : 'var(--text3)';
     html += '<div style="padding:14px 20px;border-bottom:1px solid rgba(42,47,69,.5)">';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">';
     html += '<div style="display:flex;align-items:center;gap:10px">';
     html += '<span style="font-size:16px;font-weight:700;color:var(--text3);font-family:monospace;width:24px">' + (i+1) + '</span>';
-    html += '<div><div style="font-size:14px;font-weight:700">' + op + '</div>';
-    html += '<div style="font-size:11px;color:var(--text2);margin-top:2px">' + d.maquinas.length + ' máquinas · ' + fmtL(d.totalL) + ' · R$' + (d.preco||0).toFixed(2) + '/L</div></div></div>';
-    html += '<div style="text-align:right"><div style="font-size:18px;font-weight:700;color:' + cor + '">' + fmtR(d.desperdicadoR) + '</div>';
-    html += '<div style="font-size:11px;color:var(--text2)">' + fmtL(d.desperdicadoL) + ' desperdiçados (' + pct.toFixed(1) + '%)</div></div></div>';
+    html += '<div><div style="display:flex;align-items:center;gap:8px">';
+    html += '<span style="font-size:14px;font-weight:700">' + op + '</span>';
+    if (naMeta) html += '<span style="background:rgba(34,197,94,.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">✅ NA META</span>';
+    if (semPrecoCfg) html += '<span style="background:rgba(245,158,11,.15);color:var(--yellow);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">⚠️ SEM PREÇO</span>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--text2);margin-top:2px">' + d.maquinas.length + ' máquinas · ' + fmtL(d.totalL) + (d.preco ? ' · R$' + d.preco.toFixed(2) + '/L' : '') + '</div></div></div>';
+    html += '<div style="text-align:right">';
+    if (d.desperdicadoR > 0) {
+      html += '<div style="font-size:18px;font-weight:700;color:var(--red)">' + fmtR(d.desperdicadoR) + '</div>';
+      html += '<div style="font-size:11px;color:var(--text2)">' + fmtL(d.desperdicadoL) + ' desperdiçados (' + pct.toFixed(1) + '%)</div>';
+    } else if (naMeta) {
+      html += '<div style="font-size:18px;font-weight:700;color:var(--green)">✅ Meta atingida</div>';
+      if (d.economiaR > 0) html += '<div style="font-size:11px;color:var(--green)">' + fmtR(d.economiaR) + ' economizados (' + fmtL(d.economiaL) + ')</div>';
+      else html += '<div style="font-size:11px;color:var(--text2)">0L desperdiçados</div>';
+    } else {
+      html += '<div style="font-size:14px;color:var(--text3)">— sem preço configurado</div>';
+    }
+    html += '</div></div>';
     if (d.desperdicadoR > 0) {
       html += '<div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">';
       html += '<div style="height:100%;width:' + barW + '%;background:var(--red);border-radius:3px;transition:width .4s"></div></div>';
+    } else if (naMeta && d.economiaR > 0 && totalEconomiaR > 0) {
+      const barWE = Math.max((d.economiaR / totalEconomiaR) * 100, 2);
+      html += '<div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">';
+      html += '<div style="height:100%;width:' + barWE + '%;background:var(--green);border-radius:3px;transition:width .4s"></div></div>';
     }
     html += '</div>';
   });
@@ -4236,7 +4264,7 @@ function renderExecutivo() {
   c.innerHTML = html;
 
   // Salva dados para exportação
-  window._execDados = { labelPeriodo, totalDesperdicadoR, totalDesperdicadoL, pctDesperdicio, opsOrdenadas, todasMaq, fmtR, fmtL };
+  window._execDados = { labelPeriodo, totalDesperdicadoR, totalDesperdicadoL, totalEconomiaR, totalEconomiaL, pctDesperdicio, opsOrdenadas, todasMaq, fmtR, fmtL };
 }
 
 function kpiExec(label, value, sub, cor) {
