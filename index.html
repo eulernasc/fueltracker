@@ -3970,7 +3970,7 @@ function relChecarReincidencia() {
       const media = d.h > 0 ? d.l / d.h : 0;
       const efic = meta > 0 && media > 0 ? (meta / media) * 100 : null;
       if (!maqHistorico[placa]) maqHistorico[placa] = [];
-      maqHistorico[placa].push({ periodoId: id, label: p.label || id, efic, operacao: maq?.operacao || '' });
+      maqHistorico[placa].push({ periodoId: id, label: p.label || id, efic, media, operacao: maq?.operacao || '' });
     });
   });
 
@@ -3988,6 +3988,7 @@ function relChecarReincidencia() {
         operacao: maq?.operacao || '',
         periodos: abaixo.length,
         labels: abaixo.map(h => h.label),
+        detalhesPeriodos: abaixo.map(h => ({ label: h.label, efic: h.efic, media: h.media })),
         piorEfic: Math.min(...abaixo.map(h => h.efic))
       });
     }
@@ -4041,10 +4042,18 @@ function relChecarReincidencia() {
       html += '<div style="font-size:12px;font-weight:700;color:var(--text2);margin:10px 0 6px">' + op + '</div>';
       html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
       maquinas.forEach(r => {
-        html += '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:8px 12px;font-size:12px">' +
+        const periodsHTML = r.detalhesPeriodos.map(p =>
+          '<div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;border-bottom:1px solid rgba(239,68,68,.15)">' +
+          '<span style="color:var(--text3);font-size:10px">' + p.label + '</span>' +
+          '<span style="font-family:monospace;font-size:11px;font-weight:600;color:var(--red)">' + p.media.toFixed(2) + ' L/h <span style="color:var(--text3);font-weight:400">(' + p.efic.toFixed(1) + '%)</span></span>' +
+          '</div>'
+        ).join('');
+        html += '<div style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 12px;font-size:12px;min-width:200px">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">' +
           '<span style="font-family:monospace;font-weight:700">' + r.placa + '</span>' +
-          '<span style="color:var(--red);margin-left:8px;font-weight:600">' + r.piorEfic.toFixed(1) + '%</span>' +
-          '<span style="color:var(--text3);font-size:10px;display:block;margin-top:2px">' + r.periodos + ' períodos: ' + r.labels.join(', ') + '</span>' +
+          '<span style="color:var(--red);font-weight:600;font-size:11px">pior: ' + r.piorEfic.toFixed(1) + '%</span>' +
+          '</div>' +
+          periodsHTML +
           '</div>';
       });
       html += '</div>';
