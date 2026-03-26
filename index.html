@@ -898,7 +898,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
         <div style="font-size:14px;font-weight:700;margin-bottom:14px">➕ Adicionar placa EGR</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <input type="text" class="form-input" id="arla-nova-egr" placeholder="Ex: ABC1D23" style="flex:1;min-width:150px;font-family:monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+          <input type="text" class="form-input" id="arla-nova-egr" placeholder="Ex: ABC1D23 DEF4E56 GHI7F89" style="flex:1;min-width:150px;font-family:monospace;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
           <button class="btn btn-primary" onclick="arlaAdicionarEGR()">+ Adicionar</button>
         </div>
         <div style="margin-top:12px;font-size:12px;color:var(--text2)">
@@ -3554,14 +3554,21 @@ function arlaRenderBancoEGR() {
 }
 function arlaAdicionarEGR() {
   const inp = document.getElementById('arla-nova-egr');
-  const placa = inp.value.trim().toUpperCase();
-  if (!placa) { showToast('Digite uma placa', 'error'); return; }
-  if (window._arlaState.egrSet.has(placa)) { showToast('Placa já está no banco EGR', 'error'); return; }
-  window._arlaState.egrSet.add(placa);
+  const placas = inp.value.trim().toUpperCase().split(/[\s,;]+/).filter(p => p.length > 0);
+  if (!placas.length) { showToast('Digite pelo menos uma placa', 'error'); return; }
+  let adicionadas = 0, duplicadas = 0;
+  placas.forEach(placa => {
+    if (window._arlaState.egrSet.has(placa)) { duplicadas++; return; }
+    window._arlaState.egrSet.add(placa);
+    adicionadas++;
+  });
+  if (!adicionadas) { showToast('Placa(s) já existem no banco EGR', 'error'); return; }
   localStorage.setItem('arla_egr', JSON.stringify([...window._arlaState.egrSet]));
   inp.value = '';
   arlaRenderBancoEGR();
-  showToast('✅ Placa ' + placa + ' adicionada ao banco EGR!', 'success');
+  let msg = '✅ ' + adicionadas + ' placa(s) adicionada(s)!';
+  if (duplicadas > 0) msg += ' (' + duplicadas + ' já existiam)';
+  showToast(msg, 'success');
 }
 
 function arlaRemoverEGR(placa) {
