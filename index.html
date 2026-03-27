@@ -1179,7 +1179,7 @@ function doPost(e) {
 `;
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'' };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[] };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -3310,21 +3310,32 @@ window._arlaState = {
 };
 
 function arlaInit() {
-  // Carrega EGR do localStorage ou usa defaults
-  const savedEgr = localStorage.getItem('arla_egr');
-  if (savedEgr) {
-    try { window._arlaState.egrSet = new Set(JSON.parse(savedEgr)); }
-    catch(e) { window._arlaState.egrSet = new Set(ARLA_EGR_DEFAULT); }
+  // Carrega EGR: prioridade = state (Firebase) > localStorage > defaults
+  if (state.arlaEgr && state.arlaEgr.length) {
+    window._arlaState.egrSet = new Set(state.arlaEgr);
   } else {
-    window._arlaState.egrSet = new Set(ARLA_EGR_DEFAULT);
-    localStorage.setItem('arla_egr', JSON.stringify(ARLA_EGR_DEFAULT));
+    const savedEgr = localStorage.getItem('arla_egr');
+    if (savedEgr) {
+      try { window._arlaState.egrSet = new Set(JSON.parse(savedEgr)); }
+      catch(e) { window._arlaState.egrSet = new Set(ARLA_EGR_DEFAULT); }
+    } else {
+      window._arlaState.egrSet = new Set(ARLA_EGR_DEFAULT);
+    }
   }
-  // Carrega grupos
-  const savedGrupos = localStorage.getItem('arla_grupos');
-  if (savedGrupos) { try { window._arlaState.grupos = JSON.parse(savedGrupos); } catch(e) {} }
-  // Carrega meses
-  const savedMeses = localStorage.getItem('arla_meses');
-  if (savedMeses) { try { window._arlaState.meses = JSON.parse(savedMeses); } catch(e) {} }
+  // Carrega grupos: prioridade = state (Firebase) > localStorage
+  if (state.arlaGrupos && state.arlaGrupos.length) {
+    window._arlaState.grupos = state.arlaGrupos;
+  } else {
+    const savedGrupos = localStorage.getItem('arla_grupos');
+    if (savedGrupos) { try { window._arlaState.grupos = JSON.parse(savedGrupos); } catch(e) {} }
+  }
+  // Carrega meses: prioridade = state (Firebase) > localStorage
+  if (state.arlaMeses && state.arlaMeses.length) {
+    window._arlaState.meses = state.arlaMeses;
+  } else {
+    const savedMeses = localStorage.getItem('arla_meses');
+    if (savedMeses) { try { window._arlaState.meses = JSON.parse(savedMeses); } catch(e) {} }
+  }
   // Compatibilidade com formato antigo
   const savedDados = localStorage.getItem('arla_dados');
   if (savedDados && !window._arlaState.meses.length) {
@@ -3516,7 +3527,9 @@ function arlaProcessar(rows) {
   window._arlaState.meses = window._arlaState.meses.filter(m => m.id !== mesId);
   window._arlaState.meses.push({ id: mesId, label: mesLabel, dados: window._arlaState.processados, importadoEm: new Date().toLocaleString('pt-BR') });
   window._arlaState.mesAtual = mesId;
-  localStorage.setItem('arla_meses', JSON.stringify(window._arlaState.meses));
+  state.arlaMeses = window._arlaState.meses;
+  localStorage.setItem('arla_meses', JSON.stringify(state.arlaMeses));
+  saveState();
   window._arlaState._pendingMesId = null;
   window._arlaState._pendingMesLabel = null;
   arlaExibirResultado();
@@ -3550,7 +3563,9 @@ function arlaConfirmarExcluirMes() {
   const mes = meses[idx];
   document.getElementById('arla-modal-excluir-mes').classList.remove('open');
   window._arlaState.meses.splice(idx, 1);
-  localStorage.setItem('arla_meses', JSON.stringify(window._arlaState.meses));
+  state.arlaMeses = window._arlaState.meses;
+  localStorage.setItem('arla_meses', JSON.stringify(state.arlaMeses));
+  saveState();
   if (window._arlaState.meses.length) {
     window._arlaState.mesAtual = window._arlaState.meses[window._arlaState.meses.length-1].id;
     window._arlaState.processados = window._arlaState.meses[window._arlaState.meses.length-1].dados;
@@ -3810,7 +3825,9 @@ function arlaAdicionarEGR() {
     adicionadas++;
   });
   if (!adicionadas) { showToast('Placa(s) já existem no banco EGR', 'error'); return; }
-  localStorage.setItem('arla_egr', JSON.stringify([...window._arlaState.egrSet]));
+  state.arlaEgr = [...window._arlaState.egrSet];
+  localStorage.setItem('arla_egr', JSON.stringify(state.arlaEgr));
+  saveState();
   inp.value = '';
   arlaRenderBancoEGR();
   let msg = '✅ ' + adicionadas + ' placa(s) adicionada(s)!';
@@ -3821,7 +3838,9 @@ function arlaAdicionarEGR() {
 function arlaRemoverEGR(placa) {
   if (!confirm('Remover ' + placa + ' do banco EGR?')) return;
   window._arlaState.egrSet.delete(placa);
-  localStorage.setItem('arla_egr', JSON.stringify([...window._arlaState.egrSet]));
+  state.arlaEgr = [...window._arlaState.egrSet];
+  localStorage.setItem('arla_egr', JSON.stringify(state.arlaEgr));
+  saveState();
   arlaRenderBancoEGR();
   showToast('Placa ' + placa + ' removida', 'success');
 }
@@ -3876,7 +3895,9 @@ function arlaSalvarGrupo() {
   } else {
     window._arlaState.grupos.push({ id: Date.now().toString(), nome, emails, ops, obs });
   }
-  localStorage.setItem('arla_grupos', JSON.stringify(window._arlaState.grupos));
+  state.arlaGrupos = window._arlaState.grupos;
+  localStorage.setItem('arla_grupos', JSON.stringify(state.arlaGrupos));
+  saveState();
   arlaLimparFormGrupo();
   arlaRenderGrupos();
   showToast('✅ Grupo salvo!', 'success');
@@ -3926,7 +3947,9 @@ function arlaEditarGrupo(id) {
 function arlaExcluirGrupo(id) {
   if (!confirm('Excluir este grupo?')) return;
   window._arlaState.grupos = window._arlaState.grupos.filter(g => g.id !== id);
-  localStorage.setItem('arla_grupos', JSON.stringify(window._arlaState.grupos));
+  state.arlaGrupos = window._arlaState.grupos;
+  localStorage.setItem('arla_grupos', JSON.stringify(state.arlaGrupos));
+  saveState();
   arlaRenderGrupos();
   showToast('Grupo excluído', 'success');
 }
