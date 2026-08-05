@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -1504,6 +1505,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
     </div>
     <div class="header-actions">
       <button class="btn btn-secondary btn-sm" onclick="kmReset()">🔄 Novo Comparativo</button>
+      <button class="btn btn-primary btn-sm" onclick="kmAbrirComparativoMensal()" title="Carregar vários meses e gerar um único Excel com Dashboard, Consolidado e uma aba por mês">📚 Comparativo Mensal</button>
       <button class="btn btn-secondary btn-sm" id="btn-km-export" style="display:none" onclick="kmExportarExcel()">⬇️ Exportar Excel</button>
       <button class="btn btn-primary btn-sm" id="btn-km-email" style="display:none" onclick="kmCopiarEmail()">📧 Copiar E-mail de Alerta</button>
       <button class="btn btn-secondary btn-sm" id="btn-km-email-comp" style="display:none" onclick="kmAbrirComparativoDuplo()" title="Gerar e-mail comparando dois períodos lado a lado">📧 Comparar 2 Períodos</button>
@@ -1795,6 +1797,59 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
     <div style="display:flex;gap:10px;justify-content:flex-end">
       <button class="btn btn-secondary" onclick="document.getElementById('modal-mr-modelo').classList.remove('open')">Cancelar</button>
       <button class="btn btn-primary" onclick="mrSalvarModelo()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL KM COMPARATIVO MENSAL -->
+<div class="modal-overlay" id="modal-km-mensal">
+  <div class="modal" style="width:1080px;max-width:96vw">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px">
+      <div>
+        <div class="modal-title" style="margin-bottom:4px">📚 KM Comparativo Mensal</div>
+        <div style="font-size:13px;color:var(--text2)">Carregue os arquivos de cada mês e gere um único Excel com Dashboard, Consolidado e uma aba para cada período.</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('modal-km-mensal').classList.remove('open')">✕ Fechar</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 160px;gap:12px;margin:16px 0">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Operação / identificação do relatório</label>
+        <input type="text" class="form-input" id="km-mensal-identificacao" placeholder="Ex: BRACELL">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Ano</label>
+        <input type="number" class="form-input" id="km-mensal-ano" min="2020" max="2100">
+      </div>
+    </div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;margin-bottom:8px">⚡ Carregamento rápido</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input type="file" id="km-mensal-varios-sistema" accept=".xlsx,.xls" multiple style="display:none" onchange="kmMensalCarregarVarios(this,'sistema')">
+        <input type="file" id="km-mensal-varios-cliente" accept=".xlsx,.xls" multiple style="display:none" onchange="kmMensalCarregarVarios(this,'cliente')">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('km-mensal-varios-sistema').click()">📂 Carregar vários do O2P</button>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('km-mensal-varios-cliente').click()">📋 Carregar vários do Cliente</button>
+        <span style="font-size:11px;color:var(--text3)">O mês é identificado pelo nome do arquivo. Caso não identifique, carregue na linha do mês correto.</span>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">⚙️ Serão usados os mesmos critérios de Alerta, Atenção, Excesso e as margens por operação configuradas na tela principal.</div>
+
+    <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:105px minmax(210px,1fr) minmax(210px,1fr) 170px;gap:12px;padding:9px 12px;background:var(--bg3);font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px">
+        <div>Mês</div><div>KM O2P — Sistema</div><div>KM Produtivo — Cliente</div><div style="text-align:center">Situação</div>
+      </div>
+      <div id="km-mensal-lista" style="max-height:48vh;overflow-y:auto"></div>
+    </div>
+
+    <div id="km-mensal-resumo" style="font-size:12px;margin-top:12px"></div>
+    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="kmMensalLimparTudo()">🗑️ Limpar arquivos</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" onclick="document.getElementById('modal-km-mensal').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-primary" id="btn-km-mensal-gerar" onclick="kmMensalGerarExcel()" disabled>📊 Gerar Excel consolidado</button>
+      </div>
     </div>
   </div>
 </div>
@@ -8823,79 +8878,593 @@ function showPageMetaRota() {
   mrSimPopular();
 }
 
+// ── KM COMPARATIVO MENSAL ────────────────────────────────────────────────────
+const KM_MESES = [
+  { nome:'Janeiro', abrev:'Jan' }, { nome:'Fevereiro', abrev:'Fev' },
+  { nome:'Março', abrev:'Mar' },   { nome:'Abril', abrev:'Abr' },
+  { nome:'Maio', abrev:'Mai' },    { nome:'Junho', abrev:'Jun' },
+  { nome:'Julho', abrev:'Jul' },   { nome:'Agosto', abrev:'Ago' },
+  { nome:'Setembro', abrev:'Set' },{ nome:'Outubro', abrev:'Out' },
+  { nome:'Novembro', abrev:'Nov' },{ nome:'Dezembro', abrev:'Dez' }
+];
+
+window._kmMensalState = window._kmMensalState || { meses: {} };
+
+function kmNumeroSeguro(valor, fallback=0) {
+  const n = parseFloat(valor);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function kmLerCriteriosAtuais() {
+  const margensOp = {};
+  document.querySelectorAll('.km-op-margem-min').forEach(inp => {
+    const op = inp.dataset.op;
+    if (!margensOp[op]) margensOp[op] = {};
+    margensOp[op].min = kmNumeroSeguro(inp.value, 0);
+  });
+  document.querySelectorAll('.km-op-margem-atencao').forEach(inp => {
+    const op = inp.dataset.op;
+    if (!margensOp[op]) margensOp[op] = {};
+    margensOp[op].atencao = kmNumeroSeguro(inp.value, 5);
+  });
+  document.querySelectorAll('.km-op-margem-excesso').forEach(inp => {
+    const op = inp.dataset.op;
+    if (!margensOp[op]) margensOp[op] = {};
+    margensOp[op].excesso = kmNumeroSeguro(inp.value, 0);
+  });
+  window._kmState.margensOp = margensOp;
+  return {
+    margensOp,
+    margemMinGlobal: kmNumeroSeguro(document.getElementById('km-margem-min')?.value, 0),
+    margemAtencaoGlobal: kmNumeroSeguro(document.getElementById('km-margem-atencao')?.value, 5),
+    margemExcessoGlobal: kmNumeroSeguro(document.getElementById('km-margem-excesso')?.value, 0)
+  };
+}
+
+function kmProcessarDados(sistema, cliente, criterios={}) {
+  const margensOp = criterios.margensOp || {};
+  const margemMinGlobal = kmNumeroSeguro(criterios.margemMinGlobal, 0);
+  const margemAtencaoGlobal = kmNumeroSeguro(criterios.margemAtencaoGlobal, 5);
+  const margemExcessoGlobal = kmNumeroSeguro(criterios.margemExcessoGlobal, 0);
+  const prefixosIgnorar = ['EMP', 'MAQ', 'TRA'];
+  const ignorarPlaca = p => prefixosIgnorar.some(pref => String(p).toUpperCase().startsWith(pref));
+  const todasPlacas = new Set([
+    ...Object.keys(sistema || {}),
+    ...Object.keys(cliente || {})
+  ].filter(p => !ignorarPlaca(p)));
+
+  const resultados = [];
+  const semNoSistema = [];
+  const semNoCliente = [];
+
+  todasPlacas.forEach(placa => {
+    const temSistema = sistema?.[placa] !== undefined;
+    const temCliente = cliente?.[placa] !== undefined;
+
+    if (!temSistema) {
+      const d = typeof cliente[placa] === 'object' ? cliente[placa] : { km: cliente[placa], operacao: '' };
+      semNoSistema.push({ placa, kmCliente: kmNumeroSeguro(d.km, 0), operacao: kmNormalizarOp(String(d.operacao || '')) });
+      return;
+    }
+    if (!temCliente) {
+      const d = typeof sistema[placa] === 'object' ? sistema[placa] : { km: sistema[placa], operacao: '' };
+      semNoCliente.push({ placa, kmSistema: kmNumeroSeguro(d.km, 0), operacao: kmNormalizarOp(String(d.operacao || '')) });
+      return;
+    }
+
+    const dSistema = typeof sistema[placa] === 'object' ? sistema[placa] : { km: sistema[placa], operacao: '' };
+    const dCliente = typeof cliente[placa] === 'object' ? cliente[placa] : { km: cliente[placa], operacao: '' };
+    const kmS = kmNumeroSeguro(dSistema.km, 0);
+    const kmC = kmNumeroSeguro(dCliente.km, 0);
+    const op = kmNormalizarOp(String(dSistema.operacao || dCliente.operacao || ''));
+    const diff = kmS - kmC;
+    const pct = kmC > 0 ? (diff / kmC * 100) : null;
+    const mOp = margensOp[op] || {};
+    const margemMin = mOp.min !== undefined ? kmNumeroSeguro(mOp.min, margemMinGlobal) : margemMinGlobal;
+    const margemAtencao = mOp.atencao !== undefined ? kmNumeroSeguro(mOp.atencao, margemAtencaoGlobal) : margemAtencaoGlobal;
+    const margemExcesso = mOp.excesso !== undefined ? kmNumeroSeguro(mOp.excesso, margemExcessoGlobal) : margemExcessoGlobal;
+
+    let status;
+    if (pct === null) status = 'sem_base';
+    else if (margemExcesso > 0 && diff > margemExcesso) status = 'excesso';
+    else if (pct < margemMin) status = 'alerta';
+    else if (pct < margemAtencao) status = 'atencao';
+    else status = 'ok';
+
+    resultados.push({ placa, kmSistema: kmS, kmCliente: kmC, diff, pct, status, operacao: op });
+  });
+
+  const ordem = { alerta:0, excesso:1, atencao:2, sem_base:3, ok:4 };
+  resultados.sort((a,b) => (ordem[a.status] ?? 9) - (ordem[b.status] ?? 9) || a.placa.localeCompare(b.placa));
+  semNoSistema.sort((a,b) => a.placa.localeCompare(b.placa));
+  semNoCliente.sort((a,b) => a.placa.localeCompare(b.placa));
+  return { resultados, semNoSistema, semNoCliente };
+}
+
+function kmMapaSistemaDoWorkbook(wb) {
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = kmLerComHeaderDinamico(ws);
+  const byPlaca = {};
+  raw.forEach(row => {
+    const placa = String(row['Placa'] || row['placa'] || '').trim().toUpperCase();
+    const km = kmNumeroSeguro(row['Km Real'] || row['km_real'] || row['KM Real'] || row['Horas'] || row['horas'], 0);
+    const op = kmNormalizarOp(String(row['Operação'] || row['operacao'] || row['Operacao'] || '').trim());
+    if (!placa || !placa.match(/[A-Z]{2,}/) || placa.startsWith('MAQ')) return;
+    if (!byPlaca[placa]) byPlaca[placa] = { km:0, operacao:op };
+    byPlaca[placa].km += km;
+    if (!byPlaca[placa].operacao && op) byPlaca[placa].operacao = op;
+  });
+  return byPlaca;
+}
+
+function kmMapaClienteDoWorkbook(wb) {
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const raw = kmLerComHeaderDinamico(ws);
+  const byPlaca = {};
+  raw.forEach(row => {
+    const placa = String(row['Placa'] || row['PLACA'] || row['placa'] || '').trim().toUpperCase();
+    const km = kmNumeroSeguro(row['KM Produtivo'] || row['km_produtivo'] || row['KM'] || row['km'] || row['Km'], 0);
+    const op = kmNormalizarOp(String(row['Operação'] || row['Operacao'] || row['operacao'] || row['OPERAÇÃO'] || '').trim());
+    if (!placa || placa.length < 4) return;
+    if (!byPlaca[placa]) byPlaca[placa] = { km:0, operacao:op };
+    byPlaca[placa].km += km;
+    if (!byPlaca[placa].operacao && op) byPlaca[placa].operacao = op;
+  });
+  return byPlaca;
+}
+
+function kmLerArquivoMensal(file, tipo) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type:'array' });
+        resolve(tipo === 'sistema' ? kmMapaSistemaDoWorkbook(wb) : kmMapaClienteDoWorkbook(wb));
+      } catch (erro) { reject(erro); }
+    };
+    reader.onerror = () => reject(new Error('Não foi possível ler o arquivo.'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function kmAbrirComparativoMensal() {
+  const ano = document.getElementById('km-mensal-ano');
+  if (ano && !ano.value) ano.value = new Date().getFullYear();
+  kmMensalRenderLinhas();
+  document.getElementById('modal-km-mensal').classList.add('open');
+}
+
+function kmNormalizarTextoArquivo(txt) {
+  return String(txt || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+
+function kmDetectarMesArquivo(nome) {
+  const n = kmNormalizarTextoArquivo(nome).replace(/\.[^.]+$/, '');
+  const aliases = [
+    ['janeiro','jan'], ['fevereiro','fev'], ['marco','mar'], ['abril','abr'],
+    ['maio','mai'], ['junho','jun'], ['julho','jul'], ['agosto','ago'],
+    ['setembro','set'], ['outubro','out'], ['novembro','nov'], ['dezembro','dez']
+  ];
+  for (let i=0;i<aliases.length;i++) {
+    if (aliases[i].some(a => new RegExp('(^|[^a-z])' + a + '([^a-z]|$)').test(n))) return i;
+  }
+  const match = n.match(/(?:^|[^0-9])(0[1-9]|1[0-2])(?:[^0-9]|$)/);
+  return match ? parseInt(match[1],10)-1 : -1;
+}
+
+async function kmMensalCarregarArquivo(mesIdx, tipo, file, atualizar=true) {
+  if (!file) return;
+  const mes = window._kmMensalState.meses[mesIdx] || {};
+  mes.carregando = tipo;
+  window._kmMensalState.meses[mesIdx] = mes;
+  if (atualizar) kmMensalRenderLinhas();
+  try {
+    const mapa = await kmLerArquivoMensal(file, tipo);
+    mes[tipo] = mapa;
+    mes[tipo + 'Nome'] = file.name;
+    mes.carregando = null;
+    window._kmMensalState.meses[mesIdx] = mes;
+  } catch (erro) {
+    console.error(erro);
+    mes.carregando = null;
+    showToast('Erro ao ler ' + file.name, 'error');
+  }
+  if (atualizar) kmMensalRenderLinhas();
+}
+
+async function kmMensalArquivoIndividual(mesIdx, tipo, input) {
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+  await kmMensalCarregarArquivo(mesIdx, tipo, file, true);
+}
+
+async function kmMensalCarregarVarios(input, tipo) {
+  const files = [...(input.files || [])];
+  input.value = '';
+  if (!files.length) return;
+  const naoIdentificados = [];
+  let carregados = 0;
+  for (const file of files) {
+    const mesIdx = kmDetectarMesArquivo(file.name);
+    if (mesIdx < 0) { naoIdentificados.push(file.name); continue; }
+    await kmMensalCarregarArquivo(mesIdx, tipo, file, false);
+    carregados++;
+    kmMensalRenderLinhas();
+  }
+  if (carregados) showToast(carregados + ' arquivo(s) de ' + (tipo === 'sistema' ? 'O2P' : 'cliente') + ' carregado(s)', 'success');
+  if (naoIdentificados.length) showToast('Não identifiquei o mês em ' + naoIdentificados.length + ' arquivo(s). Carregue-os na linha do mês.', 'error');
+  kmMensalRenderLinhas();
+}
+
+function kmMensalRemover(mesIdx, tipo) {
+  const mes = window._kmMensalState.meses[mesIdx];
+  if (!mes) return;
+  delete mes[tipo];
+  delete mes[tipo + 'Nome'];
+  if (!mes.sistema && !mes.cliente) delete window._kmMensalState.meses[mesIdx];
+  kmMensalRenderLinhas();
+}
+
+function kmMensalLimparTudo() {
+  window._kmMensalState.meses = {};
+  kmMensalRenderLinhas();
+  showToast('Arquivos mensais removidos', 'success');
+}
+
+function kmMensalRenderLinhas() {
+  const lista = document.getElementById('km-mensal-lista');
+  if (!lista) return;
+  let prontos = 0;
+  lista.innerHTML = KM_MESES.map((mesInfo, i) => {
+    const mes = window._kmMensalState.meses[i] || {};
+    const sistemaQtd = mes.sistema ? Object.keys(mes.sistema).length : 0;
+    const clienteQtd = mes.cliente ? Object.keys(mes.cliente).length : 0;
+    const pronto = !!(mes.sistema && mes.cliente);
+    if (pronto) prontos++;
+    const status = mes.carregando
+      ? '<span style="color:var(--yellow)">⏳ Lendo arquivo...</span>'
+      : pronto
+        ? '<span style="color:var(--green);font-weight:700">✅ Pronto para exportar</span>'
+        : mes.sistema || mes.cliente
+          ? '<span style="color:var(--yellow)">⚠️ Falta um arquivo</span>'
+          : '<span style="color:var(--text3)">Aguardando arquivos</span>';
+    const arquivoBox = (tipo, nome, qtd, cor) => {
+      const inputId = 'km-mensal-' + tipo + '-' + i;
+      return '<div style="min-width:0">' +
+        '<input type="file" id="' + inputId + '" accept=".xlsx,.xls" style="display:none" onchange="kmMensalArquivoIndividual(' + i + ',\'' + tipo + '\',this)">' +
+        '<button class="btn btn-secondary btn-sm" style="width:100%;justify-content:flex-start" onclick="document.getElementById(\'' + inputId + '\').click()">📂 ' + (nome ? 'Trocar arquivo' : 'Selecionar arquivo') + '</button>' +
+        (nome ? '<div title="' + nome.replace(/"/g,'&quot;') + '" style="display:flex;align-items:center;gap:6px;margin-top:5px;font-size:11px;color:' + cor + ';min-width:0"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + nome + '</span><span style="flex-shrink:0">(' + qtd + ')</span><button onclick="event.stopPropagation();kmMensalRemover(' + i + ',\'' + tipo + '\')" title="Remover" style="background:none;border:0;color:var(--red);cursor:pointer;padding:0 2px">✕</button></div>' : '<div style="font-size:11px;color:var(--text3);margin-top:5px">Nenhum arquivo</div>') +
+        '</div>';
+    };
+    return '<div style="display:grid;grid-template-columns:105px minmax(210px,1fr) minmax(210px,1fr) 170px;gap:12px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--border);background:' + (pronto ? 'rgba(34,197,94,.035)' : 'transparent') + '">' +
+      '<div><div style="font-size:13px;font-weight:700">' + mesInfo.nome + '</div><div style="font-size:10px;color:var(--text3)">Aba ' + mesInfo.abrev + '</div></div>' +
+      arquivoBox('sistema', mes.sistemaNome, sistemaQtd, 'var(--accent)') +
+      arquivoBox('cliente', mes.clienteNome, clienteQtd, 'var(--accent2)') +
+      '<div style="font-size:11px;text-align:center">' + status + '</div>' +
+      '</div>';
+  }).join('');
+  const resumo = document.getElementById('km-mensal-resumo');
+  if (resumo) resumo.innerHTML = '<strong style="color:' + (prontos ? 'var(--green)' : 'var(--text)') + '">' + prontos + ' mês(es) completo(s)</strong><span style="color:var(--text3)"> · somente meses com os dois arquivos entrarão no Excel</span>';
+  const btn = document.getElementById('btn-km-mensal-gerar');
+  if (btn) btn.disabled = prontos === 0;
+}
+
+function kmMensalResumo(item) {
+  const resultados = item.resultados;
+  const soma = campo => resultados.reduce((acc,r) => acc + (r[campo] || 0), 0);
+  const kmS = soma('kmSistema');
+  const kmC = soma('kmCliente');
+  const diff = kmS - kmC;
+  return {
+    mesIdx:item.mesIdx,
+    mes:KM_MESES[item.mesIdx].nome,
+    abrev:KM_MESES[item.mesIdx].abrev,
+    total:resultados.length,
+    kmS, kmC, diff,
+    pct:kmC > 0 ? diff / kmC : null,
+    alerta:resultados.filter(r=>r.status==='alerta').length,
+    excesso:resultados.filter(r=>r.status==='excesso').length,
+    atencao:resultados.filter(r=>r.status==='atencao').length,
+    ok:resultados.filter(r=>r.status==='ok').length,
+    semBase:resultados.filter(r=>r.status==='sem_base').length,
+    semCorr:item.semNoSistema.length + item.semNoCliente.length
+  };
+}
+
+function kmExcelCor(hex) { return 'FF' + String(hex).replace('#','').toUpperCase(); }
+const KM_EXCEL = {
+  vermelho:'7F1D1D', vermelho2:'991B1B', laranja:'C2410C', amarelo:'A16207',
+  verde:'166534', azul:'1E3A5F', roxo:'5B21B6', escuro:'1F2937', cinza:'64748B',
+  borda:'D1D5DB', claro:'F8FAFC', branco:'FFFFFF'
+};
+
+function kmExcelBorda() {
+  const side = { style:'thin', color:{argb:kmExcelCor(KM_EXCEL.borda)} };
+  return { top:side, left:side, bottom:side, right:side };
+}
+
+function kmExcelPintarIntervalo(ws, range, fill, fontColor=KM_EXCEL.branco, bold=true) {
+  const [inicio,fim] = range.split(':');
+  const a = ws.getCell(inicio), b = ws.getCell(fim || inicio);
+  for (let row=a.row; row<=b.row; row++) for (let col=a.col; col<=b.col; col++) {
+    const c = ws.getCell(row,col);
+    c.fill = { type:'pattern', pattern:'solid', fgColor:{argb:kmExcelCor(fill)} };
+    c.font = { name:'Arial', size:10, bold, color:{argb:kmExcelCor(fontColor)} };
+    c.alignment = { vertical:'middle', horizontal:'center', wrapText:true };
+    c.border = kmExcelBorda();
+  }
+}
+
+function kmExcelCabecalho(row, fill=KM_EXCEL.escuro) {
+  row.eachCell({includeEmpty:true}, cell => {
+    cell.fill = {type:'pattern',pattern:'solid',fgColor:{argb:kmExcelCor(fill)}};
+    cell.font = {name:'Arial',size:10,bold:true,color:{argb:kmExcelCor(KM_EXCEL.branco)}};
+    cell.alignment = {vertical:'middle',horizontal:'center',wrapText:true};
+    cell.border = kmExcelBorda();
+  });
+  row.height = 26;
+}
+
+function kmExcelEstiloStatus(cell, status) {
+  const cfg = {
+    alerta:[KM_EXCEL.vermelho2,'FEE2E2'], excesso:[KM_EXCEL.laranja,'FFEDD5'],
+    atencao:[KM_EXCEL.amarelo,'FEF3C7'], ok:[KM_EXCEL.verde,'DCFCE7'],
+    sem_base:[KM_EXCEL.roxo,'EDE9FE'], sem_corr:[KM_EXCEL.roxo,'EDE9FE']
+  }[status] || [KM_EXCEL.escuro,KM_EXCEL.claro];
+  cell.fill = {type:'pattern',pattern:'solid',fgColor:{argb:kmExcelCor(cfg[1])}};
+  cell.font = {name:'Arial',size:10,bold:true,color:{argb:kmExcelCor(cfg[0])}};
+  cell.alignment = {horizontal:'center',vertical:'middle'};
+  cell.border = kmExcelBorda();
+}
+
+function kmExcelStatusLabel(status) {
+  return ({alerta:'ALERTA',excesso:'EXCESSO',atencao:'ATENÇÃO',ok:'OK',sem_base:'SEM BASE',sem_corr:'SEM CORRESPONDÊNCIA'}[status] || status || '—');
+}
+
+function kmExcelEstiloDados(row, status='') {
+  row.eachCell({includeEmpty:true}, cell => {
+    cell.font = {name:'Arial',size:10,color:{argb:kmExcelCor(KM_EXCEL.escuro)}};
+    cell.alignment = {vertical:'middle',horizontal:cell.col===1?'center':'left'};
+    cell.border = kmExcelBorda();
+  });
+  if (status) kmExcelEstiloStatus(row.getCell(row.cellCount), status);
+}
+
+function kmExcelTituloAba(ws, titulo, subtitulo, ultimaCol='G') {
+  ws.mergeCells('A1:' + ultimaCol + '1');
+  ws.getCell('A1').value = titulo;
+  ws.getCell('A1').font = {name:'Arial',size:18,bold:true,color:{argb:kmExcelCor(KM_EXCEL.branco)}};
+  ws.getCell('A1').fill = {type:'pattern',pattern:'solid',fgColor:{argb:kmExcelCor(KM_EXCEL.vermelho)}};
+  ws.getCell('A1').alignment = {vertical:'middle',horizontal:'left'};
+  ws.getCell('A1').border = kmExcelBorda();
+  ws.getRow(1).height = 34;
+  ws.mergeCells('A2:' + ultimaCol + '2');
+  ws.getCell('A2').value = subtitulo;
+  ws.getCell('A2').font = {name:'Arial',size:10,color:{argb:kmExcelCor('FCA5A5')}};
+  ws.getCell('A2').fill = {type:'pattern',pattern:'solid',fgColor:{argb:kmExcelCor(KM_EXCEL.vermelho2)}};
+  ws.getCell('A2').alignment = {vertical:'middle',horizontal:'left'};
+  ws.getCell('A2').border = kmExcelBorda();
+  ws.getRow(2).height = 22;
+}
+
+function kmExcelCriarGraficoPng(resumos) {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200; canvas.height = 440;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#1F2937'; ctx.font = 'bold 24px Arial'; ctx.fillText('Evolução mensal — KM O2P × KM Produtivo', 42, 42);
+    const left=90, top=80, right=1140, bottom=360, h=bottom-top, w=right-left;
+    const maxVal = Math.max(1, ...resumos.flatMap(r=>[r.kmS,r.kmC])) * 1.12;
+    const fmtCurto = v => v >= 1000000 ? (v/1000000).toFixed(1).replace('.',',')+' mi' : v >= 1000 ? (v/1000).toFixed(0)+' mil' : v.toFixed(0);
+    ctx.strokeStyle='#E5E7EB'; ctx.lineWidth=1; ctx.font='13px Arial'; ctx.fillStyle='#64748B';
+    for(let i=0;i<=5;i++){
+      const y=bottom-(h*i/5); ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
+      ctx.fillText(fmtCurto(maxVal*i/5), 18, y+5);
+    }
+    const grupo=w/Math.max(resumos.length,1), bar=Math.min(42,grupo*0.26);
+    resumos.forEach((r,i)=>{
+      const cx=left+grupo*i+grupo/2;
+      const hs=h*(r.kmS/maxVal), hc=h*(r.kmC/maxVal);
+      ctx.fillStyle='#C2410C'; ctx.fillRect(cx-bar-3,bottom-hs,bar,hs);
+      ctx.fillStyle='#1E3A5F'; ctx.fillRect(cx+3,bottom-hc,bar,hc);
+      ctx.fillStyle='#1F2937';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.fillText(r.abrev,cx,bottom+24);
+      ctx.font='11px Arial';ctx.fillStyle='#64748B';ctx.fillText((r.diff>=0?'+':'')+fmtCurto(r.diff),cx,bottom+43);
+    });
+    ctx.textAlign='left';
+    ctx.fillStyle='#C2410C';ctx.fillRect(850,28,18,12);ctx.fillStyle='#1F2937';ctx.font='13px Arial';ctx.fillText('KM O2P',876,39);
+    ctx.fillStyle='#1E3A5F';ctx.fillRect(970,28,18,12);ctx.fillStyle='#1F2937';ctx.fillText('KM Produtivo',996,39);
+    return canvas.toDataURL('image/png');
+  } catch(e) { console.warn('Gráfico do dashboard não pôde ser criado:',e); return null; }
+}
+
+function kmExcelCriarAbaMensal(workbook, item, identificacao, ano) {
+  const info = KM_MESES[item.mesIdx];
+  const ws = workbook.addWorksheet(info.abrev, {views:[{showGridLines:false}]});
+  ws.properties.tabColor = {argb:kmExcelCor(KM_EXCEL.laranja)};
+  ws.columns = [
+    {key:'placa',width:15},{key:'operacao',width:28},{key:'kms',width:16},{key:'kmc',width:18},
+    {key:'diff',width:16},{key:'pct',width:13},{key:'status',width:20}
+  ];
+  kmExcelTituloAba(ws, 'KM Comparativo — ' + info.nome, (identificacao ? identificacao + ' · ' : '') + info.nome + ' de ' + ano + ' · Gerado em ' + new Date().toLocaleDateString('pt-BR'));
+  const resumo = kmMensalResumo(item);
+  const cards = [
+    ['A4:B4','A5:B5','Alertas',resumo.alerta,KM_EXCEL.vermelho2,'FEE2E2'],
+    ['C4:D4','C5:D5','Excessos',resumo.excesso,KM_EXCEL.laranja,'FFEDD5'],
+    ['E4:F4','E5:F5','Atenção',resumo.atencao,KM_EXCEL.amarelo,'FEF3C7'],
+    ['G4:G4','G5:G5','OK',resumo.ok,KM_EXCEL.verde,'DCFCE7']
+  ];
+  cards.forEach(([r1,r2,label,val,cor,fundo])=>{
+    ws.mergeCells(r1);ws.mergeCells(r2);
+    const c1=ws.getCell(r1.split(':')[0]),c2=ws.getCell(r2.split(':')[0]);
+    c1.value=label;c2.value=val;
+    kmExcelPintarIntervalo(ws,r1,cor,KM_EXCEL.branco,true);
+    kmExcelPintarIntervalo(ws,r2,fundo,cor,true);
+    c2.font={name:'Arial',size:18,bold:true,color:{argb:kmExcelCor(cor)}};
+  });
+  ws.getRow(4).height=22;ws.getRow(5).height=30;
+
+  let row = 7;
+  ws.mergeCells('A'+row+':G'+row); ws.getCell('A'+row).value='Resumo por Operação'; kmExcelPintarIntervalo(ws,'A'+row+':G'+row,KM_EXCEL.azul); row++;
+  ws.getRow(row).values=['Operação','Total','Alerta','Excesso','Atenção','OK','Diferença']; kmExcelCabecalho(ws.getRow(row),KM_EXCEL.escuro); row++;
+  const porOp={};
+  item.resultados.forEach(r=>{
+    const op=r.operacao||'Sem Operação';
+    if(!porOp[op])porOp[op]={total:0,alerta:0,excesso:0,atencao:0,ok:0,diff:0};
+    porOp[op].total++;porOp[op][r.status]=(porOp[op][r.status]||0)+1;porOp[op].diff+=r.diff;
+  });
+  Object.entries(porOp).sort((a,b)=>(b[1].alerta+b[1].excesso)-(a[1].alerta+a[1].excesso)||a[0].localeCompare(b[0])).forEach(([op,d])=>{
+    const rr=ws.getRow(row++);rr.values=[op,d.total,d.alerta||0,d.excesso||0,d.atencao||0,d.ok||0,d.diff];kmExcelEstiloDados(rr);
+    rr.getCell(7).numFmt='#,##0.0;[Red]-#,##0.0';
+  });
+  row++;
+
+  const secoes = [
+    ['alerta','Alertas — KM O2P abaixo do Produtivo',KM_EXCEL.vermelho2],
+    ['excesso','Excessos — KM muito acima',KM_EXCEL.laranja],
+    ['atencao','Atenção — margem apertada',KM_EXCEL.amarelo],
+    ['sem_base','Sem base para cálculo',KM_EXCEL.roxo],
+    ['ok','OK',KM_EXCEL.verde]
+  ];
+  secoes.forEach(([status,titulo,cor])=>{
+    const linhas=item.resultados.filter(r=>r.status===status);
+    if(!linhas.length)return;
+    ws.mergeCells('A'+row+':G'+row);ws.getCell('A'+row).value=titulo+' ('+linhas.length+')';kmExcelPintarIntervalo(ws,'A'+row+':G'+row,cor);row++;
+    ws.getRow(row).values=['Placa','Operação','KM O2P','KM Produtivo','Diferença','Var. %','Status'];kmExcelCabecalho(ws.getRow(row));row++;
+    linhas.forEach(r=>{
+      const rr=ws.getRow(row++);rr.values=[r.placa,r.operacao||'—',r.kmSistema,r.kmCliente,r.diff,r.pct===null?null:r.pct/100,kmExcelStatusLabel(r.status)];kmExcelEstiloDados(rr,r.status);
+      rr.getCell(3).numFmt=rr.getCell(4).numFmt=rr.getCell(5).numFmt='#,##0.0;[Red]-#,##0.0';rr.getCell(6).numFmt='0.0%;[Red]-0.0%';
+      rr.getCell(1).font={name:'Courier New',size:10,bold:true,color:{argb:kmExcelCor(KM_EXCEL.escuro)}};
+    });
+    row++;
+  });
+
+  if(item.semNoSistema.length||item.semNoCliente.length){
+    ws.mergeCells('A'+row+':G'+row);ws.getCell('A'+row).value='Sem Correspondência ('+(item.semNoSistema.length+item.semNoCliente.length)+')';kmExcelPintarIntervalo(ws,'A'+row+':G'+row,KM_EXCEL.roxo);row++;
+    ws.getRow(row).values=['Placa','Operação','KM O2P','KM Produtivo','Diferença','Var. %','Situação'];kmExcelCabecalho(ws.getRow(row));row++;
+    item.semNoSistema.forEach(r=>{const rr=ws.getRow(row++);rr.values=[r.placa,r.operacao||'—',null,r.kmCliente,null,null,'SÓ NO CLIENTE'];kmExcelEstiloDados(rr,'sem_corr');rr.getCell(4).numFmt='#,##0.0';});
+    item.semNoCliente.forEach(r=>{const rr=ws.getRow(row++);rr.values=[r.placa,r.operacao||'—',r.kmSistema,null,null,null,'SÓ NO SISTEMA'];kmExcelEstiloDados(rr,'sem_corr');rr.getCell(3).numFmt='#,##0.0';});
+  }
+  ws.views=[{state:'frozen',ySplit:7,showGridLines:false}];
+  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9,margins:{left:.25,right:.25,top:.5,bottom:.5,header:.2,footer:.2}};
+  ws.headerFooter.oddFooter='Ignis · KM Comparativo · &D';
+}
+
+function kmExcelCriarConsolidado(workbook, itens, identificacao, ano) {
+  const ws=workbook.addWorksheet('Consolidado',{views:[{showGridLines:false}]});
+  ws.properties.tabColor={argb:kmExcelCor(KM_EXCEL.vermelho)};
+  ws.columns=[{width:15},{width:28},{width:15},{width:19},{width:20},{width:17},{width:13},{width:11},{width:11},{width:11},{width:9},{width:18},{width:20}];
+  kmExcelTituloAba(ws,'KM Comparativo — Consolidado',(identificacao?identificacao+' · ':'')+'Acumulado de '+itens.length+' mês(es) em '+ano+' · Gerado em '+new Date().toLocaleDateString('pt-BR'),'M');
+  const porPlaca={};
+  const garantir=(placa,op)=>{
+    if(!porPlaca[placa])porPlaca[placa]={placa,ops:{},meses:new Set(),kmS:0,kmC:0,alerta:0,excesso:0,atencao:0,ok:0,sem_base:0,semCorr:0};
+    if(op)porPlaca[placa].ops[op]=(porPlaca[placa].ops[op]||0)+1;
+    return porPlaca[placa];
+  };
+  itens.forEach(item=>{
+    item.resultados.forEach(r=>{const d=garantir(r.placa,r.operacao);d.meses.add(item.mesIdx);d.kmS+=r.kmSistema;d.kmC+=r.kmCliente;d[r.status]=(d[r.status]||0)+1;});
+    item.semNoSistema.forEach(r=>{const d=garantir(r.placa,r.operacao);d.meses.add(item.mesIdx);d.kmC+=r.kmCliente;d.semCorr++;});
+    item.semNoCliente.forEach(r=>{const d=garantir(r.placa,r.operacao);d.meses.add(item.mesIdx);d.kmS+=r.kmSistema;d.semCorr++;});
+  });
+  const linhas=Object.values(porPlaca).map(d=>{
+    const op=Object.entries(d.ops).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+    const diff=d.kmS-d.kmC,pct=d.kmC>0?diff/d.kmC:null;
+    const pior=d.alerta?'alerta':d.excesso?'excesso':d.atencao?'atencao':d.semCorr?'sem_corr':d.sem_base?'sem_base':'ok';
+    return {...d,op,diff,pct,pior};
+  }).sort((a,b)=>{
+    const p={alerta:0,excesso:1,atencao:2,sem_corr:3,sem_base:4,ok:5};
+    return (p[a.pior]??9)-(p[b.pior]??9)||a.diff-b.diff||a.placa.localeCompare(b.placa);
+  });
+  const totalAlertas=linhas.reduce((s,d)=>s+d.alerta,0),totalExcessos=linhas.reduce((s,d)=>s+d.excesso,0),totalSem=linhas.reduce((s,d)=>s+d.semCorr,0);
+  const cards=[['A4:C4','Placas únicas',linhas.length,KM_EXCEL.azul],['D4:F4','Ocorrências de alerta',totalAlertas,KM_EXCEL.vermelho2],['G4:I4','Ocorrências de excesso',totalExcessos,KM_EXCEL.laranja],['J4:M4','Sem correspondência',totalSem,KM_EXCEL.roxo]];
+  cards.forEach(([range,label,val,cor])=>{ws.mergeCells(range);const c=ws.getCell(range.split(':')[0]);c.value=label+': '+val;kmExcelPintarIntervalo(ws,range,cor);ws.getRow(4).height=28;});
+  ws.getRow(7).values=['Placa','Operação principal','Meses','KM O2P acumulado','KM Produtivo acumulado','Diferença','Var. %','Alertas','Excessos','Atenção','OK','Sem correspondência','Pior status'];kmExcelCabecalho(ws.getRow(7),KM_EXCEL.escuro);
+  let row=8;
+  linhas.forEach(d=>{
+    const rr=ws.getRow(row++);rr.values=[d.placa,d.op,d.meses.size,d.kmS,d.kmC,d.diff,d.pct,d.alerta,d.excesso,d.atencao,d.ok,d.semCorr,kmExcelStatusLabel(d.pior)];kmExcelEstiloDados(rr,d.pior);
+    rr.getCell(1).font={name:'Courier New',size:10,bold:true,color:{argb:kmExcelCor(KM_EXCEL.escuro)}};
+    [4,5,6].forEach(c=>rr.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');rr.getCell(7).numFmt='0.0%;[Red]-0.0%';
+  });
+  const total=ws.getRow(row);total.values=['TOTAL GERAL','',linhas.length,linhas.reduce((s,d)=>s+d.kmS,0),linhas.reduce((s,d)=>s+d.kmC,0),linhas.reduce((s,d)=>s+d.diff,0),'',totalAlertas,totalExcessos,linhas.reduce((s,d)=>s+d.atencao,0),linhas.reduce((s,d)=>s+d.ok,0),totalSem,''];kmExcelCabecalho(total,KM_EXCEL.azul);[4,5,6].forEach(c=>total.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');
+  ws.autoFilter={from:{row:7,column:1},to:{row:Math.max(7,row-1),column:13}};
+  ws.views=[{state:'frozen',xSplit:2,ySplit:7,showGridLines:false}];
+  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9};
+}
+
+function kmExcelCriarDashboard(workbook, itens, resumos, identificacao, ano) {
+  const ws=workbook.addWorksheet('Dashboard',{views:[{showGridLines:false}]});
+  ws.properties.tabColor={argb:kmExcelCor(KM_EXCEL.verde)};
+  ws.columns=Array.from({length:10},()=>({width:16}));
+  kmExcelTituloAba(ws,'Dashboard — KM Comparativo',(identificacao?identificacao+' · ':'')+KM_MESES[itens[0].mesIdx].nome+' a '+KM_MESES[itens[itens.length-1].mesIdx].nome+' de '+ano+' · Gerado em '+new Date().toLocaleDateString('pt-BR'),'J');
+  const unicas=new Set();itens.forEach(i=>{i.resultados.forEach(r=>unicas.add(r.placa));i.semNoSistema.forEach(r=>unicas.add(r.placa));i.semNoCliente.forEach(r=>unicas.add(r.placa));});
+  const tot={reg:resumos.reduce((s,r)=>s+r.total,0),alerta:resumos.reduce((s,r)=>s+r.alerta,0),excesso:resumos.reduce((s,r)=>s+r.excesso,0),sem:resumos.reduce((s,r)=>s+r.semCorr,0),diff:resumos.reduce((s,r)=>s+r.diff,0)};
+  const cards=[
+    ['A4:B4','A5:B6','Meses analisados',itens.length,KM_EXCEL.azul],
+    ['C4:D4','C5:D6','Placas únicas',unicas.size,KM_EXCEL.escuro],
+    ['E4:F4','E5:F6','Alertas',tot.alerta,KM_EXCEL.vermelho2],
+    ['G4:H4','G5:H6','Excessos',tot.excesso,KM_EXCEL.laranja],
+    ['I4:J4','I5:J6','Diferença acumulada',tot.diff,tot.diff<0?KM_EXCEL.vermelho2:KM_EXCEL.verde]
+  ];
+  cards.forEach(([r1,r2,label,val,cor])=>{ws.mergeCells(r1);ws.mergeCells(r2);const a=ws.getCell(r1.split(':')[0]),b=ws.getCell(r2.split(':')[0]);a.value=label;b.value=val;kmExcelPintarIntervalo(ws,r1,cor);kmExcelPintarIntervalo(ws,r2,'FFFFFF',cor,true);b.font={name:'Arial',size:20,bold:true,color:{argb:kmExcelCor(cor)}};if(label.includes('Diferença'))b.numFmt='#,##0.0;[Red]-#,##0.0';});
+  ws.getRow(4).height=23;ws.getRow(5).height=25;ws.getRow(6).height=25;
+  ws.mergeCells('A8:J8');ws.getCell('A8').value='Evolução mensal';kmExcelPintarIntervalo(ws,'A8:J8',KM_EXCEL.escuro);
+  const chart=kmExcelCriarGraficoPng(resumos);
+  if(chart){const id=workbook.addImage({base64:chart,extension:'png'});ws.addImage(id,{tl:{col:0.2,row:8.4},ext:{width:1050,height:385}});}
+  for(let r=9;r<=27;r++)ws.getRow(r).height=19;
+  let row=29;
+  ws.mergeCells('A'+row+':J'+row);ws.getCell('A'+row).value='Resumo mensal';kmExcelPintarIntervalo(ws,'A'+row+':J'+row,KM_EXCEL.azul);row++;
+  ws.getRow(row).values=['Mês','Placas','KM O2P','KM Produtivo','Diferença','Var. %','Alerta','Excesso','Atenção','OK'];kmExcelCabecalho(ws.getRow(row));row++;
+  resumos.forEach(r=>{const rr=ws.getRow(row++);rr.values=[r.mes,r.total,r.kmS,r.kmC,r.diff,r.pct,r.alerta,r.excesso,r.atencao,r.ok];kmExcelEstiloDados(rr);[3,4,5].forEach(c=>rr.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');rr.getCell(6).numFmt='0.0%;[Red]-0.0%';if(r.alerta)kmExcelEstiloStatus(rr.getCell(7),'alerta');if(r.excesso)kmExcelEstiloStatus(rr.getCell(8),'excesso');if(r.atencao)kmExcelEstiloStatus(rr.getCell(9),'atencao');if(r.ok)kmExcelEstiloStatus(rr.getCell(10),'ok');});
+  row++;
+  ws.mergeCells('A'+row+':J'+row);ws.getCell('A'+row).value='Consolidado por Operação';kmExcelPintarIntervalo(ws,'A'+row+':J'+row,KM_EXCEL.azul);row++;
+  ws.getRow(row).values=['Operação','Meses','Placas','KM O2P','KM Produtivo','Diferença','Alerta','Excesso','Atenção','OK'];kmExcelCabecalho(ws.getRow(row));row++;
+  const porOp={};
+  itens.forEach(item=>item.resultados.forEach(r=>{const op=r.operacao||'Sem Operação';if(!porOp[op])porOp[op]={meses:new Set(),placas:new Set(),kmS:0,kmC:0,alerta:0,excesso:0,atencao:0,ok:0};const d=porOp[op];d.meses.add(item.mesIdx);d.placas.add(r.placa);d.kmS+=r.kmSistema;d.kmC+=r.kmCliente;d[r.status]=(d[r.status]||0)+1;}));
+  Object.entries(porOp).sort((a,b)=>(b[1].alerta+b[1].excesso)-(a[1].alerta+a[1].excesso)||a[0].localeCompare(b[0])).forEach(([op,d])=>{const rr=ws.getRow(row++);rr.values=[op,d.meses.size,d.placas.size,d.kmS,d.kmC,d.kmS-d.kmC,d.alerta,d.excesso,d.atencao,d.ok];kmExcelEstiloDados(rr);[4,5,6].forEach(c=>rr.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');if(d.alerta)kmExcelEstiloStatus(rr.getCell(7),'alerta');if(d.excesso)kmExcelEstiloStatus(rr.getCell(8),'excesso');if(d.atencao)kmExcelEstiloStatus(rr.getCell(9),'atencao');if(d.ok)kmExcelEstiloStatus(rr.getCell(10),'ok');});
+  ws.views=[{state:'frozen',ySplit:3,showGridLines:false}];
+  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9};
+}
+
+async function kmMensalGerarExcel() {
+  const btn=document.getElementById('btn-km-mensal-gerar');
+  const completos=Object.entries(window._kmMensalState.meses).filter(([,m])=>m.sistema&&m.cliente).map(([idx,m])=>({mesIdx:Number(idx),...m})).sort((a,b)=>a.mesIdx-b.mesIdx);
+  if(!completos.length){showToast('Carregue pelo menos um mês completo','error');return;}
+  if(typeof ExcelJS==='undefined'){showToast('Biblioteca de Excel não carregou. Atualize a página e tente novamente.','error');return;}
+  const ano=parseInt(document.getElementById('km-mensal-ano').value,10)||new Date().getFullYear();
+  const identificacao=document.getElementById('km-mensal-identificacao').value.trim();
+  const criterios=kmLerCriteriosAtuais();
+  const itens=completos.map(m=>({mesIdx:m.mesIdx,...kmProcessarDados(m.sistema,m.cliente,criterios)}));
+  const resumos=itens.map(kmMensalResumo);
+  try{
+    btn.disabled=true;btn.dataset.texto=btn.innerHTML;btn.innerHTML='⏳ Gerando Excel...';
+    const workbook=new ExcelJS.Workbook();
+    workbook.creator='Ignis';workbook.lastModifiedBy='Ignis';workbook.created=new Date();workbook.modified=new Date();workbook.company='Ignis';
+    kmExcelCriarDashboard(workbook,itens,resumos,identificacao,ano);
+    kmExcelCriarConsolidado(workbook,itens,identificacao,ano);
+    itens.forEach(item=>kmExcelCriarAbaMensal(workbook,item,identificacao,ano));
+    const buffer=await workbook.xlsx.writeBuffer();
+    const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    const periodo=KM_MESES[itens[0].mesIdx].abrev+'-'+KM_MESES[itens[itens.length-1].mesIdx].abrev;
+    const nomeBase=(identificacao||'KM_Comparativo').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'');
+    a.href=url;a.download='Ignis_'+nomeBase+'_'+periodo+'_'+ano+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    showToast('Excel mensal gerado com Dashboard, Consolidado e '+itens.length+' abas mensais!','success');
+  }catch(erro){console.error(erro);showToast('Erro ao gerar o Excel mensal','error');}
+  finally{btn.disabled=false;btn.innerHTML=btn.dataset.texto||'📊 Gerar Excel consolidado';}
+}
+
+
 function kmComparar() {
   const sistema = window._kmState.sistema;
   const cliente = window._kmState.cliente;
   if (!sistema || !cliente) return;
 
-  // Lê margens por operação dos inputs dinâmicos
-  const margensOp = {};
-  document.querySelectorAll('.km-op-margem-min').forEach(inp => {
-    const op = inp.dataset.op;
-    if (!margensOp[op]) margensOp[op] = {};
-    margensOp[op].min = parseFloat(inp.value) || 0;
-  });
-  document.querySelectorAll('.km-op-margem-atencao').forEach(inp => {
-    const op = inp.dataset.op;
-    if (!margensOp[op]) margensOp[op] = {};
-    margensOp[op].atencao = parseFloat(inp.value) || 5;
-  });
-  document.querySelectorAll('.km-op-margem-excesso').forEach(inp => {
-    const op = inp.dataset.op;
-    if (!margensOp[op]) margensOp[op] = {};
-    margensOp[op].excesso = parseFloat(inp.value) || 0;
-  });
-  window._kmState.margensOp = margensOp;
-  // Fallback global (se não houver operações identificadas)
-  const margemMinGlobal = parseFloat(document.getElementById('km-margem-min').value) || 0;
-  const margemAtencaoGlobal = parseFloat(document.getElementById('km-margem-atencao').value) || 5;
-  const margemExcessoGlobal = parseFloat(document.getElementById('km-margem-excesso').value) || 0;
+  const criterios = kmLerCriteriosAtuais();
+  const { margensOp, margemMinGlobal, margemAtencaoGlobal, margemExcessoGlobal } = criterios;
   const label = document.getElementById('km-label').value.trim() || new Date().toLocaleDateString('pt-BR');
   const fmtKm = v => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-  // Todas as placas únicas — excluindo EMP, MAQ e TRA (empilhadeiras/máquinas/tratores internos)
-  const prefixosIgnorar = ['EMP', 'MAQ', 'TRA'];
-  const ignorarPlaca = p => prefixosIgnorar.some(pref => p.toUpperCase().startsWith(pref));
-
-  const todasPlacas = new Set([...Object.keys(sistema), ...Object.keys(cliente)].filter(p => !ignorarPlaca(p)));
-
-  const resultados = [];
-  const semNoSistema = []; // tem no cliente mas não no sistema
-  const semNoCliente = []; // tem no sistema mas não no cliente
-
-  todasPlacas.forEach(placa => {
-    const temSistema = sistema[placa] !== undefined;
-    const temCliente = cliente[placa] !== undefined;
-
-    if (!temSistema) {
-      const d = typeof cliente[placa] === 'object' ? cliente[placa] : { km: cliente[placa], operacao: '' };
-      semNoSistema.push({ placa, kmCliente: d.km, operacao: d.operacao || '' });
-      return;
-    }
-    if (!temCliente) { semNoCliente.push({ placa, kmSistema: sistema[placa].km, operacao: sistema[placa].operacao || '' }); return; }
-
-    const kmS = sistema[placa].km;
-    const kmC = typeof cliente[placa] === 'object' ? cliente[placa].km : cliente[placa];
-    // Operação: prioridade sistema > cliente
-    const op = (sistema[placa].operacao || (typeof cliente[placa] === 'object' ? cliente[placa].operacao : '') || '').replace(/_/g,' ');
-    const diff = kmS - kmC;
-    const pct = kmC > 0 ? ((kmS - kmC) / kmC * 100) : null;
-    // Usa margem da operação ou fallback global
-    const mOp = margensOp[op] || {};
-    const margemMin = mOp.min !== undefined ? mOp.min : margemMinGlobal;
-    const margemAtencao = mOp.atencao !== undefined ? mOp.atencao : margemAtencaoGlobal;
-    const margemExcesso = mOp.excesso !== undefined ? mOp.excesso : margemExcessoGlobal;
-
-    let status;
-    if (pct === null) { status = 'sem_base'; }
-    // Excesso: diferença absoluta em KM (diff = kmSistema - kmCliente)
-    else if (margemExcesso > 0 && diff > margemExcesso) { status = 'excesso'; }
-    else if (pct < margemMin) { status = 'alerta'; }
-    else if (pct < margemAtencao) { status = 'atencao'; }
-    else { status = 'ok'; }
-
-    resultados.push({ placa, kmSistema: kmS, kmCliente: kmC, diff, pct, status, operacao: op });
-  });
+  const { resultados, semNoSistema, semNoCliente } = kmProcessarDados(sistema, cliente, criterios);
 
   // Salva no histórico de comparativos para uso no e-mail duplo
   if (!window._kmHistorico) window._kmHistorico = [];
@@ -8907,7 +9476,7 @@ function kmComparar() {
   window._kmResultado = { resultados, semNoSistema, semNoCliente, label, margemMin: margemMinGlobal, margemAtencao: margemAtencaoGlobal, margemExcesso: margemExcessoGlobal };
 
   // Ordena: alertas primeiro, depois atenção, ok, sem_base
-  const ordem = { alerta: 0, atencao: 1, sem_base: 2, ok: 3 };
+  const ordem = { alerta: 0, excesso: 1, atencao: 2, sem_base: 3, ok: 4 };
   resultados.sort((a, b) => (ordem[a.status] ?? 4) - (ordem[b.status] ?? 4) || a.placa.localeCompare(b.placa));
 
   const alertas = resultados.filter(r => r.status === 'alerta');
@@ -8957,7 +9526,7 @@ function kmComparar() {
   const byOpResumo = {};
   resultados.forEach(r => {
     const op = r.operacao || 'Sem Operação';
-    if (!byOpResumo[op]) byOpResumo[op] = { kmS: 0, kmC: 0, alertas: 0, atencao: 0, ok: 0, total: 0 };
+    if (!byOpResumo[op]) byOpResumo[op] = { kmS: 0, kmC: 0, alerta: 0, excesso: 0, atencao: 0, ok: 0, total: 0 };
     byOpResumo[op].kmS   += r.kmSistema;
     byOpResumo[op].kmC   += r.kmCliente;
     byOpResumo[op].total++;
@@ -8969,7 +9538,7 @@ function kmComparar() {
   html += '<div style="overflow-x:auto"><table><thead><tr>';
   html += '<th>Operação</th><th style="text-align:center">Placas</th><th style="text-align:center">KM O2P</th><th style="text-align:center">KM Produtivo</th><th style="text-align:center">Diferença Total</th><th style="text-align:center">🔴 Alerta</th><th style="text-align:center">⚠️ Atenção</th><th style="text-align:center">✅ OK</th>';
   html += '</tr></thead><tbody>';
-  Object.entries(byOpResumo).sort((a,b) => (b[1].alertas - a[1].alertas) || a[0].localeCompare(b[0])).forEach(([op, d]) => {
+  Object.entries(byOpResumo).sort((a,b) => ((b[1].alerta + b[1].excesso) - (a[1].alerta + a[1].excesso)) || a[0].localeCompare(b[0])).forEach(([op, d]) => {
     const diff = d.kmS - d.kmC;
     const diffCor = diff >= 0 ? 'var(--green)' : 'var(--red)';
     html += '<tr>';
@@ -8978,7 +9547,7 @@ function kmComparar() {
     html += '<td style="text-align:center;font-family:monospace;color:var(--accent)">' + fmtKm(d.kmS) + '</td>';
     html += '<td style="text-align:center;font-family:monospace;color:var(--accent2)">' + fmtKm(d.kmC) + '</td>';
     html += '<td style="text-align:center;font-family:monospace;font-weight:700;color:' + diffCor + '">' + (diff >= 0 ? '+' : '') + fmtKm(diff) + '</td>';
-    html += '<td style="text-align:center">' + (d.alertas ? '<span style="background:rgba(239,68,68,.15);color:var(--red);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700">' + d.alertas + '</span>' : '<span style="color:var(--text3)">—</span>') + '</td>';
+    html += '<td style="text-align:center">' + (d.alerta ? '<span style="background:rgba(239,68,68,.15);color:var(--red);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700">' + d.alerta + '</span>' : '<span style="color:var(--text3)">—</span>') + '</td>';
     html += '<td style="text-align:center">' + (d.atencao  ? '<span style="background:rgba(245,158,11,.15);color:var(--yellow);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700">' + d.atencao + '</span>' : '<span style="color:var(--text3)">—</span>') + '</td>';
     html += '<td style="text-align:center">' + (d.ok       ? '<span style="background:rgba(34,197,94,.15);color:var(--green);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700">' + d.ok + '</span>' : '<span style="color:var(--text3)">—</span>') + '</td>';
     html += '</tr>';
