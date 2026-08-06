@@ -1506,6 +1506,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
     <div class="header-actions">
       <button class="btn btn-secondary btn-sm" onclick="kmReset()">🔄 Novo Comparativo</button>
       <button class="btn btn-primary btn-sm" onclick="kmAbrirComparativoMensal()" title="Carregar vários meses e gerar um único Excel com Dashboard, Consolidado e uma aba por mês">📚 Comparativo Mensal</button>
+      <button class="btn btn-secondary btn-sm" id="btn-km-morto" onclick="kmExportarKmMorto()" disabled title="Gera um relatório de um único mês com o KM morto total, incluindo placas sem correspondência e destaque das placas em excesso">🛣️ Comparativo KM Morto</button>
       <button class="btn btn-secondary btn-sm" id="btn-km-export" style="display:none" onclick="kmExportarExcel()">⬇️ Exportar Excel</button>
       <button class="btn btn-primary btn-sm" id="btn-km-email" style="display:none" onclick="kmCopiarEmail()">📧 Copiar E-mail de Alerta</button>
       <button class="btn btn-secondary btn-sm" id="btn-km-email-comp" style="display:none" onclick="kmAbrirComparativoDuplo()" title="Gerar e-mail comparando dois períodos lado a lado">📧 Comparar 2 Períodos</button>
@@ -8479,6 +8480,8 @@ window._kmState = { sistema: null, cliente: null };
 function kmCheckReady() {
   const ok = window._kmState.sistema && window._kmState.cliente;
   document.getElementById('btn-km-comparar').disabled = !ok;
+  const btnMorto = document.getElementById('btn-km-morto');
+  if (btnMorto) btnMorto.disabled = !ok;
   if (ok) kmMostrarMargensOps();
 }
 
@@ -9455,6 +9458,241 @@ async function kmMensalGerarExcel() {
 }
 
 
+// ── COMPARATIVO KM MORTO (1 MÊS) ────────────────────────────────────────────
+// Relatório executivo separado. Não altera o comparativo mensal nem a tela atual.
+function kmMortoLimiteExcesso(op, criterios={}) {
+  const margensOp = criterios.margensOp || {};
+  const global = kmNumeroSeguro(criterios.margemExcessoGlobal, 0);
+  const cfg = margensOp[op] || {};
+  return cfg.excesso !== undefined ? kmNumeroSeguro(cfg.excesso, global) : global;
+}
+
+function kmMortoMontarDados(sistema, cliente, criterios={}) {
+  const base = kmProcessarDados(sistema, cliente, criterios);
+  const linhas = [];
+
+  base.resultados.forEach(r => {
+    const limiteExcesso = kmMortoLimiteExcesso(r.operacao, criterios);
+    const emExcesso = r.status === 'excesso' && limiteExcesso > 0;
+    linhas.push({
+      ...r,
+      correspondencia: 'AMBOS',
+      limiteExcesso,
+      emExcesso,
+      acimaLimite: emExcesso ? Math.max(0, r.diff - limiteExcesso) : 0
+    });
+  });
+
+  // Só no cliente: entra no total geral com KM O2P = 0 e diferença negativa.
+  // Continua sinalizada como sem correspondência e nunca é excesso, pois não há KM O2P acima do cliente.
+  base.semNoSistema.forEach(r => linhas.push({
+    placa:r.placa, operacao:r.operacao || '', kmSistema:0, kmCliente:r.kmCliente,
+    diff:-r.kmCliente, pct:null, status:'sem_corr', correspondencia:'SÓ NO CLIENTE',
+    limiteExcesso:kmMortoLimiteExcesso(r.operacao, criterios), emExcesso:false, acimaLimite:0
+  }));
+
+  // Só no O2P: todo o KM entra no total geral como diferença positiva.
+  // Além de continuar sinalizada como sem correspondência, também entra em "Placas em excesso"
+  // quando ultrapassar o limite configurado para a operação.
+  base.semNoCliente.forEach(r => {
+    const limiteExcesso = kmMortoLimiteExcesso(r.operacao, criterios);
+    const diff = kmNumeroSeguro(r.kmSistema, 0);
+    const emExcesso = limiteExcesso > 0 && diff > limiteExcesso;
+    linhas.push({
+      placa:r.placa, operacao:r.operacao || '', kmSistema:diff, kmCliente:0,
+      diff, pct:null, status:'sem_corr', correspondencia:'SÓ NO O2P',
+      limiteExcesso, emExcesso,
+      acimaLimite:emExcesso ? Math.max(0, diff - limiteExcesso) : 0
+    });
+  });
+
+  const soma = campo => linhas.reduce((acc, r) => acc + kmNumeroSeguro(r[campo], 0), 0);
+  const kmSistemaTotal = soma('kmSistema');
+  const kmClienteTotal = soma('kmCliente');
+  const kmMortoTotal = kmSistemaTotal - kmClienteTotal;
+  const excessos = linhas.filter(r => r.emExcesso)
+    .sort((a,b) => b.diff - a.diff || a.placa.localeCompare(b.placa));
+  const semCorrespondencia = linhas.filter(r => r.correspondencia !== 'AMBOS')
+    .sort((a,b) => b.diff - a.diff || a.placa.localeCompare(b.placa));
+
+  const ordem = { excesso:0, sem_corr:1, alerta:2, atencao:3, sem_base:4, ok:5 };
+  linhas.sort((a,b) => (ordem[a.status] ?? 9) - (ordem[b.status] ?? 9) || b.diff - a.diff || a.placa.localeCompare(b.placa));
+
+  return {
+    linhas, excessos, semCorrespondencia,
+    totalPlacas:linhas.length,
+    kmSistemaTotal, kmClienteTotal, kmMortoTotal,
+    totalExcessos:excessos.length,
+    kmExcessoTotal:excessos.reduce((s,r)=>s+r.diff,0),
+    totalSemCorrespondencia:semCorrespondencia.length,
+    soO2P:semCorrespondencia.filter(r=>r.correspondencia==='SÓ NO O2P'),
+    soCliente:semCorrespondencia.filter(r=>r.correspondencia==='SÓ NO CLIENTE')
+  };
+}
+
+function kmMortoGraficoPng(dados) {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1200; canvas.height = 330;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#1F2937'; ctx.font = 'bold 24px Arial';
+    ctx.fillText('Visão geral — KM O2P × KM Produtivo', 38, 42);
+
+    const valores = [Math.max(0,dados.kmSistemaTotal), Math.max(0,dados.kmClienteTotal)];
+    const maxVal = Math.max(1, ...valores) * 1.12;
+    const baseY = 265, topY = 78, altura = baseY-topY;
+    const barras = [
+      {x:230, valor:valores[0], cor:'#C2410C', label:'KM O2P'},
+      {x:535, valor:valores[1], cor:'#1E3A5F', label:'KM Produtivo'}
+    ];
+    const fmt = v => v.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+    ctx.strokeStyle='#E5E7EB';ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){
+      const y=baseY-(altura*i/4);ctx.beginPath();ctx.moveTo(110,y);ctx.lineTo(820,y);ctx.stroke();
+    }
+    barras.forEach(b=>{
+      const h=altura*(b.valor/maxVal);
+      ctx.fillStyle=b.cor;ctx.fillRect(b.x,baseY-h,150,h);
+      ctx.fillStyle='#1F2937';ctx.textAlign='center';ctx.font='bold 15px Arial';ctx.fillText(b.label,b.x+75,baseY+25);
+      ctx.font='bold 17px Arial';ctx.fillText(fmt(b.valor),b.x+75,Math.max(72,baseY-h-10));
+    });
+    ctx.textAlign='left';
+    const positivo=dados.kmMortoTotal>=0;
+    ctx.fillStyle=positivo?'#FEF2F2':'#F0FDF4';ctx.fillRect(875,88,280,155);
+    ctx.strokeStyle=positivo?'#FCA5A5':'#86EFAC';ctx.strokeRect(875,88,280,155);
+    ctx.fillStyle=positivo?'#991B1B':'#166534';ctx.font='bold 16px Arial';ctx.fillText('KM morto total',905,126);
+    ctx.font='bold 30px Arial';ctx.fillText((dados.kmMortoTotal>=0?'+':'')+fmt(dados.kmMortoTotal),905,173);
+    ctx.font='13px Arial';ctx.fillText('O2P − Produtivo',905,205);
+    return canvas.toDataURL('image/png');
+  } catch(e) { console.warn('Gráfico de KM morto não pôde ser criado:', e); return null; }
+}
+
+function kmMortoEstiloLinha(ws, row, status, correspondencia) {
+  kmExcelEstiloDados(row, status === 'sem_corr' ? 'sem_corr' : status);
+  row.getCell(1).font={name:'Courier New',size:10,bold:true,color:{argb:kmExcelCor(KM_EXCEL.escuro)}};
+  [4,5,6,8,9].forEach(c=>row.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');
+  row.getCell(7).numFmt='0.0%;[Red]-0.0%';
+  if (correspondencia !== 'AMBOS') kmExcelEstiloStatus(row.getCell(3),'sem_corr');
+  if (status === 'excesso') {
+    row.eachCell({includeEmpty:true}, cell => {
+      if (cell.col !== row.cellCount) cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kmExcelCor('FFF7ED')}};
+    });
+    kmExcelEstiloStatus(row.getCell(row.cellCount),'excesso');
+  }
+}
+
+function kmExcelCriarKmMorto(workbook, dados, identificacao) {
+  const ws = workbook.addWorksheet('KM Morto',{views:[{showGridLines:false}]});
+  ws.properties.tabColor={argb:kmExcelCor(KM_EXCEL.laranja)};
+  ws.columns=[
+    {width:15},{width:28},{width:19},{width:18},{width:20},{width:18},
+    {width:13},{width:18},{width:18},{width:22},{width:22},{width:4}
+  ];
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  kmExcelTituloAba(ws,'Comparativo KM Morto',(identificacao?identificacao+' · ':'')+'Relatório de um único período · Gerado em '+hoje,'L');
+
+  const corMorto=dados.kmMortoTotal>=0?KM_EXCEL.vermelho2:KM_EXCEL.verde;
+  const cards=[
+    ['A4:B4','A5:B6','Placas analisadas',dados.totalPlacas,KM_EXCEL.azul,false],
+    ['C4:D4','C5:D6','KM O2P total',dados.kmSistemaTotal,KM_EXCEL.laranja,true],
+    ['E4:F4','E5:F6','KM Produtivo total',dados.kmClienteTotal,KM_EXCEL.azul,true],
+    ['G4:H4','G5:H6','KM morto total',dados.kmMortoTotal,corMorto,true],
+    ['I4:J4','I5:J6','Placas em excesso',dados.totalExcessos,KM_EXCEL.vermelho2,false],
+    ['K4:L4','K5:L6','Sem correspondência',dados.totalSemCorrespondencia,KM_EXCEL.roxo,false]
+  ];
+  cards.forEach(([r1,r2,label,val,cor,numeroKm])=>{
+    ws.mergeCells(r1);ws.mergeCells(r2);
+    const c1=ws.getCell(r1.split(':')[0]),c2=ws.getCell(r2.split(':')[0]);
+    c1.value=label;c2.value=val;
+    kmExcelPintarIntervalo(ws,r1,cor,KM_EXCEL.branco,true);
+    kmExcelPintarIntervalo(ws,r2,'FFFFFF',cor,true);
+    c2.font={name:'Arial',size:numeroKm?17:21,bold:true,color:{argb:kmExcelCor(cor)}};
+    if(numeroKm)c2.numFmt='#,##0.0;[Red]-#,##0.0';
+  });
+  ws.getRow(4).height=23;ws.getRow(5).height=28;ws.getRow(6).height=28;
+  ws.mergeCells('A8:L8');
+  ws.getCell('A8').value='KM morto = KM O2P − KM Produtivo. O total geral considera todas as placas. Veículos só no O2P também são marcados como excesso quando ultrapassam o limite configurado.';
+  kmExcelPintarIntervalo(ws,'A8:L8','FFF7ED',KM_EXCEL.laranja,true);
+  ws.getRow(8).height=25;
+
+  const grafico=kmMortoGraficoPng(dados);
+  if(grafico){const id=workbook.addImage({base64:grafico,extension:'png'});ws.addImage(id,{tl:{col:.25,row:8.7},ext:{width:1110,height:305}});}
+  for(let r=9;r<=24;r++)ws.getRow(r).height=19;
+
+  let row=26;
+  ws.mergeCells('A'+row+':L'+row);ws.getCell('A'+row).value='Resumo do período';kmExcelPintarIntervalo(ws,'A'+row+':L'+row,KM_EXCEL.azul);row++;
+  ws.getRow(row).values=['Origem','Placas','KM O2P','KM Produtivo','Diferença','','','','','','',''];kmExcelCabecalho(ws.getRow(row),KM_EXCEL.escuro);row++;
+  const ambos=dados.linhas.filter(r=>r.correspondencia==='AMBOS');
+  const resumoLinhas=[
+    ['Em ambos os arquivos',ambos.length,ambos.reduce((s,r)=>s+r.kmSistema,0),ambos.reduce((s,r)=>s+r.kmCliente,0)],
+    ['Somente no O2P',dados.soO2P.length,dados.soO2P.reduce((s,r)=>s+r.kmSistema,0),0],
+    ['Somente no cliente',dados.soCliente.length,0,dados.soCliente.reduce((s,r)=>s+r.kmCliente,0)]
+  ];
+  resumoLinhas.forEach(vals=>{const rr=ws.getRow(row++);rr.values=[...vals,vals[2]-vals[3]];kmExcelEstiloDados(rr);[3,4,5].forEach(c=>rr.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');});
+  const totalResumo=ws.getRow(row++);totalResumo.values=['TOTAL GERAL',dados.totalPlacas,dados.kmSistemaTotal,dados.kmClienteTotal,dados.kmMortoTotal];kmExcelCabecalho(totalResumo,KM_EXCEL.azul);[3,4,5].forEach(c=>totalResumo.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');
+  row++;
+
+  ws.mergeCells('A'+row+':L'+row);ws.getCell('A'+row).value='Placas em excesso ('+dados.totalExcessos+')';kmExcelPintarIntervalo(ws,'A'+row+':L'+row,KM_EXCEL.vermelho2);row++;
+  if(dados.excessos.length){
+    ws.getRow(row).values=['Placa','Operação','Correspondência','KM O2P','KM Produtivo','KM morto','Var. %','Limite excesso','Acima do limite','Status','',''];kmExcelCabecalho(ws.getRow(row),KM_EXCEL.laranja);row++;
+    dados.excessos.forEach(r=>{const rr=ws.getRow(row++);rr.values=[r.placa,r.operacao||'—',r.correspondencia,r.kmSistema,r.kmCliente,r.diff,r.pct===null?null:r.pct/100,r.limiteExcesso,r.acimaLimite,'EXCESSO'];kmMortoEstiloLinha(ws,rr,'excesso',r.correspondencia);});
+  }else{
+    ws.mergeCells('A'+row+':L'+row);ws.getCell('A'+row).value='Nenhuma placa ultrapassou o limite de excesso configurado.';kmExcelPintarIntervalo(ws,'A'+row+':L'+row,'DCFCE7',KM_EXCEL.verde,true);row++;
+  }
+  row++;
+
+  ws.mergeCells('A'+row+':L'+row);ws.getCell('A'+row).value='Placas sem correspondência ('+dados.totalSemCorrespondencia+')';kmExcelPintarIntervalo(ws,'A'+row+':L'+row,KM_EXCEL.roxo);row++;
+  if(dados.semCorrespondencia.length){
+    ws.getRow(row).values=['Placa','Operação','Correspondência','KM O2P','KM Produtivo','Impacto no total','','','','Situação','',''];kmExcelCabecalho(ws.getRow(row),KM_EXCEL.escuro);row++;
+    dados.semCorrespondencia.forEach(r=>{const rr=ws.getRow(row++);rr.values=[r.placa,r.operacao||'—',r.correspondencia,r.kmSistema,r.kmCliente,r.diff,null,null,null,r.correspondencia];kmMortoEstiloLinha(ws,rr,'sem_corr',r.correspondencia);});
+  }else{
+    ws.mergeCells('A'+row+':L'+row);ws.getCell('A'+row).value='Todos os veículos possuem correspondência entre os dois arquivos.';kmExcelPintarIntervalo(ws,'A'+row+':L'+row,'DCFCE7',KM_EXCEL.verde,true);row++;
+  }
+  row++;
+
+  ws.mergeCells('A'+row+':L'+row);ws.getCell('A'+row).value='Detalhamento completo';kmExcelPintarIntervalo(ws,'A'+row+':L'+row,KM_EXCEL.escuro);row++;
+  const cabecalhoDetalhe=row;
+  ws.getRow(row).values=['Placa','Operação','Correspondência','KM O2P','KM Produtivo','KM morto','Var. %','Limite excesso','Acima do limite','Status','',''];kmExcelCabecalho(ws.getRow(row),KM_EXCEL.escuro);row++;
+  dados.linhas.forEach(r=>{
+    const statusTexto=r.correspondencia==='AMBOS'
+      ? kmExcelStatusLabel(r.status)
+      : (r.emExcesso ? r.correspondencia+' / EXCESSO' : r.correspondencia);
+    const rr=ws.getRow(row++);rr.values=[r.placa,r.operacao||'—',r.correspondencia,r.kmSistema,r.kmCliente,r.diff,r.pct===null?null:r.pct/100,r.limiteExcesso,r.acimaLimite,statusTexto];
+    kmMortoEstiloLinha(ws,rr,r.emExcesso?'excesso':r.status,r.correspondencia);
+  });
+  const total=ws.getRow(row);total.values=['TOTAL GERAL','',dados.totalPlacas,dados.kmSistemaTotal,dados.kmClienteTotal,dados.kmMortoTotal,'','','',dados.totalExcessos+' excesso(s)','',''];kmExcelCabecalho(total,KM_EXCEL.azul);[4,5,6].forEach(c=>total.getCell(c).numFmt='#,##0.0;[Red]-#,##0.0');
+
+  ws.autoFilter={from:{row:cabecalhoDetalhe,column:1},to:{row:Math.max(cabecalhoDetalhe,row-1),column:10}};
+  ws.views=[{state:'frozen',xSplit:2,ySplit:2,showGridLines:false}];
+  ws.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9,margins:{left:.25,right:.25,top:.5,bottom:.5,header:.2,footer:.2}};
+  ws.headerFooter.oddFooter='Ignis · Comparativo KM Morto · &D';
+}
+
+async function kmExportarKmMorto() {
+  const sistema=window._kmState.sistema, cliente=window._kmState.cliente;
+  if(!sistema||!cliente){showToast('Carregue os dois arquivos antes de gerar o KM Morto','error');return;}
+  if(typeof ExcelJS==='undefined'){showToast('Biblioteca de Excel não carregou. Atualize a página e tente novamente.','error');return;}
+  const btn=document.getElementById('btn-km-morto');
+  const identificacao=document.getElementById('km-label')?.value.trim() || new Date().toLocaleDateString('pt-BR');
+  const criterios=kmLerCriteriosAtuais();
+  const dados=kmMortoMontarDados(sistema,cliente,criterios);
+  try{
+    if(btn){btn.disabled=true;btn.dataset.texto=btn.innerHTML;btn.innerHTML='⏳ Gerando KM Morto...';}
+    const workbook=new ExcelJS.Workbook();
+    workbook.creator='Ignis';workbook.lastModifiedBy='Ignis';workbook.created=new Date();workbook.modified=new Date();workbook.company='Ignis';
+    kmExcelCriarKmMorto(workbook,dados,identificacao);
+    const buffer=await workbook.xlsx.writeBuffer();
+    const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    const nomeBase=identificacao.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'') || 'Periodo';
+    a.href=url;a.download='Ignis_Comparativo_KM_Morto_'+nomeBase+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    showToast('Comparativo KM Morto gerado com total geral, excessos e placas sem correspondência!','success');
+  }catch(erro){console.error(erro);showToast('Erro ao gerar o Comparativo KM Morto','error');}
+  finally{if(btn){btn.disabled=false;btn.innerHTML=btn.dataset.texto||'🛣️ Comparativo KM Morto';}}
+}
+
+
 function kmComparar() {
   const sistema = window._kmState.sistema;
   const cliente = window._kmState.cliente;
@@ -10214,6 +10452,8 @@ function kmReset() {
   document.getElementById('btn-km-email').style.display = 'none';
   document.getElementById('btn-km-email-comp').style.display = 'none';
   document.getElementById('btn-km-comparar').disabled = true;
+  const btnMorto = document.getElementById('btn-km-morto');
+  if (btnMorto) btnMorto.disabled = true;
   document.getElementById('km-label').value = '';
   const badge = document.getElementById('kmcomp-nav-badge');
   if (badge) badge.style.display = 'none';
