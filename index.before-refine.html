@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- IGNIS Stage 1 Performance — 18/08/2026 -->
-<meta name="ignis-build" content="2026-08-18-stage2-refined">
+<meta name="ignis-build" content="2026-08-18-stage1-performance">
 <title>Ignis — Gestão Inteligente de Frotas</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1624,11 +1624,13 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
   <div id="page-arla" class="page">
     <div class="page-header">
       <div class="page-header-title">
-        <div class="page-title">Controle de Arla</div>
+        <div class="page-title">🧪 Controle de Arla</div>
         <div class="page-sub">Monitoramento do consumo de Arla 32 por frota</div>
       </div>
       <div class="header-actions" id="arla-header-actions">
-        <button class="btn btn-primary btn-sm btn-clean-import" onclick="arlaVerificarSenhaEMes()"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Carregar relatório</button>
+        <button class="btn btn-secondary btn-sm" id="btn-arla-excluir-mes" style="display:none" onclick="verificarSenha(arlaAbrirExcluirMes)">🗑️ Excluir Mês</button>
+        <button class="btn btn-secondary btn-sm" id="btn-arla-export" style="display:none" onclick="arlaExportarExcel()">⬇️ Exportar Excel</button>
+        <button class="btn btn-primary btn-sm" onclick="arlaVerificarSenhaEMes()">⬆️ Carregar Relatório</button>
         <input type="file" id="arla-file-input" accept=".xlsx,.xls" style="display:none" onchange="arlaCarregarArquivo(this)">
       </div>
     </div>
@@ -1638,23 +1640,23 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 
     <!-- Tabs -->
     <div class="arla-tab-group">
-      <button class="arla-tab active" onclick="arlaSetTab('relatorio',this)">Relatório</button>
-      <button class="arla-tab" onclick="arlaSetTab('segmentos',this)">Segmentos</button>
-      <button class="arla-tab" onclick="arlaSetTab('egr',this)">Banco EGR</button>
-      <button class="arla-tab" onclick="arlaSetTab('grupos',this)">Grupos de E-mail</button>
+      <button class="arla-tab active" onclick="arlaSetTab('relatorio',this)">📊 Relatório</button>
+      <button class="arla-tab" onclick="arlaSetTab('segmentos',this)">🎯 Segmentos</button>
+      <button class="arla-tab" onclick="arlaSetTab('egr',this)">🚛 Banco EGR</button>
+      <button class="arla-tab" onclick="arlaSetTab('grupos',this)">📧 Grupos de E-mail</button>
     </div>
 
     <!-- ABA RELATÓRIO -->
     <div id="arla-tab-relatorio">
       <!-- Estado vazio -->
       <div id="arla-empty" style="background:var(--bg2);border:2px dashed var(--border);border-radius:14px;padding:48px;text-align:center">
-        <div class="empty-state-mark"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg></div>
+        <div style="font-size:42px;margin-bottom:12px">🧪</div>
         <div style="font-size:15px;font-weight:700;margin-bottom:6px">Nenhum relatório carregado</div>
         <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.7">
           Carregue o arquivo mensal com as colunas:<br>
           <strong>Operação · Placa · Modelo · Vol. Real · Vol. Arla</strong>
         </div>
-        <button class="btn btn-primary" onclick="arlaVerificarSenhaEMes()"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Carregar relatório .xlsx</button>
+        <button class="btn btn-primary" onclick="arlaVerificarSenhaEMes()">⬆️ Carregar Relatório .xlsx</button>
       </div>
 
       <!-- Resultado -->
@@ -1664,17 +1666,13 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
           <div style="font-size:13px;font-weight:600;color:var(--text2)">Mês de referência:</div>
           <select class="filter-select" id="arla-mes-sel" onchange="arlaTrocarMes(this.value)" style="min-width:180px"></select>
           <div style="font-size:12px;color:var(--text3)" id="arla-mes-info"></div>
-          <div class="arla-report-actions">
-            <button class="btn btn-secondary btn-sm" id="btn-arla-export" style="display:none" onclick="arlaExportarExcel()">Exportar Excel</button>
-            <button class="btn btn-secondary btn-sm danger-soft" id="btn-arla-excluir-mes" style="display:none" onclick="verificarSenha(arlaAbrirExcluirMes)">Excluir mês</button>
-          </div>
         </div>
       <!-- KPIs -->
         <div class="arla-kpi-grid">
           <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-total" style="color:var(--accent)">0</div><div class="arla-kpi-label">Total SRC Analisadas</div></div>
-          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(239,68,68,.3)" onclick="arlaSetStatusTab('critico',document.getElementById('arla-tab-status-critico'))"><div class="arla-kpi-val" id="arla-kpi-fail" style="color:var(--red)">0</div><div class="arla-kpi-label"><span class="status-dot critico"></span>Crítico</div></div>
-          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(245,158,11,.3)" onclick="arlaSetStatusTab('atencao',document.getElementById('arla-tab-status-atencao'))"><div class="arla-kpi-val" id="arla-kpi-atencao" style="color:#f59e0b">0</div><div class="arla-kpi-label"><span class="status-dot atencao"></span>Atenção</div></div>
-          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(34,197,94,.3)" onclick="arlaSetStatusTab('ideal',document.getElementById('arla-tab-status-ideal'))"><div class="arla-kpi-val" id="arla-kpi-ok" style="color:var(--green)">0</div><div class="arla-kpi-label"><span class="status-dot ideal"></span>Ideal</div></div>
+          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(239,68,68,.3)" onclick="arlaSetStatusTab('critico',document.getElementById('arla-tab-status-critico'))"><div class="arla-kpi-val" id="arla-kpi-fail" style="color:var(--red)">0</div><div class="arla-kpi-label">🔴 Crítico</div></div>
+          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(245,158,11,.3)" onclick="arlaSetStatusTab('atencao',document.getElementById('arla-tab-status-atencao'))"><div class="arla-kpi-val" id="arla-kpi-atencao" style="color:#f59e0b">0</div><div class="arla-kpi-label">🟡 Atenção</div></div>
+          <div class="arla-kpi" style="cursor:pointer;border-color:rgba(34,197,94,.3)" onclick="arlaSetStatusTab('ideal',document.getElementById('arla-tab-status-ideal'))"><div class="arla-kpi-val" id="arla-kpi-ok" style="color:var(--green)">0</div><div class="arla-kpi-label">🟢 Ideal</div></div>
           <div class="arla-kpi"><div class="arla-kpi-val" id="arla-kpi-egr" style="color:var(--text2)">0</div><div class="arla-kpi-label">Ignoradas (EGR)</div></div>
         </div>
 
@@ -1683,9 +1681,9 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 
         <!-- Tabs de status -->
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-          <button class="arla-status-tab active" id="arla-tab-status-critico" onclick="arlaSetStatusTab('critico',this)" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.12);color:var(--red);font-size:13px;font-weight:600;cursor:pointer;transition:.2s"><span class="status-dot critico"></span>Crítico</button>
-          <button class="arla-status-tab" id="arla-tab-status-atencao" onclick="arlaSetStatusTab('atencao',this)" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.2s"><span class="status-dot atencao"></span>Atenção</button>
-          <button class="arla-status-tab" id="arla-tab-status-ideal" onclick="arlaSetStatusTab('ideal',this)" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.2s"><span class="status-dot ideal"></span>Ideal</button>
+          <button class="arla-status-tab active" id="arla-tab-status-critico" onclick="arlaSetStatusTab('critico',this)" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(239,68,68,.4);background:rgba(239,68,68,.12);color:var(--red);font-size:13px;font-weight:600;cursor:pointer;transition:.2s">🔴 Crítico</button>
+          <button class="arla-status-tab" id="arla-tab-status-atencao" onclick="arlaSetStatusTab('atencao',this)" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.2s">🟡 Atenção</button>
+          <button class="arla-status-tab" id="arla-tab-status-ideal" onclick="arlaSetStatusTab('ideal',this)" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.2s">🟢 Ideal</button>
           <button class="arla-status-tab" id="arla-tab-status-todos" onclick="arlaSetStatusTab('todos',this)" style="padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:.2s">📋 Todos SRC</button>
         </div>
         <!-- Filtros -->
@@ -1827,57 +1825,6 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 .km-status-alerta{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--red);}
 .km-status-sem{background:rgba(124,92,252,.12);border:1px solid rgba(217,98,30,.3);color:var(--accent2);}
 @keyframes kf-progress{0%{width:0%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:0%;margin-left:100%}}
-
-
-/* ────────────────────────────────────────────────────────────────
-   IGNIS Stage 2 Refined — espaçamento, ícones vetoriais e contraste reforçado
-   ──────────────────────────────────────────────────────────────── */
-:root{
-  --bg:#0a0d12;--bg2:#10151c;--bg3:#171d26;--border:rgba(255,255,255,.075);
-  --accent:#ff6b2c;--accent2:#ff9a3d;--green:#34c98b;--red:#f05f57;
-  --yellow:#f2b84b;--text:#f5f7fa;--text2:#9ca8b7;--text3:#687382;
-  --card-shadow:0 10px 35px rgba(0,0,0,.22);--radius:16px;
-}
-body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),transparent 60%),linear-gradient(180deg,#0a0d12 0%,#0b0f14 100%);}
-.sidebar{width:268px;background:rgba(14,18,24,.96);border-right:1px solid var(--border);box-shadow:18px 0 45px rgba(0,0,0,.16);}
-.sidebar-toggle{left:268px}
-.sidebar.collapsed{width:72px}.sidebar.collapsed .sidebar-toggle{left:72px}
-.main{margin-left:268px;padding:42px 46px 70px;max-width:1900px;}
-.page-header{margin-bottom:26px;gap:20px}.page-title{font-size:31px;letter-spacing:-.8px}.page-sub{font-size:13px;color:#7f8b99}
-.nav{padding-left:16px;padding-right:16px}.nav-section-label{padding-left:10px}.nav-item{min-height:46px;padding:11px 13px;margin-bottom:6px;border-radius:11px;font-size:13.5px}
-.nav-item.active{background:rgba(255,107,44,.11);border-color:rgba(255,107,44,.18);box-shadow:inset 3px 0 0 var(--accent)}
-.kpi-grid{gap:16px!important;margin-bottom:28px!important}.kpi-card{min-height:138px!important;padding:21px 22px 19px!important;border-radius:16px!important;background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98))!important;box-shadow:0 8px 30px rgba(0,0,0,.16)!important;border-color:var(--border)!important}
-.kpi-card::after,.kpi-card::before{display:none!important}.kpi-card:hover{transform:none!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 10px 30px rgba(0,0,0,.20)!important}
-.kpi-label{color:#8592a1!important;letter-spacing:.75px!important}.kpi-value{font-size:31px!important;letter-spacing:-1px!important}
-.kpi-icon{right:18px!important;top:18px!important;width:auto!important;height:auto!important;border:0!important;background:transparent!important;border-radius:0!important;color:#ff7840!important;opacity:1!important;display:block!important}
-.kpi-icon .ui-icon{width:23px;height:23px;stroke-width:2.15}.kpi-card:hover .kpi-icon{color:var(--accent)!important}
-.chart-card,.table-card,.machine-card,.sheets-config,.modal{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98))!important;border-color:var(--border)!important;box-shadow:0 8px 30px rgba(0,0,0,.16)!important}
-.chart-card{padding:26px!important;border-radius:16px!important}.table-card{border-radius:16px!important}
-
-/* Dashboard filters */
-.dashboard-filter-shell{padding:16px!important;margin-bottom:24px!important;background:linear-gradient(180deg,rgba(17,22,29,.94),rgba(14,19,25,.94))!important;border-color:var(--border)!important;box-shadow:0 10px 34px rgba(0,0,0,.14)!important;gap:14px!important}
-.dash-filter-trigger,.dash-select-shell{height:48px!important;background:#111720!important;border-color:rgba(255,255,255,.085)!important;border-radius:12px!important}
-.dash-filter-trigger:hover,.dash-select-shell:hover{border-color:rgba(255,107,44,.35)!important}
-.dash-filter-caption{color:#788696!important}.dash-filter-trigger-icon{color:#9eabba!important;background:transparent!important;width:20px!important;height:20px!important;min-width:20px!important;border-radius:0!important}.dash-dropdown{background:#11171e!important;border-color:rgba(255,255,255,.105)!important;box-shadow:0 22px 55px rgba(0,0,0,.46)!important;border-radius:14px!important;padding:12px!important}
-.dash-search-box{background:#0d1218!important;border-color:rgba(255,255,255,.08)!important}.dash-option{min-height:38px!important;padding:8px 9px!important;border-radius:9px!important}.dash-option:hover{background:rgba(255,255,255,.045)!important}
-
-/* Importação simplificada */
-.import-modal-modern{padding:30px!important}.import-modal-title{display:flex;align-items:center;gap:11px;margin-bottom:8px!important}.title-mark{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:0;background:transparent;color:#ff7840}.title-mark .ui-icon{width:18px;height:18px}
-.import-helper{font-size:13px;color:var(--text2);line-height:1.65;margin:0 0 22px 45px;max-width:440px}
-.import-primary-card{width:100%;display:flex;align-items:center;gap:14px;text-align:left;border:1px solid rgba(255,107,44,.3);background:linear-gradient(180deg,#151c25,#11171e);border-radius:14px;padding:18px;cursor:pointer;color:var(--text);transition:.16s;font-family:inherit}
-.import-primary-card:hover{border-color:rgba(255,107,44,.65);transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,0,0,.16)}
-.import-primary-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#ff7840;flex:none;background:transparent;border:0;border-radius:0}.import-primary-icon .ui-icon{width:27px;height:27px;stroke-width:2.1}
-.import-primary-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.import-primary-copy strong{font-size:14px}.import-primary-copy small{font-size:11.5px;color:var(--text2)}.import-primary-action{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
-.history-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:26px 0 10px;padding-top:18px;border-top:1px solid rgba(148,163,184,.12)}.history-title{font-size:12px;font-weight:700;color:#dce3ea;text-transform:uppercase;letter-spacing:.7px}.history-sub{font-size:10.5px;color:var(--text3);margin-top:2px}.history-list{display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto}
-
-/* Máquinas: ícones vetoriais, menos sensação de desenho */
-.machines-grid{gap:20px!important}.machine-card{padding:24px!important;border-radius:16px!important;cursor:default!important}.machine-card:hover{transform:none!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 10px 28px rgba(0,0,0,.18)!important}.machine-icon{width:32px!important;height:32px!important;border:0!important;background:transparent!important;border-radius:0!important;color:#ff7840!important;display:flex!important;align-items:center!important;justify-content:center!important}.machine-icon .ui-icon{width:24px;height:24px;stroke-width:2.05}.machine-edit-btn{display:inline-flex!important;align-items:center!important;gap:7px!important;color:#a9b6c3!important}.machine-edit-btn .ui-icon{width:16px;height:16px;color:#ff7840;stroke-width:2.05}.machine-edit-btn:hover{color:#fff!important}.machine-edit-btn:hover .ui-icon{color:var(--accent)}
-
-/* Arla: cabeçalho limpo e ações secundárias dentro do relatório */
-.btn-clean-import{display:inline-flex;align-items:center;gap:8px}.btn-clean-import .ui-icon{width:16px;height:16px}.arla-tab-group{background:#10151c!important;border-color:var(--border)!important;padding:5px!important;border-radius:13px!important;gap:4px!important}.arla-tab{border-radius:9px!important;padding:10px 16px!important}.arla-report-actions{display:flex;gap:8px;margin-left:auto}.danger-soft{color:#e99696!important;border-color:rgba(239,90,90,.2)!important}.empty-state-mark{width:54px;height:54px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;color:#778899}.empty-state-mark .ui-icon{width:30px;height:30px}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:1px}.status-dot.critico{background:#ef5a5a}.status-dot.atencao{background:#f5a524}.status-dot.ideal{background:#32c58a}.arla-kpi-label{display:flex;align-items:center}
-
-@media(max-width:1200px){.main{padding:34px 28px 60px}.sidebar{width:250px}.sidebar-toggle{left:250px}.main{margin-left:250px}.kpi-grid{gap:12px!important}}
-@media(max-width:768px){.main{margin-left:0!important;padding:78px 14px 88px!important}.dashboard-filter-shell{padding:12px!important}.import-helper{margin-left:0}.import-primary-card{align-items:flex-start}.import-primary-action{display:none}.arla-report-actions{width:100%;margin-left:0}}
 </style>
 
 <div id="page-kmcomp" class="page">
@@ -2343,32 +2290,58 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
 </div>
 
 <div class="modal-overlay" id="modal-import">
-  <div class="modal import-modal-modern" style="width:560px">
-    <div class="modal-title import-modal-title">
-      <span class="title-mark"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14a2 2 0 0 0 2-2v-3"/><path d="M3 16v3a2 2 0 0 0 2 2"/></svg></span>
-      Importar abastecimentos
-    </div>
-    <div class="import-helper">Carregue o relatório diário do mês inteiro. O Ignis identifica e organiza as semanas automaticamente.</div>
+  <div class="modal" style="width:540px">
+    <div class="modal-title">⬆️ Importar Relatório</div>
 
-    <button class="import-primary-card" type="button" onclick="document.getElementById('file-input-diario').click()">
-      <span class="import-primary-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg></span>
-      <span class="import-primary-copy">
-        <strong>Selecionar relatório do mês</strong>
-        <small>Gestão de Abastecimentos*.xlsx</small>
-      </span>
-      <span class="import-primary-action">Escolher arquivo</span>
-    </button>
+    <!-- Nome do período -->
+    <div class="form-group">
+      <label class="form-label">Nome do Período</label>
+      <input type="text" class="form-input" id="import-periodo-nome" placeholder="ex: Semana 10 · Mar/2026">
+      <div style="font-size:11px;color:var(--text2);margin-top:5px">Dê um nome que identifique este relatório no histórico.</div>
+    </div>
+
+    <!-- Datas de referência -->
+    <div class="form-row" style="margin-bottom:16px">
+      <div class="form-group">
+        <label class="form-label">Início do Período</label>
+        <input type="date" class="form-input" id="import-data-ini">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fim do Período</label>
+        <input type="date" class="form-input" id="import-data-fim">
+      </div>
+    </div>
+
+    <div class="import-area" onclick="document.getElementById('file-input').click()">
+      <div class="import-icon">📂</div>
+      <div class="import-text">Clique para selecionar o arquivo</div>
+      <div class="import-sub">ExportProcessIndicator*.xlsx</div>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls" style="display:none" onchange="importarRelatorio(this)">
+    <div id="import-preview"></div>
+
+    <div style="margin:18px 0;display:flex;align-items:center;gap:10px">
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+      <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">ou</div>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <div class="import-area" style="border-color:var(--accent);background:rgba(192,57,43,.04)" onclick="document.getElementById('file-input-diario').click()">
+      <div class="import-icon">📅</div>
+      <div class="import-text">Importar Relatório Diário (mês inteiro)</div>
+      <div class="import-sub">Detecta as semanas automaticamente — Gestão de Abastecimentos*.xlsx</div>
+    </div>
     <input type="file" id="file-input-diario" accept=".xlsx,.xls" style="display:none" onchange="importarRelatorioDiario(this)">
     <div id="import-diario-preview"></div>
 
-    <div class="history-head">
-      <div>
-        <div class="history-title">Histórico de períodos</div>
-        <div class="history-sub">Importações já processadas pelo Ignis</div>
+    <!-- Histórico de períodos -->
+    <div style="margin-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px">📋 Histórico de Períodos</div>
+        <button class="btn btn-secondary" id="btn-apagar-todos-periodos" onclick="limparTodosPeriodos()" style="display:none;padding:5px 10px;font-size:11px;color:var(--red);border-color:rgba(239,68,68,.3)">🗑️ Apagar Todos</button>
       </div>
-      <button class="btn btn-secondary" id="btn-apagar-todos-periodos" onclick="limparTodosPeriodos()" style="display:none;padding:7px 11px;font-size:11px;color:var(--red);border-color:rgba(239,68,68,.25)">Apagar todos</button>
+      <div id="historico-periodos" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto"></div>
     </div>
-    <div id="historico-periodos" class="history-list"></div>
 
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-import')">Fechar</button>
@@ -2376,6 +2349,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
   </div>
 </div>
 
+<!-- MODAL MÊS ARLA -->
 <div class="modal-overlay" id="arla-modal-excluir-mes">
   <div class="modal" style="max-width:400px">
     <div class="modal-title">🗑️ Excluir Relatório</div>
@@ -3531,7 +3505,9 @@ function updateFilters(force=false) {
       '<option value="__tratores__">Tratores</option>' +
       '<option value="__pesada__">Frota pesada</option>' +
       '<option value="__leve__">Frota leve</option>' +
-      '<option value="__empilhadeiras__">Empilhadeiras</option>';
+      '<option value="__empilhadeiras__">Empilhadeiras</option>' +
+      '<option disabled>──────────────</option>' +
+      state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
     sel.value=val;
   });
   // Popular filtro de períodos em Abastecimentos
@@ -3966,9 +3942,7 @@ function renderDashboard() {
   const kpiHorasUnitEl = document.getElementById('kpi-horas-unit');
   if(kpiHorasUnitEl) kpiHorasUnitEl.textContent = unidadeH;
   const kpiHorasIconEl = document.getElementById('kpi-horas-icon');
-  if(kpiHorasIconEl) kpiHorasIconEl.innerHTML = isKmL
-    ? '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M7 21 10 3"/><path d="m17 21-3-18"/><path d="M12 6v3"/><path d="M12 13v3"/></svg>'
-    : '<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  if(kpiHorasIconEl) kpiHorasIconEl.textContent = isKmL ? '🛣️' : '⏱️';
   const kpiMediaLabelEl = document.getElementById('kpi-media-label');
   if(kpiMediaLabelEl) kpiMediaLabelEl.textContent = labelMedia;
   const kpiMediaUnitEl = document.getElementById('kpi-media-unit');
@@ -5088,7 +5062,7 @@ function renderMaquinas() {
     const tH=abasts.reduce((s,a)=>s+(a.horas||0),0);
     const media=tH>0?(tL/tH).toFixed(2):'—';
     const sCls=m.status==='Ativa'?'status-ativa':m.status==='Manutenção'?'status-manutencao':'status-inativa';
-    return `<div class="machine-card"><div class="machine-top"><div class="machine-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></div><span class="status ${sCls}">${m.status||'Ativa'}</span></div>
+    return `<div class="machine-card"><div class="machine-top"><div class="machine-icon">${m.placa&&m.placa.toUpperCase().startsWith('EMP')?'<img src="assets/ignis-inline-2-b4d5d76fbd.jpg" style="width:28px;height:28px;object-fit:contain">':'🚜'}</div><span class="status ${sCls}">${m.status||'Ativa'}</span></div>
       <div class="machine-placa">${m.placa}</div><div class="machine-model">${m.modelo||'—'}</div>
       <div class="machine-op">${(m.operacao||'').replace(/_/g,' ')}</div>
       <div class="machine-stats">
@@ -5097,7 +5071,7 @@ function renderMaquinas() {
         <div class="stat"><div class="stat-value" style="font-size:16px">${abasts.length}</div><div class="stat-label">Abast.</div></div>
       </div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-        <button class="btn-icon machine-edit-btn" onclick="verificarSenha(()=>editarMaquina(${getMaquinaIndex(m)}))" title="Editar máquina"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>Editar</button>
+        <button class="btn-icon" onclick="verificarSenha(()=>editarMaquina(${getMaquinaIndex(m)}))" title="Editar máquina">✏️ Editar</button>
       </div></div>`;
   }).join('');
   const restante = Math.max(0, list.length - visiveis.length);
@@ -11257,13 +11231,3 @@ async function rcExportar() {
 </script>
 </body>
 </html>
-
-<style id="ignis-icon-contrast-fix">
-.nav-item .icon,.nav-item .icon-wrap{color:#9aa7b6!important}
-.nav-item .ui-icon{stroke-width:2!important}
-.nav-item.active .icon,.nav-item.active .icon-wrap{color:#ff7840!important}
-.dash-filter-trigger-icon .ui-icon{stroke-width:2.1!important}
-.empty-state-mark{color:#9aa8b8!important}
-.empty-state-mark .ui-icon{stroke-width:2!important}
-.btn-clean-import .ui-icon{color:#fff!important;stroke-width:2.1!important}
-</style>
