@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- IGNIS Stage 1 Performance — 18/08/2026 -->
-<meta name="ignis-build" content="2026-08-18-stage2-refined">
-<title>Ignis — Gestão Inteligente de Frotas</title>
+<meta name="ignis-build" content="2026-08-18-stage2-fleet-ui">
+<title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -694,7 +694,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
   --surface-2:#171e27;
   --border:rgba(255,255,255,.075);
   --border-strong:rgba(255,255,255,.12);
-  --accent:#ff6b2c;
+  --accent:#f2642e;
   --accent2:#ff9a3d;
   --green:#34c98b;
   --red:#f05f57;
@@ -755,7 +755,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background-im
 .filter-select:focus,.filter-input:focus,.form-input:focus,.form-select:focus{border-color:rgba(255,107,44,.55)!important;box-shadow:0 0 0 3px rgba(255,107,44,.08)!important}
 .btn{border-radius:10px!important;font-weight:620!important;letter-spacing:-.01em;box-shadow:none!important;transition:transform .14s,background .14s,border-color .14s!important}
 .btn:hover{transform:translateY(-1px)}
-.btn-primary{background:linear-gradient(135deg,#ff6b2c,#e85b20)!important;border:1px solid #ff7c43!important;color:#fff!important}
+.btn-primary{background:linear-gradient(135deg,#f2642e,#e85b20)!important;border:1px solid #f77746!important;color:#fff!important}
 .btn-secondary,.btn-ghost{background:#141a22!important;border:1px solid var(--border)!important;color:#c5ced8!important}
 .btn-danger{background:rgba(240,95,87,.09)!important;border:1px solid rgba(240,95,87,.25)!important;color:#ff8d86!important}
 
@@ -916,6 +916,40 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 
 </style>
 
+
+<style id="stage2-fleet-polish">
+:root{--accent:#f2642e;--accent2:#f49342;}
+.logo-sub{font-size:10.5px!important;letter-spacing:.05px}
+.nav-item .icon,.nav-item .icon-wrap{color:#8996a5}.nav-item.active .icon,.nav-item.active .icon-wrap{color:var(--accent)}
+.nav-item .ui-icon{width:18px;height:18px;stroke-width:2.05}
+/* KPI: mesma âncora, tamanho e área visual para todos os ícones */
+.kpi-label{padding-right:46px!important;min-height:20px;display:flex;align-items:center}
+.kpi-icon{position:absolute!important;right:22px!important;top:22px!important;width:28px!important;height:28px!important;display:flex!important;align-items:center!important;justify-content:center!important;color:var(--accent)!important;line-height:1!important}
+.kpi-icon .ui-icon{width:22px!important;height:22px!important;stroke-width:2.15!important}
+.kpi-card:hover .kpi-icon{color:#f57845!important}
+/* Cadastro de frota/equipamentos */
+.equipment-kind{display:flex;align-items:center;gap:10px;min-width:0}.equipment-type-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#788798;white-space:nowrap}
+.machine-icon{color:var(--accent)!important;width:34px!important;height:34px!important}.machine-icon .equipment-svg{width:27px!important;height:27px!important;stroke-width:1.9!important}
+.machine-card .machine-op{color:var(--accent)!important}.machine-edit-btn .ui-icon{color:var(--accent)!important}
+/* Prazo mensal do Arla */
+.arla-deadline-banner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;border:1px solid;border-radius:14px;padding:15px 18px}
+.arla-deadline-copy{display:flex;align-items:center;gap:12px;min-width:0;flex:1}.arla-deadline-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none}.arla-deadline-icon .ui-icon{width:22px;height:22px;stroke-width:2}.arla-deadline-text{font-size:13px;color:var(--text);line-height:1.55}
+/* Refinamento geral sem alterar o fundo aprovado */
+.btn-primary{background:#f2642e!important;border-color:#f2642e!important}.btn-primary:hover{background:#e95c29!important;border-color:#e95c29!important}
+.nav-item.active{background:rgba(242,100,46,.105)!important;border-color:rgba(242,100,46,.18)!important;box-shadow:inset 3px 0 0 var(--accent)!important}
+.dash-filter-trigger:hover,.dash-select-shell:hover{border-color:rgba(242,100,46,.34)!important}
+.empty-icon:empty,.comp-maq-opt span:empty{display:none!important}
+@media(max-width:900px){.equipment-type-label{display:none}.kpi-icon{right:16px!important;top:18px!important}.kpi-label{padding-right:38px!important}}
+</style>
+<style id="ignis-icon-contrast-fix">
+.nav-item .icon,.nav-item .icon-wrap{color:#9aa7b6!important}
+.nav-item .ui-icon{stroke-width:2!important}
+.nav-item.active .icon,.nav-item.active .icon-wrap{color:var(--accent)!important}
+.dash-filter-trigger-icon .ui-icon{stroke-width:2.1!important}
+.empty-state-mark{color:#9aa8b8!important}
+.empty-state-mark .ui-icon{stroke-width:2!important}
+.btn-clean-import .ui-icon{color:#fff!important;stroke-width:2.1!important}
+</style>
 </head>
 <body>
 
@@ -935,7 +969,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
     <div class="login-hero">
       <span class="login-flame"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5c.4 3-1.2 4.5-2.5 5.9-1.3 1.4-2.4 2.7-1.8 5 .8-1.1 1.8-1.9 3-2.6-.2 2.6 1.3 3.9 2.1 5 .6.8 1 1.5.9 2.5 2.1-1.2 3.3-3.3 3.3-5.7 0-3.9-2.4-7.5-5-10.1Z"/><path d="M8.3 8.1c-2.1 2.1-3.5 4.5-3.5 7.1A7.2 7.2 0 0 0 12 22c3.9 0 7.1-2.8 7.2-6.5"/></svg></span>
       <div class="login-brand">IGNIS</div>
-      <div class="login-tagline">Gestão Inteligente de Frotas</div>
+      <div class="login-tagline">Gestão Inteligente de Frotas e Equipamentos</div>
     </div>
     <div class="login-divider"></div>
     <div class="login-body">
@@ -983,7 +1017,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 <aside class="sidebar" id="sidebar">
   <div class="logo">
     <div class="logo-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5c.4 3-1.2 4.5-2.5 5.9-1.3 1.4-2.4 2.7-1.8 5 .8-1.1 1.8-1.9 3-2.6-.2 2.6 1.3 3.9 2.1 5 .6.8 1 1.5.9 2.5 2.1-1.2 3.3-3.3 3.3-5.7 0-3.9-2.4-7.5-5-10.1Z"/><path d="M8.3 8.1c-2.1 2.1-3.5 4.5-3.5 7.1A7.2 7.2 0 0 0 12 22c3.9 0 7.1-2.8 7.2-6.5"/></svg></div>
-    <div><div class="logo-text">Ignis</div><div class="logo-sub">Gestão Inteligente de Frotas</div></div>
+    <div><div class="logo-text">Ignis</div><div class="logo-sub">Gestão Inteligente de Frotas e Equipamentos</div></div>
   </div>
   <nav class="nav">
     <div class="nav-section-label">Visão geral</div>
@@ -992,7 +1026,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 
     <div class="nav-section-label">Operação</div>
     <div class="nav-item" onclick="showPage('abastecimentos',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg></span><span class="nav-label">Abastecimentos</span></div>
-    <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></span><span class="nav-label">Máquinas</span></div>
+    <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="6" rx="1.5"/><rect x="14" y="5" width="7" height="6" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg></span><span class="nav-label">Frota e Equipamentos</span></div>
 
     <div class="nav-section-label">Inteligência</div>
     <div class="nav-item" id="nav-relatorio" onclick="showPage('relatorio',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span><span id="rel-reincidencia-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">Relatório</span></div>
@@ -1039,7 +1073,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
       <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg></span>Abastec.
     </div>
     <div class="mob-nav-item" id="mob-nav-maquinas" onclick="showPage('maquinas',this);updateMobNav('maquinas')">
-      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></span>Máquinas
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></span>Equipamentos
     </div>
     <div class="mob-nav-item" id="mob-nav-relatorio" onclick="showPage('relatorio',this);updateMobNav('relatorio')">
       <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span>Relatório
@@ -1197,7 +1231,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
     </div>
 
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Veículos Ativos</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 14l2-6h14l2 6v5h-2v-2H5v2H3z"/><circle cx="7" cy="14" r="1"/><circle cx="17" cy="14" r="1"/></svg></div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
+      <div class="kpi-card"><div class="kpi-label">Ativos Monitorados</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="6" width="7" height="6" rx="1.5"/><rect x="14" y="4" width="7" height="8" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg></div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
       <div class="kpi-card"><div class="kpi-label" id="kpi-horas-label">Horas Trabalhadas</div><div class="kpi-icon" id="kpi-horas-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><span class="kpi-value" id="kpi-horas">0</span><span class="kpi-unit" id="kpi-horas-unit">h</span></div></div>
       <div class="kpi-card"><div class="kpi-label">Total de Litros</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 2s6 6.2 6 12a6 6 0 0 1-12 0c0-5.8 6-12 6-12Z"/></svg></div><div><span class="kpi-value" id="kpi-litros">0</span><span class="kpi-unit">L</span></div><div class="kpi-delta" id="kpi-litros-delta"></div></div>
       <div class="kpi-card"><div class="kpi-label" id="kpi-meta-label">Meta Ideal L/H</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg></div><div><span class="kpi-value" id="kpi-meta-ideal">—</span><span class="kpi-unit" id="kpi-meta-unit"></span></div><div id="kpi-meta-sub" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
@@ -1348,12 +1382,12 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
   <!-- MÁQUINAS -->
   <div id="page-maquinas" class="page">
     <div class="page-header">
-      <div><div class="page-title">Máquinas</div><div class="page-sub">Gerencie o cadastro de máquinas</div></div>
+      <div><div class="page-title">Frota e Equipamentos</div><div class="page-sub">Cadastre e acompanhe máquinas, tratores, caminhões, veículos leves e empilhadeiras</div></div>
       <div class="header-actions">
         <input type="text" class="filter-input" id="maq-busca" placeholder="Buscar placa ou modelo..." oninput="scheduleRenderMaquinas()" style="min-width:180px">
         <select class="filter-select" id="maq-op-filter" onchange="renderMaquinas()"><option value="">Todas as Operações</option></select>
         <button class="btn btn-ghost" onclick="corrigirOperacoesDesatualizadas()" title="Atualiza a operação de cada placa usando o abastecimento mais recente já importado, sem precisar reimportar nada">🔄 Corrigir Operações</button>
-        <button class="btn btn-primary" onclick="verificarSenha(openNovaMaquina)">+ Nova Máquina</button>
+        <button class="btn btn-primary" onclick="verificarSenha(openNovaMaquina)">+ Novo Equipamento</button>
       </div>
     </div>
     <div id="maquinas-grid" class="machines-grid"></div>
@@ -1634,7 +1668,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
     </div>
 
     <!-- Lembrete de importação -->
-    <div id="arla-lembrete-banner" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:14px 18px;margin-bottom:16px"></div>
+    <div id="arla-lembrete-banner" style="display:none;margin-bottom:18px"></div>
 
     <!-- Tabs -->
     <div class="arla-tab-group">
@@ -1834,7 +1868,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
    ──────────────────────────────────────────────────────────────── */
 :root{
   --bg:#0a0d12;--bg2:#10151c;--bg3:#171d26;--border:rgba(255,255,255,.075);
-  --accent:#ff6b2c;--accent2:#ff9a3d;--green:#34c98b;--red:#f05f57;
+  --accent:#f2642e;--accent2:#ff9a3d;--green:#34c98b;--red:#f05f57;
   --yellow:#f2b84b;--text:#f5f7fa;--text2:#9ca8b7;--text3:#687382;
   --card-shadow:0 10px 35px rgba(0,0,0,.22);--radius:16px;
 }
@@ -1849,7 +1883,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
 .kpi-grid{gap:16px!important;margin-bottom:28px!important}.kpi-card{min-height:138px!important;padding:21px 22px 19px!important;border-radius:16px!important;background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98))!important;box-shadow:0 8px 30px rgba(0,0,0,.16)!important;border-color:var(--border)!important}
 .kpi-card::after,.kpi-card::before{display:none!important}.kpi-card:hover{transform:none!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 10px 30px rgba(0,0,0,.20)!important}
 .kpi-label{color:#8592a1!important;letter-spacing:.75px!important}.kpi-value{font-size:31px!important;letter-spacing:-1px!important}
-.kpi-icon{right:18px!important;top:18px!important;width:auto!important;height:auto!important;border:0!important;background:transparent!important;border-radius:0!important;color:#ff7840!important;opacity:1!important;display:block!important}
+.kpi-icon{right:18px!important;top:18px!important;width:auto!important;height:auto!important;border:0!important;background:transparent!important;border-radius:0!important;color:#f66f3b!important;opacity:1!important;display:block!important}
 .kpi-icon .ui-icon{width:23px;height:23px;stroke-width:2.15}.kpi-card:hover .kpi-icon{color:var(--accent)!important}
 .chart-card,.table-card,.machine-card,.sheets-config,.modal{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98))!important;border-color:var(--border)!important;box-shadow:0 8px 30px rgba(0,0,0,.16)!important}
 .chart-card{padding:26px!important;border-radius:16px!important}.table-card{border-radius:16px!important}
@@ -1862,16 +1896,16 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
 .dash-search-box{background:#0d1218!important;border-color:rgba(255,255,255,.08)!important}.dash-option{min-height:38px!important;padding:8px 9px!important;border-radius:9px!important}.dash-option:hover{background:rgba(255,255,255,.045)!important}
 
 /* Importação simplificada */
-.import-modal-modern{padding:30px!important}.import-modal-title{display:flex;align-items:center;gap:11px;margin-bottom:8px!important}.title-mark{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:0;background:transparent;color:#ff7840}.title-mark .ui-icon{width:18px;height:18px}
+.import-modal-modern{padding:30px!important}.import-modal-title{display:flex;align-items:center;gap:11px;margin-bottom:8px!important}.title-mark{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:0;background:transparent;color:#f66f3b}.title-mark .ui-icon{width:18px;height:18px}
 .import-helper{font-size:13px;color:var(--text2);line-height:1.65;margin:0 0 22px 45px;max-width:440px}
 .import-primary-card{width:100%;display:flex;align-items:center;gap:14px;text-align:left;border:1px solid rgba(255,107,44,.3);background:linear-gradient(180deg,#151c25,#11171e);border-radius:14px;padding:18px;cursor:pointer;color:var(--text);transition:.16s;font-family:inherit}
 .import-primary-card:hover{border-color:rgba(255,107,44,.65);transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,0,0,.16)}
-.import-primary-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#ff7840;flex:none;background:transparent;border:0;border-radius:0}.import-primary-icon .ui-icon{width:27px;height:27px;stroke-width:2.1}
+.import-primary-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#f66f3b;flex:none;background:transparent;border:0;border-radius:0}.import-primary-icon .ui-icon{width:27px;height:27px;stroke-width:2.1}
 .import-primary-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.import-primary-copy strong{font-size:14px}.import-primary-copy small{font-size:11.5px;color:var(--text2)}.import-primary-action{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
 .history-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:26px 0 10px;padding-top:18px;border-top:1px solid rgba(148,163,184,.12)}.history-title{font-size:12px;font-weight:700;color:#dce3ea;text-transform:uppercase;letter-spacing:.7px}.history-sub{font-size:10.5px;color:var(--text3);margin-top:2px}.history-list{display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto}
 
 /* Máquinas: ícones vetoriais, menos sensação de desenho */
-.machines-grid{gap:20px!important}.machine-card{padding:24px!important;border-radius:16px!important;cursor:default!important}.machine-card:hover{transform:none!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 10px 28px rgba(0,0,0,.18)!important}.machine-icon{width:32px!important;height:32px!important;border:0!important;background:transparent!important;border-radius:0!important;color:#ff7840!important;display:flex!important;align-items:center!important;justify-content:center!important}.machine-icon .ui-icon{width:24px;height:24px;stroke-width:2.05}.machine-edit-btn{display:inline-flex!important;align-items:center!important;gap:7px!important;color:#a9b6c3!important}.machine-edit-btn .ui-icon{width:16px;height:16px;color:#ff7840;stroke-width:2.05}.machine-edit-btn:hover{color:#fff!important}.machine-edit-btn:hover .ui-icon{color:var(--accent)}
+.machines-grid{gap:20px!important}.machine-card{padding:24px!important;border-radius:16px!important;cursor:default!important}.machine-card:hover{transform:none!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 10px 28px rgba(0,0,0,.18)!important}.machine-icon{width:32px!important;height:32px!important;border:0!important;background:transparent!important;border-radius:0!important;color:#f66f3b!important;display:flex!important;align-items:center!important;justify-content:center!important}.machine-icon .ui-icon{width:24px;height:24px;stroke-width:2.05}.machine-edit-btn{display:inline-flex!important;align-items:center!important;gap:7px!important;color:#a9b6c3!important}.machine-edit-btn .ui-icon{width:16px;height:16px;color:#f66f3b;stroke-width:2.05}.machine-edit-btn:hover{color:#fff!important}.machine-edit-btn:hover .ui-icon{color:var(--accent)}
 
 /* Arla: cabeçalho limpo e ações secundárias dentro do relatório */
 .btn-clean-import{display:inline-flex;align-items:center;gap:8px}.btn-clean-import .ui-icon{width:16px;height:16px}.arla-tab-group{background:#10151c!important;border-color:var(--border)!important;padding:5px!important;border-radius:13px!important;gap:4px!important}.arla-tab{border-radius:9px!important;padding:10px 16px!important}.arla-report-actions{display:flex;gap:8px;margin-left:auto}.danger-soft{color:#e99696!important;border-color:rgba(239,90,90,.2)!important}.empty-state-mark{width:54px;height:54px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;color:#778899}.empty-state-mark .ui-icon{width:30px;height:30px}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:1px}.status-dot.critico{background:#ef5a5a}.status-dot.atencao{background:#f5a524}.status-dot.ideal{background:#32c58a}.arla-kpi-label{display:flex;align-items:center}
@@ -2241,7 +2275,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
 <!-- MODAL KM COMP DUPLO -->
 <div class="modal-overlay" id="modal-maquina">
   <div class="modal">
-    <div class="modal-title" id="modal-maquina-title">Nova Máquina</div>
+    <div class="modal-title" id="modal-maquina-title">Novo Equipamento</div>
     <input type="hidden" id="maq-edit-idx" value="-1">
     <div class="form-row">
       <div class="form-group"><label class="form-label">Placa</label><input type="text" class="form-input" id="maq-placa" placeholder="MAQ0000"></div>
@@ -2318,7 +2352,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
         <label class="perm-item"><input type="checkbox" data-perm="dashboard"> ⊞ Dashboard</label>
         <label class="perm-item"><input type="checkbox" data-perm="comparativo"> 📊 Comparativo</label>
         <label class="perm-item"><input type="checkbox" data-perm="abastecimentos"> ⛽ Abastecimentos</label>
-        <label class="perm-item"><input type="checkbox" data-perm="maquinas"> 🚜 Máquinas</label>
+        <label class="perm-item"><input type="checkbox" data-perm="maquinas">Frota e Equipamentos</label>
         <label class="perm-item"><input type="checkbox" data-perm="relatorio"> 📧 Relatório</label>
         <label class="perm-item"><input type="checkbox" data-perm="excluir"> 🗑️ A Excluir</label>
         <label class="perm-item"><input type="checkbox" data-perm="arla"> 🧪 Arla</label>
@@ -2929,19 +2963,35 @@ window.addEventListener('beforeunload', e => {
 window._authUser = null; // usuário logado atualmente
 
 // Todas as abas disponíveis
+function navIconSvg(name) {
+  const icons = {
+    dashboard:'<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+    comparativo:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>',
+    abastecimentos:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg>',
+    maquinas:'<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="6" rx="1.5"/><rect x="14" y="5" width="7" height="6" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg>',
+    relatorio:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+    excluir:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/><path d="M10 11v6M14 11v6"/></svg>',
+    arla:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg>',
+    kmcomp:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 17 17 4l3 3L7 20H4z"/><path d="m14 7 3 3"/><path d="M8 16l2 2"/></svg>',
+    metarota:'<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg>',
+    recon:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M7 7h10"/><path d="m14 4 3 3-3 3"/><path d="M17 17H7"/><path d="m10 20-3-3 3-3"/></svg>',
+    config:'<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>'
+  };
+  return icons[name] || icons.dashboard;
+}
 const AUTH_PAGES = [
-  { id:'dashboard',    label:'Dashboard',      icon:'⊞' },
-  { id:'comparativo',  label:'Comparativo',    icon:'📊' },
-  { id:'abastecimentos',label:'Abastecimentos',icon:'⛽' },
-  { id:'maquinas',     label:'Máquinas',       icon:'🚜' },
-  { id:'relatorio',    label:'Relatório',      icon:'📧' },
-  { id:'excluir',      label:'A Excluir',      icon:'🗑️' },
-  { id:'arla',         label:'Arla',           icon:'🧪' },
-  { id:'kmcomp',       label:'KM Comparativo', icon:'📏' },
-  { id:'metarota',     label:'Meta por Rota',  icon:'🎯' },
-  { id:'recon',        label:'O2P × Ticket',   icon:'🔍' },
-  { id:'config',       label:'Configurações',  icon:'⚙️' },
-];
+  { id:'dashboard',     label:'Dashboard',             group:'Visão geral' },
+  { id:'comparativo',   label:'Comparativo',           group:'Visão geral' },
+  { id:'abastecimentos',label:'Abastecimentos',        group:'Operação' },
+  { id:'maquinas',      label:'Frota e Equipamentos',  group:'Operação' },
+  { id:'relatorio',     label:'Relatório',             group:'Inteligência' },
+  { id:'excluir',       label:'A Excluir',             group:'Inteligência' },
+  { id:'arla',          label:'Controle Arla',         group:'Inteligência' },
+  { id:'kmcomp',        label:'KM Comparativo',        group:'Inteligência' },
+  { id:'metarota',      label:'Meta por Rota',         group:'Inteligência' },
+  { id:'recon',         label:'O2P × Ticket',          group:'Inteligência' },
+  { id:'config',        label:'Configurações',         group:'Sistema' },
+].map(p => ({...p, icon:navIconSvg(p.id)}));
 
 async function sha256(str) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -3203,16 +3253,22 @@ function authRenderNav() {
   const u = window._authUser;
   if (!u) return;
   const perms = u.role === 'adm' ? AUTH_PAGES.map(p=>p.id) : (u.perms || []);
-  // Sidebar desktop
   const nav = document.querySelector('.nav');
   nav.innerHTML = '';
+  let ultimoGrupo = '';
   AUTH_PAGES.forEach(p => {
     if (!perms.includes(p.id)) return;
-    const isSpecial = ['relatorio','excluir','arla','kmcomp'].includes(p.id);
+    if (p.group !== ultimoGrupo) {
+      const section = document.createElement('div');
+      section.className = 'nav-section-label';
+      section.textContent = p.group;
+      nav.appendChild(section);
+      ultimoGrupo = p.group;
+    }
     let inner = '';
     if (p.id === 'relatorio') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="rel-reincidencia-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span>`;
     else if (p.id === 'excluir') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="excluir-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span></span>`;
-    else if (p.id === 'arla') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="arla-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span></span>`;
+    else if (p.id === 'arla') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="arla-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span><span id="arla-lembrete-badge" style="display:none" class="nav-mini-alert">!</span></span>`;
     else if (p.id === 'kmcomp') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="kmcomp-nav-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span>`;
     else inner = `<span class="icon">${p.icon}</span>`;
     const div = document.createElement('div');
@@ -3222,7 +3278,6 @@ function authRenderNav() {
     div.onclick = () => showPage(p.id, div);
     nav.appendChild(div);
   });
-  // Mobile bottom nav — mostra só abas com permissão
   document.querySelectorAll('.mob-nav-item').forEach(el => {
     const pageId = el.id.replace('mob-nav-','');
     el.style.display = perms.includes(pageId) ? '' : 'none';
@@ -3548,7 +3603,7 @@ function updateFilters(force=false) {
     periodoSel.value = valP;
   }
   const sel=document.getElementById('abast-placa');
-  if(sel) sel.innerHTML='<option value="">Selecione a máquina</option>'+state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
+  if(sel) sel.innerHTML='<option value="">Selecione o equipamento</option>'+state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
 }
 
 
@@ -5066,6 +5121,32 @@ function carregarMaisMaquinas() {
   renderMaquinas();
 }
 
+function getTipoEquipamentoCadastro(m) {
+  const placa = (m?.placa || '').toUpperCase();
+  const modelo = (m?.modelo || '').toUpperCase();
+  const tipo = (m?.tipo || '').toUpperCase();
+  const op = (m?.operacao || '').toUpperCase();
+  if (m?.tipoIgnis) return m.tipoIgnis;
+  if (modelo.includes('MOFFETT') || modelo.includes('EMPILH') || tipo.includes('EMPILH') || placa.startsWith('EMP')) return 'empilhadeira';
+  if (tipo.includes('VEICULO LEVE') || tipo.includes('VEÍCULO LEVE') || op.startsWith('VL') || op.includes('MERCADO LIVRE')) return 'leve';
+  if (placa.startsWith('TRA') || tipo.includes('TRATOR') || modelo.includes('TRATOR')) return 'trator';
+  if (placa.startsWith('MAQ') || tipo.includes('ESCAVA') || tipo.includes('MAQUINA') || tipo.includes('MÁQUINA')) return 'maquina';
+  return 'pesada';
+}
+function getEquipamentoTipoLabel(m) {
+  const t = getTipoEquipamentoCadastro(m);
+  return ({maquina:'Máquina',trator:'Trator',pesada:'Frota pesada',leve:'Frota leve',empilhadeira:'Empilhadeira'})[t] || 'Equipamento';
+}
+function getEquipamentoIconSvg(m) {
+  const t = getTipoEquipamentoCadastro(m);
+  if (t === 'trator') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><circle cx="7" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18h1m6 0h3"/><path d="M9 15V9h5l3 5"/><path d="M11 9V6h4"/><path d="M4 13h5"/><path d="M15 6V4h2"/></svg>';
+  if (t === 'pesada') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><path d="M3 7h11v9H3z"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M5 10h6"/></svg>';
+  if (t === 'leve') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><path d="m4 15 2-5h12l2 5v3H4z"/><path d="m8 10 2-3h4l2 3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>';
+  if (t === 'empilhadeira') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><circle cx="7" cy="18" r="2"/><circle cx="14" cy="18" r="2"/><path d="M4 18V9h6v7h5"/><path d="M10 9V5h4v8"/><path d="M18 4v14"/><path d="M18 16h4M18 19h4"/></svg>';
+  // Máquina: escavadeira com lança e garra, inspirada nos equipamentos florestais da operação.
+  return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><path d="M3 18h9c2 0 3.5 1 3.5 2.5S14 23 12 23H3c-2 0-3-1-3-2.5S1 18 3 18Z"/><path d="M4 17v-6h6l3 6"/><path d="M9 11V7h4l2 4"/><path d="M13 7 18 3l2 2-4 6"/><path d="M20 5l2 4-2 3"/><path d="m20 12-2 2M20 12l2 2M18 14l1 2M22 14l-1 2"/></svg>';
+}
+
 function renderMaquinas() {
   updateFilters();
   _markPageClean('maquinas');
@@ -5080,7 +5161,7 @@ function renderMaquinas() {
   if(opF) list=list.filter(m=>m.operacao===opF);
   if(busca) list=list.filter(m=>`${m.placa||''}${m.modelo||''}${m.tipo||''}`.toLowerCase().includes(busca));
   const c=document.getElementById('maquinas-grid');
-  if(!list.length){c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🚜</div><div class="empty-text">Nenhuma máquina cadastrada</div></div>';return;}
+  if(!list.length){c.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-state-mark"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M8 10h8M8 14h5"/></svg></div><div class="empty-text">Nenhum equipamento cadastrado</div></div>';return;}
   const visiveis = list.slice(0, _maqVisibleLimit);
   let htmlCards = visiveis.map(m=>{
     const abasts=getAbastecimentosPorPlaca(m.placa);
@@ -5088,7 +5169,7 @@ function renderMaquinas() {
     const tH=abasts.reduce((s,a)=>s+(a.horas||0),0);
     const media=tH>0?(tL/tH).toFixed(2):'—';
     const sCls=m.status==='Ativa'?'status-ativa':m.status==='Manutenção'?'status-manutencao':'status-inativa';
-    return `<div class="machine-card"><div class="machine-top"><div class="machine-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></div><span class="status ${sCls}">${m.status||'Ativa'}</span></div>
+    return `<div class="machine-card"><div class="machine-top"><div class="equipment-kind"><div class="machine-icon">${getEquipamentoIconSvg(m)}</div><span class="equipment-type-label">${getEquipamentoTipoLabel(m)}</span></div><span class="status ${sCls}">${m.status||'Ativa'}</span></div>
       <div class="machine-placa">${m.placa}</div><div class="machine-model">${m.modelo||'—'}</div>
       <div class="machine-op">${(m.operacao||'').replace(/_/g,' ')}</div>
       <div class="machine-stats">
@@ -5097,12 +5178,12 @@ function renderMaquinas() {
         <div class="stat"><div class="stat-value" style="font-size:16px">${abasts.length}</div><div class="stat-label">Abast.</div></div>
       </div>
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-        <button class="btn-icon machine-edit-btn" onclick="verificarSenha(()=>editarMaquina(${getMaquinaIndex(m)}))" title="Editar máquina"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>Editar</button>
+        <button class="btn-icon machine-edit-btn" onclick="verificarSenha(()=>editarMaquina(${getMaquinaIndex(m)}))" title="Editar equipamento"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>Editar</button>
       </div></div>`;
   }).join('');
   const restante = Math.max(0, list.length - visiveis.length);
   if (restante > 0) {
-    htmlCards += `<div class="machines-progressive-footer"><span>Mostrando <b>${visiveis.length.toLocaleString('pt-BR')}</b> de <b>${list.length.toLocaleString('pt-BR')}</b> máquinas</span><button class="btn btn-secondary btn-sm" onclick="carregarMaisMaquinas()">Mostrar mais ${Math.min(_MAQ_PAGE_SIZE,restante).toLocaleString('pt-BR')}</button></div>`;
+    htmlCards += `<div class="machines-progressive-footer"><span>Mostrando <b>${visiveis.length.toLocaleString('pt-BR')}</b> de <b>${list.length.toLocaleString('pt-BR')}</b> equipamentos</span><button class="btn btn-secondary btn-sm" onclick="carregarMaisMaquinas()">Mostrar mais ${Math.min(_MAQ_PAGE_SIZE,restante).toLocaleString('pt-BR')}</button></div>`;
   }
   c.innerHTML = htmlCards;
 }
@@ -5120,7 +5201,7 @@ function openNovoAbast() {
   document.getElementById('modal-abast').classList.add('open');
 }
 function openNovaMaquina() {
-  document.getElementById('modal-maquina-title').textContent='Nova Máquina';
+  document.getElementById('modal-maquina-title').textContent='Novo Equipamento';
   document.getElementById('maq-edit-idx').value='-1';
   document.getElementById('maq-placa').value='';
   document.getElementById('maq-placa').readOnly=false;
@@ -5136,7 +5217,7 @@ function openNovaMaquina() {
 function editarMaquina(idx) {
   const m=state.maquinas[idx];
   if(!m) return;
-  document.getElementById('modal-maquina-title').textContent='Editar Máquina';
+  document.getElementById('modal-maquina-title').textContent='Editar Equipamento';
   document.getElementById('maq-edit-idx').value=idx;
   document.getElementById('maq-placa').value=m.placa;
   document.getElementById('maq-placa').readOnly=true;
@@ -5296,12 +5377,12 @@ function salvarMaquina() {
     state.maquinas[editIdx]={...state.maquinas[editIdx],modelo,tipo,operacao,status,meta};
     // Atualizar operacao nos abastecimentos vinculados
     state.abastecimentos.forEach(a=>{ if(a.placa===placa) a.operacao=operacao; });
-    showToast(`Máquina ${placa} atualizada!`,'success');
+    showToast(`Equipamento ${placa} atualizado!`,'success');
   } else {
     // Modo novo
     if(state.maquinas.find(m=>m.placa===placa)){showToast('Placa já cadastrada','error');return;}
     state.maquinas.push({placa,modelo,tipo,operacao,status,meta});
-    showToast(`Máquina ${placa} cadastrada!`,'success');
+    showToast(`Equipamento ${placa} cadastrado!`,'success');
   }
   saveState(); closeModal('modal-maquina'); renderMaquinas(); updateFilters();
 }
@@ -7189,87 +7270,54 @@ function arlaMigrarClassificacaoAntiga() {
 }
 
 function arlaChecarLembrete() {
-  const meses = window._arlaState.meses;
+  const meses = window._arlaState.meses || [];
   const badge = document.getElementById('arla-lembrete-badge');
   const banner = document.getElementById('arla-lembrete-banner');
-
-  if (!meses.length) {
-    // Nunca importou — sempre lembra
-    if (badge) badge.style.display = '';
-    if (banner) { banner.style.display = ''; banner.innerHTML = arlaLembreteBannerHTML('Nenhum relatório importado ainda. Importe o relatório mensal de Arla para começar o monitoramento.', 'yellow'); }
-    return;
-  }
-
-  // Pega o mês mais recente pelo id (mes_YYYY_MM)
-  const ultimo = meses[meses.length - 1];
-  const mesIdMatch = ultimo.id.match(/mes_(\d{4})_(\d{2})/);
-  let diasDesdeUltimo = null;
-  let mesUltimoLabel = ultimo.label;
-
-  if (mesIdMatch) {
-    const ano = parseInt(mesIdMatch[1]), mes = parseInt(mesIdMatch[2]);
-    // Último dia do mês importado
-    const ultimoDiaMes = new Date(ano, mes, 0); // dia 0 do mês seguinte = último dia do mês atual
-    const hoje = new Date();
-    diasDesdeUltimo = Math.floor((hoje - ultimoDiaMes) / (1000 * 60 * 60 * 24));
-  }
-
-  // Verifica se o mês atual já foi importado
   const hoje = new Date();
-  const mesAtualId = 'mes_' + hoje.getFullYear() + '_' + String(hoje.getMonth()+1).padStart(2,'0');
-  const mesAtualImportado = meses.some(m => m.id === mesAtualId);
+  const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+  const mesAnteriorId = 'mes_' + mesAnterior.getFullYear() + '_' + String(mesAnterior.getMonth()+1).padStart(2,'0');
+  const mesAnteriorLabelRaw = mesAnterior.toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+  const mesAnteriorLabel = mesAnteriorLabelRaw.charAt(0).toUpperCase() + mesAnteriorLabelRaw.slice(1);
+  const mesAnteriorImportado = meses.some(m => m.id === mesAnteriorId);
 
-  let mostrarLembrete = false;
-  let mensagem = '';
-
-  if (mesAtualImportado) {
-    // Mês atual já importado — sem lembrete
+  if (mesAnteriorImportado) {
     if (badge) badge.style.display = 'none';
     if (banner) banner.style.display = 'none';
     return;
   }
 
-  // Dia >= 5 do mês = hora de importar o mês anterior
-  if (hoje.getDate() >= 5) {
-    const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-    const mesAnteriorLabel = mesAnterior.toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
-    const mesAnteriorId = 'mes_' + mesAnterior.getFullYear() + '_' + String(mesAnterior.getMonth()+1).padStart(2,'0');
-    const mesAnteriorImportado = meses.some(m => m.id === mesAnteriorId);
-    if (!mesAnteriorImportado) {
-      mostrarLembrete = true;
-      mensagem = '⏰ O relatório de <strong>' + mesAnteriorLabel.charAt(0).toUpperCase() + mesAnteriorLabel.slice(1) + '</strong> ainda não foi importado. Já passou do dia 5 — hora de atualizar!';
-    }
-  } else if (hoje.getDate() >= 1 && hoje.getDate() < 5) {
-    // Primeiros dias do mês — aviso mais suave
-    const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-    const mesAnteriorLabel = mesAnterior.toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
-    const mesAnteriorId = 'mes_' + mesAnterior.getFullYear() + '_' + String(mesAnterior.getMonth()+1).padStart(2,'0');
-    const mesAnteriorImportado = meses.some(m => m.id === mesAnteriorId);
-    if (!mesAnteriorImportado) {
-      mostrarLembrete = true;
-      mensagem = '📅 O relatório de <strong>' + mesAnteriorLabel.charAt(0).toUpperCase() + mesAnteriorLabel.slice(1) + '</strong> ainda não foi importado.';
-    }
+  const dia = hoje.getDate();
+  let mensagem = '';
+  let tipo = 'yellow';
+  if (dia < 15) {
+    const faltam = 15 - dia;
+    mensagem = 'O relatório de <strong>' + mesAnteriorLabel + '</strong> ainda não foi importado. Prazo até dia 15 — faltam <strong>' + faltam + ' dia' + (faltam === 1 ? '' : 's') + '</strong>.';
+  } else if (dia === 15) {
+    mensagem = 'O relatório de <strong>' + mesAnteriorLabel + '</strong> ainda não foi importado. <strong>O prazo termina hoje.</strong>';
+  } else {
+    const atraso = dia - 15;
+    tipo = 'red';
+    mensagem = 'O relatório de <strong>' + mesAnteriorLabel + '</strong> ainda não foi importado. O prazo era dia 15 — <strong>' + atraso + ' dia' + (atraso === 1 ? '' : 's') + ' em atraso.</strong>';
   }
 
-  if (badge) badge.style.display = mostrarLembrete ? '' : 'none';
+  if (badge) badge.style.display = '';
   if (banner) {
-    banner.style.display = mostrarLembrete ? '' : 'none';
-    if (mostrarLembrete) banner.innerHTML = arlaLembreteBannerHTML(mensagem, hoje.getDate() >= 5 ? 'red' : 'yellow');
+    banner.style.display = '';
+    banner.innerHTML = arlaLembreteBannerHTML(mensagem, tipo);
   }
 }
-
 function arlaLembreteBannerHTML(msg, tipo) {
-  const cores = {
-    yellow: { bg: 'rgba(245,158,11,.1)', border: 'rgba(245,158,11,.4)', icon: '⏰', color: 'var(--yellow)' },
-    red:    { bg: 'rgba(239,68,68,.1)',  border: 'rgba(239,68,68,.4)',  icon: '🚨', color: 'var(--red)' }
-  };
-  const c = cores[tipo] || cores.yellow;
-  return '<div style="display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap">' +
-    '<div style="display:flex;align-items:center;gap:10px">' +
-    '<span style="font-size:20px">' + c.icon + '</span>' +
-    '<div style="font-size:13px;color:var(--text);line-height:1.5">' + msg + '</div>' +
-    '</div>' +
-    '<button class="btn btn-primary btn-sm" onclick="arlaVerificarSenhaEMes()">⬆️ Importar agora</button>' +
+  const atrasado = tipo === 'red';
+  const cor = atrasado ? 'var(--red)' : 'var(--yellow)';
+  const bg = atrasado ? 'rgba(239,95,87,.08)' : 'rgba(242,184,75,.08)';
+  const border = atrasado ? 'rgba(239,95,87,.28)' : 'rgba(242,184,75,.28)';
+  const icon = atrasado
+    ? '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3 2.7 20h18.6L12 3Z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg>'
+    : '<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h3M8 17h6"/></svg>';
+  return '<div class="arla-deadline-banner" style="background:' + bg + ';border-color:' + border + '">' +
+    '<div class="arla-deadline-copy"><span class="arla-deadline-icon" style="color:' + cor + '">' + icon + '</span>' +
+    '<div class="arla-deadline-text">' + msg + '</div></div>' +
+    '<button class="btn btn-primary btn-sm btn-clean-import" onclick="arlaVerificarSenhaEMes()"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Importar agora</button>' +
     '</div>';
 }
 
@@ -11255,15 +11303,46 @@ async function rcExportar() {
 }
 
 </script>
+
+<script id="ignis-ui-symbol-cleanup">
+(function installIgnisUiSymbolCleanup(){
+  const re = /\p{Extended_Pictographic}\uFE0F?/gu;
+  const strip = value => String(value || '').replace(re,'').replace(/\uFE0F/g,'').replace(/[ \t]{2,}/g,' ');
+  const skipTags = new Set(['SCRIPT','STYLE','TEXTAREA','CODE','PRE']);
+  function cleanNode(root){
+    if (!root) return;
+    if (root.nodeType === Node.TEXT_NODE) {
+      if (root.parentElement && !skipTags.has(root.parentElement.tagName)) {
+        const next = strip(root.nodeValue);
+        if (next !== root.nodeValue) root.nodeValue = next;
+      }
+      return;
+    }
+    if (root.nodeType !== Node.ELEMENT_NODE && root.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) return;
+    if (root.nodeType === Node.ELEMENT_NODE) {
+      if (skipTags.has(root.tagName)) return;
+      ['placeholder','title','aria-label'].forEach(a=>{
+        if (root.hasAttribute?.(a)) {
+          const v=root.getAttribute(a), n=strip(v).trim();
+          if(n!==v) root.setAttribute(a,n);
+        }
+      });
+    }
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n=>{
+      if(n.parentElement && !skipTags.has(n.parentElement.tagName)){
+        const v=n.nodeValue, nv=strip(v);
+        if(nv!==v) n.nodeValue=nv;
+      }
+    });
+  }
+  const run=()=>cleanNode(document.body);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true}); else run();
+  const obs=new MutationObserver(muts=>{ muts.forEach(m=>m.addedNodes.forEach(cleanNode)); });
+  const start=()=>document.body&&obs.observe(document.body,{childList:true,subtree:true});
+  if(document.body) start(); else document.addEventListener('DOMContentLoaded',start,{once:true});
+})();
+</script>
 </body>
 </html>
-
-<style id="ignis-icon-contrast-fix">
-.nav-item .icon,.nav-item .icon-wrap{color:#9aa7b6!important}
-.nav-item .ui-icon{stroke-width:2!important}
-.nav-item.active .icon,.nav-item.active .icon-wrap{color:#ff7840!important}
-.dash-filter-trigger-icon .ui-icon{stroke-width:2.1!important}
-.empty-state-mark{color:#9aa8b8!important}
-.empty-state-mark .ui-icon{stroke-width:2!important}
-.btn-clean-import .ui-icon{color:#fff!important;stroke-width:2.1!important}
-</style>
