@@ -6,7 +6,7 @@
 <!-- IGNIS Stage 1 Performance — 18/08/2026 -->
 <meta name="ignis-build" content="2026-08-18-stage1-performance">
 <title>Ignis — Gestão Inteligente de Frotas</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -684,12 +684,244 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
 .machines-progressive-footer b{color:var(--text)}
 @media(max-width:700px){.machines-progressive-footer{flex-direction:column;gap:8px}}
 </style>
+
+<style id="ignis-stage2-visual">
+:root{
+  --bg:#0a0d12;
+  --bg2:#10151c;
+  --bg3:#171d26;
+  --surface:#121820;
+  --surface-2:#171e27;
+  --border:rgba(255,255,255,.075);
+  --border-strong:rgba(255,255,255,.12);
+  --accent:#ff6b2c;
+  --accent2:#ff9a3d;
+  --green:#34c98b;
+  --red:#f05f57;
+  --yellow:#f2b84b;
+  --text:#f5f7fa;
+  --text1:#f5f7fa;
+  --text2:#9ca8b7;
+  --text3:#687382;
+  --card-shadow:0 10px 35px rgba(0,0,0,.22);
+  --radius:16px;
+}
+html{background:var(--bg)}
+body{
+  background:
+    radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),transparent 60%),
+    linear-gradient(180deg,#0a0d12 0%,#0b0f14 100%);
+  font-family:'DM Sans',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  letter-spacing:-.005em;
+}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.32),transparent 45%);z-index:-1}
+.ui-icon{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Sidebar */
+.sidebar{width:252px;background:rgba(14,18,24,.96);border-right:1px solid var(--border);box-shadow:18px 0 45px rgba(0,0,0,.16);backdrop-filter:blur(18px)}
+.sidebar.collapsed{width:72px}
+.sidebar-toggle{left:252px;background:#151b23;border-color:var(--border);color:var(--text2);box-shadow:4px 0 18px rgba(0,0,0,.2)}
+.sidebar.collapsed~.main,.sidebar.collapsed + .main{margin-left:72px}
+.sidebar.collapsed .nav-section-label{display:none}
+.logo{padding:24px 18px 20px;border-bottom:1px solid var(--border);gap:12px}
+.logo-icon,.mob-logo-icon{width:40px;height:40px;border-radius:12px;background:linear-gradient(145deg,rgba(255,107,44,.2),rgba(255,154,61,.08));border:1px solid rgba(255,107,44,.28);color:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px rgba(255,255,255,.06)}
+.logo-icon .ui-icon,.mob-logo-icon .ui-icon{width:22px;height:22px;stroke-width:2}
+.logo-text{font-size:17px;font-weight:750;letter-spacing:-.4px}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:.02em;margin-top:1px}
+.nav{padding:16px 12px 12px;overflow-y:auto}
+.nav-section-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#55606e;padding:14px 12px 6px;white-space:nowrap}
+.nav-item{min-height:42px;padding:10px 12px;border-radius:10px;color:var(--text2);gap:12px;font-size:13px;font-weight:520;border:1px solid transparent;transition:background .16s,border-color .16s,color .16s,transform .16s}
+.nav-item:hover{background:rgba(255,255,255,.035);color:var(--text);border-color:rgba(255,255,255,.045);transform:translateX(1px)}
+.nav-item.active{background:linear-gradient(90deg,rgba(255,107,44,.14),rgba(255,107,44,.055));color:#fff;border-color:rgba(255,107,44,.2);box-shadow:inset 3px 0 0 var(--accent)}
+.nav-item .icon,.nav-item .icon-wrap{width:22px;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:#788493;position:relative}
+.nav-item.active .icon,.nav-item.active .icon-wrap{color:var(--accent)}
+.nav-item .ui-icon{width:18px;height:18px}
+.nav-mini-alert{position:absolute;top:-4px;right:-5px;width:14px;height:14px;border-radius:50%;background:var(--yellow);color:#121212;font-size:9px;font-weight:800;align-items:center;justify-content:center}
+.user-info{border-top:1px solid var(--border);background:rgba(255,255,255,.012)}
+.sync-status{border-top:1px solid var(--border)}
+
+/* Main layout */
+.main{margin-left:252px;padding:34px 38px 56px;max-width:1800px;transition:margin-left .3s cubic-bezier(.4,0,.2,1)}
+.page.active{animation:stage2Fade .18s ease-out}
+@keyframes stage2Fade{from{opacity:.35}to{opacity:1}}
+.page-header{margin-bottom:24px;align-items:flex-start}
+.page-title{font-size:27px;font-weight:720;letter-spacing:-.8px;color:#f7f9fb}
+.page-sub{color:#7f8b99;font-size:12px;margin-top:4px}
+.header-actions{margin-left:auto}
+
+/* Inputs/buttons */
+.filter-select,.filter-input,.form-input,.form-select{background:#121820!important;border:1px solid var(--border)!important;color:var(--text)!important;border-radius:10px!important;box-shadow:inset 0 1px rgba(255,255,255,.025);transition:border-color .16s,background .16s,box-shadow .16s}
+.filter-select:hover,.filter-input:hover,.form-input:hover,.form-select:hover{border-color:var(--border-strong)!important;background:#151c25!important}
+.filter-select:focus,.filter-input:focus,.form-input:focus,.form-select:focus{border-color:rgba(255,107,44,.55)!important;box-shadow:0 0 0 3px rgba(255,107,44,.08)!important}
+.btn{border-radius:10px!important;font-weight:620!important;letter-spacing:-.01em;box-shadow:none!important;transition:transform .14s,background .14s,border-color .14s!important}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:linear-gradient(135deg,#ff6b2c,#e85b20)!important;border:1px solid #ff7c43!important;color:#fff!important}
+.btn-secondary,.btn-ghost{background:#141a22!important;border:1px solid var(--border)!important;color:#c5ced8!important}
+.btn-danger{background:rgba(240,95,87,.09)!important;border:1px solid rgba(240,95,87,.25)!important;color:#ff8d86!important}
+
+/* Cards */
+.kpi-grid{gap:12px}
+.kpi-card,.chart-card,.table-card,.machine-card,.sheets-config,.modal{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98))!important;border:1px solid var(--border)!important;box-shadow:0 8px 30px rgba(0,0,0,.16)!important}
+.kpi-card{border-radius:14px!important;padding:18px 18px 16px!important;min-height:124px;position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.kpi-card:hover{border-color:rgba(255,255,255,.11)!important;transform:translateY(-1px)}
+.kpi-label{font-size:10px!important;letter-spacing:.075em;text-transform:uppercase;color:#778392!important;font-weight:700!important}
+.kpi-value{font-size:28px!important;font-weight:720!important;letter-spacing:-.8px}
+.kpi-unit{color:#7e8996!important;font-size:12px!important}
+.kpi-icon{width:36px!important;height:36px!important;border-radius:10px;background:rgba(255,107,44,.075);border:1px solid rgba(255,107,44,.12);color:var(--accent)!important;display:flex!important;align-items:center;justify-content:center;font-size:0!important}
+.kpi-icon .ui-icon{width:18px;height:18px;stroke-width:1.8}
+.chart-card{border-radius:15px!important;padding:18px!important}
+.chart-title{font-size:13px!important;font-weight:680!important;color:#e8edf3!important;letter-spacing:-.2px}
+.table-card{border-radius:14px!important}
+thead{background:#151b23!important}
+th{color:#7f8b99!important;font-size:9px!important;letter-spacing:.08em!important;border-color:var(--border)!important}
+td{border-color:rgba(255,255,255,.045)!important}
+tbody tr:hover{background:rgba(255,255,255,.018)!important}
+
+/* Empty states */
+.empty{border:1px dashed rgba(255,255,255,.07);border-radius:12px;background:rgba(255,255,255,.012)}
+.empty-icon{display:none!important}
+.empty-text{font-weight:620;color:#9aa5b2!important}
+.empty-sub{color:#64707d!important}
+
+/* Modal */
+.modal-overlay{backdrop-filter:blur(5px);background:rgba(0,0,0,.64)!important}
+.modal{border-radius:18px!important}
+.modal-title{font-size:18px!important;font-weight:720!important;letter-spacing:-.4px}
+
+/* Status / badge */
+.badge,.excl-badge{font-family:'DM Sans',sans-serif!important}
+.excl-badge{box-shadow:0 0 0 2px #10151c}
+
+/* Mobile */
+.mob-topbar{background:rgba(12,16,22,.94)!important;border-bottom:1px solid var(--border)!important;backdrop-filter:blur(18px)}
+.mob-bottom-nav{background:rgba(12,16,22,.96)!important;border-top:1px solid var(--border)!important;backdrop-filter:blur(18px)}
+.mob-icon{color:#788493;display:flex;justify-content:center}
+.mob-icon .ui-icon{width:19px;height:19px}
+.mob-nav-item.active .mob-icon{color:var(--accent)}
+.mob-hamburger{width:38px!important;height:38px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:0!important}
+.mob-hamburger span{width:17px;height:1.5px;background:currentColor;border-radius:3px}
+
+/* Login */
+.login-overlay{background:radial-gradient(700px 420px at 50% 12%,rgba(255,107,44,.08),transparent 65%),#0a0d12!important}
+.login-card{background:linear-gradient(180deg,#141a22,#10151c)!important;border:1px solid var(--border)!important;box-shadow:0 30px 80px rgba(0,0,0,.4)!important;border-radius:20px!important}
+.login-flame,.login-brand-mark{display:flex;align-items:center;justify-content:center;color:var(--accent)}
+.login-flame .ui-icon{width:24px;height:24px}
+.login-brand-mark{width:54px;height:54px;margin:0 auto;color:var(--accent);background:rgba(255,107,44,.08);border:1px solid rgba(255,107,44,.16);border-radius:16px}
+.login-brand-mark .ui-icon{width:27px;height:27px}
+
+/* Remove cartoon feel from common inline emojis without touching logic-generated status symbols */
+.import-icon{font-size:0!important;width:46px;height:46px;border-radius:12px;background:rgba(255,107,44,.07);border:1px solid rgba(255,107,44,.13)}
+
+@media(max-width:900px){
+ .main{margin-left:0!important;padding:78px 14px 88px!important}
+ .page-title{font-size:23px}
+ .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .kpi-card{min-height:112px;padding:15px!important}
+ .kpi-value{font-size:24px!important}
+}
+@media(max-width:520px){.kpi-grid{grid-template-columns:1fr 1fr!important;gap:8px}.kpi-card{min-height:104px}.header-actions{width:100%}}
+
+
+/* Dashboard filter bar — Stage 2.1 */
+#page-dashboard .dashboard-page-header{margin-bottom:14px!important}
+.dashboard-toolbar{
+  display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;
+  width:100%;box-sizing:border-box;margin:0 0 20px;padding:14px;
+  background:linear-gradient(180deg,rgba(17,22,29,.94),rgba(14,19,25,.94));
+  border:1px solid var(--border);border-radius:16px;
+  box-shadow:0 10px 34px rgba(0,0,0,.14),inset 0 1px rgba(255,255,255,.025);
+  position:relative;z-index:40;
+}
+.dash-filter-control,.dash-period-control{display:flex;flex-direction:column;gap:6px;position:relative;min-width:0}
+.dash-filter-control{flex:1 1 190px;max-width:250px}
+.dash-native-control{max-width:230px}
+.dash-filter-caption{font-size:9px;line-height:1;text-transform:uppercase;letter-spacing:.105em;color:#687584;font-weight:750;padding-left:2px}
+.dash-filter-trigger,.dash-select-shell{
+  width:100%;height:44px;box-sizing:border-box;display:flex;align-items:center;gap:9px;
+  border:1px solid rgba(255,255,255,.085);border-radius:11px;background:#111720;color:#edf2f7;
+  padding:0 12px;box-shadow:inset 0 1px rgba(255,255,255,.025);transition:.16s ease;
+}
+.dash-filter-trigger{font:inherit;cursor:pointer;text-align:left}
+.dash-filter-trigger:hover,.dash-select-shell:hover{background:#151c25;border-color:rgba(255,255,255,.14)}
+.dash-filter-trigger:focus-visible,.dash-select-shell:focus-within{outline:none;border-color:rgba(255,107,44,.58);box-shadow:0 0 0 3px rgba(255,107,44,.09)}
+.dash-filter-trigger-icon{width:28px;height:28px;min-width:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#8793a1;background:rgba(255,255,255,.035)}
+.dash-filter-trigger-icon .ui-icon{width:15px;height:15px;stroke-width:1.9}
+.dash-filter-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:620;letter-spacing:0;flex:1;color:#edf1f5}
+.dash-chevron{width:16px;height:16px;min-width:16px;fill:none;stroke:#667281;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dash-select-shell select{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:#edf1f5;font:600 12px 'DM Sans',sans-serif;outline:none;min-width:0;flex:1;height:100%;cursor:pointer;padding:0;margin:0}
+.dash-select-shell select option{background:#121820;color:#eef2f6}
+
+.dash-dropdown{
+  position:absolute;top:calc(100% + 9px);left:0;width:360px;max-width:min(360px,calc(100vw - 34px));
+  box-sizing:border-box;padding:12px;background:#11171e;border:1px solid rgba(255,255,255,.105);border-radius:14px;
+  box-shadow:0 22px 55px rgba(0,0,0,.46),inset 0 1px rgba(255,255,255,.035);z-index:900;
+}
+.dash-dropdown-compact{width:320px}
+.dash-dropdown-heading{display:flex;align-items:flex-start;justify-content:space-between;padding:2px 2px 10px}
+.dash-dropdown-title{font-size:13px;font-weight:720;color:#f1f4f8;letter-spacing:-.15px}
+.dash-dropdown-subtitle{font-size:10px;color:#697584;margin-top:2px}
+.dash-search-box{height:39px;display:flex;align-items:center;gap:8px;padding:0 10px;margin-bottom:9px;background:#0d1218;border:1px solid rgba(255,255,255,.08);border-radius:10px;transition:.15s}
+.dash-search-box:focus-within{border-color:rgba(255,107,44,.48);box-shadow:0 0 0 3px rgba(255,107,44,.07)}
+.dash-search-box .ui-icon{width:15px;height:15px;color:#626e7c;stroke-width:1.9;flex:none}
+.dash-search-box input{width:100%;min-width:0;border:0!important;outline:none!important;background:transparent!important;color:#eef2f6!important;font:500 12px 'DM Sans',sans-serif!important;padding:0!important;margin:0!important;box-shadow:none!important}
+.dash-search-box input::placeholder{color:#586473}
+.dash-option-list{max-height:236px;overflow-y:auto;padding:3px 3px 2px 0;scrollbar-width:thin;scrollbar-color:#303944 transparent}
+.dash-option-list::-webkit-scrollbar{width:6px}.dash-option-list::-webkit-scrollbar-thumb{background:#303944;border-radius:10px}
+.dash-option{
+  min-height:36px;box-sizing:border-box;display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;gap:9px;
+  padding:6px 9px;border-radius:9px;color:#b7c0ca;font-size:12px;cursor:pointer;transition:background .13s,color .13s;
+}
+.dash-option:hover{background:rgba(255,255,255,.045);color:#f4f6f8}
+.dash-option-all{margin-bottom:5px;border-bottom:1px solid rgba(255,255,255,.065);border-radius:9px 9px 4px 4px;padding-bottom:9px;color:#d6dde5;font-weight:650}
+.dash-option-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25}
+.dash-option input[type="checkbox"]{
+  appearance:none;-webkit-appearance:none;width:16px;height:16px;margin:0;border-radius:5px;border:1px solid #46515e;background:#0c1117;display:grid;place-content:center;cursor:pointer;transition:.13s;
+}
+.dash-option input[type="checkbox"]::after{content:'';width:7px;height:4px;border-left:1.8px solid #fff;border-bottom:1.8px solid #fff;transform:rotate(-45deg) scale(0);margin-top:-1px;transition:transform .11s}
+.dash-option input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}
+.dash-option input[type="checkbox"]:checked::after{transform:rotate(-45deg) scale(1)}
+.dash-option input[type="checkbox"]:indeterminate{background:rgba(255,107,44,.2);border-color:rgba(255,107,44,.7)}
+.dash-option input[type="checkbox"]:indeterminate::after{width:7px;height:0;border:0;border-top:1.8px solid #ffb18e;transform:none}
+
+.dash-toolbar-divider{width:1px;height:44px;background:rgba(255,255,255,.07);margin:0 2px 0 0;align-self:flex-end}
+.dash-period-control{flex:0 0 auto}
+.dashboard-toolbar .tab-group{height:44px;padding:3px;border:1px solid rgba(255,255,255,.08);background:#0f151c;border-radius:11px;box-sizing:border-box;display:flex}
+.dashboard-toolbar .tab-btn{height:36px;padding:0 12px;border-radius:8px;font-size:11px;color:#778493;border:0;background:transparent}
+.dashboard-toolbar .tab-btn.active{background:#1b232d;color:#f3f6f8;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07)}
+.dashboard-toolbar .dash-date-range{align-items:flex-end;gap:6px;height:44px}
+.dashboard-toolbar .dash-date-range input{height:44px;padding:0 9px!important;font-size:11px!important;width:132px!important}
+.dashboard-toolbar .dash-date-range span{font-size:10px;color:#687584;align-self:center}
+.dash-import-btn{height:44px;align-self:flex-end;display:flex!important;align-items:center;gap:8px;padding:0 15px!important;white-space:nowrap}
+.dash-import-btn .ui-icon{width:16px;height:16px;stroke-width:2}
+
+@media(max-width:1250px){
+  .dash-filter-control{flex:1 1 180px;max-width:none}
+  .dash-toolbar-divider{display:none}
+}
+@media(max-width:900px){
+  .dashboard-toolbar{padding:12px;gap:9px}
+  .dash-filter-control,.dash-native-control{flex:1 1 calc(50% - 5px);max-width:none}
+  .dash-dropdown{width:min(360px,calc(100vw - 48px))}
+  .dash-period-control{flex:1 1 100%}
+  .dashboard-toolbar .tab-group{width:100%}.dashboard-toolbar .tab-btn{flex:1}
+  .dash-import-btn{flex:1 1 100%;justify-content:center}
+}
+@media(max-width:560px){
+  .dash-filter-control,.dash-native-control{flex:1 1 100%}
+  .dash-dropdown,.dash-dropdown-compact{width:100%;max-width:100%;left:0;right:0}
+  .dashboard-toolbar .dash-date-range{width:100%;height:auto;flex-wrap:wrap}
+  .dashboard-toolbar .dash-date-range input{width:calc(50% - 16px)!important;flex:1}
+}
+
+</style>
+
 </head>
 <body>
 
 <!-- ══ LOADING OVERLAY ══ -->
 <div id="ignis-loading" style="position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="font-size:48px">🔥</div>
+  <div class="login-brand-mark"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5c.4 3-1.2 4.5-2.5 5.9-1.3 1.4-2.4 2.7-1.8 5 .8-1.1 1.8-1.9 3-2.6-.2 2.6 1.3 3.9 2.1 5 .6.8 1 1.5.9 2.5 2.1-1.2 3.3-3.3 3.3-5.7 0-3.9-2.4-7.5-5-10.1Z"/><path d="M8.3 8.1c-2.1 2.1-3.5 4.5-3.5 7.1A7.2 7.2 0 0 0 12 22c3.9 0 7.1-2.8 7.2-6.5"/></svg></div>
   <div style="font-size:20px;font-weight:800;letter-spacing:3px;color:var(--text)">IGNIS</div>
   <div style="font-size:12px;color:var(--text3);letter-spacing:1px">Carregando...</div>
   <div style="width:200px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:8px">
@@ -701,7 +933,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
 <div id="login-screen">
   <div class="login-card">
     <div class="login-hero">
-      <span class="login-flame">🔥</span>
+      <span class="login-flame"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5c.4 3-1.2 4.5-2.5 5.9-1.3 1.4-2.4 2.7-1.8 5 .8-1.1 1.8-1.9 3-2.6-.2 2.6 1.3 3.9 2.1 5 .6.8 1 1.5.9 2.5 2.1-1.2 3.3-3.3 3.3-5.7 0-3.9-2.4-7.5-5-10.1Z"/><path d="M8.3 8.1c-2.1 2.1-3.5 4.5-3.5 7.1A7.2 7.2 0 0 0 12 22c3.9 0 7.1-2.8 7.2-6.5"/></svg></span>
       <div class="login-brand">IGNIS</div>
       <div class="login-tagline">Gestão Inteligente de Frotas</div>
     </div>
@@ -740,31 +972,38 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
 <!-- MOBILE TOPBAR -->
 <div class="mob-topbar">
   <div class="mob-logo">
-    <div class="mob-logo-icon">🔥</div>
+    <div class="mob-logo-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5c.4 3-1.2 4.5-2.5 5.9-1.3 1.4-2.4 2.7-1.8 5 .8-1.1 1.8-1.9 3-2.6-.2 2.6 1.3 3.9 2.1 5 .6.8 1 1.5.9 2.5 2.1-1.2 3.3-3.3 3.3-5.7 0-3.9-2.4-7.5-5-10.1Z"/><path d="M8.3 8.1c-2.1 2.1-3.5 4.5-3.5 7.1A7.2 7.2 0 0 0 12 22c3.9 0 7.1-2.8 7.2-6.5"/></svg></div>
     <div class="mob-logo-text">Ignis</div>
   </div>
-  <button class="mob-hamburger" onclick="toggleSidebar()">☰</button>
+  <button class="mob-hamburger" onclick="toggleSidebar()" aria-label="Abrir menu"><span></span><span></span><span></span></button>
 </div>
 <!-- SIDEBAR OVERLAY -->
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <aside class="sidebar" id="sidebar">
   <div class="logo">
-    <div class="logo-icon">🔥</div>
+    <div class="logo-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5c.4 3-1.2 4.5-2.5 5.9-1.3 1.4-2.4 2.7-1.8 5 .8-1.1 1.8-1.9 3-2.6-.2 2.6 1.3 3.9 2.1 5 .6.8 1 1.5.9 2.5 2.1-1.2 3.3-3.3 3.3-5.7 0-3.9-2.4-7.5-5-10.1Z"/><path d="M8.3 8.1c-2.1 2.1-3.5 4.5-3.5 7.1A7.2 7.2 0 0 0 12 22c3.9 0 7.1-2.8 7.2-6.5"/></svg></div>
     <div><div class="logo-text">Ignis</div><div class="logo-sub">Gestão Inteligente de Frotas</div></div>
   </div>
   <nav class="nav">
-    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">⊞</span><span class="nav-label">Dashboard</span></div>
-    <div class="nav-item" onclick="showPage('comparativo',this)"><span class="icon">📊</span><span class="nav-label">Comparativo</span></div>
-    <div class="nav-item" onclick="showPage('abastecimentos',this)"><span class="icon">⛽</span><span class="nav-label">Abastecimentos</span></div>
-    <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon">🚜</span><span class="nav-label">Máquinas</span></div>
-    <div class="nav-item" id="nav-relatorio" onclick="showPage('relatorio',this)"><span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">📧</span><span id="rel-reincidencia-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">Relatório</span></div>
-    <div class="nav-item" id="nav-excluir" onclick="showPage('excluir',this)"><span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">🗑️</span><span id="excluir-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span></span><span class="nav-label">A Excluir</span></div>
-    <div class="nav-item" id="nav-arla" onclick="showPage('arla',this)"><span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">🧪</span><span id="arla-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span><span id="arla-lembrete-badge" style="display:none;background:var(--yellow);color:#000;font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;position:absolute;top:-4px;right:-4px">⏰</span></span><span class="nav-label">Controle Arla</span></div>
-    <div class="nav-item" id="nav-kmcomp" onclick="showPage('kmcomp',this)"><span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">📏</span><span id="kmcomp-nav-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">KM Comparativo</span></div>
-    <div class="nav-item" id="nav-metarota" onclick="showPage('metarota',this)"><span class="icon">🎯</span><span class="nav-label">Meta por Rota</span></div>
-    <div class="nav-item" onclick="showPage('recon',this)"><span class="icon">🔍</span><span class="nav-label">O2P × Ticket</span></div>
-    <div class="nav-item" onclick="showPage('config',this)"><span class="icon">⚙️</span><span class="nav-label">Configurações</span></div>
+    <div class="nav-section-label">Visão geral</div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="nav-label">Dashboard</span></div>
+    <div class="nav-item" onclick="showPage('comparativo',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span><span class="nav-label">Comparativo</span></div>
+
+    <div class="nav-section-label">Operação</div>
+    <div class="nav-item" onclick="showPage('abastecimentos',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg></span><span class="nav-label">Abastecimentos</span></div>
+    <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></span><span class="nav-label">Máquinas</span></div>
+
+    <div class="nav-section-label">Inteligência</div>
+    <div class="nav-item" id="nav-relatorio" onclick="showPage('relatorio',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span><span id="rel-reincidencia-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">Relatório</span></div>
+    <div class="nav-item" id="nav-excluir" onclick="showPage('excluir',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/><path d="M10 11v6M14 11v6"/></svg></span><span id="excluir-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span></span><span class="nav-label">A Excluir</span></div>
+    <div class="nav-item" id="nav-arla" onclick="showPage('arla',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg></span><span id="arla-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span><span id="arla-lembrete-badge" style="display:none" class="nav-mini-alert">!</span></span><span class="nav-label">Controle Arla</span></div>
+    <div class="nav-item" id="nav-kmcomp" onclick="showPage('kmcomp',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 17 17 4l3 3L7 20H4z"/><path d="m14 7 3 3"/><path d="M8 16l2 2"/></svg></span><span id="kmcomp-nav-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">KM Comparativo</span></div>
+    <div class="nav-item" id="nav-metarota" onclick="showPage('metarota',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg></span><span class="nav-label">Meta por Rota</span></div>
+    <div class="nav-item" onclick="showPage('recon',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M7 7h10"/><path d="m14 4 3 3-3 3"/><path d="M17 17H7"/><path d="m10 20-3-3 3-3"/></svg></span><span class="nav-label">O2P × Ticket</span></div>
+
+    <div class="nav-section-label">Sistema</div>
+    <div class="nav-item" onclick="showPage('config',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span><span class="nav-label">Configurações</span></div>
   </nav>
   <div class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebarCollapse()" title="Recolher">&#8249;</div>
   <div class="user-info" id="sidebar-user-info">
@@ -794,28 +1033,28 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
       <span class="mob-icon">⊞</span>Dashboard
     </div>
     <div class="mob-nav-item" id="mob-nav-comparativo" onclick="showPage('comparativo',this);updateMobNav('comparativo')">
-      <span class="mob-icon">📊</span>Comparativo
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span>Comparativo
     </div>
     <div class="mob-nav-item" id="mob-nav-abastecimentos" onclick="showPage('abastecimentos',this);updateMobNav('abastecimentos')">
-      <span class="mob-icon">⛽</span>Abastec.
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg></span>Abastec.
     </div>
     <div class="mob-nav-item" id="mob-nav-maquinas" onclick="showPage('maquinas',this);updateMobNav('maquinas')">
-      <span class="mob-icon">🚜</span>Máquinas
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></span>Máquinas
     </div>
     <div class="mob-nav-item" id="mob-nav-relatorio" onclick="showPage('relatorio',this);updateMobNav('relatorio')">
-      <span class="mob-icon">📧</span>Relatório
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span>Relatório
     </div>
     <div class="mob-nav-item" id="mob-nav-excluir" onclick="showPage('excluir',this);updateMobNav('excluir')">
-      <span class="mob-icon">🗑️</span>A Excluir
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/><path d="M10 11v6M14 11v6"/></svg></span>A Excluir
     </div>
     <div class="mob-nav-item" id="mob-nav-arla" onclick="showPage('arla',this);updateMobNav('arla')">
-      <span class="mob-icon">🧪</span>Arla
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg></span>Arla
     </div>
     <div class="mob-nav-item" id="mob-nav-kmcomp" onclick="showPage('kmcomp',this);updateMobNav('kmcomp')">
-      <span class="mob-icon">📏</span>KM
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 17 17 4l3 3L7 20H4z"/><path d="m14 7 3 3"/><path d="M8 16l2 2"/></svg></span>KM
     </div>
     <div class="mob-nav-item" id="mob-nav-config" onclick="showPage('config',this);updateMobNav('config')">
-      <span class="mob-icon">⚙️</span>Config
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span>Config
     </div>
   </div>
 </nav>
@@ -824,76 +1063,146 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
 
   <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
-    <div class="page-header">
-      <div class="page-header-title"><div class="page-title">Painel de Consumo</div><div class="page-sub">Visão geral do consumo de combustível</div></div>
-      <div class="header-actions">
-        <!-- Multi-select operações -->
-        <div style="position:relative" id="op-dropdown-wrap">
-          <button class="filter-select" id="op-dropdown-btn" onclick="toggleOpDropdown()" style="cursor:pointer;text-align:left;min-width:180px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span id="op-dropdown-label">Todas as Operações</span>
-            <span style="font-size:10px">▼</span>
-          </button>
-          <div id="op-dropdown-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:260px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:320px;overflow-y:auto">
-            <input type="text" id="op-search" placeholder="🔍 Buscar operação..." oninput="filtrarOpsDropdown()" style="width:100%;box-sizing:border-box;padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:12px;margin-bottom:6px;outline:none">
-            <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">
-              <input type="checkbox" id="op-all-check" checked onchange="toggleAllOps(this)"> Todas as Operações
-            </label>
-            <div id="op-checkboxes"></div>
+    <div class="page-header dashboard-page-header">
+      <div class="page-header-title">
+        <div class="page-title">Painel de Consumo</div>
+        <div class="page-sub">Visão geral do consumo de combustível</div>
+      </div>
+    </div>
+
+    <div class="dashboard-toolbar" aria-label="Filtros do painel">
+      <!-- Operação -->
+      <div class="dash-filter-control" id="op-dropdown-wrap">
+        <span class="dash-filter-caption">Operação</span>
+        <button class="dash-filter-trigger" id="op-dropdown-btn" onclick="toggleOpDropdown()" type="button" aria-haspopup="true">
+          <span class="dash-filter-trigger-icon" aria-hidden="true">
+            <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 21V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v15"/><path d="M8 8h2M14 8h2M8 12h2M14 12h2M8 16h2M14 16h2"/><path d="M2 21h20"/></svg>
+          </span>
+          <span class="dash-filter-value" id="op-dropdown-label">Todas as Operações</span>
+          <svg class="dash-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </button>
+        <div id="op-dropdown-menu" class="dash-dropdown" style="display:none">
+          <div class="dash-dropdown-heading">
+            <div>
+              <div class="dash-dropdown-title">Operações</div>
+              <div class="dash-dropdown-subtitle">Selecione uma ou mais filiais</div>
+            </div>
           </div>
+          <label class="dash-search-box">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="text" id="op-search" placeholder="Buscar operação" oninput="filtrarOpsDropdown()" autocomplete="off">
+          </label>
+          <label class="dash-option dash-option-all">
+            <input type="checkbox" id="op-all-check" checked onchange="toggleAllOps(this)">
+            <span class="dash-option-text">Todas as operações</span>
+          </label>
+          <div id="op-checkboxes" class="dash-option-list"></div>
         </div>
-        <!-- Filtro por Placa -->
-        <div style="position:relative" id="placa-dropdown-wrap">
-          <button class="filter-select" id="placa-dropdown-btn" onclick="togglePlacaDropdown()" style="cursor:pointer;text-align:left;min-width:160px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span id="placa-dropdown-label">Todas as Placas</span>
-            <span style="font-size:10px">▼</span>
-          </button>
-          <div id="placa-dropdown-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:220px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:320px;overflow-y:auto">
-            <input type="text" id="placa-search" placeholder="🔍 Buscar placa..." oninput="filtrarPlacasDropdown()" style="width:100%;box-sizing:border-box;padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text1);font-size:12px;margin-bottom:6px;outline:none">
-            <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">
-              <input type="checkbox" id="placa-all-check" checked onchange="toggleAllPlacas(this)"> Todas as Placas
-            </label>
-            <div id="placa-checkboxes"></div>
+      </div>
+
+      <!-- Placa -->
+      <div class="dash-filter-control" id="placa-dropdown-wrap">
+        <span class="dash-filter-caption">Placa</span>
+        <button class="dash-filter-trigger" id="placa-dropdown-btn" onclick="togglePlacaDropdown()" type="button" aria-haspopup="true">
+          <span class="dash-filter-trigger-icon" aria-hidden="true">
+            <svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 17h14l2-5-2-5H5l-2 5 2 5Z"/><path d="M7 17v2M17 17v2"/><circle cx="7.5" cy="12" r="1"/><circle cx="16.5" cy="12" r="1"/></svg>
+          </span>
+          <span class="dash-filter-value" id="placa-dropdown-label">Todas as Placas</span>
+          <svg class="dash-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </button>
+        <div id="placa-dropdown-menu" class="dash-dropdown dash-dropdown-compact" style="display:none">
+          <div class="dash-dropdown-heading">
+            <div>
+              <div class="dash-dropdown-title">Placas</div>
+              <div class="dash-dropdown-subtitle">Filtre uma ou mais placas</div>
+            </div>
           </div>
+          <label class="dash-search-box">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="text" id="placa-search" placeholder="Buscar placa" oninput="filtrarPlacasDropdown()" autocomplete="off">
+          </label>
+          <label class="dash-option dash-option-all">
+            <input type="checkbox" id="placa-all-check" checked onchange="toggleAllPlacas(this)">
+            <span class="dash-option-text">Todas as placas</span>
+          </label>
+          <div id="placa-checkboxes" class="dash-option-list"></div>
         </div>
-        <select class="filter-select" id="dash-maq-filter" onchange="updateFilters();populatePlacaDropdown();populateModeloDropdown();renderDashboard()"><option value="">Selecione o tipo...</option></select>
-        <!-- Multi-select modelos -->
-        <div style="position:relative" id="modelo-dropdown-wrap">
-          <button class="filter-select" id="modelo-dropdown-btn" onclick="toggleModeloDropdown()" style="cursor:pointer;text-align:left;min-width:170px;display:none;align-items:center;justify-content:space-between;gap:8px">
-            <span id="modelo-dropdown-label">Todos os Modelos</span>
-            <span style="font-size:10px">▼</span>
-          </button>
-          <div id="modelo-dropdown-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:340px;overflow-y:auto">
-            <input type="text" id="modelo-search" placeholder="🔍 Buscar modelo..." oninput="filtrarModelosDropdown()" style="width:100%;box-sizing:border-box;padding:6px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:12px;margin-bottom:6px;outline:none">
-            <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">
-              <input type="checkbox" id="modelo-all-check" checked onchange="toggleAllModelos(this)"> Todos os Modelos
-            </label>
-            <div id="modelo-checkboxes"></div>
+      </div>
+
+      <!-- Tipo -->
+      <div class="dash-filter-control dash-native-control">
+        <span class="dash-filter-caption">Tipo de veículo</span>
+        <div class="dash-select-shell">
+          <span class="dash-filter-trigger-icon" aria-hidden="true">
+            <svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 16h18"/><path d="M5 16l1-6h12l1 6"/><path d="M8 10V7h8v3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+          </span>
+          <select id="dash-maq-filter" onchange="updateFilters();populatePlacaDropdown();populateModeloDropdown();renderDashboard()"><option value="">Todos os tipos</option></select>
+          <svg class="dash-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </div>
+      </div>
+
+      <!-- Modelo -->
+      <div class="dash-filter-control" id="modelo-dropdown-wrap" style="display:none">
+        <span class="dash-filter-caption">Modelo</span>
+        <button class="dash-filter-trigger" id="modelo-dropdown-btn" onclick="toggleModeloDropdown()" type="button" aria-haspopup="true">
+          <span class="dash-filter-trigger-icon" aria-hidden="true">
+            <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M8 10h8M8 14h5"/></svg>
+          </span>
+          <span class="dash-filter-value" id="modelo-dropdown-label">Todos os Modelos</span>
+          <svg class="dash-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </button>
+        <div id="modelo-dropdown-menu" class="dash-dropdown" style="display:none">
+          <div class="dash-dropdown-heading">
+            <div>
+              <div class="dash-dropdown-title">Modelos</div>
+              <div class="dash-dropdown-subtitle">Refine o painel por modelo</div>
+            </div>
           </div>
+          <label class="dash-search-box">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input type="text" id="modelo-search" placeholder="Buscar modelo" oninput="filtrarModelosDropdown()" autocomplete="off">
+          </label>
+          <label class="dash-option dash-option-all">
+            <input type="checkbox" id="modelo-all-check" checked onchange="toggleAllModelos(this)">
+            <span class="dash-option-text">Todos os modelos</span>
+          </label>
+          <div id="modelo-checkboxes" class="dash-option-list"></div>
         </div>
+      </div>
+
+      <div class="dash-toolbar-divider" aria-hidden="true"></div>
+
+      <div class="dash-period-control">
+        <span class="dash-filter-caption">Período</span>
         <div class="tab-group">
           <button class="tab-btn active" id="tab-semanal" onclick="setTab('semanal')">Semanal</button>
           <button class="tab-btn" id="tab-mensal" onclick="setTab('mensal')">Mensal</button>
           <button class="tab-btn" id="tab-custom" onclick="setTab('custom')">Período</button>
         </div>
-        <div id="dash-date-range" style="display:none;align-items:center;gap:6px">
-          <input type="date" class="form-input" id="dash-data-ini" style="padding:6px 10px;font-size:13px;width:140px" onchange="renderDashboard()">
-          <span style="color:var(--text2);font-size:12px">até</span>
-          <input type="date" class="form-input" id="dash-data-fim" style="padding:6px 10px;font-size:13px;width:140px" onchange="renderDashboard()">
-        </div>
-        <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar</button>
       </div>
+
+      <div id="dash-date-range" class="dash-date-range" style="display:none">
+        <input type="date" class="form-input" id="dash-data-ini" onchange="renderDashboard()">
+        <span>até</span>
+        <input type="date" class="form-input" id="dash-data-fim" onchange="renderDashboard()">
+      </div>
+
+      <button class="btn btn-primary dash-import-btn" onclick="verificarSenha(openImport)">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 14v5h14v-5"/></svg>
+        Importar dados
+      </button>
     </div>
     <!-- Banner reincidência Dashboard -->
     <div id="dash-reincidencia-banner" style="display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);border-radius:12px;padding:14px 18px;margin-bottom:16px;cursor:pointer" onclick="showPage('relatorio',document.querySelector('.nav-item:nth-child(5)'))">
     </div>
 
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Veículos Ativos</div><div class="kpi-icon">🚗</div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
-      <div class="kpi-card"><div class="kpi-label" id="kpi-horas-label">Horas Trabalhadas</div><div class="kpi-icon" id="kpi-horas-icon">⏱️</div><div><span class="kpi-value" id="kpi-horas">0</span><span class="kpi-unit" id="kpi-horas-unit">h</span></div></div>
-      <div class="kpi-card"><div class="kpi-label">Total de Litros</div><div class="kpi-icon">🛢️</div><div><span class="kpi-value" id="kpi-litros">0</span><span class="kpi-unit">L</span></div><div class="kpi-delta" id="kpi-litros-delta"></div></div>
-      <div class="kpi-card"><div class="kpi-label" id="kpi-meta-label">Meta Ideal L/H</div><div class="kpi-icon">🎯</div><div><span class="kpi-value" id="kpi-meta-ideal">—</span><span class="kpi-unit" id="kpi-meta-unit"></span></div><div id="kpi-meta-sub" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
-      <div class="kpi-card"><div class="kpi-label" id="kpi-media-label">Média Realizada</div><div class="kpi-icon">📊</div><div><span class="kpi-value" id="kpi-media">0</span><span class="kpi-unit" id="kpi-media-unit">L/h</span></div><div class="kpi-delta" id="kpi-media-delta"></div><div id="kpi-media-meta" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
-      <div class="kpi-card"><div class="kpi-label">Eficiência Geral</div><div class="kpi-icon">⚡</div><div><span class="kpi-value" id="kpi-eficiencia">—</span><span class="kpi-unit">%</span></div><div id="kpi-efic-sub" style="font-size:11px;margin-top:4px"></div></div>
+      <div class="kpi-card"><div class="kpi-label">Veículos Ativos</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 14l2-6h14l2 6v5h-2v-2H5v2H3z"/><circle cx="7" cy="14" r="1"/><circle cx="17" cy="14" r="1"/></svg></div><div><span class="kpi-value" id="kpi-maquinas">0</span></div><div class="kpi-delta" id="kpi-maq-delta"></div></div>
+      <div class="kpi-card"><div class="kpi-label" id="kpi-horas-label">Horas Trabalhadas</div><div class="kpi-icon" id="kpi-horas-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><span class="kpi-value" id="kpi-horas">0</span><span class="kpi-unit" id="kpi-horas-unit">h</span></div></div>
+      <div class="kpi-card"><div class="kpi-label">Total de Litros</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 2s6 6.2 6 12a6 6 0 0 1-12 0c0-5.8 6-12 6-12Z"/></svg></div><div><span class="kpi-value" id="kpi-litros">0</span><span class="kpi-unit">L</span></div><div class="kpi-delta" id="kpi-litros-delta"></div></div>
+      <div class="kpi-card"><div class="kpi-label" id="kpi-meta-label">Meta Ideal L/H</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg></div><div><span class="kpi-value" id="kpi-meta-ideal">—</span><span class="kpi-unit" id="kpi-meta-unit"></span></div><div id="kpi-meta-sub" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
+      <div class="kpi-card"><div class="kpi-label" id="kpi-media-label">Média Realizada</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></div><div><span class="kpi-value" id="kpi-media">0</span><span class="kpi-unit" id="kpi-media-unit">L/h</span></div><div class="kpi-delta" id="kpi-media-delta"></div><div id="kpi-media-meta" style="font-size:11px;color:var(--text3);margin-top:4px"></div></div>
+      <div class="kpi-card"><div class="kpi-label">Eficiência Geral</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><div><span class="kpi-value" id="kpi-eficiencia">—</span><span class="kpi-unit">%</span></div><div id="kpi-efic-sub" style="font-size:11px;margin-top:4px"></div></div>
     </div>
     <!-- Consumo por Operação (linha 1, largura total) -->
     <div class="chart-card" style="margin-bottom:16px;height:280px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
@@ -1009,13 +1318,13 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
     <div class="page-header">
       <div><div class="page-title">Abastecimentos</div><div class="page-sub">Registre e gerencie os abastecimentos</div></div>
       <div class="header-actions">
-        <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar</button>
+        <button class="btn btn-secondary" onclick="verificarSenha(openImport)">Importar dados</button>
         <button class="btn btn-primary" onclick="verificarSenha(openNovoAbast)">+ Novo Registro</button>
       </div>
     </div>
     <div class="filters">
       <select class="filter-select" id="abast-op-filter" onchange="renderAbastecimentos()" style="flex:1;min-width:130px"><option value="">Todas as Operações</option></select>
-      <input type="text" class="filter-input" id="abast-placa-busca" placeholder="🔍 Buscar placa..." oninput="scheduleRenderAbastecimentos()" style="flex:1;min-width:130px">
+      <input type="text" class="filter-input" id="abast-placa-busca" placeholder="Buscar placa..." oninput="scheduleRenderAbastecimentos()" style="flex:1;min-width:130px">
       <select class="filter-select" id="abast-periodo-filter" onchange="renderAbastecimentos()" style="flex:1;min-width:160px"><option value="">Todos os Períodos</option></select>
       <input type="date" class="filter-input" id="abast-data-ini" onchange="renderAbastecimentos()" style="flex:1;min-width:130px">
       <input type="date" class="filter-input" id="abast-data-fim" onchange="renderAbastecimentos()" style="flex:1;min-width:130px">
@@ -1041,7 +1350,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
     <div class="page-header">
       <div><div class="page-title">Máquinas</div><div class="page-sub">Gerencie o cadastro de máquinas</div></div>
       <div class="header-actions">
-        <input type="text" class="filter-input" id="maq-busca" placeholder="🔍 Buscar placa ou modelo..." oninput="scheduleRenderMaquinas()" style="min-width:180px">
+        <input type="text" class="filter-input" id="maq-busca" placeholder="Buscar placa ou modelo..." oninput="scheduleRenderMaquinas()" style="min-width:180px">
         <select class="filter-select" id="maq-op-filter" onchange="renderMaquinas()"><option value="">Todas as Operações</option></select>
         <button class="btn btn-ghost" onclick="corrigirOperacoesDesatualizadas()" title="Atualiza a operação de cada placa usando o abastecimento mais recente já importado, sem precisar reimportar nada">🔄 Corrigir Operações</button>
         <button class="btn btn-primary" onclick="verificarSenha(openNovaMaquina)">+ Nova Máquina</button>
@@ -1209,7 +1518,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
         </div>
         <div class="form-group">
           <label class="form-label">Operações deste grupo</label>
-          <input type="text" class="form-input" id="relg-ops-busca" placeholder="🔍 Buscar operação..." oninput="relgFiltrarOps()" style="margin-bottom:8px;font-size:13px">
+          <input type="text" class="form-input" id="relg-ops-busca" placeholder="Buscar operação..." oninput="relgFiltrarOps()" style="margin-bottom:8px;font-size:13px">
           <div id="relg-ops-container" style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
             <div style="font-size:12px;color:var(--text3)">Importe um período primeiro para ver as operações disponíveis</div>
           </div>
@@ -1386,7 +1695,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
               <span style="font-size:10px">▼</span>
             </button>
             <div id="arla-op-dropdown-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:260px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4);max-height:320px;overflow:hidden;flex-direction:column">
-              <input type="text" placeholder="🔍 Buscar operação..." oninput="arlaFiltrarDropdownOps(this.value)" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:7px;font-size:12px;font-family:\'DM Sans\',sans-serif;outline:none;margin-bottom:6px;box-sizing:border-box">
+              <input type="text" placeholder="Buscar operação..." oninput="arlaFiltrarDropdownOps(this.value)" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:7px;font-size:12px;font-family:\'DM Sans\',sans-serif;outline:none;margin-bottom:6px;box-sizing:border-box">
               <div style="overflow-y:auto;flex:1">
               <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);margin-bottom:4px">
                 <input type="checkbox" id="arla-op-all-check" checked onchange="arlaToggleAllOps(this)" style="accent-color:var(--accent)"> Todas as Operações
@@ -1481,7 +1790,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
         </div>
         <div class="form-group">
           <label class="form-label">Operações incluídas neste grupo</label>
-          <input type="text" class="form-input" id="arla-grupo-ops-busca" placeholder="🔍 Buscar operação..." oninput="arlaFiltrarOpsGrupo()" style="margin-bottom:8px;font-size:13px">
+          <input type="text" class="form-input" id="arla-grupo-ops-busca" placeholder="Buscar operação..." oninput="arlaFiltrarOpsGrupo()" style="margin-bottom:8px;font-size:13px">
           <div id="arla-grupo-ops" style="background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;max-height:220px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px">
             <div style="font-size:12px;color:var(--text3)">Carregue um relatório primeiro para ver as operações disponíveis</div>
           </div>
@@ -1521,16 +1830,16 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
 <div id="page-kmcomp" class="page">
   <div class="page-header">
     <div class="page-header-title">
-      <div class="page-title">📏 KM Comparativo</div>
+      <div class="page-title">KM Comparativo</div>
       <div class="page-sub">Cruza o KM produtivo do cliente com o KM do nosso sistema</div>
     </div>
     <div class="header-actions">
-      <button class="btn btn-secondary btn-sm" onclick="kmReset()">🔄 Novo Comparativo</button>
-      <button class="btn btn-primary btn-sm" onclick="kmAbrirComparativoMensal()" title="Carregar vários meses e gerar um único Excel com Dashboard, Consolidado e uma aba por mês">📚 Comparativo Mensal</button>
+      <button class="btn btn-secondary btn-sm" onclick="kmReset()">Novo comparativo</button>
+      <button class="btn btn-primary btn-sm" onclick="kmAbrirComparativoMensal()" title="Carregar vários meses e gerar um único Excel com Dashboard, Consolidado e uma aba por mês">Comparativo mensal</button>
       <button class="btn btn-secondary btn-sm" id="btn-km-morto" onclick="kmExportarKmMorto()" disabled title="Gera um relatório de um único mês com o KM improdutivo total, incluindo placas sem correspondência e destaque das placas em excesso">🛣️ Comparativo KM Improdutivo</button>
       <button class="btn btn-secondary btn-sm" id="btn-km-export" style="display:none" onclick="kmExportarExcel()">⬇️ Exportar Excel</button>
-      <button class="btn btn-primary btn-sm" id="btn-km-email" style="display:none" onclick="kmCopiarEmail()">📧 Copiar E-mail de Alerta</button>
-      <button class="btn btn-secondary btn-sm" id="btn-km-email-comp" style="display:none" onclick="kmAbrirComparativoDuplo()" title="Gerar e-mail comparando dois períodos lado a lado">📧 Comparar 2 Períodos</button>
+      <button class="btn btn-primary btn-sm" id="btn-km-email" style="display:none" onclick="kmCopiarEmail()">Copiar e-mail de alerta</button>
+      <button class="btn btn-secondary btn-sm" id="btn-km-email-comp" style="display:none" onclick="kmAbrirComparativoDuplo()" title="Gerar e-mail comparando dois períodos lado a lado">Comparar 2 períodos</button>
     </div>
   </div>
 
@@ -1635,7 +1944,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
 <div id="page-recon" class="page">
   <div class="page-header">
     <div class="page-header-title">
-      <div class="page-title">🔍 Reconciliação O2P × Ticket Log [v1]</div>
+      <div class="page-title">Reconciliação O2P × Ticket Log</div>
       <div class="page-sub">Compare abastecimentos e identifique divergências entre os sistemas</div>
     </div>
   </div>
@@ -1661,7 +1970,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
       </div>
     </div>
     <div style="margin-top:20px">
-      <button class="btn btn-primary" id="rc-btn-comparar" onclick="rcComparar()" disabled>🔍 Comparar arquivos</button>
+      <button class="btn btn-primary" id="rc-btn-comparar" onclick="rcComparar()" disabled>Comparar arquivos</button>
     </div>
   </div>
   <div id="rc-resultado" style="display:none">
@@ -1675,7 +1984,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;flex-wrap:wrap;gap:8px">
         <span id="rc-tab-titulo" style="font-size:14px;font-weight:600"></span>
         <div style="display:flex;gap:8px">
-          <input type="text" class="form-input" id="rc-busca" placeholder="🔍 Filtrar por placa..." oninput="rcFiltrar()" style="width:190px;padding:7px 12px">
+          <input type="text" class="form-input" id="rc-busca" placeholder="Filtrar por placa..." oninput="rcFiltrar()" style="width:190px;padding:7px 12px">
           <button class="btn btn-secondary btn-sm" onclick="rcExportar()">⬇️ Exportar Excel</button>
         </div>
       </div>
@@ -1692,7 +2001,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
 <div id="page-metarota" class="page">
   <div class="page-header">
     <div class="page-header-title">
-      <div class="page-title">🎯 Meta por Rota</div>
+      <div class="page-title">Meta por Rota</div>
       <div class="page-sub">Configure metas ajustadas por modelo de veículo, operação e peso da carga</div>
     </div>
   </div>
@@ -3149,9 +3458,9 @@ function updateFilters(force=false) {
   if(cb){
     const selected=getSelectedOps(); // null = todas, Set = específicas
     cb.innerHTML=opsFiltradas.map(o=>`
-      <label style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px">
+      <label class="dash-option">
         <input type="checkbox" class="op-check" value="${o}" ${selected===null||selected.has(o)?'checked':''} onchange="onOpCheckChange()">
-        ${o.replace(/_/g,' ')}
+        <span class="dash-option-text">${o.replace(/_/g,' ')}</span>
       </label>`).join('');
     // Sincroniza o "Todas" checkbox
     const allCheck=document.getElementById('op-all-check');
@@ -3191,13 +3500,13 @@ function updateFilters(force=false) {
   ['dash-maq-filter'].forEach(id=>{
     const sel=document.getElementById(id); if(!sel) return;
     const val=sel.value;
-    sel.innerHTML='<option value="">Selecione o tipo...</option>' +
-      '<option value="__maquinas__">⚙️ MÁQUINAS</option>' +
-      '<option value="__tratores__">🚜 TRATORES</option>' +
-      '<option value="__pesada__">🚛 FROTA PESADA</option>' +
-      '<option value="__leve__">🚗 FROTA LEVE</option>' +
-      
-      '<option disabled style="color:var(--text3);font-size:11px">──────────────</option>' +
+    sel.innerHTML='<option value="">Todos os tipos</option>' +
+      '<option value="__maquinas__">Máquinas</option>' +
+      '<option value="__tratores__">Tratores</option>' +
+      '<option value="__pesada__">Frota pesada</option>' +
+      '<option value="__leve__">Frota leve</option>' +
+      '<option value="__empilhadeiras__">Empilhadeiras</option>' +
+      '<option disabled>──────────────</option>' +
       state.maquinas.map(m=>`<option value="${m.placa}">${m.placa}</option>`).join('');
     sel.value=val;
   });
@@ -3251,10 +3560,11 @@ function togglePlacaDropdown() {
 function populateModeloDropdown() {
   const btn  = document.getElementById('modelo-dropdown-btn');
   const cont = document.getElementById('modelo-checkboxes');
+  const wrap = document.getElementById('modelo-dropdown-wrap');
   if (!btn || !cont) return;
 
   const maqF = document.getElementById('dash-maq-filter')?.value || '';
-  if (!maqF) { btn.style.display = 'none'; return; }
+  if (!maqF) { btn.style.display = 'none'; if (wrap) wrap.style.display = 'none'; return; }
 
   const byTipo = state.abastecimentos.filter(a => {
     const ti = getTipoIgnis(a);
@@ -3285,14 +3595,15 @@ function populateModeloDropdown() {
     base.map(a => (getMaquina(a.placa)?.modelo || a.modelo || '').trim().toUpperCase()).filter(Boolean)
   )].sort();
 
-  if (modelos.length === 0) { btn.style.display = 'none'; cont.innerHTML = ''; return; }
+  if (modelos.length === 0) { btn.style.display = 'none'; if (wrap) wrap.style.display = 'none'; cont.innerHTML = ''; return; }
 
   const anterior = getSelectedModelos();
+  if (wrap) wrap.style.display = 'flex';
   btn.style.display = 'flex';
   cont.innerHTML = modelos.map(m =>
-    `<label class="modelo-check-label" style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px">
+    `<label class="dash-option modelo-check-label">
       <input type="checkbox" class="modelo-check" value="${m}" ${anterior===null||anterior.has(m)?'checked':''} onchange="onModeloCheckChange()">
-      ${m}
+      <span class="dash-option-text">${m}</span>
     </label>`
   ).join('');
 
@@ -3377,9 +3688,9 @@ function populatePlacaDropdown() {
   )].sort();
   const sel = getSelectedPlacas();
   cont.innerHTML = placas.map(p =>
-    `<label style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;font-size:12px" class="placa-check-label">
+    `<label class="dash-option placa-check-label">
       <input type="checkbox" class="placa-check" value="${p}" ${sel===null||sel.has(p)?'checked':''} onchange="onPlacaCheckChange()">
-      ${p}
+      <span class="dash-option-text">${p}</span>
     </label>`
   ).join('');
   sincPlacaAllCheck();
@@ -5903,7 +6214,7 @@ function renderRelEmailBloco(operacoes, relTipo) {
     '</div></div>' +
     dica +
     // Barra de busca
-    '<input type="text" id="rel-email-search" class="form-input" placeholder="🔍 Buscar operação..." oninput="relEmailFiltrar()" style="width:100%;box-sizing:border-box;margin-bottom:12px">' +
+    '<input type="text" id="rel-email-search" class="form-input" placeholder="Buscar operação..." oninput="relEmailFiltrar()" style="width:100%;box-sizing:border-box;margin-bottom:12px">' +
     '<div id="rel-email-lista">' +
     blocos.map((b, idx) =>
       '<div class="rel-email-item" data-label="' + b.label.toLowerCase() + '" style="margin-bottom:6px;border:1px solid var(--border);border-radius:8px;overflow:hidden">' +
@@ -10056,7 +10367,7 @@ function kmComparar() {
   html += '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">';
   html += '<div style="font-size:15px;font-weight:700">📊 Resultado por Placa</div>';
   html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
-  html += '<input type="text" class="filter-input" id="km-busca" placeholder="🔍 Buscar placa..." oninput="kmFiltrarTabela()" style="padding:6px 12px;font-size:13px;min-width:160px">';
+  html += '<input type="text" class="filter-input" id="km-busca" placeholder="Buscar placa..." oninput="kmFiltrarTabela()" style="padding:6px 12px;font-size:13px;min-width:160px">';
   // Filtro por operação
   html += '<select class="filter-select" id="km-filtro-op" onchange="kmFiltrarTabela()" style="font-size:13px">';
   html += '<option value="">Todas as Operações</option>';
