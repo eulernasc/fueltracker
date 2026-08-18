@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- IGNIS Stage 1 Performance — 18/08/2026 -->
-<meta name="ignis-build" content="2026-08-18-stage2-fleet-ui">
+<meta name="ignis-build" content="2026-08-18-stage2-polish-general">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -252,7 +252,7 @@ window.dispatchEvent(new Event('firebaseReady'));
 <style>
 :root {
   --bg:#0e0c0b;--bg2:#161210;--bg3:#1e1916;--border:rgba(220,80,30,.18);
-  --accent:#c0392b;--accent2:#d9621e;--green:#2a9d6a;--red:#c0392b;
+  --accent:#e95f32;--accent2:#f07b48;--green:#2a9d6a;--red:#e95f32;
   --yellow:#e8941a;--text:#f0ebe4;--text2:#9a8f85;--text3:#5e5550;
   --card-shadow:0 4px 24px rgba(0,0,0,0.5);--radius:14px;
 }
@@ -280,8 +280,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
   transition:left .3s cubic-bezier(.4,0,.2,1),background .2s,box-shadow .2s;
   color:var(--text3);box-shadow:3px 0 12px rgba(0,0,0,.3);
 }
-.sidebar-toggle::after{content:'';position:absolute;inset:0;border-radius:0 10px 10px 0;background:linear-gradient(to right,rgba(192,57,43,0),rgba(192,57,43,.06));opacity:0;transition:.2s;}
-.sidebar-toggle:hover{color:var(--accent);box-shadow:3px 0 18px rgba(192,57,43,.25);}
+.sidebar-toggle::after{content:'';position:absolute;inset:0;border-radius:0 10px 10px 0;background:linear-gradient(to right,rgba(233,95,50,0),rgba(233,95,50,.06));opacity:0;transition:.2s;}
+.sidebar-toggle:hover{color:var(--accent);box-shadow:3px 0 18px rgba(233,95,50,.25);}
 .sidebar-toggle:hover::after{opacity:1;}
 .sidebar.collapsed .sidebar-toggle{left:64px;}
 .logo{padding:24px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
@@ -291,7 +291,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .nav{padding:16px 12px;flex:1;overflow-y:auto;}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .2s;margin-bottom:4px;position:relative;}
 .nav-item:hover{background:var(--bg3);color:var(--text);}
-.nav-item.active{background:rgba(192,57,43,.15);color:var(--accent);border:1px solid rgba(192,57,43,.3);border-left:3px solid var(--accent);}
+.nav-item.active{background:rgba(233,95,50,.15);color:var(--accent);border:1px solid rgba(233,95,50,.3);border-left:3px solid var(--accent);}
 .nav-item .icon{font-size:18px;width:22px;text-align:center;}
 .sync-status{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;display:flex;align-items:center;gap:8px;}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);}
@@ -428,7 +428,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
 .kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;transition:all .2s;}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:.3s;border-radius:var(--radius) var(--radius) 0 0;}
-.kpi-card:hover::before{opacity:1;} .kpi-card:hover{box-shadow:0 4px 20px rgba(192,57,43,.1);transform:translateY(-1px);}
+.kpi-card:hover::before{opacity:1;} .kpi-card:hover{box-shadow:0 4px 20px rgba(233,95,50,.1);transform:translateY(-1px);}
 .kpi-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text2);margin-bottom:4px;}
 .kpi-icon{position:absolute;right:10px;top:10px;font-size:15px;opacity:.3;}
 .kpi-value{font-size:20px;font-weight:700;letter-spacing:-0.5px;color:var(--text);}
@@ -469,13 +469,13 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min
 .comp-diff.down{color:var(--red);}
 .comp-maq-table{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px;}
 .comp-maq-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:space-between;}
-.comp-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(192,57,43,.15);color:var(--accent);}
+.comp-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(233,95,50,.15);color:var(--accent);}
 /* BUTTONS */
 .btn{padding:9px 18px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s cubic-bezier(.4,0,.2,1);font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:7px;position:relative;overflow:hidden;}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 2px 10px rgba(192,57,43,.25);}
-.btn-primary:hover{background:linear-gradient(135deg,#d44235,var(--accent2));transform:translateY(-2px) scale(1.02);box-shadow:0 6px 20px rgba(192,57,43,.45);}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 2px 10px rgba(233,95,50,.25);}
+.btn-primary:hover{background:linear-gradient(135deg,#d44235,var(--accent2));transform:translateY(-2px) scale(1.02);box-shadow:0 6px 20px rgba(233,95,50,.45);}
 .btn-secondary{background:var(--bg2);border:1px solid var(--border);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.2);}
-.btn-secondary:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 12px rgba(192,57,43,.15);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 12px rgba(233,95,50,.15);}
 .btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);}
 .btn-danger:hover{background:rgba(239,68,68,.2);}
 .btn-sm{padding:6px 12px;font-size:12px;}
@@ -489,10 +489,10 @@ th{padding:11px 16px;text-align:left;font-size:11px;font-weight:600;letter-spaci
 th.col-check{width:40px;text-align:center;}
 td{padding:12px 16px;font-size:13px;border-bottom:1px solid rgba(42,47,69,.5);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(192,57,43,.04);transition:background .15s;}
+tr:hover td{background:rgba(233,95,50,.04);transition:background .15s;}
 tr.selected-row td{background:rgba(79,142,247,.06);}
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;font-family:monospace;}
-.badge-blue{background:rgba(192,57,43,.15);color:var(--accent);}
+.badge-blue{background:rgba(233,95,50,.15);color:var(--accent);}
 .badge-green{background:rgba(34,197,94,.15);color:var(--green);}
 .badge-red{background:rgba(239,68,68,.15);color:var(--red);}
 .badge-yellow{background:rgba(245,158,11,.15);color:var(--yellow);}
@@ -504,7 +504,7 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 /* MACHINES */
 .machines-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
 .machine-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:all .2s;cursor:pointer;}
-.machine-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 10px 36px rgba(192,57,43,.15);}
+.machine-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 10px 36px rgba(233,95,50,.15);}
 .machine-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
 .machine-icon{width:40px;height:40px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
 .machine-placa{font-size:16px;font-weight:700;font-family:monospace;}
@@ -542,8 +542,8 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 .semana-select-group{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
 .semana-opt{padding:10px;border-radius:10px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:.2s;}
 .semana-opt:hover{border-color:var(--accent);}
-.semana-opt.selected{background:rgba(192,57,43,.15);border-color:var(--accent);color:var(--accent);}
-.semana-opt.has-data{border-color:rgba(192,57,43,.3);}
+.semana-opt.selected{background:rgba(233,95,50,.15);border-color:var(--accent);color:var(--accent);}
+.semana-opt.has-data{border-color:rgba(233,95,50,.3);}
 .semana-opt-num{font-size:16px;font-weight:700;font-family:monospace;}
 .semana-opt-label{font-size:10px;color:var(--text2);margin-top:2px;}
 /* SHEETS CONFIG */
@@ -626,7 +626,7 @@ body{overflow-x:hidden;}
 
 /* ── LOGIN ── */
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;background-image:url("assets/ignis-inline-1-237f3eb50e.jpg");background-size:cover;background-position:center;}
-.login-card{background:rgba(22,18,16,0.82);border:1px solid rgba(192,57,43,0.35);border-radius:20px;width:100%;max-width:420px;overflow:hidden;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 48px rgba(0,0,0,0.7);}
+.login-card{background:rgba(22,18,16,0.82);border:1px solid rgba(233,95,50,0.35);border-radius:20px;width:100%;max-width:420px;overflow:hidden;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 8px 48px rgba(0,0,0,0.7);}
 .login-hero{background:var(--accent);padding:36px 32px;text-align:center;}
 .login-flame{font-size:48px;margin-bottom:12px;display:block;}
 .login-brand{font-size:28px;font-weight:800;color:#fff;letter-spacing:3px;}
@@ -638,12 +638,12 @@ body{overflow-x:hidden;}
 .login-input:focus{border-color:var(--accent);}
 .login-btn{width:100%;background:var(--accent);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:.2s;font-family:'DM Sans',sans-serif;}
 .login-btn:hover{background:var(--accent2);}
-.login-error{background:rgba(192,57,43,.15);border:1px solid rgba(192,57,43,.3);color:#f07070;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none;}
+.login-error{background:rgba(233,95,50,.15);border:1px solid rgba(233,95,50,.3);color:#f07070;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:14px;display:none;}
 .login-setup-note{font-size:12px;color:var(--text3);text-align:center;margin-top:14px;}
 /* ── USER MGMT ── */
 .user-row{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px;}
 .user-name{font-size:13px;font-weight:600;flex:1;}
-.user-role-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(192,57,43,.15);color:var(--accent);border:1px solid rgba(192,57,43,.3);}
+.user-role-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(233,95,50,.15);color:var(--accent);border:1px solid rgba(233,95,50,.3);}
 .user-role-badge.adm{background:rgba(232,148,26,.15);color:var(--yellow);border-color:rgba(232,148,26,.3);}
 .perm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
 .perm-item{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
@@ -655,11 +655,11 @@ body{overflow-x:hidden;}
 .user-display-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .user-display-role{font-size:10px;color:var(--text3);}
 .logout-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px;border-radius:6px;transition:.2s;}
-.logout-btn:hover{color:var(--red);background:rgba(192,57,43,.1);}
+.logout-btn:hover{color:var(--red);background:rgba(233,95,50,.1);}
 .nav-badge-abs{position:absolute;top:-5px;right:-6px;margin:0 !important;width:15px;height:15px;font-size:9px;}
 
 /* ── VISUAL ENHANCEMENTS ─────────────────────────────────────────── */
-#bar-tooltip{position:fixed;background:#1e1916;border:1px solid rgba(192,57,43,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);pointer-events:none;z-index:9999;max-width:320px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+#bar-tooltip{position:fixed;background:#1e1916;border:1px solid rgba(233,95,50,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);pointer-events:none;z-index:9999;max-width:320px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.6);}
 .page{animation:ignis-fadein .25s ease;}
 @keyframes ignis-fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .login-card{animation:ignis-card-in .45s cubic-bezier(.22,.68,0,1.2);}
@@ -667,7 +667,7 @@ body{overflow-x:hidden;}
 @keyframes ignis-kpi-pop{0%{transform:scale(1)}40%{transform:scale(1.13)}100%{transform:scale(1)}}
 .kpi-pop{animation:ignis-kpi-pop .35s ease;}
 table tbody tr{transition:background .15s;}
-table tbody tr:hover td{background:rgba(192,57,43,.07);}
+table tbody tr:hover td{background:rgba(233,95,50,.07);}
 @keyframes ignis-dot-pulse{0%,100%{box-shadow:0 0 0 0 rgba(42,157,106,.55)}70%{box-shadow:0 0 0 7px rgba(42,157,106,0)}}
 .sync-dot-pulse{animation:ignis-dot-pulse 1.5s infinite;}
 .arla-donut-wrap{display:flex;align-items:center;justify-content:center;gap:20px;padding:12px 0 4px;}
@@ -694,7 +694,7 @@ table tbody tr:hover td{background:rgba(192,57,43,.07);}
   --surface-2:#171e27;
   --border:rgba(255,255,255,.075);
   --border-strong:rgba(255,255,255,.12);
-  --accent:#f2642e;
+  --accent:#e95f32;
   --accent2:#ff9a3d;
   --green:#34c98b;
   --red:#f05f57;
@@ -755,7 +755,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;background-im
 .filter-select:focus,.filter-input:focus,.form-input:focus,.form-select:focus{border-color:rgba(255,107,44,.55)!important;box-shadow:0 0 0 3px rgba(255,107,44,.08)!important}
 .btn{border-radius:10px!important;font-weight:620!important;letter-spacing:-.01em;box-shadow:none!important;transition:transform .14s,background .14s,border-color .14s!important}
 .btn:hover{transform:translateY(-1px)}
-.btn-primary{background:linear-gradient(135deg,#f2642e,#e85b20)!important;border:1px solid #f77746!important;color:#fff!important}
+.btn-primary{background:linear-gradient(135deg,#e95f32,#e85b20)!important;border:1px solid #f77746!important;color:#fff!important}
 .btn-secondary,.btn-ghost{background:#141a22!important;border:1px solid var(--border)!important;color:#c5ced8!important}
 .btn-danger{background:rgba(240,95,87,.09)!important;border:1px solid rgba(240,95,87,.25)!important;color:#ff8d86!important}
 
@@ -918,7 +918,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 
 
 <style id="stage2-fleet-polish">
-:root{--accent:#f2642e;--accent2:#f49342;}
+:root{--accent:#e95f32;--accent2:#f07b48;--accent-hover:#d9542a;--blue:#4f8fe8;}
 .logo-sub{font-size:10.5px!important;letter-spacing:.05px}
 .nav-item .icon,.nav-item .icon-wrap{color:#8996a5}.nav-item.active .icon,.nav-item.active .icon-wrap{color:var(--accent)}
 .nav-item .ui-icon{width:18px;height:18px;stroke-width:2.05}
@@ -926,7 +926,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 .kpi-label{padding-right:46px!important;min-height:20px;display:flex;align-items:center}
 .kpi-icon{position:absolute!important;right:22px!important;top:22px!important;width:28px!important;height:28px!important;display:flex!important;align-items:center!important;justify-content:center!important;color:var(--accent)!important;line-height:1!important}
 .kpi-icon .ui-icon{width:22px!important;height:22px!important;stroke-width:2.15!important}
-.kpi-card:hover .kpi-icon{color:#f57845!important}
+.kpi-card:hover .kpi-icon{color:#f47a4d!important}
 /* Cadastro de frota/equipamentos */
 .equipment-kind{display:flex;align-items:center;gap:10px;min-width:0}.equipment-type-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#788798;white-space:nowrap}
 .machine-icon{color:var(--accent)!important;width:34px!important;height:34px!important}.machine-icon .equipment-svg{width:27px!important;height:27px!important;stroke-width:1.9!important}
@@ -935,7 +935,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 .arla-deadline-banner{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;border:1px solid;border-radius:14px;padding:15px 18px}
 .arla-deadline-copy{display:flex;align-items:center;gap:12px;min-width:0;flex:1}.arla-deadline-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none}.arla-deadline-icon .ui-icon{width:22px;height:22px;stroke-width:2}.arla-deadline-text{font-size:13px;color:var(--text);line-height:1.55}
 /* Refinamento geral sem alterar o fundo aprovado */
-.btn-primary{background:#f2642e!important;border-color:#f2642e!important}.btn-primary:hover{background:#e95c29!important;border-color:#e95c29!important}
+.btn-primary{background:var(--accent)!important;border-color:var(--accent)!important}.btn-primary:hover{background:var(--accent-hover)!important;border-color:var(--accent-hover)!important}
 .nav-item.active{background:rgba(242,100,46,.105)!important;border-color:rgba(242,100,46,.18)!important;box-shadow:inset 3px 0 0 var(--accent)!important}
 .dash-filter-trigger:hover,.dash-select-shell:hover{border-color:rgba(242,100,46,.34)!important}
 .empty-icon:empty,.comp-maq-opt span:empty{display:none!important}
@@ -950,6 +950,53 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 .empty-state-mark .ui-icon{stroke-width:2!important}
 .btn-clean-import .ui-icon{color:#fff!important;stroke-width:2.1!important}
 </style>
+
+<style id="ignis-stage2-polish-final">
+:root{--accent:#e95f32;--accent2:#f07b48;--accent-hover:#d9542a;--green:#31c48d;--yellow:#f5b942;--red:#ef6262;--blue:#4f8fe8;}
+/* all controls use one visual language */
+.filter-select,.filter-input,.form-input,.form-select,.btn,.arla-tab,.semana-opt{font-family:'DM Sans',sans-serif!important}
+.btn-primary:hover{background:var(--accent-hover)!important;border-color:var(--accent-hover)!important;box-shadow:0 6px 18px rgba(233,95,50,.22)!important}
+.btn-secondary:hover,.btn-ghost:hover{border-color:rgba(233,95,50,.42)!important;color:#f6a07d!important;background:rgba(233,95,50,.055)!important;box-shadow:none!important}
+.machine-card:hover{border-color:rgba(233,95,50,.34)!important;box-shadow:0 12px 32px rgba(0,0,0,.24)!important}
+.dashboard-toolbar{border-color:rgba(255,255,255,.085)!important}
+.dash-filter-trigger{padding:0 14px!important}.dash-filter-value{padding-left:2px!important;font-size:13px!important}
+.dash-filter-trigger-icon{background:transparent!important;border:0!important;color:#aab6c4!important;width:24px!important;height:24px!important;min-width:24px!important}
+.dash-filter-trigger-icon .ui-icon{width:19px!important;height:19px!important;stroke-width:2!important}
+.dash-type-menu{width:270px!important;padding:8px!important}
+.dash-type-option{width:100%;height:42px;border:0;background:transparent;color:#b8c3ce;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:9px;font:600 13px 'DM Sans';cursor:pointer;text-align:left}
+.dash-type-option:hover{background:rgba(255,255,255,.045);color:#fff}.dash-type-option.selected{background:rgba(233,95,50,.11);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+.dash-type-option .ui-icon{width:19px;height:19px;color:#9eabb9}.dash-type-option.selected .ui-icon{color:var(--accent)}
+/* checkbox padrão - evita quadrados nativos e desalinhados */
+input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:17px;height:17px;min-width:17px;border:1px solid #4a5665;border-radius:5px;background:#0d131a;display:inline-grid;place-content:center;vertical-align:middle;margin:0;cursor:pointer;transition:.14s}
+input[type="checkbox"]::after{content:'';width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) scale(0);margin-top:-1px;transition:.12s}
+input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}input[type="checkbox"]:checked::after{transform:rotate(-45deg) scale(1)}
+input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:rgba(233,95,50,.75)}
+.selection-chip,#comp-periodo-checkboxes label{display:inline-flex!important;align-items:center!important;gap:9px!important;padding:9px 12px!important;background:#121922!important;border:1px solid var(--border)!important;border-radius:10px!important;color:#bac4cf!important;cursor:pointer!important;font-size:12px!important;font-weight:600!important;transition:.15s!important}
+.selection-chip:hover,#comp-periodo-checkboxes label:hover{border-color:rgba(233,95,50,.3)!important;background:#151d27!important;color:#fff!important}.selection-chip.selected,#comp-periodo-checkboxes label:has(input:checked){border-color:rgba(233,95,50,.65)!important;background:rgba(233,95,50,.1)!important;color:#fff!important}
+.rel-tipo-btn,.exec-tipo-btn,.arla-status-tab{border-radius:10px!important;min-height:38px!important;padding:8px 13px!important;background:#121922!important;border:1px solid var(--border)!important;color:#b7c2ce!important}.rel-tipo-btn.active,.exec-tipo-btn.active,.arla-status-tab.active{background:rgba(233,95,50,.11)!important;border-color:rgba(233,95,50,.5)!important;color:#fff!important}
+.perm-item{background:#121922!important;border-color:var(--border)!important;border-radius:10px!important;padding:10px 12px!important}
+.icon-action-btn{width:36px;height:34px;padding:0!important;justify-content:center}.icon-action-btn .ui-icon{width:16px;height:16px}
+/* title vector icons */
+.page-title-icon{display:flex;align-items:center;gap:11px}.title-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--accent)}.title-icon .ui-icon{width:24px;height:24px;stroke-width:1.9}
+.import-icon-svg{background:transparent!important;border:0!important;color:var(--accent)!important}.import-icon-svg .ui-icon{width:34px!important;height:34px!important;stroke-width:1.7!important}
+.import-icon:empty,.empty-icon:empty{display:none!important}
+/* KPI icons aligned but without emoji-like tiles */
+.kpi-icon{right:22px!important;top:22px!important;width:26px!important;height:26px!important;background:transparent!important;border:0!important}.kpi-icon .ui-icon{width:21px!important;height:21px!important}
+/* operation analysis */
+.dashboard-op-card{min-height:210px!important;padding-bottom:18px!important}.operation-card-strip{display:flex;gap:10px;overflow-x:auto;padding:12px 2px 7px;scrollbar-width:thin}.operation-card{min-width:184px;max-width:205px;flex:0 0 184px;border:1px solid var(--border);background:#121922;border-radius:12px;padding:13px;text-align:left;color:var(--text);cursor:pointer;transition:.16s}.operation-card:hover{border-color:rgba(255,255,255,.13);transform:translateY(-1px)}.operation-card.selected{border-color:rgba(233,95,50,.62);box-shadow:inset 0 0 0 1px rgba(233,95,50,.18)}
+.operation-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.operation-name{font-size:10.5px;color:#8fa0b1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:108px}.status-pill{font-size:9px;font-weight:750;border-radius:999px;padding:3px 7px;white-space:nowrap}.status-pill.ok{color:#49d7a1;background:rgba(49,196,141,.11)}.status-pill.attention{color:#f6c65d;background:rgba(245,185,66,.1)}.status-pill.critical{color:#ff7b7b;background:rgba(239,98,98,.1)}.status-pill.sem-meta{color:#8592a0;background:rgba(133,146,160,.08)}
+.operation-primary{display:flex;align-items:baseline;gap:5px;margin-top:11px}.operation-primary strong{font:700 24px 'DM Mono',monospace}.operation-primary span{font-size:10px;color:#718090}.operation-meta{font-size:10px;color:#8492a1;margin-top:3px;height:16px}.operation-progress{height:7px;background:#0b1117;border-radius:999px;position:relative;margin-top:12px;overflow:visible}.operation-fill{display:block;height:100%;border-radius:999px}.operation-progress i{position:absolute;top:-3px;width:1px;height:13px;background:#d6dee7;opacity:.72}.operation-foot{display:flex;justify-content:space-between;color:#738292;font-size:9.5px;margin-top:9px}
+/* plate chart = efficiency vs meta; liters shown as context, not an incomparable second axis */
+.dashboard-plate-card{min-height:330px!important}.efficiency-chart{height:250px;display:flex;align-items:flex-end;gap:15px;min-width:max-content;padding:24px 8px 8px}.efficiency-column{width:72px;flex:0 0 72px;text-align:center;cursor:default}.efficiency-value{font:700 10px 'DM Mono',monospace;margin-bottom:5px}.efficiency-bar-zone{height:128px;position:relative;display:flex;justify-content:center;align-items:flex-end;border-bottom:1px solid rgba(255,255,255,.08)}.efficiency-target{position:absolute;left:5px;right:5px;height:1px;background:rgba(255,255,255,.5);z-index:2}.efficiency-bar{width:28px;border-radius:5px 5px 2px 2px;transition:.25s}.efficiency-plate{font:650 10px 'DM Mono',monospace;color:#aeb9c4;margin-top:7px}.efficiency-meta{font-size:8.5px;color:#6f7d8b;margin-top:2px}.efficiency-liters{font-size:8.5px;color:#7e8b99;margin-top:3px}.meta-legend{color:#7f8b98!important;font-size:10px!important}
+/* comparison cards: no meaningless mini graph */
+.comp-card{min-height:0!important}.comp-card .comp-row:last-child{border-bottom:0!important}
+/* comparison type selector */
+.comp-maq-opt{min-height:42px!important;border-radius:9px!important;padding:0 11px!important}.comp-maq-opt:hover{background:rgba(255,255,255,.045)!important}.comp-type-icon{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:#9aa8b6}.comp-type-icon .ui-icon{width:18px;height:18px}.comp-maq-opt[data-selected="1"]{background:rgba(233,95,50,.1)!important;box-shadow:inset 3px 0 0 var(--accent)}
+/* eliminate old accent/red hover artifacts */
+.sidebar-toggle:hover{color:var(--accent)!important;box-shadow:3px 0 18px rgba(233,95,50,.18)!important}.nav-item.active{background:rgba(233,95,50,.1)!important;border-color:rgba(233,95,50,.18)!important}.semana-opt.selected{background:rgba(233,95,50,.1)!important}.semana-opt.has-data{border-color:rgba(233,95,50,.26)!important}tr:hover td{background:rgba(233,95,50,.035)!important}.import-area:hover{background:rgba(233,95,50,.035)!important}
+@media(max-width:900px){.kpi-icon{right:16px!important;top:18px!important}.operation-card{min-width:170px;flex-basis:170px}.dash-type-menu{width:100%!important}}
+</style>
+
 </head>
 <body>
 
@@ -1164,15 +1211,15 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
       </div>
 
       <!-- Tipo -->
-      <div class="dash-filter-control dash-native-control">
+      <div class="dash-filter-control dash-native-control" id="dash-type-wrap">
         <span class="dash-filter-caption">Tipo de veículo</span>
-        <div class="dash-select-shell">
-          <span class="dash-filter-trigger-icon" aria-hidden="true">
-            <svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 16h18"/><path d="M5 16l1-6h12l1 6"/><path d="M8 10V7h8v3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
-          </span>
-          <select id="dash-maq-filter" onchange="updateFilters();populatePlacaDropdown();populateModeloDropdown();renderDashboard()"><option value="">Todos os tipos</option></select>
+        <select id="dash-maq-filter" style="display:none"><option value="">Todos os tipos</option></select>
+        <button class="dash-filter-trigger dash-type-trigger" id="dash-type-btn" type="button" onclick="toggleDashTypeDropdown()" aria-haspopup="true">
+          <span class="dash-filter-trigger-icon" id="dash-type-icon" aria-hidden="true"></span>
+          <span class="dash-filter-value" id="dash-type-label">Todos os tipos</span>
           <svg class="dash-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
-        </div>
+        </button>
+        <div class="dash-dropdown dash-type-menu" id="dash-type-menu" style="display:none"></div>
       </div>
 
       <!-- Modelo -->
@@ -1239,20 +1286,20 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
       <div class="kpi-card"><div class="kpi-label">Eficiência Geral</div><div class="kpi-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><div><span class="kpi-value" id="kpi-eficiencia">—</span><span class="kpi-unit">%</span></div><div id="kpi-efic-sub" style="font-size:11px;margin-top:4px"></div></div>
     </div>
     <!-- Consumo por Operação (linha 1, largura total) -->
-    <div class="chart-card" style="margin-bottom:16px;height:280px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+    <div class="chart-card dashboard-op-card" style="margin-bottom:16px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-bottom:0">
         <div class="chart-title" style="margin-bottom:0">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
-        <div id="op-filter-indicator" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--accent);background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.3);border-radius:8px;padding:4px 10px;cursor:pointer" onclick="opClearSelection()">
-          <span>🔍</span><span id="op-filter-label">1 operação filtrada</span><span style="font-size:10px;color:var(--text2)">✕ limpar</span>
+        <div id="op-filter-indicator" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--accent);background:rgba(233,95,50,.12);border:1px solid rgba(233,95,50,.3);border-radius:8px;padding:4px 10px;cursor:pointer" onclick="opClearSelection()">
+          <svg class="ui-icon" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="op-filter-label">1 operação filtrada</span><span style="font-size:10px;color:var(--text2)">limpar</span>
         </div>
       </div>
       <div id="op-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:12px"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
     </div>
     <!-- Consumo por Máquina (largura total) -->
-    <div class="chart-card" style="margin-bottom:16px;height:340px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+    <div class="chart-card dashboard-plate-card" style="margin-bottom:16px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-bottom:0">
         <div class="chart-title" style="margin-bottom:0">Consumo por Placa — <span id="chart-period-label">Semanal</span></div>
-        <div class="chart-legend" id="bar-chart-legend" style="margin:0"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div><span id="bar-legend-media">Média L/h</span></div></div>
+        <div class="chart-legend" id="bar-chart-legend" style="margin:0"></div>
       </div>
       <div id="bar-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:12px"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
     </div>
@@ -1288,45 +1335,42 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
         </div>
         <!-- Atalhos de período -->
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-secondary btn-sm" onclick="compSetRangePeriodo('ultima-semana')" title="Período mais recente importado">📅 Última semana</button>
-          <button class="btn btn-secondary btn-sm" onclick="compSetRangePeriodo('mes-recente')" title="Mês do período mais recente">📆 Mês recente</button>
+          <button class="btn btn-secondary btn-sm" onclick="compSetRangePeriodo('ultima-semana')" title="Período mais recente importado">Última semana</button>
+          <button class="btn btn-secondary btn-sm" onclick="compSetRangePeriodo('mes-recente')" title="Mês do período mais recente">Mês recente</button>
           <button class="btn btn-secondary btn-sm" onclick="compSetRangePeriodo('todos')" title="Mostrar todos os períodos">⊞ Todos</button>
         </div>
-        <button class="btn btn-secondary" onclick="verificarSenha(openImport)">⬆️ Importar Período</button>
+        <button class="btn btn-secondary" onclick="verificarSenha(openImport)">Importar período</button>
         <div style="position:relative" id="comp-maq-dropdown-wrap">
   <button class="filter-select" id="comp-maq-btn" onclick="toggleCompMaqDropdown()" style="cursor:pointer;text-align:left;min-width:180px;display:flex;align-items:center;justify-content:space-between;gap:8px">
-    <span id="comp-maq-label">Consolidado (sem EMP)</span>
+    <span id="comp-maq-label">Máquinas</span>
     <span style="font-size:10px">▼</span>
   </button>
   <div id="comp-maq-menu" style="display:none;position:absolute;top:calc(100% + 4px);right:0;min-width:200px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.4)">
-    <div class="comp-maq-opt" data-val="" onclick="setCompMaq(this)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px">
-      <span>⊞</span> Todos (sem EMP)
-    </div>
-    <div class="comp-maq-opt" data-val="__maquinas__" onclick="setCompMaq(this)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px">
-      <span>⚙️</span> MÁQUINAS
+<div class="comp-maq-opt" data-val="__maquinas__" onclick="setCompMaq(this)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px">
+      <span class="comp-type-icon" data-kind="maquina"></span> MÁQUINAS
     </div>
     <div class="comp-maq-opt" data-val="__tratores__" onclick="setCompMaq(this)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px">
-      <span>🚜</span> TRATORES
+      <span class="comp-type-icon" data-kind="trator"></span> TRATORES
     </div>
     <div class="comp-maq-opt" data-val="__pesada__" onclick="setCompMaq(this)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px">
-      <span>🚛</span> FROTA PESADA
+      <span class="comp-type-icon" data-kind="pesada"></span> FROTA PESADA
     </div>
     <div class="comp-maq-opt" data-val="__leve__" onclick="setCompMaq(this)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px">
-      <span>🚗</span> FROTA LEVE
+      <span class="comp-type-icon" data-kind="leve"></span> FROTA LEVE
     </div>
     <div class="comp-maq-opt" data-val="__empilhadeiras__" onclick="setCompMaq(this)" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:13px">
-      <img src="assets/ignis-inline-2-b4d5d76fbd.jpg" style="width:18px;height:18px;object-fit:contain"> EMPILHADEIRAS
+      <span class="comp-type-icon" data-kind="empilhadeira"></span> EMPILHADEIRAS
     </div>
   </div>
-  <input type="hidden" id="comp-maq-filter" value="">
+  <input type="hidden" id="comp-maq-filter" value="__maquinas__">
 </div>
       </div>
     </div>
 
     <!-- Tabs do Comparativo -->
     <div class="arla-tab-group" style="margin-bottom:16px">
-      <button class="arla-tab active" id="comp-tab-btn-periodos" onclick="compSetTab('periodos',this)">📊 Comparativo</button>
-      <button class="arla-tab" id="comp-tab-btn-financeiro" onclick="compSetTab('financeiro',this)">💰 Evolução Financeira</button>
+      <button class="arla-tab active" id="comp-tab-btn-periodos" onclick="compSetTab('periodos',this)">Comparativo</button>
+      <button class="arla-tab" id="comp-tab-btn-financeiro" onclick="compSetTab('financeiro',this)">Evolução Financeira</button>
     </div>
 
     <!-- ABA COMPARATIVO -->
@@ -1371,8 +1415,8 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
           <span class="selected-count" id="selected-count" style="display:none"></span>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-danger btn-sm" id="btn-apagar-selecionados" style="display:none" onclick="verificarSenha(apagarSelecionados)">🗑️ Apagar Selecionados</button>
-          <button class="btn btn-secondary btn-sm" onclick="toggleSelecionarTodos()" id="btn-sel-todos">☐ Selecionar Todos</button>
+          <button class="btn btn-danger btn-sm" id="btn-apagar-selecionados" style="display:none" onclick="verificarSenha(apagarSelecionados)">Apagar selecionados</button>
+          <button class="btn btn-secondary btn-sm" onclick="toggleSelecionarTodos()" id="btn-sel-todos">Selecionar todos</button>
         </div>
       </div>
       <div id="abast-table-container"></div>
@@ -1386,7 +1430,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
       <div class="header-actions">
         <input type="text" class="filter-input" id="maq-busca" placeholder="Buscar placa ou modelo..." oninput="scheduleRenderMaquinas()" style="min-width:180px">
         <select class="filter-select" id="maq-op-filter" onchange="renderMaquinas()"><option value="">Todas as Operações</option></select>
-        <button class="btn btn-ghost" onclick="corrigirOperacoesDesatualizadas()" title="Atualiza a operação de cada placa usando o abastecimento mais recente já importado, sem precisar reimportar nada">🔄 Corrigir Operações</button>
+        <button class="btn btn-ghost" onclick="corrigirOperacoesDesatualizadas()" title="Atualiza a operação de cada placa usando o abastecimento mais recente já importado, sem precisar reimportar nada">Corrigir operações</button>
         <button class="btn btn-primary" onclick="verificarSenha(openNovaMaquina)">+ Novo Equipamento</button>
       </div>
     </div>
@@ -1412,9 +1456,9 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
           5. Copie a URL gerada e cole aqui acima
         </div>
         <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-secondary btn-sm" onclick="copiarScriptApps()">📋 Copiar código Apps Script</button>
-          <button class="btn btn-primary btn-sm" onclick="testarConexao()">🔌 Testar Conexão</button>
-          <button class="btn btn-primary btn-sm" onclick="sincronizarAgora()">🔄 Sincronizar Agora</button>
+          <button class="btn btn-secondary btn-sm" onclick="copiarScriptApps()">Copiar código Apps Script</button>
+          <button class="btn btn-primary btn-sm" onclick="testarConexao()">Testar conexão</button>
+          <button class="btn btn-primary btn-sm" onclick="sincronizarAgora()">Sincronizar agora</button>
         </div>
       </div>
       <div class="sheets-config" style="margin-top:16px">
@@ -1426,7 +1470,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
         <input type="file" id="import-json" accept=".json" style="display:none" onchange="importarJSON(this)">
         <div class="sheets-hint" style="margin-top:10px">Use o backup JSON para transferir dados entre computadores sem internet.</div>
       </div>
-      <div class="sheets-config" style="margin-top:16px;border-color:rgba(192,57,43,.4)" id="config-users-section">
+      <div class="sheets-config" style="margin-top:16px;border-color:rgba(233,95,50,.4)" id="config-users-section">
         <div class="sheets-config-title" style="color:var(--accent)">👥 Gerenciamento de Usuários</div>
         <div class="sheets-hint" style="margin-bottom:14px">Crie usuários e defina quais abas cada um pode acessar.</div>
         <div id="users-lista" style="margin-bottom:14px"></div>
@@ -1434,14 +1478,14 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
       </div>
       <div class="sheets-config" id="config-danger-zone" style="margin-top:16px;border-color:rgba(239,68,68,.3)">
         <div class="sheets-config-title" style="color:var(--red)">⚠️ Zona de Perigo</div>
-        <button class="btn btn-danger btn-sm" onclick="verificarSenha(limparTodosDados)">🗑️ Reset completo (local + Firebase)</button>
+        <button class="btn btn-danger btn-sm" onclick="verificarSenha(limparTodosDados)">Reset completo (local + Firebase)</button>
       </div>
       <div class="sheets-config" style="margin-top:16px;border-color:rgba(245,158,11,.4)">
         <div class="sheets-config-title">⛽ Preço do Diesel por Operação</div>
         <div class="sheets-hint" style="margin-bottom:14px">Configure o preço por litro de cada operação para calcular o custo de ineficiência no Relatório Executivo.</div>
         <div id="diesel-preco-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" onclick="dieselPopularOps()">🔄 Atualizar Operações</button>
+          <button class="btn btn-primary btn-sm" onclick="dieselPopularOps()">Atualizar operações</button>
         </div>
       </div>
     </div>
@@ -1450,7 +1494,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
   <!-- RELATÓRIO -->
   <div id="page-relatorio" class="page">
     <div class="page-header">
-      <div class="page-header-title"><div class="page-title">Relatório de Eficiência</div><div class="page-sub">Analise um período e envie alertas por e-mail</div></div>
+      <div class="page-header-title"><div class="page-title page-title-icon"><span class="title-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>Relatório de Eficiência</div><div class="page-sub">Analise um período e envie alertas por e-mail</div></div>
     </div>
 
     <!-- Banner de reincidência -->
@@ -1458,16 +1502,16 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
 
     <!-- Tabs do relatório -->
     <div class="arla-tab-group" style="margin-bottom:20px">
-      <button class="arla-tab active" id="rel-tab-btn-analise" onclick="relSetTab('analise',this)">🔍 Análise</button>
-      <button class="arla-tab" id="rel-tab-btn-grupos" onclick="relSetTab('grupos',this)">📧 Grupos de E-mail</button>
-      <button class="arla-tab" id="rel-tab-btn-executivo" onclick="relSetTab('executivo',this)">💰 Relatório Executivo</button>
+      <button class="arla-tab active" id="rel-tab-btn-analise" onclick="relSetTab('analise',this)">Análise</button>
+      <button class="arla-tab" id="rel-tab-btn-grupos" onclick="relSetTab('grupos',this)">Grupos de E-mail</button>
+      <button class="arla-tab" id="rel-tab-btn-executivo" onclick="relSetTab('executivo',this)">Relatório Executivo</button>
     </div>
 
     <!-- ABA ANÁLISE -->
     <div id="rel-tab-analise">
     <!-- Seletor de período + destinatário -->
     <div class="sheets-config" style="margin-bottom:16px">
-      <div class="sheets-config-title">📋 Configurar Análise</div>
+      <div class="sheets-config-title">Configurar análise</div>
       <div class="form-row" style="margin-bottom:12px">
         <div class="form-group">
           <label class="form-label">Data Inicial</label>
@@ -1513,7 +1557,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
         </div>
       </div>
       <div style="margin-top:14px">
-        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="renderRelatorio()">🔍 Analisar Período</button>
+        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="renderRelatorio()">Analisar período</button>
       </div>
     </div>
 
@@ -1562,8 +1606,8 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
           <textarea class="form-input" id="relg-corpo" rows="5" style="width:100%;box-sizing:border-box;resize:vertical;font-size:13px;line-height:1.6;margin-top:2px" placeholder="Bom dia,&#10;&#10;Segue abaixo as placas abaixo da meta estipulada referente ao período.&#10;&#10;Seguimos à disposição."></textarea>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-primary" onclick="relgSalvar()">💾 Salvar Grupo</button>
-          <button class="btn btn-secondary" onclick="relgLimpar()">✕ Cancelar</button>
+          <button class="btn btn-primary" onclick="relgSalvar()">Salvar grupo</button>
+          <button class="btn btn-secondary" onclick="relgLimpar()">Cancelar</button>
         </div>
         <input type="hidden" id="relg-edit-id" value="">
       </div>
@@ -1575,7 +1619,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
     <!-- ABA RELATÓRIO EXECUTIVO -->
     <div id="rel-tab-executivo" style="display:none">
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
-        <div style="font-size:14px;font-weight:700;margin-bottom:6px">💰 Relatório Executivo de Economia</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px">Relatório Executivo de Economia</div>
         <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Selecione o período para calcular o custo de ineficiência. Configure os preços em ⚙️ Configurações.</div>
         <div class="form-row" style="margin-bottom:12px">
           <div class="form-group">
@@ -1608,7 +1652,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
           <label class="form-label">Filtrar Operação (opcional)</label>
           <select class="form-input" id="exec-op-filter"><option value="">Todas as Operações</option></select>
         </div>
-        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="renderExecutivo()">💰 Calcular Relatório Executivo</button>
+        <button class="btn btn-primary" style="width:100%;padding:12px" onclick="renderExecutivo()">Calcular relatório executivo</button>
       </div>
       <div id="executivo-resultado"></div>
     </div>
@@ -1756,7 +1800,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
           Sobe o arquivo mensal de Eficiência (aba <b>"Frota Pesada"</b>) e o sistema cadastra automaticamente o segmento de cada placa — sem precisar mapear manualmente. Só Frota Pesada usa Arla (Frota Leve, Máquinas e Empilhadeiras não entram).
         </div>
         <div class="import-area" onclick="document.getElementById('arla-segmento-file-input').click()" style="padding:24px">
-          <div class="import-icon">📂</div>
+          <div class="import-icon import-icon-svg"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 5h6l2 2h8v12H4z"/><path d="M12 10v6M9.5 12.5 12 10l2.5 2.5"/></svg></div>
           <div class="import-text">Carregar planilha de fechamento (.xlsx/.xlsm)</div>
           <div class="import-sub">Aba "Frota Pesada" — colunas Operação, Seguimento, Placa</div>
         </div>
@@ -1836,8 +1880,8 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
           <textarea class="form-input" id="arla-grupo-obs" placeholder="Ex: Prezados, segue o relatório de Arla referente ao mês de março..." rows="3" style="resize:vertical;font-size:13px"></textarea>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-primary" onclick="arlaSalvarGrupo()">💾 Salvar Grupo</button>
-          <button class="btn btn-secondary" onclick="arlaLimparFormGrupo()">✕ Cancelar</button>
+          <button class="btn btn-primary" onclick="arlaSalvarGrupo()">Salvar grupo</button>
+          <button class="btn btn-secondary" onclick="arlaLimparFormGrupo()">Cancelar</button>
         </div>
         <input type="hidden" id="arla-grupo-edit-id" value="">
       </div>
@@ -1868,7 +1912,7 @@ tbody tr:hover{background:rgba(255,255,255,.018)!important}
    ──────────────────────────────────────────────────────────────── */
 :root{
   --bg:#0a0d12;--bg2:#10151c;--bg3:#171d26;--border:rgba(255,255,255,.075);
-  --accent:#f2642e;--accent2:#ff9a3d;--green:#34c98b;--red:#f05f57;
+  --accent:#e95f32;--accent2:#ff9a3d;--green:#34c98b;--red:#f05f57;
   --yellow:#f2b84b;--text:#f5f7fa;--text2:#9ca8b7;--text3:#687382;
   --card-shadow:0 10px 35px rgba(0,0,0,.22);--radius:16px;
 }
@@ -2350,7 +2394,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
       <label class="form-label">Permissões de acesso</label>
       <div class="perm-grid">
         <label class="perm-item"><input type="checkbox" data-perm="dashboard"> ⊞ Dashboard</label>
-        <label class="perm-item"><input type="checkbox" data-perm="comparativo"> 📊 Comparativo</label>
+        <label class="perm-item"><input type="checkbox" data-perm="comparativo"> Comparativo</label>
         <label class="perm-item"><input type="checkbox" data-perm="abastecimentos"> ⛽ Abastecimentos</label>
         <label class="perm-item"><input type="checkbox" data-perm="maquinas">Frota e Equipamentos</label>
         <label class="perm-item"><input type="checkbox" data-perm="relatorio"> 📧 Relatório</label>
@@ -3222,7 +3266,7 @@ function loginEntrarApp() {
   const u = window._authUser;
   // Atualiza info do usuário na sidebar
   document.getElementById('sidebar-username').textContent = u.nome || u.id;
-  document.getElementById('sidebar-role').textContent = u.role === 'adm' ? 'ADM Master' : u.role === 'admin' ? '⭐ Admin' : 'Usuário';
+  document.getElementById('sidebar-role').textContent = u.role === 'adm' ? 'ADM Master' : u.role === 'admin' ? 'Admin' : 'Usuário';
   document.getElementById('sidebar-avatar').textContent = (u.nome || u.id).charAt(0).toUpperCase();
   // Renderiza nav com permissões
   authRenderNav();
@@ -3316,15 +3360,15 @@ async function authRenderUsuarios(usersOverride) {
         <div class="user-name">${usr.nome||id} <span style="font-size:11px;color:var(--text3);font-family:monospace">(${id})</span></div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">${(usr.perms||[]).filter(p=>p!=='manage_users').length} aba(s) · ${(usr.perms||[]).includes('manage_users')?'<span style="color:var(--yellow)">pode gerenciar usuários</span>':''}</div>
       </div>
-      <span class="user-role-badge ${usr.role==='adm'?'adm':usr.role==='admin'?'adm':''}">${usr.role==='adm'?'ADM Master':usr.role==='admin'?'⭐ Admin':'Usuário'}</span>
-      ${u?.id !== id && (isAdm || usr.role !== 'adm') ? `<button class="btn btn-secondary btn-sm" onclick="abrirModalEditarUsuario('${id}')">✏️</button>
-      <button class="btn btn-danger btn-sm" onclick="confirmarExcluirUsuario('${id}')">🗑️</button>` : `<span style="font-size:11px;color:var(--text3)">(você)</span>`}
+      <span class="user-role-badge ${usr.role==='adm'?'adm':usr.role==='admin'?'adm':''}">${usr.role==='adm'?'ADM Master':usr.role==='admin'?'Admin':'Usuário'}</span>
+      ${u?.id !== id && (isAdm || usr.role !== 'adm') ? `<button class="btn btn-secondary btn-sm icon-action-btn" onclick="abrirModalEditarUsuario('${id}')" title="Editar usuário"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button>
+      <button class="btn btn-danger btn-sm icon-action-btn" onclick="confirmarExcluirUsuario('${id}')" title="Excluir usuário"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg></button>` : `<span style="font-size:11px;color:var(--text3)">(você)</span>`}
     </div>
   `).join('');
 }
 
 function abrirModalNovoUsuario() {
-  document.getElementById('modal-usuario-title').textContent = '👤 Novo Usuário';
+  document.getElementById('modal-usuario-title').textContent = 'Novo Usuário';
   document.getElementById('edit-user-id').value = '';
   document.getElementById('user-field-login').value = '';
   document.getElementById('user-field-login').disabled = false;
@@ -3340,7 +3384,7 @@ function abrirModalNovoUsuario() {
 async function abrirModalEditarUsuario(id) {
   const users = await authCarregarUsuarios();
   const u = users[id]; if (!u) return;
-  document.getElementById('modal-usuario-title').textContent = '✏️ Editar Usuário';
+  document.getElementById('modal-usuario-title').textContent = 'Editar Usuário';
   document.getElementById('edit-user-id').value = id;
   document.getElementById('user-field-login').value = id;
   document.getElementById('user-field-login').disabled = true;
@@ -3410,7 +3454,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loginInit();
   const tip = document.createElement('div');
   tip.id = 'bar-tooltip';
-  tip.style.cssText = 'position:fixed;background:#1e1916;border:1px solid rgba(192,57,43,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:#f0ebe4;pointer-events:none;z-index:9999;max-width:300px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.6);line-height:1.6';
+  tip.style.cssText = 'position:fixed;background:#1e1916;border:1px solid rgba(233,95,50,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:#f0ebe4;pointer-events:none;z-index:9999;max-width:300px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.6);line-height:1.6';
   document.body.appendChild(tip);
   document.addEventListener('mousemove', e => {
     if (tip.style.display !== 'none') {
@@ -3428,7 +3472,7 @@ function showBarTooltip(el, raw) {
     const idx = s.indexOf(':'); if(idx<0) return `<span style="color:#f0ebe4">${s}</span>`;
     return `<span style="color:#9a8f85">${s.substring(0,idx)}</span> <b style="color:#f0ebe4">${s.substring(idx+1).trim()}</b>`;
   }).join('<br>');
-  t.innerHTML = `<div style="font-weight:700;color:#c0392b;margin-bottom:4px;font-size:13px">${placa||''}</div><div style="color:#9a8f85;font-size:11px;margin-bottom:6px">${op||''}</div>${rows}`;
+  t.innerHTML = `<div style="font-weight:700;color:#e95f32;margin-bottom:4px;font-size:13px">${placa||''}</div><div style="color:#9a8f85;font-size:11px;margin-bottom:6px">${op||''}</div>${rows}`;
   t.style.display = 'block';
 }
 function hideBarTooltip() {
@@ -3588,6 +3632,7 @@ function updateFilters(force=false) {
       '<option value="__leve__">Frota leve</option>' +
       '<option value="__empilhadeiras__">Empilhadeiras</option>';
     sel.value=val;
+    if (id==='dash-maq-filter' && typeof renderDashTypeMenu==='function') renderDashTypeMenu();
   });
   // Popular filtro de períodos em Abastecimentos
   const periodoSel = document.getElementById('abast-periodo-filter');
@@ -4111,11 +4156,11 @@ function renderDashboard() {
     // km/L: eficiência = real/meta (maior km/L = melhor)
     const efic = isKmL ? (media/metaMedia)*100 : (metaMedia/media)*100;
     const cor=efic>=98?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
-    const icone=efic>=98?'✅':efic>=90?'⚠️':'🔴';
+    const icone='';
     eficEl.textContent=efic.toFixed(1);
     eficEl.style.color=cor;
     const desvio=((media-metaMedia)/metaMedia*100);
-    eficSubEl.innerHTML=`<span style="color:${cor}">${icone} ${desvio>0?'+':''}${desvio.toFixed(1)}% vs meta</span>`;
+    eficSubEl.innerHTML=`<span style="color:${cor}">${desvio>0?'+':''}${desvio.toFixed(1)}% vs meta</span>`;
   } else {
     eficEl.textContent='—';
     eficEl.style.color='var(--text3)';
@@ -4144,70 +4189,47 @@ function renderDashboard() {
 function renderOpChart(list, isKmL=false) {
   const c=document.getElementById('op-chart-container');
   if(!c) return;
-  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div>';return;}
+  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-text">Sem dados</div></div>';return;}
   const unidadeMedia = isKmL ? 'km/L' : 'L/h';
   const byOp={};
   list.forEach(a=>{
     const op=(getMaquina(a.placa)?.operacao||a.operacao||'Sem Operação').replace(/_/g,' ');
-    if(!byOp[op])byOp[op]={litros:0,horas:0,maquinas:new Set()};
-    byOp[op].litros+=a.litros||0;
-    byOp[op].horas+=a.horas||0;
-    byOp[op].maquinas.add(a.placa);
+    if(!byOp[op]) byOp[op]={litros:0,horas:0,maquinas:new Set()};
+    byOp[op].litros+=a.litros||0; byOp[op].horas+=a.horas||0; byOp[op].maquinas.add(a.placa);
   });
-  const ops=Object.keys(byOp).sort();
-  ops.forEach(op=>{
-    const maqsDaOp=[...byOp[op].maquinas].map(p=>getMaquina(p)).filter(m=>m&&m.meta>0);
-    byOp[op].meta=maqsDaOp.length>0?(maqsDaOp.reduce((s,m)=>s+m.meta,0)/maqsDaOp.length):0;
-  });
-  const maxL=Math.max(...ops.map(o=>byOp[o].litros));
-  const maxM = isKmL
-    ? Math.max(...ops.map(o=>{ const meta=byOp[o].meta||0; const m=byOp[o].litros>0?byOp[o].horas/byOp[o].litros:0; return Math.max(meta,m)*1.3; }), 1)
-    : Math.max(...ops.map(o=>byOp[o].horas>0?byOp[o].litros/byOp[o].horas:0), 1);
-
-  if (!window._selectedOps) window._selectedOps = new Set();
-  const sel = window._selectedOps;
-
-  c.innerHTML=`<div style="display:inline-flex;gap:8px;padding:6px 2px 4px;min-width:max-content">`+
-    ops.map(op=>{
+  Object.keys(byOp).forEach(op=>{
     const d=byOp[op];
-    const l=d.litros;
-    const m = isKmL ? (l>0 ? d.horas/l : 0) : (d.horas>0 ? l/d.horas : 0);
-    const meta=d.meta||0;
+    const maqs=[...d.maquinas].map(p=>getMaquina(p)).filter(m=>m&&m.meta>0);
+    d.meta=maqs.length?maqs.reduce((s,m)=>s+m.meta,0)/maqs.length:0;
+    d.media=isKmL?(d.litros>0?d.horas/d.litros:0):(d.horas>0?d.litros/d.horas:0);
+    d.efic=d.meta>0&&d.media>0?(isKmL?d.media/d.meta*100:d.meta/d.media*100):null;
+  });
+  const ops=Object.keys(byOp).sort((a,b)=>{
+    const ea=byOp[a].efic ?? 999, eb=byOp[b].efic ?? 999;
+    return ea-eb || a.localeCompare(b);
+  });
+  if(!window._selectedOps) window._selectedOps=new Set();
+  const sel=window._selectedOps;
+  c.innerHTML='<div class="operation-card-strip">'+ops.map(op=>{
+    const d=byOp[op], meta=d.meta, m=d.media, efic=d.efic;
     const desvio=meta>0&&m>0?((m-meta)/meta*100):null;
-    const bomDesvio = isKmL ? (desvio!==null&&desvio>=0) : (desvio!==null&&desvio<=0);
-    const mColor=desvio===null?'var(--yellow)':bomDesvio?'var(--green)':Math.abs(desvio)<=10?'#f59e0b':'var(--red)';
-    const icone=desvio===null?'':bomDesvio?'✅':Math.abs(desvio)<=10?'⚠️':'🔴';
-    // Barra: proporcional à meta quando km/L, proporcional ao máximo global quando L/h
-    const barH = isKmL && meta>0
-      ? Math.min(Math.max((m/meta)*32, 3), 52)
-      : maxM>0 ? Math.max((m/maxM)*32, 3) : 3;
-    // Barra litros (só L/h)
-    const barHL = maxL>0 ? Math.max((l/maxL)*32, 3) : 3;
-    // Estado visual baseado na seleção (clique pra filtrar)
-    const isSelected = sel.size===0 || sel.has(op);
-    const borderStyle = sel.has(op) ? `2px solid ${mColor}` : '1px solid var(--border)';
-    const opacStyle = isSelected ? '1' : '0.3';
-    const scaleStyle = sel.has(op) ? 'scale(1.03)' : 'scale(1)';
-    const opEsc = op.replace(/'/g,"&apos;");
-    return `<div data-op="${opEsc}" onclick="opCardClick(event,'${opEsc}')" style="background:var(--bg3);border:${borderStyle};border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;min-width:130px;max-width:160px;cursor:pointer;opacity:${opacStyle};transform:${scaleStyle};transition:opacity .2s,transform .2s,border .15s;user-select:none">
-      <div style="display:flex;align-items:baseline;gap:4px">
-        <span style="font-size:18px;font-weight:700;color:${mColor};font-family:monospace;line-height:1">${m.toFixed(2)}</span>
-        <span style="font-size:10px;color:var(--text3)">${unidadeMedia}</span>
-      </div>
-      ${meta>0?`<div style="font-size:10px;color:${mColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${icone} ${desvio!==null?(desvio>0?'+':'')+desvio.toFixed(1)+'%':''} · meta ${meta.toFixed(2)}</div>`:'<div style="font-size:10px;color:var(--text3)">sem meta</div>'}
-      <div style="display:flex;gap:3px;align-items:flex-end;height:36px;margin-top:2px">
-        ${!isKmL ? `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end">
-          <div style="background:var(--accent);border-radius:2px 2px 0 0;height:${barHL}px;opacity:.7"></div>
-        </div>` : ''}
-        <div style="flex:${isKmL?'none':'1'};width:${isKmL?'100%':'auto'};display:flex;flex-direction:column;justify-content:flex-end">
-          <div style="background:${mColor};border-radius:2px 2px 0 0;height:${barH}px"></div>
-        </div>
-      </div>
-      <div style="font-size:10px;color:var(--text3);font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px" title="${op}">${op}</div>
-    </div>`;
+    const status=efic===null?'sem-meta':efic>=98?'ok':efic>=90?'attention':'critical';
+    const statusLabel=efic===null?'Sem meta':efic>=98?'Dentro da meta':efic>=90?'Atenção':'Crítico';
+    const statusColor=efic===null?'var(--text3)':efic>=98?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
+    const ratio=meta>0&&m>0?Math.min(m/meta,1.45):0;
+    const fillPct=Math.max(4,Math.min(100,ratio/1.45*100));
+    const markerPct=100/1.45;
+    const isSelected=sel.size===0||sel.has(op), active=sel.has(op);
+    const opEsc=op.replace(/'/g,"&apos;");
+    return `<button type="button" class="operation-card ${active?'selected':''}" data-op="${opEsc}" onclick="opCardClick(event,'${opEsc}')" style="opacity:${isSelected?1:.35}">
+      <div class="operation-card-head"><span class="operation-name" title="${op}">${op}</span><span class="status-pill ${status}">${statusLabel}</span></div>
+      <div class="operation-primary"><strong style="color:${statusColor}">${m.toFixed(2)}</strong><span>${unidadeMedia}</span></div>
+      <div class="operation-meta">Meta ${meta>0?meta.toFixed(2)+' '+unidadeMedia:'não cadastrada'}${desvio!==null?' · '+(desvio>0?'+':'')+desvio.toFixed(1)+'%':''}</div>
+      <div class="operation-progress"><span class="operation-fill" style="width:${fillPct}%;background:${statusColor}"></span>${meta>0?`<i style="left:${markerPct}%"></i>`:''}</div>
+      <div class="operation-foot"><span>${d.litros.toLocaleString('pt-BR',{maximumFractionDigits:0})} L</span><span>${d.maquinas.size} ativos</span></div>
+    </button>`;
   }).join('')+'</div>';
 }
-
 function opCardClick(e, op) {
   e.stopPropagation();
   if (!window._selectedOps) window._selectedOps = new Set();
@@ -4271,75 +4293,34 @@ document.addEventListener('click', function(e) {
 
 function renderBarChart(list, isKmL=false) {
   const c=document.getElementById('bar-chart-container');
-  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div></div>';return;}
-  const unidadeMedia = isKmL ? 'km/L' : 'L/h';
-  const calcMedia = (l,h) => isKmL ? (l>0?h/l:0) : (h>0?l/h:0);
+  if(!list.length){c.innerHTML='<div class="empty"><div class="empty-text">Sem dados</div></div>';return;}
+  const unidadeMedia=isKmL?'km/L':'L/h';
+  const calcMedia=(l,h)=>isKmL?(l>0?h/l:0):(h>0?l/h:0);
   const byMaq={};
   list.forEach(a=>{if(!byMaq[a.placa])byMaq[a.placa]={litros:0,horas:0};byMaq[a.placa].litros+=a.litros||0;byMaq[a.placa].horas+=a.horas||0;});
-  const pl=Object.keys(byMaq).sort();
-  const maxL=Math.max(...pl.map(p=>byMaq[p].litros));
-
-  // Para km/L: escala cada barra RELATIVA à sua própria meta (se tiver), senão usa máximo global
-  // Para L/h: escala global como antes
-  const maxM = isKmL
-    ? Math.max(...pl.map(p=>{ const meta=getMaquina(p)?.meta||0; const m=calcMedia(byMaq[p].litros,byMaq[p].horas); return Math.max(meta,m)*1.3; }), 1)
-    : Math.max(...pl.map(p=>calcMedia(byMaq[p].litros,byMaq[p].horas)), ...pl.map(p=>getMaquina(p)?.meta||0), 1);
-
-  const H=120;
-  const barW=isKmL?28:22;
-  c.style.height='';
-  c.style.overflowX='auto';
-  c.style.overflowY='hidden';
-
-  // Atualiza legenda dinamicamente
-  const legendEl = document.getElementById('bar-chart-legend');
-  if(legendEl) {
-    legendEl.innerHTML = isKmL
-      ? `<div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média ${unidadeMedia}</div>`
-      : `<div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Litros</div><div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Média ${unidadeMedia}</div>`;
-  }
-
-  c.innerHTML=`<div style="display:inline-flex;align-items:flex-end;gap:${isKmL?14:18}px;padding-top:28px;min-width:max-content;padding-bottom:4px">`+pl.map(p=>{
-    const l=byMaq[p].litros, h=byMaq[p].horas;
-    const m=calcMedia(l,h);
-    const maq=getMaquina(p);
-    const meta=maq?.meta||0;
-    // Para km/L: barra escalonada por meta individual (meta = 100% da altura)
-    const hM = isKmL
-      ? (meta>0 ? Math.min((m/meta)*H, H*1.5) : maxM>0?(m/maxM)*H:0)
-      : (maxM>0?(m/maxM)*H:0);
-    const hL=maxL>0?(l/maxL)*H:0;
-    const desvio=meta>0&&m>0?((m-meta)/meta*100):null;
-    const bomDesvio = isKmL ? (desvio!==null&&desvio>=0) : (desvio!==null&&desvio<=0);
-    const barColor=desvio===null?'var(--yellow)':bomDesvio?'var(--green)':Math.abs(desvio)<=10?'#f59e0b':'var(--red)';
-    // Linha de meta para km/L
-    const metaLineH = isKmL && meta>0 ? Math.min((meta/Math.max(meta,m))*H, H) : 0;
-    const metaText = meta > 0
-      ? `<div style="font-size:9px;font-weight:600;font-family:monospace;white-space:nowrap;margin-top:3px;padding:1px 5px;border-radius:4px;background:rgba(192,57,43,.15);color:var(--accent)">${meta.toFixed(2)}</div>`
-      : `<div style="font-size:9px;margin-top:3px;padding:1px 5px;height:16px;visibility:hidden">—</div>`;
-    const tooltipContent = `${p} | ${maq?.operacao||'—'} | ${l.toFixed(0)}L · ${h.toFixed(0)}${isKmL?'km':'h'} · ${m.toFixed(2)} ${unidadeMedia}${meta>0?' · meta: '+meta.toFixed(2)+' '+unidadeMedia:''}${desvio!==null?' ('+( desvio>0?'+':'')+desvio.toFixed(1)+'%)':''}`;
-    return `<div class="bar-group" style="padding-bottom:20px;gap:16px;position:relative;cursor:pointer"
-      onmouseenter="showBarTooltip(this,'${tooltipContent.replace(/'/g,"&apos;")}')"
-      onmouseleave="hideBarTooltip()">
-      <div class="bars">
-        ${!isKmL ? `<div style="display:flex;flex-direction:column;align-items:center">
-          <span style="font-size:9px;color:var(--accent);font-weight:700;margin-bottom:2px;font-family:monospace;white-space:nowrap">${l.toFixed(0)}L</span>
-          <div class="bar bar-litros" style="height:${Math.max(hL,2)}px;width:${barW}px"></div>
-        </div>` : ''}
-        <div style="display:flex;flex-direction:column;align-items:center;position:relative">
-          <span style="font-size:9px;color:${barColor};font-weight:700;margin-bottom:2px;font-family:monospace;white-space:nowrap">${m.toFixed(2)}</span>
-          <div style="position:relative;width:${barW}px">
-            <div class="bar" style="height:${Math.max(hM,2)}px;width:${barW}px;background:${barColor};border-radius:4px 4px 0 0"></div>
-            ${isKmL && meta>0 ? `<div style="position:absolute;bottom:${Math.min((meta/Math.max(meta,m))*Math.max(hM,2),Math.max(hM,2))}px;left:0;width:${barW}px;height:2px;background:rgba(255,255,255,0.5);border-radius:1px"></div>` : ''}
-          </div>
-        </div>
-      </div>
-      <div class="bar-label">${p}</div>
-      ${metaText}
+  const items=Object.keys(byMaq).map(placa=>{
+    const d=byMaq[placa], media=calcMedia(d.litros,d.horas), maq=getMaquina(placa), meta=maq?.meta||0;
+    const efic=meta>0&&media>0?(isKmL?media/meta*100:meta/media*100):null;
+    return {placa,...d,media,meta,efic,op:maq?.operacao||''};
+  }).sort((a,b)=>(a.efic??999)-(b.efic??999)||a.placa.localeCompare(b.placa));
+  const legend=document.getElementById('bar-chart-legend');
+  if(legend) legend.innerHTML='<div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>≥ 98%</div><div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>90–97,9%</div><div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>&lt; 90%</div><div class="legend-item meta-legend">linha = 100% da meta</div>';
+  const H=128, baseline=H*(100/135);
+  c.innerHTML='<div class="efficiency-chart">'+items.map(it=>{
+    const efic=it.efic;
+    const color=efic===null?'var(--text3)':efic>=98?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
+    const barH=efic===null?4:Math.max(4,Math.min(H,efic/135*H));
+    const desvio=it.meta>0&&it.media>0?((it.media-it.meta)/it.meta*100):null;
+    const tip=`${it.placa} | ${(it.op||'—').replace(/_/g,' ')} | ${it.litros.toFixed(0)} L | ${it.media.toFixed(2)} ${unidadeMedia}${it.meta>0?' | meta '+it.meta.toFixed(2):''}${efic!==null?' | eficiência '+efic.toFixed(1)+'%':''}`;
+    return `<div class="efficiency-column" onmouseenter="showBarTooltip(this,'${tip.replace(/'/g,"&apos;")}')" onmouseleave="hideBarTooltip()">
+      <div class="efficiency-value" style="color:${color}">${it.media.toFixed(2)}</div>
+      <div class="efficiency-bar-zone"><div class="efficiency-target" style="bottom:${baseline}px"></div><div class="efficiency-bar" style="height:${barH}px;background:${color}"></div></div>
+      <div class="efficiency-plate">${it.placa}</div>
+      <div class="efficiency-meta">${it.meta>0?'meta '+it.meta.toFixed(2):'sem meta'}</div>
+      <div class="efficiency-liters">${it.litros.toLocaleString('pt-BR',{maximumFractionDigits:0})} L${efic!==null?' · '+efic.toFixed(0)+'%':''}</div>
     </div>`;
   }).join('')+'</div>';
 }
-
 function renderRanking(list, isKmL=false) {
   const c=document.getElementById('ranking-list');
   if(!list.length){c.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><div class="empty-text">Sem dados</div></div>';return;}
@@ -4368,7 +4349,7 @@ function renderRanking(list, isKmL=false) {
       const pct = Math.abs(item.desvio);
       if(bomDesvio){ alertColor='var(--green)'; alertIcon='✓'; alertLabel='Dentro da meta'; barColor='var(--green)'; }
       else if(pct<=10){ alertColor='var(--yellow)'; alertIcon='⚠'; alertLabel=`${item.desvio.toFixed(1)}% vs meta`; barColor='var(--yellow)'; }
-      else { alertColor='var(--red)'; alertIcon='🔴'; alertLabel=`${item.desvio.toFixed(1)}% vs meta`; barColor='var(--red)'; }
+      else { alertColor='var(--red)'; alertIcon=''; alertLabel=`${item.desvio.toFixed(1)}% vs meta`; barColor='var(--red)'; }
     }
     const barW=item.meta>0?Math.min(Math.max((item.media/item.meta)*60,8),100):0;
     return `<div class="ranking-item" style="flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px">
@@ -4461,7 +4442,7 @@ function renderComparativo() {
 
   // Renderizar checkboxes — só os períodos visíveis
   checkboxDiv.innerHTML = periodosVisiveis.map(([id, p]) => `
-    <label style="display:inline-flex;align-items:center;gap:7px;padding:7px 12px;background:${_periodosSelec.has(id)?'rgba(192,57,43,.15)':'var(--bg3)'};border:1px solid ${_periodosSelec.has(id)?'var(--accent)':'var(--border)'};border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;transition:.2s">
+    <label class="selection-chip ${_periodosSelec.has(id)?'selected':''}">
       <input type="checkbox" style="accent-color:var(--accent)" ${_periodosSelec.has(id)?'checked':''} onchange="togglePeriodoComp('${id}',this)">
       ${p.label||id}
       <span style="color:var(--text3);font-size:10px">${(p.registros||[]).length} maq.</span>
@@ -4509,37 +4490,18 @@ function renderComparativo() {
     const metaP = maqsP.length>0?(maqsP.reduce((s,m)=>s+m.meta,0)/maqsP.length):0;
     const eficP = metaP>0&&d.media>0 ? (isKmL ? (d.media/metaP)*100 : (metaP/d.media)*100) : null;
     const eficCor = eficP===null?'var(--text3)':eficP>=98?'var(--green)':eficP>=90?'var(--yellow)':'var(--red)';
-    const eficIcon = eficP===null?'':eficP>=98?'✅':eficP>=90?'⚠️':'🔴';
+    const eficIcon = '';
     const desvioP = metaP>0&&d.media>0?((d.media-metaP)/metaP*100):null;
     const dMsign = isKmL ? (dM!==null&&dM>=0?'up':'down') : (dM!==null&&dM>=0?'down':'up');
-
-    // Sparkline — usa km/L ou L/h conforme tipo
-    const sparkRows = d.rows.slice(0,10);
-    const sparkMaxL = Math.max(...sparkRows.map(r=>r.litros||0),1);
-    const sparkMaxM = Math.max(...sparkRows.map(r=>isKmL?(r.litros>0?(r.horas||0)/r.litros:0):(r.horas>0?r.litros/r.horas:0)),1);
-    const sparkW = 6, sparkGap = 3, sparkH = 28, pairGap = 2;
-    const pairW = sparkW*2 + pairGap;
-    const sparkBars = sparkRows.map((r,i)=>{
-      const l = r.litros||0, h = r.horas||0;
-      const m = isKmL ? (l>0?h/l:0) : (h>0?l/h:0);
-      const hL = Math.max(2, Math.round(l/sparkMaxL*sparkH));
-      const hM = Math.max(2, Math.round(m/sparkMaxM*sparkH));
-      const x = i*(pairW+sparkGap);
-      return `<rect x="${x}" y="${sparkH-hL}" width="${sparkW}" height="${hL}" rx="1" fill="#c0392b" opacity="0.8"/>` +
-             `<rect x="${x+sparkW+pairGap}" y="${sparkH-hM}" width="${sparkW}" height="${hM}" rx="1" fill="#d9621e" opacity="0.8"/>`;
-    }).join('');
-    const sparkSvgW = sparkRows.length*(pairW+sparkGap);
-    const sparkVals = sparkRows;
 
     html+=`<div class="comp-card">
       <div class="comp-card-title">${d.label}</div>
       <div class="comp-row"><span class="comp-semana">Litros</span><span class="comp-val">${d.totalL.toFixed(0)}L</span>${dL!==null?`<span class="comp-diff ${dL>0?'down':'up'}">${dL>0?'▲':'▼'}${Math.abs(dL).toFixed(1)}%</span>`:''}</div>
       <div class="comp-row"><span class="comp-semana">Média ${unidadeMedia}</span><span class="comp-val">${d.media.toFixed(2)}</span>${dM!==null?`<span class="comp-diff ${dMsign}">${dM>=0?'▲':'▼'}${Math.abs(dM).toFixed(1)}%</span>`:''}</div>
       <div class="comp-row"><span class="comp-semana">Meta Ideal</span><span class="comp-val" style="color:var(--accent)">${metaP>0?metaP.toFixed(2)+' '+unidadeMedia:'—'}</span></div>
-      <div class="comp-row"><span class="comp-semana">Eficiência</span><span class="comp-val" style="color:${eficCor}">${eficP!==null?eficIcon+' '+eficP.toFixed(1)+'%':'—'}</span>${desvioP!==null?`<span class="comp-diff" style="color:${eficCor}">${desvioP>0?'+':''}${desvioP.toFixed(1)}%</span>`:''}</div>
+      <div class="comp-row"><span class="comp-semana">Eficiência</span><span class="comp-val" style="color:${eficCor}">${eficP!==null?eficP.toFixed(1)+'%':'—'}</span>${desvioP!==null?`<span class="comp-diff" style="color:${eficCor}">${desvioP>0?'+':''}${desvioP.toFixed(1)}%</span>`:''}</div>
       <div class="comp-row"><span class="comp-semana">Veículos</span><span class="comp-val">${d.maquinas}</span></div>
       <div class="comp-row"><span class="comp-semana">${labelHoras}</span><span class="comp-val">${d.totalH.toFixed(0)}${isKmL?'km':'h'}</span></div>
-      ${sparkVals.length>0?`<div style="margin-top:8px;opacity:.85"><svg width="${sparkSvgW}" height="${sparkH}" viewBox="0 0 ${sparkSvgW} ${sparkH}">${sparkBars}</svg><div style="display:flex;gap:8px;margin-top:3px"><span style="font-size:9px;color:#c0392b">■ litros</span><span style="font-size:9px;color:#d9621e">■ ${unidadeMedia}</span></div></div>`:''}
     </div>`;
   });
   html+='</div>';
@@ -4548,7 +4510,7 @@ function renderComparativo() {
   const todasOps=[...new Set(selecionadosFiltrados.flatMap(([id])=>dadosPeriodo[id].rows.map(r=>(r.operacao||'').replace(/_/g,' ')).filter(Boolean)))].sort();
   if(todasOps.length>0 && opF.size===0){
     html+=`<div class="comp-maq-table" style="margin-bottom:16px">
-      <div class="comp-maq-header"><span>📍 Consumo por Operação</span><span class="comp-badge">${todasOps.length} operações</span></div>
+      <div class="comp-maq-header"><span>Consumo por Operação</span><span class="comp-badge">${todasOps.length} operações</span></div>
       <div style="overflow-x:auto"><table><thead><tr><th>Operação</th><th style="color:var(--text2)">Meta</th>${selecionadosFiltrados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>${unidadeMedia}</th><th>Maq.</th>`).join('')}${selecionadosFiltrados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
     todasOps.forEach(op=>{
       const maqsDaOp=state.maquinas.filter(m=>(m.operacao||'').replace(/_/g,' ')===op&&m.meta>0);
@@ -4578,7 +4540,7 @@ function renderComparativo() {
   // Tabela por Máquina
   const todasPlacas=[...new Set(selecionadosFiltrados.flatMap(([id])=>dadosPeriodo[id].rows.filter(r=>opF.size===0||opF.has(r.operacao)).map(r=>r.placa)))]
     .sort();
-  html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>🚗 Consumo por Placa</span><span class="comp-badge">${todasPlacas.length} veículos</span></div>
+  html+=`<div class="comp-maq-table"><div class="comp-maq-header"><span>Consumo por Placa</span><span class="comp-badge">${todasPlacas.length} veículos</span></div>
   <div style="overflow-x:auto"><table><thead><tr><th>Placa</th><th>Operação</th><th style="color:var(--text2)">Meta</th>${selecionadosFiltrados.map(([id])=>`<th>${dadosPeriodo[id].label} — L</th><th>${unidadeMedia}</th>`).join('')}${selecionadosFiltrados.length>1?'<th>Variação</th>':''}</tr></thead><tbody>`;
   todasPlacas.forEach(placa=>{
     let op='';
@@ -5027,7 +4989,7 @@ function atualizarBotoesSelecao() {
   countEl.style.display=n>0?'inline':'none';
   countEl.textContent=`${n} selecionado${n!==1?'s':''}`;
   btnApagar.style.display=n>0?'inline-flex':'none';
-  btnSel.textContent=selectedIds.size===abastFiltrados.length?'☑ Desmarcar Todos':'☐ Selecionar Todos';
+  btnSel.textContent=selectedIds.size===abastFiltrados.length?'☑ Desmarcar Todos':'Selecionar todos';
 }
 
 function toggleSelecionarTodos() {
@@ -5138,13 +5100,7 @@ function getEquipamentoTipoLabel(m) {
   return ({maquina:'Máquina',trator:'Trator',pesada:'Frota pesada',leve:'Frota leve',empilhadeira:'Empilhadeira'})[t] || 'Equipamento';
 }
 function getEquipamentoIconSvg(m) {
-  const t = getTipoEquipamentoCadastro(m);
-  if (t === 'trator') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><circle cx="7" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18h1m6 0h3"/><path d="M9 15V9h5l3 5"/><path d="M11 9V6h4"/><path d="M4 13h5"/><path d="M15 6V4h2"/></svg>';
-  if (t === 'pesada') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><path d="M3 7h11v9H3z"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M5 10h6"/></svg>';
-  if (t === 'leve') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><path d="m4 15 2-5h12l2 5v3H4z"/><path d="m8 10 2-3h4l2 3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>';
-  if (t === 'empilhadeira') return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><circle cx="7" cy="18" r="2"/><circle cx="14" cy="18" r="2"/><path d="M4 18V9h6v7h5"/><path d="M10 9V5h4v8"/><path d="M18 4v14"/><path d="M18 16h4M18 19h4"/></svg>';
-  // Máquina: escavadeira com lança e garra, inspirada nos equipamentos florestais da operação.
-  return '<svg class="ui-icon equipment-svg" viewBox="0 0 24 24"><path d="M3 18h9c2 0 3.5 1 3.5 2.5S14 23 12 23H3c-2 0-3-1-3-2.5S1 18 3 18Z"/><path d="M4 17v-6h6l3 6"/><path d="M9 11V7h4l2 4"/><path d="M13 7 18 3l2 2-4 6"/><path d="M20 5l2 4-2 3"/><path d="m20 12-2 2M20 12l2 2M18 14l1 2M22 14l-1 2"/></svg>';
+  return getFleetTypeIconSvg(getTipoEquipamentoCadastro(m));
 }
 
 function renderMaquinas() {
@@ -6307,7 +6263,7 @@ function renderRelEmailBloco(operacoes, relTipo) {
   const bloco = document.getElementById('rel-email-bloco');
   if (!bloco) return;
   if (!operacoes.length) { bloco.innerHTML = ''; return; }
-  const dica = '<div style="font-size:11px;color:var(--text3);margin-bottom:12px">💡 Configure grupos em <strong>📧 Grupos de E-mail</strong> para reusar toda semana!</div>';
+  const dica = '<div style="font-size:11px;color:var(--text3);margin-bottom:12px">💡 Configure grupos em <strong>Grupos de E-mail</strong> para reusar toda semana!</div>';
   const blocosSalvos = relgGetBlocosSalvos(operacoes, relTipo);
   const blocos = blocosSalvos || relGetBlocos(operacoes, relTipo);
   window._relBlocos = blocos;
@@ -7636,7 +7592,7 @@ function arlaExibirResultado() {
     const circ = 2 * Math.PI * r;
     const seg = (pct) => (pct/100) * circ;
     const segs = [
-      {val:fail.length,    color:'#c0392b', label:'Crítico'},
+      {val:fail.length,    color:'#e95f32', label:'Crítico'},
       {val:atencao.length, color:'#f59e0b', label:'Atenção'},
       {val:ok.length,      color:'#2a9d6a', label:'Ideal'},
       {val:egr.length,     color:'#3b82f6', label:'EGR'},
@@ -7753,7 +7709,7 @@ function arlaSetStatusTab(tab, el) {
     b.style.borderColor = 'var(--border)';
   });
   if (el) {
-    const colors = { critico: ['rgba(239,68,68,.12)', 'var(--red)', 'rgba(239,68,68,.4)'], atencao: ['rgba(245,158,11,.12)', '#f59e0b', 'rgba(245,158,11,.4)'], ideal: ['rgba(34,197,94,.12)', 'var(--green)', 'rgba(34,197,94,.4)'], todos: ['rgba(79,142,247,.12)', 'var(--accent)', 'rgba(192,57,43,.4)'] };
+    const colors = { critico: ['rgba(239,68,68,.12)', 'var(--red)', 'rgba(239,68,68,.4)'], atencao: ['rgba(245,158,11,.12)', '#f59e0b', 'rgba(245,158,11,.4)'], ideal: ['rgba(34,197,94,.12)', 'var(--green)', 'rgba(34,197,94,.4)'], todos: ['rgba(79,142,247,.12)', 'var(--accent)', 'rgba(233,95,50,.4)'] };
     const [bg, color, border] = colors[tab] || colors.todos;
     el.style.background = bg; el.style.color = color; el.style.borderColor = border;
   }
@@ -8055,18 +8011,18 @@ function arlaRenderGrupos() {
     if (temDados) {
       const btnEnv = document.createElement('button');
       btnEnv.className = 'btn btn-primary btn-sm';
-      btnEnv.textContent = '📧 Enviar';
+      btnEnv.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="m4 7 8 6 8-6"/></svg>Enviar';
       btnEnv.addEventListener('click', () => arlaEnviarEmailGrupo(g.id));
       btns.appendChild(btnEnv);
     }
     const btnEdit = document.createElement('button');
     btnEdit.className = 'btn btn-secondary btn-sm';
-    btnEdit.textContent = '✏️ Editar';
+    btnEdit.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>Editar';
     btnEdit.addEventListener('click', () => arlaEditarGrupo(g.id));
     btns.appendChild(btnEdit);
     const btnDel = document.createElement('button');
     btnDel.className = 'btn btn-danger btn-sm';
-    btnDel.textContent = '🗑️';
+    btnDel.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg>';
     btnDel.addEventListener('click', () => arlaExcluirGrupo(g.id));
     btns.appendChild(btnDel);
   });
@@ -8408,12 +8364,12 @@ function relgRender() {
     const btns = document.getElementById('relg-btns-' + g.id);
     const btnEdit = document.createElement('button');
     btnEdit.className = 'btn btn-secondary btn-sm';
-    btnEdit.textContent = '✏️ Editar';
+    btnEdit.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>Editar';
     btnEdit.addEventListener('click', () => relgEditar(g.id));
     btns.appendChild(btnEdit);
     const btnDel = document.createElement('button');
     btnDel.className = 'btn btn-danger btn-sm';
-    btnDel.textContent = '🗑️';
+    btnDel.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg>';
     btnDel.addEventListener('click', () => relgExcluir(g.id));
     btns.appendChild(btnDel);
   });
@@ -8732,7 +8688,7 @@ function dieselPopularOps() {
 
   const colStyle = 'display:flex;align-items:center;gap:4px;justify-content:flex-end';
 
-  let aviso = !podeEditar ? `<div style="background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text2);margin-bottom:10px">
+  let aviso = !podeEditar ? `<div style="background:rgba(233,95,50,.08);border:1px solid rgba(233,95,50,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--text2);margin-bottom:10px">
     🔒 Somente ADM Master e Admin podem editar estas configurações.
   </div>` : '';
 
@@ -10395,7 +10351,7 @@ function kmComparar() {
       html += '<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px">🗂️ Presentes no nosso sistema mas NÃO na planilha do cliente (' + semNoCliente.length + '):</div>';
       html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
       semNoCliente.forEach(r => {
-        html += '<span style="background:rgba(192,57,43,.15);color:var(--accent);border:1px solid rgba(192,57,43,.3);border-radius:6px;padding:3px 9px;font-family:monospace;font-size:12px;font-weight:700">' + r.placa + ' <span style="font-weight:400;font-size:10px">' + fmtKm(r.kmSistema) + ' km</span></span>';
+        html += '<span style="background:rgba(233,95,50,.15);color:var(--accent);border:1px solid rgba(233,95,50,.3);border-radius:6px;padding:3px 9px;font-family:monospace;font-size:12px;font-weight:700">' + r.placa + ' <span style="font-weight:400;font-size:10px">' + fmtKm(r.kmSistema) + ' km</span></span>';
       });
       html += '</div>';
     }
@@ -10493,7 +10449,7 @@ function kmComparar() {
   });
   semNoCliente.forEach(r => {
     html += '<tr data-status="sem_corr" data-placa="' + r.placa + '" data-op="' + (r.operacao || '') + '">';
-    html += '<td><span class="placa-tag" style="border-color:rgba(192,57,43,.4)">' + r.placa + '</span></td>';
+    html += '<td><span class="placa-tag" style="border-color:rgba(233,95,50,.4)">' + r.placa + '</span></td>';
     html += '<td style="font-size:12px;color:var(--text2)">' + (r.operacao || '—') + '</td>';
     html += '<td style="text-align:center;font-family:monospace;color:var(--accent)">' + fmtKm(r.kmSistema) + '</td>';
     html += '<td style="text-align:center;color:var(--text3)">—</td>';
@@ -10615,6 +10571,53 @@ function kmExportarExcel() {
 <x:Name>KM Comparativo</x:Name>
 <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
 </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+
+<style id="ignis-stage2-polish-final">
+:root{--accent:#e95f32;--accent2:#f07b48;--accent-hover:#d9542a;--green:#31c48d;--yellow:#f5b942;--red:#ef6262;--blue:#4f8fe8;}
+/* all controls use one visual language */
+.filter-select,.filter-input,.form-input,.form-select,.btn,.arla-tab,.semana-opt{font-family:'DM Sans',sans-serif!important}
+.btn-primary:hover{background:var(--accent-hover)!important;border-color:var(--accent-hover)!important;box-shadow:0 6px 18px rgba(233,95,50,.22)!important}
+.btn-secondary:hover,.btn-ghost:hover{border-color:rgba(233,95,50,.42)!important;color:#f6a07d!important;background:rgba(233,95,50,.055)!important;box-shadow:none!important}
+.machine-card:hover{border-color:rgba(233,95,50,.34)!important;box-shadow:0 12px 32px rgba(0,0,0,.24)!important}
+.dashboard-toolbar{border-color:rgba(255,255,255,.085)!important}
+.dash-filter-trigger{padding:0 14px!important}.dash-filter-value{padding-left:2px!important;font-size:13px!important}
+.dash-filter-trigger-icon{background:transparent!important;border:0!important;color:#aab6c4!important;width:24px!important;height:24px!important;min-width:24px!important}
+.dash-filter-trigger-icon .ui-icon{width:19px!important;height:19px!important;stroke-width:2!important}
+.dash-type-menu{width:270px!important;padding:8px!important}
+.dash-type-option{width:100%;height:42px;border:0;background:transparent;color:#b8c3ce;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:9px;font:600 13px 'DM Sans';cursor:pointer;text-align:left}
+.dash-type-option:hover{background:rgba(255,255,255,.045);color:#fff}.dash-type-option.selected{background:rgba(233,95,50,.11);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+.dash-type-option .ui-icon{width:19px;height:19px;color:#9eabb9}.dash-type-option.selected .ui-icon{color:var(--accent)}
+/* checkbox padrão - evita quadrados nativos e desalinhados */
+input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:17px;height:17px;min-width:17px;border:1px solid #4a5665;border-radius:5px;background:#0d131a;display:inline-grid;place-content:center;vertical-align:middle;margin:0;cursor:pointer;transition:.14s}
+input[type="checkbox"]::after{content:'';width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) scale(0);margin-top:-1px;transition:.12s}
+input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}input[type="checkbox"]:checked::after{transform:rotate(-45deg) scale(1)}
+input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:rgba(233,95,50,.75)}
+.selection-chip,#comp-periodo-checkboxes label{display:inline-flex!important;align-items:center!important;gap:9px!important;padding:9px 12px!important;background:#121922!important;border:1px solid var(--border)!important;border-radius:10px!important;color:#bac4cf!important;cursor:pointer!important;font-size:12px!important;font-weight:600!important;transition:.15s!important}
+.selection-chip:hover,#comp-periodo-checkboxes label:hover{border-color:rgba(233,95,50,.3)!important;background:#151d27!important;color:#fff!important}.selection-chip.selected,#comp-periodo-checkboxes label:has(input:checked){border-color:rgba(233,95,50,.65)!important;background:rgba(233,95,50,.1)!important;color:#fff!important}
+.rel-tipo-btn,.exec-tipo-btn,.arla-status-tab{border-radius:10px!important;min-height:38px!important;padding:8px 13px!important;background:#121922!important;border:1px solid var(--border)!important;color:#b7c2ce!important}.rel-tipo-btn.active,.exec-tipo-btn.active,.arla-status-tab.active{background:rgba(233,95,50,.11)!important;border-color:rgba(233,95,50,.5)!important;color:#fff!important}
+.perm-item{background:#121922!important;border-color:var(--border)!important;border-radius:10px!important;padding:10px 12px!important}
+.icon-action-btn{width:36px;height:34px;padding:0!important;justify-content:center}.icon-action-btn .ui-icon{width:16px;height:16px}
+/* title vector icons */
+.page-title-icon{display:flex;align-items:center;gap:11px}.title-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--accent)}.title-icon .ui-icon{width:24px;height:24px;stroke-width:1.9}
+.import-icon-svg{background:transparent!important;border:0!important;color:var(--accent)!important}.import-icon-svg .ui-icon{width:34px!important;height:34px!important;stroke-width:1.7!important}
+.import-icon:empty,.empty-icon:empty{display:none!important}
+/* KPI icons aligned but without emoji-like tiles */
+.kpi-icon{right:22px!important;top:22px!important;width:26px!important;height:26px!important;background:transparent!important;border:0!important}.kpi-icon .ui-icon{width:21px!important;height:21px!important}
+/* operation analysis */
+.dashboard-op-card{min-height:210px!important;padding-bottom:18px!important}.operation-card-strip{display:flex;gap:10px;overflow-x:auto;padding:12px 2px 7px;scrollbar-width:thin}.operation-card{min-width:184px;max-width:205px;flex:0 0 184px;border:1px solid var(--border);background:#121922;border-radius:12px;padding:13px;text-align:left;color:var(--text);cursor:pointer;transition:.16s}.operation-card:hover{border-color:rgba(255,255,255,.13);transform:translateY(-1px)}.operation-card.selected{border-color:rgba(233,95,50,.62);box-shadow:inset 0 0 0 1px rgba(233,95,50,.18)}
+.operation-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.operation-name{font-size:10.5px;color:#8fa0b1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:108px}.status-pill{font-size:9px;font-weight:750;border-radius:999px;padding:3px 7px;white-space:nowrap}.status-pill.ok{color:#49d7a1;background:rgba(49,196,141,.11)}.status-pill.attention{color:#f6c65d;background:rgba(245,185,66,.1)}.status-pill.critical{color:#ff7b7b;background:rgba(239,98,98,.1)}.status-pill.sem-meta{color:#8592a0;background:rgba(133,146,160,.08)}
+.operation-primary{display:flex;align-items:baseline;gap:5px;margin-top:11px}.operation-primary strong{font:700 24px 'DM Mono',monospace}.operation-primary span{font-size:10px;color:#718090}.operation-meta{font-size:10px;color:#8492a1;margin-top:3px;height:16px}.operation-progress{height:7px;background:#0b1117;border-radius:999px;position:relative;margin-top:12px;overflow:visible}.operation-fill{display:block;height:100%;border-radius:999px}.operation-progress i{position:absolute;top:-3px;width:1px;height:13px;background:#d6dee7;opacity:.72}.operation-foot{display:flex;justify-content:space-between;color:#738292;font-size:9.5px;margin-top:9px}
+/* plate chart = efficiency vs meta; liters shown as context, not an incomparable second axis */
+.dashboard-plate-card{min-height:330px!important}.efficiency-chart{height:250px;display:flex;align-items:flex-end;gap:15px;min-width:max-content;padding:24px 8px 8px}.efficiency-column{width:72px;flex:0 0 72px;text-align:center;cursor:default}.efficiency-value{font:700 10px 'DM Mono',monospace;margin-bottom:5px}.efficiency-bar-zone{height:128px;position:relative;display:flex;justify-content:center;align-items:flex-end;border-bottom:1px solid rgba(255,255,255,.08)}.efficiency-target{position:absolute;left:5px;right:5px;height:1px;background:rgba(255,255,255,.5);z-index:2}.efficiency-bar{width:28px;border-radius:5px 5px 2px 2px;transition:.25s}.efficiency-plate{font:650 10px 'DM Mono',monospace;color:#aeb9c4;margin-top:7px}.efficiency-meta{font-size:8.5px;color:#6f7d8b;margin-top:2px}.efficiency-liters{font-size:8.5px;color:#7e8b99;margin-top:3px}.meta-legend{color:#7f8b98!important;font-size:10px!important}
+/* comparison cards: no meaningless mini graph */
+.comp-card{min-height:0!important}.comp-card .comp-row:last-child{border-bottom:0!important}
+/* comparison type selector */
+.comp-maq-opt{min-height:42px!important;border-radius:9px!important;padding:0 11px!important}.comp-maq-opt:hover{background:rgba(255,255,255,.045)!important}.comp-type-icon{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:#9aa8b6}.comp-type-icon .ui-icon{width:18px;height:18px}.comp-maq-opt[data-selected="1"]{background:rgba(233,95,50,.1)!important;box-shadow:inset 3px 0 0 var(--accent)}
+/* eliminate old accent/red hover artifacts */
+.sidebar-toggle:hover{color:var(--accent)!important;box-shadow:3px 0 18px rgba(233,95,50,.18)!important}.nav-item.active{background:rgba(233,95,50,.1)!important;border-color:rgba(233,95,50,.18)!important}.semana-opt.selected{background:rgba(233,95,50,.1)!important}.semana-opt.has-data{border-color:rgba(233,95,50,.26)!important}tr:hover td{background:rgba(233,95,50,.035)!important}.import-area:hover{background:rgba(233,95,50,.035)!important}
+@media(max-width:900px){.kpi-icon{right:16px!important;top:18px!important}.operation-card{min-width:170px;flex-basis:170px}.dash-type-menu{width:100%!important}}
+</style>
+
 </head>
 <body>
 <table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-family:Arial,sans-serif">
@@ -10767,6 +10770,53 @@ function arlaExportarExcel() {
 <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
 <x:Name>Arla 32</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
 </x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+
+<style id="ignis-stage2-polish-final">
+:root{--accent:#e95f32;--accent2:#f07b48;--accent-hover:#d9542a;--green:#31c48d;--yellow:#f5b942;--red:#ef6262;--blue:#4f8fe8;}
+/* all controls use one visual language */
+.filter-select,.filter-input,.form-input,.form-select,.btn,.arla-tab,.semana-opt{font-family:'DM Sans',sans-serif!important}
+.btn-primary:hover{background:var(--accent-hover)!important;border-color:var(--accent-hover)!important;box-shadow:0 6px 18px rgba(233,95,50,.22)!important}
+.btn-secondary:hover,.btn-ghost:hover{border-color:rgba(233,95,50,.42)!important;color:#f6a07d!important;background:rgba(233,95,50,.055)!important;box-shadow:none!important}
+.machine-card:hover{border-color:rgba(233,95,50,.34)!important;box-shadow:0 12px 32px rgba(0,0,0,.24)!important}
+.dashboard-toolbar{border-color:rgba(255,255,255,.085)!important}
+.dash-filter-trigger{padding:0 14px!important}.dash-filter-value{padding-left:2px!important;font-size:13px!important}
+.dash-filter-trigger-icon{background:transparent!important;border:0!important;color:#aab6c4!important;width:24px!important;height:24px!important;min-width:24px!important}
+.dash-filter-trigger-icon .ui-icon{width:19px!important;height:19px!important;stroke-width:2!important}
+.dash-type-menu{width:270px!important;padding:8px!important}
+.dash-type-option{width:100%;height:42px;border:0;background:transparent;color:#b8c3ce;display:flex;align-items:center;gap:12px;padding:0 12px;border-radius:9px;font:600 13px 'DM Sans';cursor:pointer;text-align:left}
+.dash-type-option:hover{background:rgba(255,255,255,.045);color:#fff}.dash-type-option.selected{background:rgba(233,95,50,.11);color:#fff;box-shadow:inset 3px 0 0 var(--accent)}
+.dash-type-option .ui-icon{width:19px;height:19px;color:#9eabb9}.dash-type-option.selected .ui-icon{color:var(--accent)}
+/* checkbox padrão - evita quadrados nativos e desalinhados */
+input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:17px;height:17px;min-width:17px;border:1px solid #4a5665;border-radius:5px;background:#0d131a;display:inline-grid;place-content:center;vertical-align:middle;margin:0;cursor:pointer;transition:.14s}
+input[type="checkbox"]::after{content:'';width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) scale(0);margin-top:-1px;transition:.12s}
+input[type="checkbox"]:checked{background:var(--accent);border-color:var(--accent)}input[type="checkbox"]:checked::after{transform:rotate(-45deg) scale(1)}
+input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:rgba(233,95,50,.75)}
+.selection-chip,#comp-periodo-checkboxes label{display:inline-flex!important;align-items:center!important;gap:9px!important;padding:9px 12px!important;background:#121922!important;border:1px solid var(--border)!important;border-radius:10px!important;color:#bac4cf!important;cursor:pointer!important;font-size:12px!important;font-weight:600!important;transition:.15s!important}
+.selection-chip:hover,#comp-periodo-checkboxes label:hover{border-color:rgba(233,95,50,.3)!important;background:#151d27!important;color:#fff!important}.selection-chip.selected,#comp-periodo-checkboxes label:has(input:checked){border-color:rgba(233,95,50,.65)!important;background:rgba(233,95,50,.1)!important;color:#fff!important}
+.rel-tipo-btn,.exec-tipo-btn,.arla-status-tab{border-radius:10px!important;min-height:38px!important;padding:8px 13px!important;background:#121922!important;border:1px solid var(--border)!important;color:#b7c2ce!important}.rel-tipo-btn.active,.exec-tipo-btn.active,.arla-status-tab.active{background:rgba(233,95,50,.11)!important;border-color:rgba(233,95,50,.5)!important;color:#fff!important}
+.perm-item{background:#121922!important;border-color:var(--border)!important;border-radius:10px!important;padding:10px 12px!important}
+.icon-action-btn{width:36px;height:34px;padding:0!important;justify-content:center}.icon-action-btn .ui-icon{width:16px;height:16px}
+/* title vector icons */
+.page-title-icon{display:flex;align-items:center;gap:11px}.title-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--accent)}.title-icon .ui-icon{width:24px;height:24px;stroke-width:1.9}
+.import-icon-svg{background:transparent!important;border:0!important;color:var(--accent)!important}.import-icon-svg .ui-icon{width:34px!important;height:34px!important;stroke-width:1.7!important}
+.import-icon:empty,.empty-icon:empty{display:none!important}
+/* KPI icons aligned but without emoji-like tiles */
+.kpi-icon{right:22px!important;top:22px!important;width:26px!important;height:26px!important;background:transparent!important;border:0!important}.kpi-icon .ui-icon{width:21px!important;height:21px!important}
+/* operation analysis */
+.dashboard-op-card{min-height:210px!important;padding-bottom:18px!important}.operation-card-strip{display:flex;gap:10px;overflow-x:auto;padding:12px 2px 7px;scrollbar-width:thin}.operation-card{min-width:184px;max-width:205px;flex:0 0 184px;border:1px solid var(--border);background:#121922;border-radius:12px;padding:13px;text-align:left;color:var(--text);cursor:pointer;transition:.16s}.operation-card:hover{border-color:rgba(255,255,255,.13);transform:translateY(-1px)}.operation-card.selected{border-color:rgba(233,95,50,.62);box-shadow:inset 0 0 0 1px rgba(233,95,50,.18)}
+.operation-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.operation-name{font-size:10.5px;color:#8fa0b1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:108px}.status-pill{font-size:9px;font-weight:750;border-radius:999px;padding:3px 7px;white-space:nowrap}.status-pill.ok{color:#49d7a1;background:rgba(49,196,141,.11)}.status-pill.attention{color:#f6c65d;background:rgba(245,185,66,.1)}.status-pill.critical{color:#ff7b7b;background:rgba(239,98,98,.1)}.status-pill.sem-meta{color:#8592a0;background:rgba(133,146,160,.08)}
+.operation-primary{display:flex;align-items:baseline;gap:5px;margin-top:11px}.operation-primary strong{font:700 24px 'DM Mono',monospace}.operation-primary span{font-size:10px;color:#718090}.operation-meta{font-size:10px;color:#8492a1;margin-top:3px;height:16px}.operation-progress{height:7px;background:#0b1117;border-radius:999px;position:relative;margin-top:12px;overflow:visible}.operation-fill{display:block;height:100%;border-radius:999px}.operation-progress i{position:absolute;top:-3px;width:1px;height:13px;background:#d6dee7;opacity:.72}.operation-foot{display:flex;justify-content:space-between;color:#738292;font-size:9.5px;margin-top:9px}
+/* plate chart = efficiency vs meta; liters shown as context, not an incomparable second axis */
+.dashboard-plate-card{min-height:330px!important}.efficiency-chart{height:250px;display:flex;align-items:flex-end;gap:15px;min-width:max-content;padding:24px 8px 8px}.efficiency-column{width:72px;flex:0 0 72px;text-align:center;cursor:default}.efficiency-value{font:700 10px 'DM Mono',monospace;margin-bottom:5px}.efficiency-bar-zone{height:128px;position:relative;display:flex;justify-content:center;align-items:flex-end;border-bottom:1px solid rgba(255,255,255,.08)}.efficiency-target{position:absolute;left:5px;right:5px;height:1px;background:rgba(255,255,255,.5);z-index:2}.efficiency-bar{width:28px;border-radius:5px 5px 2px 2px;transition:.25s}.efficiency-plate{font:650 10px 'DM Mono',monospace;color:#aeb9c4;margin-top:7px}.efficiency-meta{font-size:8.5px;color:#6f7d8b;margin-top:2px}.efficiency-liters{font-size:8.5px;color:#7e8b99;margin-top:3px}.meta-legend{color:#7f8b98!important;font-size:10px!important}
+/* comparison cards: no meaningless mini graph */
+.comp-card{min-height:0!important}.comp-card .comp-row:last-child{border-bottom:0!important}
+/* comparison type selector */
+.comp-maq-opt{min-height:42px!important;border-radius:9px!important;padding:0 11px!important}.comp-maq-opt:hover{background:rgba(255,255,255,.045)!important}.comp-type-icon{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;color:#9aa8b6}.comp-type-icon .ui-icon{width:18px;height:18px}.comp-maq-opt[data-selected="1"]{background:rgba(233,95,50,.1)!important;box-shadow:inset 3px 0 0 var(--accent)}
+/* eliminate old accent/red hover artifacts */
+.sidebar-toggle:hover{color:var(--accent)!important;box-shadow:3px 0 18px rgba(233,95,50,.18)!important}.nav-item.active{background:rgba(233,95,50,.1)!important;border-color:rgba(233,95,50,.18)!important}.semana-opt.selected{background:rgba(233,95,50,.1)!important}.semana-opt.has-data{border-color:rgba(233,95,50,.26)!important}tr:hover td{background:rgba(233,95,50,.035)!important}.import-area:hover{background:rgba(233,95,50,.035)!important}
+@media(max-width:900px){.kpi-icon{right:16px!important;top:18px!important}.operation-card{min-width:170px;flex-basis:170px}.dash-type-menu{width:100%!important}}
+</style>
+
 </head>
 <body>
 <table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-family:Arial,sans-serif">
@@ -11143,7 +11193,7 @@ function setCompMaq(el) {
   const text = el.textContent.trim();
   const btn = document.getElementById('comp-maq-label');
   if (val === '__empilhadeiras__') {
-    btn.innerHTML = `<img src="assets/ignis-inline-2-b4d5d76fbd.jpg" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin-right:4px"> EMPILHADEIRAS`;
+    btn.innerHTML = `<span class="comp-type-icon" data-kind="empilhadeira"></span> EMPILHADEIRAS`;
   } else {
     btn.textContent = text;
   }
@@ -11229,7 +11279,7 @@ function rcComparar() {
   document.getElementById('rc-kpis').innerHTML = [
     {v:_rcO2P.length,          l:'Total O2P',    c:'var(--text)'},
     {v:_rcTicket.length,       l:'Total Ticket',  c:'var(--text)'},
-    {v:_rcDados.o2p.length,    l:'Só no O2P',     c:'var(--red,#c0392b)'},
+    {v:_rcDados.o2p.length,    l:'Só no O2P',     c:'var(--red,#e95f32)'},
     {v:_rcDados.ticket.length, l:'Só na Ticket',  c:'#e8941a'},
     {v:_rcDados.ambos.length,  l:'Em ambos',       c:'var(--green,#2a9d6a)'},
   ].map(k=>'<div class="kpi-card"><div style="font-size:26px;font-weight:700;color:'+k.c+'">'+k.v.toLocaleString('pt-BR')+'</div><div class="kpi-delta" style="font-size:12px;color:var(--text2)">'+k.l+'</div></div>').join('');
@@ -11304,6 +11354,43 @@ async function rcExportar() {
 
 </script>
 
+
+<script id="ignis-stage2-polish-js">
+function getFleetTypeIconSvg(kind){
+  const k=String(kind||'').replace(/^__|__$/g,'');
+  const cls='ui-icon equipment-svg';
+  if(k==='trator'||k==='tratores') return `<svg class="${cls}" viewBox="0 0 24 24"><circle cx="6.5" cy="17.5" r="3"/><circle cx="17" cy="17" r="4"/><path d="M3 17.5H2.5V13h7.5l2 4.5"/><path d="M10 13V8h5l3 5"/><path d="M12 8V5h3.5"/><path d="M15.5 5V3.5h2"/></svg>`;
+  if(k==='pesada') return `<svg class="${cls}" viewBox="0 0 24 24"><path d="M3 7h11v9H3z"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M5 10h6"/></svg>`;
+  if(k==='leve') return `<svg class="${cls}" viewBox="0 0 24 24"><path d="m4 15 2-5h12l2 5v3H4z"/><path d="m8 10 2-3h4l2 3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>`;
+  if(k==='empilhadeira'||k==='empilhadeiras') return `<svg class="${cls}" viewBox="0 0 24 24"><circle cx="7" cy="18" r="2"/><circle cx="14" cy="18" r="2"/><path d="M4 18V9h6v7h5"/><path d="M10 9V5h4v8"/><path d="M18 4v14M18 16h4M18 19h4"/></svg>`;
+  if(k==='maquina'||k==='maquinas') return `<svg class="${cls}" viewBox="0 0 24 24"><path d="M3 19h9.5c2 0 3.5.8 3.5 2s-1.5 2-3.5 2H3c-2 0-3-.8-3-2s1-2 3-2Z"/><path d="M4 18v-6h6l3 6"/><path d="M9 12V8h4l2 4"/><path d="M13 8 18 4l2 2-4 6"/><path d="M20 6l2 4-2 3"/><path d="m20 13-2 2M20 13l2 2M18 15l1 2M22 15l-1 2"/></svg>`;
+  return `<svg class="${cls}" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="6" rx="1.5"/><rect x="14" y="5" width="7" height="6" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg>`;
+}
+const DASH_TYPES=[['','Todos os tipos','all'],['__maquinas__','Máquinas','maquina'],['__tratores__','Tratores','trator'],['__pesada__','Frota pesada','pesada'],['__leve__','Frota leve','leve'],['__empilhadeiras__','Empilhadeiras','empilhadeira']];
+function renderDashTypeMenu(){
+  const menu=document.getElementById('dash-type-menu'); const sel=document.getElementById('dash-maq-filter'); if(!menu||!sel)return;
+  menu.innerHTML=DASH_TYPES.map(([v,l,k])=>`<button type="button" class="dash-type-option ${sel.value===v?'selected':''}" onclick="selectDashType('${v}')">${getFleetTypeIconSvg(k)}<span>${l}</span></button>`).join('');
+  const item=DASH_TYPES.find(x=>x[0]===sel.value)||DASH_TYPES[0];
+  const label=document.getElementById('dash-type-label'), icon=document.getElementById('dash-type-icon'); if(label)label.textContent=item[1]; if(icon)icon.innerHTML=getFleetTypeIconSvg(item[2]);
+}
+function toggleDashTypeDropdown(){ const m=document.getElementById('dash-type-menu'); if(!m)return; ['op-dropdown-menu','placa-dropdown-menu','modelo-dropdown-menu'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none'}); renderDashTypeMenu(); m.style.display=m.style.display==='none'?'block':'none'; }
+function selectDashType(value){ const sel=document.getElementById('dash-maq-filter'); if(!sel)return; sel.value=value; const m=document.getElementById('dash-type-menu'); if(m)m.style.display='none'; renderDashTypeMenu(); updateFilters(true); populatePlacaDropdown(); populateModeloDropdown(); renderDashboard(); }
+function decorateCompTypeOptions(){document.querySelectorAll('.comp-type-icon').forEach(el=>{el.innerHTML=getFleetTypeIconSvg(el.dataset.kind)});}
+const _oldSetCompMaq=window.setCompMaq;
+window.setCompMaq=function(el){
+  const val=el.dataset.val; document.getElementById('comp-maq-filter').value=val;
+  const labels={__maquinas__:'Máquinas',__tratores__:'Tratores',__pesada__:'Frota pesada',__leve__:'Frota leve',__empilhadeiras__:'Empilhadeiras'};
+  document.getElementById('comp-maq-label').textContent=labels[val]||'Máquinas';
+  document.getElementById('comp-maq-menu').style.display='none';
+  document.querySelectorAll('.comp-maq-opt').forEach(o=>{o.style.background='';o.dataset.selected=o===el?'1':'0'});
+  updateFilters(true); const tabFin=document.getElementById('comp-tab-financeiro'); if(tabFin&&tabFin.style.display!=='none')renderCompFinanceiro();else renderComparativo();
+};
+document.addEventListener('click',e=>{const wrap=document.getElementById('dash-type-wrap');const menu=document.getElementById('dash-type-menu');if(wrap&&menu&&!wrap.contains(e.target))menu.style.display='none'});
+function polishUiAfterRender(){renderDashTypeMenu();decorateCompTypeOptions();const selected=document.querySelector('.comp-maq-opt[data-val="__maquinas__"]');if(selected)selected.dataset.selected='1';}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',polishUiAfterRender);else polishUiAfterRender();
+new MutationObserver(()=>{decorateCompTypeOptions()}).observe(document.body,{childList:true,subtree:true});
+</script>
+
 <script id="ignis-ui-symbol-cleanup">
 (function installIgnisUiSymbolCleanup(){
   const re = /\p{Extended_Pictographic}\uFE0F?/gu;
@@ -11339,6 +11426,8 @@ async function rcExportar() {
   }
   const run=()=>cleanNode(document.body);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',run,{once:true}); else run();
+  const removeEmptyDecor=()=>document.querySelectorAll('.empty-icon:empty,.import-icon:empty').forEach(el=>el.remove());
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',removeEmptyDecor,{once:true}); else removeEmptyDecor();
   const obs=new MutationObserver(muts=>{ muts.forEach(m=>m.addedNodes.forEach(cleanNode)); });
   const start=()=>document.body&&obs.observe(document.body,{childList:true,subtree:true});
   if(document.body) start(); else document.addEventListener('DOMContentLoaded',start,{once:true});
