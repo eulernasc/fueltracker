@@ -1031,6 +1031,10 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 
 
 
+
+<style id="stage3-clarity-fix">
+.pend-highlight{margin-top:10px;padding:10px 11px;border-radius:10px;background:#0e151d;border:1px solid rgba(255,255,255,.055);display:flex;align-items:center;justify-content:space-between;gap:12px}.pend-highlight>div{min-width:0}.pend-highlight span{display:block;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#75869a;font-weight:750}.pend-highlight strong{display:block;margin-top:2px;font-size:14px;color:#fff}.pend-highlight small{font-size:10.5px;color:#8392a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42%}.pend-preview{font-size:10.5px;color:var(--text3);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pend-detail-btn{margin-top:9px;border:1px solid rgba(233,95,50,.22);background:rgba(233,95,50,.065);color:#f38a63;padding:7px 9px;border-radius:8px;font:inherit;font-size:10.8px;font-weight:720;cursor:pointer;display:inline-flex;align-items:center;gap:7px}.pend-detail-btn:hover{background:rgba(233,95,50,.11);border-color:rgba(233,95,50,.38)}.pend-detail-btn span{color:#fff;background:#1a222c;border-radius:999px;padding:1px 6px;font-size:9.5px}.pend-detail-modal{width:min(820px,92vw)!important;max-height:82vh;display:flex;flex-direction:column}.pend-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:14px}.pend-detail-sub{font-size:11.5px;color:var(--text3);margin-top:3px}.pend-close{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:#101720;color:#9cabba;font-size:22px;line-height:1;cursor:pointer}.pend-close:hover{color:#fff;border-color:rgba(233,95,50,.35)}.pend-detail-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px;max-height:55vh;background:#0f151d}.pend-detail-table{width:100%;border-collapse:collapse;font-size:12px}.pend-detail-table th{position:sticky;top:0;background:#151d26;color:#8798aa;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:9.5px;padding:10px 12px;border-bottom:1px solid var(--border);z-index:1}.pend-detail-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#b8c4d0}.pend-detail-table tr:last-child td{border-bottom:0}.pend-detail-table tr:hover td{background:rgba(255,255,255,.018)}.pend-detail-table tr.worst td{background:rgba(244,94,89,.045)}.pend-detail-table .bad{color:#f45e59}.pend-detail-table .warn{color:#f4b544}.pend-detail-table .ok{color:#35c891}.pend-worst-tag{display:inline-block;margin-left:7px;font-size:8.5px;text-transform:uppercase;letter-spacing:.05em;color:#ff8b86;background:rgba(244,94,89,.1);border-radius:999px;padding:2px 5px}.pend-issue:has(.pend-detail-btn){min-height:170px}
+</style>
 </head>
 <body>
 
@@ -3748,7 +3752,20 @@ function pendCollect(){
   const addIssue=(i)=>{issues.push(i);(i.keys||[i.id]).forEach(k=>activeLabels[k]=i.title);};
 
   const reinc=pendGetReincidentes();
-  if(reinc.length){const worst=reinc[0]?.pior??100;addIssue({id:'consumo',kind:'consumo',severity:worst<90?'critical':'attention',title:'Consumo reincidente',count:reinc.length,keys:reinc.map(r=>'consumo:'+r.placa),page:'relatorio',detail:`${reinc.length} ativo${reinc.length>1?'s':''} abaixo de 98% em 2+ períodos. Pior eficiência: ${worst.toFixed(1)}%.`,meta:reinc.slice(0,5).map(r=>r.placa).join(', ')});monitors.push({name:'Consumo e reincidência',status:worst<90?'critical':'attention',detail:`${reinc.length} reincidente${reinc.length>1?'s':''}`});}
+  if(reinc.length){
+    const worst=reinc[0]; const worstPct=worst?.pior??100;
+    addIssue({
+      id:'consumo',kind:'consumo',severity:worstPct<90?'critical':'attention',title:'Consumo reincidente',count:reinc.length,
+      keys:reinc.map(r=>'consumo:'+r.placa),page:'relatorio',
+      detail:`${reinc.length} ativo${reinc.length>1?'s':''} abaixo de 98% em 2 ou mais períodos.`,
+      highlightLabel:'Menor eficiência',
+      highlightValue:`${worst?.placa||'—'} · ${worstPct.toFixed(1)}%`,
+      highlightSub:worst?.operacao||'Operação não informada',
+      rows:reinc.map(r=>({placa:r.placa,operacao:r.operacao||'—',eficiencia:r.pior,periodos:r.periodos})),
+      meta:reinc.slice(0,5).map(r=>`${r.placa} ${r.pior.toFixed(1)}%`).join(' · ')
+    });
+    monitors.push({name:'Consumo e reincidência',status:worstPct<90?'critical':'attention',detail:`${reinc.length} reincidente${reinc.length>1?'s':''} · menor ${worstPct.toFixed(1)}%`});
+  }
   else monitors.push({name:'Consumo e reincidência',status:'ok',detail:'Nenhuma reincidência detectada'});
 
   const latest=pendLatestAbast(); const gap=pendBusinessGap(latest);
@@ -3762,7 +3779,13 @@ function pendCollect(){
 
   const arla=pendGetArla();
   if(arla.deadlineMissing){const sev=arla.dia>15?'critical':'attention'; const atraso=Math.max(0,arla.dia-15);addIssue({id:'arla-prazo',kind:'arla',severity:sev,title:'Relatório mensal de Arla',count:1,keys:['arla-prazo'],page:'arla',detail:arla.dia>15?`Relatório de ${arla.prevLabel} não importado · ${atraso} dia${atraso!==1?'s':''} em atraso.`:`Relatório de ${arla.prevLabel} ainda não importado · prazo dia 15.`,meta:'Controle mensal'});}
-  if(arla.crit.length){addIssue({id:'arla-critico',kind:'arla',severity:'critical',title:'Arla fora da faixa crítica',count:arla.crit.length,keys:arla.crit.map(r=>'arla:'+String(arla.latest?.id||'')+':'+r.placa),page:'arla',detail:`${arla.crit.length} placa${arla.crit.length>1?'s':''} em estado crítico no relatório ${arla.latest?.label||'mais recente'}.`,meta:arla.crit.slice(0,5).map(r=>r.placa).join(', ')});}
+  if(arla.crit.length){
+    addIssue({id:'arla-critico',kind:'arla',severity:'critical',title:'Arla fora da faixa crítica',count:arla.crit.length,
+      keys:arla.crit.map(r=>'arla:'+String(arla.latest?.id||'')+':'+r.placa),page:'arla',
+      detail:`${arla.crit.length} placa${arla.crit.length>1?'s':''} em estado crítico no relatório ${arla.latest?.label||'mais recente'}.`,
+      rows:arla.crit.map(r=>({placa:r.placa||'—',operacao:r.operacao||'—',pct:Number(r.pct),segmento:r.segmento||'—',direcao:r.direcao||''})),
+      meta:arla.crit.slice(0,5).map(r=>r.placa).join(', ')});
+  }
   const arlaStatus=arla.deadlineMissing?(arla.dia>15?'critical':'attention'):(arla.crit.length?'critical':arla.aten.length?'attention':'ok');
   const arlaDetail=arla.deadlineMissing?'Relatório mensal pendente':arla.latest?`${arla.crit.length} crítico(s) · ${arla.aten.length} atenção`:'Nenhum mês importado';
   monitors.push({name:'Controle Arla',status:arla.latest||arla.deadlineMissing?arlaStatus:'waiting',detail:arlaDetail});
@@ -3786,7 +3809,36 @@ function pendSyncResolved(activeLabels){
   return hist;
 }
 function pendGo(page){const el=document.getElementById('nav-'+page)||[...document.querySelectorAll('.nav-item')].find(n=>(n.getAttribute('onclick')||'').includes("'"+page+"'"));if(!document.getElementById('page-'+page)){showToast('Você não tem acesso a esta análise.','error');return;}showPage(page,el);}
-function pendIssueHTML(i){const sev=i.severity==='critical'?'Crítica':'Atenção';return `<article class="pend-issue ${i.severity}" onclick="pendGo('${i.page}')"><div class="pend-issue-icon">${pendSvg(i.kind)}</div><div class="pend-issue-body"><div class="pend-issue-top"><div class="pend-issue-title">${pendEsc(i.title)}</div><span class="pend-severity ${i.severity}">${sev}</span></div><div class="pend-issue-detail">${pendEsc(i.detail)}</div>${i.meta?`<div style="font-size:10.5px;color:var(--text3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pendEsc(i.meta)}</div>`:''}<div class="pend-issue-meta"><span class="pend-issue-count">${Number(i.count||1).toLocaleString('pt-BR')} ocorrência${Number(i.count||1)===1?'':'s'}</span><span class="pend-issue-action">Abrir análise <svg class="ui-icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></div></div></article>`;}
+function pendIssueHTML(i){
+  const sev=i.severity==='critical'?'Crítica':'Atenção';
+  const highlight=i.highlightValue?`<div class="pend-highlight"><div><span>${pendEsc(i.highlightLabel||'Destaque')}</span><strong>${pendEsc(i.highlightValue)}</strong></div>${i.highlightSub?`<small>${pendEsc(i.highlightSub)}</small>`:''}</div>`:'';
+  const details=i.rows?.length?`<button class="pend-detail-btn" onclick="event.stopPropagation();pendOpenDetails('${i.id}')">Ver ${i.id==='consumo'?'placas reincidentes':'detalhes'} <span>${Number(i.rows.length).toLocaleString('pt-BR')}</span></button>`:'';
+  return `<article class="pend-issue ${i.severity}" onclick="pendGo('${i.page}')"><div class="pend-issue-icon">${pendSvg(i.kind)}</div><div class="pend-issue-body"><div class="pend-issue-top"><div class="pend-issue-title">${pendEsc(i.title)}</div><span class="pend-severity ${i.severity}">${sev}</span></div><div class="pend-issue-detail">${pendEsc(i.detail)}</div>${highlight}${i.meta&&!i.highlightValue?`<div class="pend-preview">${pendEsc(i.meta)}</div>`:''}${details}<div class="pend-issue-meta"><span class="pend-issue-count">${Number(i.count||1).toLocaleString('pt-BR')} ocorrência${Number(i.count||1)===1?'':'s'}</span><span class="pend-issue-action">Abrir análise <svg class="ui-icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></div></div></article>`;
+}
+function pendOpenDetails(issueId){
+  const issue=pendCollect().issues.find(x=>x.id===issueId); if(!issue||!issue.rows?.length)return;
+  let overlay=document.getElementById('pend-detail-modal');
+  if(!overlay){
+    overlay=document.createElement('div'); overlay.id='pend-detail-modal'; overlay.className='modal-overlay';
+    overlay.innerHTML=`<div class="modal pend-detail-modal"><div class="pend-detail-head"><div><div class="modal-title" id="pend-detail-title"></div><div class="pend-detail-sub" id="pend-detail-sub"></div></div><button class="pend-close" onclick="closeModal('pend-detail-modal')" aria-label="Fechar">×</button></div><div class="pend-detail-table-wrap"><table class="pend-detail-table"><thead id="pend-detail-thead"></thead><tbody id="pend-detail-tbody"></tbody></table></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('pend-detail-modal')">Fechar</button><button class="btn btn-primary" id="pend-detail-open">Abrir análise</button></div></div>`;
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('pend-detail-title').textContent=issue.title;
+  document.getElementById('pend-detail-sub').textContent=`${issue.rows.length.toLocaleString('pt-BR')} registro${issue.rows.length===1?'':'s'} · ordenado para facilitar a análise`;
+  const th=document.getElementById('pend-detail-thead'), tb=document.getElementById('pend-detail-tbody');
+  if(issueId==='consumo'){
+    const rows=[...issue.rows].sort((a,b)=>a.eficiencia-b.eficiencia);
+    th.innerHTML='<tr><th>Placa</th><th>Operação</th><th>Menor eficiência</th><th>Períodos</th></tr>';
+    tb.innerHTML=rows.map((r,idx)=>`<tr class="${idx===0?'worst':''}"><td><strong>${pendEsc(r.placa)}</strong>${idx===0?'<span class="pend-worst-tag">Pior caso</span>':''}</td><td>${pendEsc(r.operacao)}</td><td><strong class="${r.eficiencia<90?'bad':r.eficiencia<98?'warn':'ok'}">${Number(r.eficiencia).toFixed(1)}%</strong></td><td>${Number(r.periodos)||0}</td></tr>`).join('');
+  } else if(issueId==='arla-critico'){
+    th.innerHTML='<tr><th>Placa</th><th>Operação</th><th>Percentual</th><th>Segmento</th></tr>';
+    tb.innerHTML=issue.rows.map(r=>`<tr><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.operacao)}</td><td>${Number.isFinite(r.pct)?Number(r.pct).toFixed(1)+'%':'—'}</td><td>${pendEsc(r.segmento)}</td></tr>`).join('');
+  } else {
+    th.innerHTML='<tr><th>Registro</th><th>Detalhe</th></tr>'; tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(r.placa||'—')}</td><td>${pendEsc(r.operacao||'—')}</td></tr>`).join('');
+  }
+  document.getElementById('pend-detail-open').onclick=()=>{closeModal('pend-detail-modal');pendGo(issue.page)};
+  overlay.classList.add('open');
+}
 function renderPendencias(force=false){
   const page=document.getElementById('page-pendencias'); if(!page)return;
   const {issues,monitors,activeLabels}=pendCollect(); const hist=pendSyncResolved(activeLabels); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
@@ -5586,23 +5638,16 @@ function editarMaquina(idx) {
 }
 
 function openImport() {
-  // Sugerir nome baseado na semana atual
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const weekNum = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
-  const mes = now.toLocaleDateString('pt-BR',{month:'short',year:'numeric'});
-  document.getElementById('import-periodo-nome').value = `Semana ${weekNum} · ${mes.charAt(0).toUpperCase()+mes.slice(1)}`;
-  // Sugerir início da semana (segunda) e fim (domingo)
-  const day = now.getDay();
-  const diffMon = day===0 ? -6 : 1-day;
-  const mon = new Date(now); mon.setDate(now.getDate()+diffMon);
-  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-  const fmt = d => d.toISOString().split('T')[0];
-  document.getElementById('import-data-ini').value = fmt(mon);
-  document.getElementById('import-data-fim').value = fmt(sun);
-  document.getElementById('import-preview').innerHTML = '';
+  // O modal atual importa o relatório mensal completo. A versão antiga desta função
+  // ainda procurava campos de período removidos no Stage 2 e lançava erro antes de
+  // abrir o modal. Mantemos somente os elementos que realmente existem hoje.
+  const file = document.getElementById('file-input-diario');
+  const preview = document.getElementById('import-diario-preview');
+  if (file) file.value = '';
+  if (preview) preview.innerHTML = '';
   renderHistoricoPeriodos();
-  document.getElementById('modal-import').classList.add('open');
+  const modal = document.getElementById('modal-import');
+  if (modal) modal.classList.add('open');
 }
 
 function renderHistoricoPeriodos() {
