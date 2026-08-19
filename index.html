@@ -1028,6 +1028,9 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 .sidebar.collapsed #nav-arla .nav-count-pill,.sidebar.collapsed #nav-arla .nav-alert-dot{display:none!important}
 @media(max-width:900px){.operation-card{min-width:196px!important;flex-basis:196px!important}.efficiency-column{width:78px!important;flex-basis:78px!important}}
 </style>
+
+
+
 </head>
 <body>
 
@@ -1345,7 +1348,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <svg class="ui-icon" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="op-filter-label">1 operação filtrada</span><span style="font-size:10px;color:var(--text2)">limpar</span>
         </div>
       </div>
-      <div id="op-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:12px"><div class="empty"><div class="empty-icon">🏭</div><div class="empty-text">Sem dados</div></div></div>
+      <div id="op-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:12px"><div class="empty"><div class="empty-text">Sem dados</div></div></div>
     </div>
     <!-- Consumo por Máquina (largura total) -->
     <div class="chart-card dashboard-plate-card" style="margin-bottom:16px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
@@ -1353,7 +1356,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="chart-title" style="margin-bottom:0">Consumo por Placa — <span id="chart-period-label">Semanal</span></div>
         <div class="chart-legend" id="bar-chart-legend" style="margin:0"></div>
       </div>
-      <div id="bar-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:12px"><div class="empty"><div class="empty-icon">📊</div><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
+      <div id="bar-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:12px"><div class="empty"><div class="empty-text">Sem dados</div><div class="empty-sub">Importe um relatório para começar</div></div></div>
     </div>
     <!-- Ranking abaixo -->
     <div class="chart-card" style="margin-bottom:16px">
@@ -4871,7 +4874,7 @@ function compFinRenderSemanal(dados, fmtR) {
   const totEcon = dados.reduce((s, d) => s + d.econR, 0);
   const totLiq = totDesp - totEcon;
 
-  let html = '<div style="display:flex;flex-direction:column;gap:10px">';
+  let html = '<div class="fin-chart-list">';
   dados.forEach((d, idx) => {
     const liquidoCor = d.liquidoR > 0 ? 'var(--red)' : d.liquidoR < 0 ? 'var(--green)' : 'var(--text3)';
     const barDesp = Math.max((d.despR / maxVal) * 100, 0);
@@ -4884,10 +4887,10 @@ function compFinRenderSemanal(dados, fmtR) {
       .sort((a, b) => b[1].despR - a[1].despR)
       .slice(0, 3);
 
-    html += '<div style="background:var(--bg3);border-radius:10px;overflow:hidden">';
+    html += '<div class="fin-chart-card">';
     // Header clicável
-    html += '<div style="padding:12px 14px;cursor:pointer" onclick="this.nextSibling.style.display=this.nextSibling.style.display===\'none\'?\'\':\' none\'">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:4px">';
+    html += '<div class="fin-chart-head" onclick="this.nextSibling.style.display=this.nextSibling.style.display===\'none\'?\'\':\' none\'">';
+    html += '<div class="fin-chart-title-row">';
     html += '<div>';
     html += '<span style="font-size:13px;font-weight:700">' + d.label + '</span>';
     if (d.dataIni) html += '<span style="font-size:10px;color:var(--text3);margin-left:8px">' + d.dataIni.split('-').reverse().join('/') + (d.dataFim ? ' a ' + d.dataFim.split('-').reverse().join('/') : '') + '</span>';
@@ -4896,15 +4899,9 @@ function compFinRenderSemanal(dados, fmtR) {
     html += '<span style="font-size:14px;font-weight:700;color:' + liquidoCor + '">Líquido: ' + (d.liquidoR >= 0 ? '' : '-') + fmtR(d.liquidoR) + '</span>';
     html += '</div>';
     // Barras
-    html += '<div style="display:flex;flex-direction:column;gap:5px">';
-    html += '<div style="display:flex;align-items:center;gap:8px">';
-    html += '<span style="font-size:11px;color:var(--red);width:90px;text-align:right;flex-shrink:0">🔴 ' + (d.despR > 0 ? fmtR(d.despR) : '—') + '</span>';
-    html += '<div style="flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden"><div style="height:100%;width:' + barDesp + '%;background:var(--red);border-radius:5px"></div></div>';
-    html += '</div>';
-    html += '<div style="display:flex;align-items:center;gap:8px">';
-    html += '<span style="font-size:11px;color:var(--green);width:90px;text-align:right;flex-shrink:0">🟢 ' + (d.econR > 0 ? fmtR(d.econR) : '—') + '</span>';
-    html += '<div style="flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden"><div style="height:100%;width:' + barEcon + '%;background:var(--green);border-radius:5px"></div></div>';
-    html += '</div>';
+    html += '<div class="fin-chart-bars">';
+    html += '<div class="fin-chart-row"><span class="fin-chart-label" style="color:var(--red)"><i class="fin-swatch loss"></i>Desperdício <b>' + (d.despR > 0 ? fmtR(d.despR) : '—') + '</b></span><div class="fin-track"><div class="fin-fill loss" style="width:' + barDesp + '%"></div></div></div>';
+    html += '<div class="fin-chart-row"><span class="fin-chart-label" style="color:var(--green)"><i class="fin-swatch save"></i>Economia <b>' + (d.econR > 0 ? fmtR(d.econR) : '—') + '</b></span><div class="fin-track"><div class="fin-fill save" style="width:' + barEcon + '%"></div></div></div>';
     html += '</div></div>';
     // Detalhes expansíveis
     html += '<div style="display:none;padding:0 14px 12px;border-top:1px solid rgba(42,47,69,.5)">';
@@ -4920,7 +4917,7 @@ function compFinRenderSemanal(dados, fmtR) {
         html += '</div>';
       });
     } else {
-      html += '<div style="font-size:12px;color:var(--green)">✅ Nenhum desperdício neste período</div>';
+      html += '<div style="font-size:12px;color:var(--green);font-weight:650">Nenhum desperdício neste período</div>';
     }
     html += '</div>';
     html += '</div>';
@@ -4932,7 +4929,7 @@ function compFinRenderSemanal(dados, fmtR) {
   html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Desperdiçado</div><div style="font-size:20px;font-weight:700;color:var(--red)">' + fmtR(totDesp) + '</div></div>';
   html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Economizado</div><div style="font-size:20px;font-weight:700;color:var(--green)">' + fmtR(totEcon) + '</div></div>';
   html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Saldo Líquido</div><div style="font-size:20px;font-weight:700;color:' + (totLiq > 0 ? 'var(--red)' : 'var(--green)') + '">' + (totLiq >= 0 ? '' : '-') + fmtR(totLiq) + '</div></div>';
-  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Melhor Semana 💚</div>';
+  html += '<div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Melhor Semana</div>';
   const melhor = dados.filter(d => d.econR > 0 || d.despR > 0).sort((a,b) => a.liquidoR - b.liquidoR)[0];
   html += '<div style="font-size:13px;font-weight:600;color:var(--green)">' + (melhor ? melhor.label : '—') + '</div></div>';
   html += '</div>';
@@ -4956,21 +4953,21 @@ function compFinRenderMensal(dados, fmtR) {
   const meses = Object.entries(byMes).sort((a, b) => a[0].localeCompare(b[0]));
   if (!meses.length) return '<div style="color:var(--text3);font-size:13px">Configure datas de referência nos períodos importados para agrupar por mês</div>';
   const maxVal = Math.max(...meses.map(([, d]) => Math.max(d.despR, d.econR)), 1);
-  let html = '<div style="display:flex;flex-direction:column;gap:10px">';
+  let html = '<div class="fin-chart-list">';
   meses.forEach(([key, d]) => {
     const liquidoR = d.despR - d.econR;
     const liquidoCor = liquidoR > 0 ? 'var(--red)' : liquidoR < 0 ? 'var(--green)' : 'var(--text3)';
     const barDesp = Math.max((d.despR / maxVal) * 100, 0);
     const barEcon = Math.max((d.econR / maxVal) * 100, 0);
-    html += '<div style="background:var(--bg3);border-radius:10px;padding:12px 14px">';
+    html += '<div class="fin-chart-card"><div class="fin-chart-head">';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:4px">';
     html += '<div><span style="font-size:13px;font-weight:600">' + d.label + '</span><span style="font-size:11px;color:var(--text3);margin-left:8px">' + d.periodos + ' período(s)</span></div>';
     html += '<span style="font-size:13px;font-weight:700;color:' + liquidoCor + '">Líquido: ' + (liquidoR >= 0 ? '' : '-') + fmtR(liquidoR) + '</span>';
     html += '</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:4px">';
-    if (d.despR > 0) html += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--red);width:80px;text-align:right">🔴 ' + fmtR(d.despR) + '</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + barDesp + '%;background:var(--red);border-radius:4px"></div></div></div>';
-    if (d.econR > 0) html += '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;color:var(--green);width:80px;text-align:right">🟢 ' + fmtR(d.econR) + '</span><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + barEcon + '%;background:var(--green);border-radius:4px"></div></div></div>';
-    html += '</div></div>';
+    html += '<div class="fin-chart-bars">';
+    if (d.despR > 0) html += '<div class="fin-chart-row"><span class="fin-chart-label" style="color:var(--red)"><i class="fin-swatch loss"></i>Desperdício <b>' + fmtR(d.despR) + '</b></span><div class="fin-track"><div class="fin-fill loss" style="width:' + barDesp + '%"></div></div></div>';
+    if (d.econR > 0) html += '<div class="fin-chart-row"><span class="fin-chart-label" style="color:var(--green)"><i class="fin-swatch save"></i>Economia <b>' + fmtR(d.econR) + '</b></span><div class="fin-track"><div class="fin-fill save" style="width:' + barEcon + '%"></div></div></div>';
+    html += '</div></div></div>';
   });
   html += '</div>';
   const totDesp = meses.reduce((s, [, d]) => s + d.despR, 0);
@@ -7758,44 +7755,40 @@ function arlaExibirResultado() {
   document.getElementById('arla-kpi-atencao').textContent = atencao.length;
   document.getElementById('arla-kpi-ok').textContent = ok.length;
   document.getElementById('arla-kpi-egr').textContent = egr.length;
-
-  // Donut chart
+  // Donut chart — padrão visual unificado do IGNIS
   const donutWrap = document.getElementById('arla-donut-container');
   if (donutWrap && srcDados.length > 0) {
     const total = srcDados.length;
-    const pFail = (fail.length/total*100).toFixed(1);
-    const pOk   = (ok.length/total*100).toFixed(1);
-    const pEgr  = (egr.length/total*100).toFixed(1);
     const semD  = srcDados.filter(r => r.status === 'SEM_DIESEL');
-    const pSem  = (semD.length/total*100).toFixed(1);
-    // SVG donut
-    const r = 48, cx = 60, cy = 60, stroke = 16;
+    const r = 46, cx = 60, cy = 60, stroke = 14;
     const circ = 2 * Math.PI * r;
-    const seg = (pct) => (pct/100) * circ;
     const segs = [
-      {val:fail.length,    color:'#e95f32', label:'Crítico'},
-      {val:atencao.length, color:'#f59e0b', label:'Atenção'},
-      {val:ok.length,      color:'#2a9d6a', label:'Ideal'},
-      {val:egr.length,     color:'#3b82f6', label:'EGR'},
-      {val:semD.length,    color:'#9a8f85', label:'Sem diesel'},
-    ];
+      {val:fail.length,    color:'#ef6262', label:'Crítico'},
+      {val:atencao.length, color:'#f5b942', label:'Atenção'},
+      {val:ok.length,      color:'#31c48d', label:'Ideal'},
+      {val:egr.length,     color:'#4f8fe8', label:'EGR'},
+      {val:semD.length,    color:'#7f8b98', label:'Sem diesel'},
+    ].filter(s => s.val > 0);
     let offset = 0;
     const paths = segs.map(s => {
-      const len = seg(s.val/total*100);
-      const d = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${stroke}" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-dasharray .6s ease"/>`;
+      const pct = s.val / total * 100;
+      const len = (pct/100) * circ;
+      const d = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${stroke}" stroke-dasharray="${Math.max(0,len-1.6)} ${circ-Math.max(0,len-1.6)}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" stroke-linecap="round" style="transition:stroke-dasharray .45s ease"/>`;
       offset += len; return d;
     }).join('');
     donutWrap.innerHTML = `<div class="arla-donut-wrap">
-      <svg width="120" height="120" viewBox="0 0 120 120">
-        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg3)" stroke-width="${stroke}"/>
+      <svg viewBox="0 0 120 120" aria-label="Distribuição dos status de Arla">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#0b1117" stroke-width="${stroke}"/>
         ${paths}
-        <text x="${cx}" y="${cy-6}" text-anchor="middle" fill="var(--text)" font-size="14" font-weight="700">${total}</text>
-        <text x="${cx}" y="${cy+10}" text-anchor="middle" fill="var(--text2)" font-size="9">total</text>
+        <text x="${cx}" y="${cy-4}" text-anchor="middle" fill="var(--text)" font-size="16" font-weight="800">${total}</text>
+        <text x="${cx}" y="${cy+11}" text-anchor="middle" fill="var(--text2)" font-size="8.5">analisadas</text>
       </svg>
       <div class="arla-donut-legend">
-        ${segs.map(s=>`<span><i style="background:${s.color}"></i>${s.label}: <b style="color:var(--text)">${s.val}</b></span>`).join('')}
+        ${segs.map(s=>{ const pct=(s.val/total*100); return `<span><i style="background:${s.color}"></i><em style="font-style:normal;color:#aeb9c4">${s.label}</em><span class="arla-legend-pct">${pct.toFixed(1)}%</span><b>${s.val}</b></span>`; }).join('')}
       </div>
     </div>`;
+  } else if (donutWrap) {
+    donutWrap.innerHTML = '';
   }
 
   // Reset status tab to crítico quando carregar dados novos (foco do gestor)
@@ -11622,5 +11615,112 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.addEventListener('unhandledrejection', function(e){ console.error('[IGNIS promise]', e.reason); });
 })();
 </script>
+<style id="ignis-chart-system-2026">
+/* ═══════════════════════════════════════════════════════════════
+   IGNIS — sistema visual unificado para gráficos
+   Somente visual: não altera cálculos, filtros ou dados.
+   ═══════════════════════════════════════════════════════════════ */
+.chart-card{
+  background:linear-gradient(180deg,#131a22 0%,#111820 100%)!important;
+  border-color:rgba(151,164,178,.15)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.16)!important;
+}
+.chart-title{color:#eef3f8!important;font-weight:720!important;letter-spacing:-.15px!important}
+.chart-legend{align-items:center!important;flex-wrap:wrap!important}
+.legend-item{color:#91a0af!important;font-size:10.5px!important;font-weight:600!important}
+.legend-dot{width:8px!important;height:8px!important;border-radius:3px!important}
+
+/* Consumo por operação: 5 operações cabem sem barra horizontal.
+   Se houver mais de 5, cria nova linha em vez de rolagem. */
+.dashboard-op-card{padding:20px 18px!important}
+#op-chart-container{overflow:visible!important;padding-bottom:0!important}
+.operation-card-strip{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:10px!important;
+  overflow:visible!important;
+  padding:12px 0 0!important;
+}
+.operation-card{
+  min-width:0!important;max-width:none!important;flex:none!important;
+  width:100%!important;padding:12px 13px!important;border-radius:12px!important;
+  background:linear-gradient(180deg,#141c25,#111820)!important;
+  border-color:rgba(151,164,178,.14)!important;
+}
+.operation-card:hover{border-color:rgba(233,95,50,.34)!important;box-shadow:0 8px 22px rgba(0,0,0,.16)!important}
+.operation-card.selected{border-color:rgba(233,95,50,.64)!important;box-shadow:inset 0 0 0 1px rgba(233,95,50,.12),0 8px 22px rgba(0,0,0,.14)!important}
+.operation-name{font-size:10.5px!important;max-width:calc(100% - 84px)!important}
+.operation-primary{margin-top:9px!important}.operation-primary strong{font-size:23px!important}
+.operation-analysis{margin-top:7px!important;padding:8px 0!important;gap:8px!important}
+.operation-analysis small{font-size:8.5px!important}.operation-analysis strong{font-size:11.5px!important}
+.operation-progress{height:6px!important;margin-top:9px!important;background:#0b1117!important}
+.operation-foot-single{font-size:9.5px!important;margin-top:7px!important}
+#op-chart-container::-webkit-scrollbar{display:none!important}
+
+/* Consumo por placa: aparência de gráfico consistente, sem a barra branca nativa. */
+.dashboard-plate-card{padding:20px 18px!important}
+#bar-chart-container{scrollbar-width:thin!important;scrollbar-color:#33404d #0d131a!important;padding-bottom:10px!important}
+#bar-chart-container::-webkit-scrollbar{height:7px!important}
+#bar-chart-container::-webkit-scrollbar-track{background:#0d131a!important;border-radius:999px!important}
+#bar-chart-container::-webkit-scrollbar-thumb{background:#33404d!important;border-radius:999px!important;border:1px solid #0d131a!important}
+#bar-chart-container::-webkit-scrollbar-thumb:hover{background:#455362!important}
+.efficiency-chart{
+  height:270px!important;gap:16px!important;padding:24px 10px 8px!important;
+  background-image:linear-gradient(to bottom,rgba(255,255,255,.035) 1px,transparent 1px)!important;
+  background-size:100% 42px!important;
+  border-radius:12px!important;
+}
+.efficiency-column{width:78px!important;flex-basis:78px!important;padding:4px 5px 0!important;border-radius:10px!important;transition:background .16s,transform .16s!important}
+.efficiency-column:hover{background:rgba(255,255,255,.025)!important;transform:translateY(-2px)!important}
+.efficiency-value{font-size:11.5px!important;margin-bottom:7px!important}
+.efficiency-bar-zone{height:132px!important;border-bottom-color:rgba(255,255,255,.10)!important}
+.efficiency-target{height:2px!important;background:#d7e0e8!important;opacity:.78!important;box-shadow:0 0 0 1px rgba(10,15,20,.35)!important}
+.efficiency-bar{width:34px!important;border-radius:8px 8px 3px 3px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 5px 12px rgba(0,0,0,.16)!important}
+.efficiency-plate{font-size:10.5px!important;margin-top:8px!important;color:#d0d8e1!important}
+.efficiency-meta{font-size:9.7px!important;color:#8e9baa!important;margin-top:4px!important}
+.efficiency-score{font-size:10.2px!important;margin-top:3px!important}
+.meta-legend{padding-left:8px!important;border-left:1px solid rgba(255,255,255,.12)!important}
+
+/* Comparativo: cards e barras financeiras seguem o mesmo padrão visual. */
+.comp-card{background:linear-gradient(180deg,#141c25,#111820)!important;border-color:rgba(151,164,178,.15)!important;border-radius:13px!important;box-shadow:0 8px 22px rgba(0,0,0,.12)!important}
+.comp-card-title{color:#9fabb8!important;letter-spacing:.075em!important}
+.comp-row{border-bottom-color:rgba(151,164,178,.09)!important}
+.fin-chart-list{display:flex;flex-direction:column;gap:10px}
+.fin-chart-card{background:linear-gradient(180deg,#141c25,#111820);border:1px solid rgba(151,164,178,.14);border-radius:13px;overflow:hidden}
+.fin-chart-head{padding:13px 15px 11px;cursor:pointer}
+.fin-chart-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.fin-chart-bars{display:grid;gap:7px}
+.fin-chart-row{display:grid;grid-template-columns:110px minmax(120px,1fr);align-items:center;gap:10px}
+.fin-chart-label{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:650;color:#9aa7b4;white-space:nowrap}
+.fin-chart-label b{margin-left:auto;color:inherit;font-weight:720}
+.fin-swatch{width:8px;height:8px;border-radius:3px;flex:none}.fin-swatch.loss{background:var(--red)}.fin-swatch.save{background:var(--green)}
+.fin-track{height:9px;background:#0b1117;border:1px solid rgba(151,164,178,.08);border-radius:999px;overflow:hidden}
+.fin-fill{height:100%;border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.fin-fill.loss{background:linear-gradient(90deg,#cf5353,var(--red))}.fin-fill.save{background:linear-gradient(90deg,#299f74,var(--green))}
+
+/* Arla: donut e legenda com a mesma linguagem dos demais gráficos. */
+.arla-donut-wrap{display:grid!important;grid-template-columns:160px minmax(220px,1fr)!important;align-items:center!important;justify-content:center!important;gap:24px!important;padding:14px 6px 8px!important;max-width:540px;margin:0 auto}
+.arla-donut-wrap svg{width:154px!important;height:154px!important;filter:drop-shadow(0 8px 16px rgba(0,0,0,.18))}
+.arla-donut-legend{display:grid!important;gap:7px!important;font-size:12px!important}
+.arla-donut-legend span{display:grid!important;grid-template-columns:10px 1fr auto auto!important;align-items:center!important;gap:8px!important;padding:7px 9px!important;background:#121922!important;border:1px solid rgba(151,164,178,.10)!important;border-radius:9px!important}
+.arla-donut-legend i{width:8px!important;height:8px!important;border-radius:3px!important}
+.arla-donut-legend .arla-legend-pct{color:#7f8d9b;font-size:10px;font-weight:650;min-width:42px;text-align:right}
+.arla-donut-legend b{font:700 12px 'DM Mono',monospace!important;color:#eaf0f6!important;min-width:30px;text-align:right}
+
+/* Gráficos/containers em outras abas: bordas, títulos e hover coerentes. */
+#page-comparativo .comp-maq-table,#page-arla .chart-card,#page-kmcomp .chart-card,#page-metarota .chart-card{
+  border-color:rgba(151,164,178,.14)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.12)!important;
+}
+
+@media(max-width:1260px){
+  .operation-card-strip{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:800px){
+  .operation-card-strip{grid-template-columns:1fr!important}
+  .arla-donut-wrap{grid-template-columns:1fr!important;justify-items:center!important}.arla-donut-legend{width:100%!important}
+  .fin-chart-row{grid-template-columns:1fr!important;gap:5px!important}
+}
+</style>
 </body>
 </html>
