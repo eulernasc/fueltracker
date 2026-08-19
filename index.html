@@ -1082,14 +1082,14 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 
 <style id="ignis-anomalias-page-css">
 /* Tela dedicada de Anomalias */
-.anom-header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}.anom-rules{display:flex;align-items:center;gap:8px;padding:7px;border:1px solid var(--border);background:var(--bg2);border-radius:13px}.anom-rules-title{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7d8da0;padding:0 6px}
+.anom-header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}.anom-header-tools{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.anom-import-ops-btn{height:42px!important;border-radius:11px!important;padding:0 13px!important;white-space:nowrap}.anom-import-ops-btn .ui-icon{width:16px;height:16px;color:#f07a52}.anom-rules{display:flex;align-items:center;gap:8px;padding:7px;border:1px solid var(--border);background:var(--bg2);border-radius:13px}.anom-rules-title{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7d8da0;padding:0 6px}
 .anom-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.anom-kpi{appearance:none;text-align:left;background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:16px 18px;min-height:112px;color:var(--text);cursor:pointer;transition:.16s;position:relative;overflow:hidden}.anom-kpi:hover{border-color:rgba(255,255,255,.12);transform:translateY(-1px)}.anom-kpi.active{border-color:rgba(233,95,50,.52);box-shadow:inset 0 0 0 1px rgba(233,95,50,.13)}.anom-kpi span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#8292a5}.anom-kpi strong{display:block;font:750 29px 'DM Mono',monospace;margin-top:9px;color:#fff}.anom-kpi small{display:block;font-size:10.5px;color:#78889a;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.anom-kpi.medidor strong{color:#ff7676}.anom-kpi.alta strong{color:#f4b544}.anom-kpi.baixa strong{color:#ef6262}.anom-kpi.all strong{color:#f0f4f7}
 .anom-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden}.anom-toolbar{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:12px}.anom-type-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.anom-type-tab{height:34px;padding:0 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#8999aa;font:700 11.5px 'DM Sans',sans-serif;cursor:pointer}.anom-type-tab:hover{background:rgba(255,255,255,.035);color:#fff}.anom-type-tab.active{background:rgba(233,95,50,.1);border-color:rgba(233,95,50,.28);color:#f58a63}.anom-filter-row{display:grid;grid-template-columns:150px 105px minmax(220px,1fr) minmax(230px,1.15fr) auto;gap:9px;align-items:center}.anom-select,.anom-search{height:42px;border:1px solid var(--border);border-radius:11px;background:#101720;color:var(--text);font:600 12px 'DM Sans',sans-serif}.anom-select{padding:0 34px 0 12px;outline:none}.anom-select:focus,.anom-search:focus-within{border-color:rgba(233,95,50,.5);box-shadow:0 0 0 3px rgba(233,95,50,.07)}.anom-search{display:flex;align-items:center;gap:8px;padding:0 11px}.anom-search .ui-icon{width:16px;height:16px;color:#728295}.anom-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#fff;font:500 12px 'DM Sans',sans-serif}.anom-summary{padding:10px 16px;font-size:11.5px;color:#8191a3;border-bottom:1px solid rgba(255,255,255,.04)}.anom-summary strong{color:#dce5ed}
 .anom-table-wrap{overflow:auto;max-height:58vh;scrollbar-width:thin;scrollbar-color:#364351 #0d141b}.anom-table{width:100%;min-width:1180px;border-collapse:collapse;font-size:11.5px}.anom-table th{position:sticky;top:0;z-index:2;background:#151d26;color:#8192a5;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:9.5px;padding:11px 12px;border-bottom:1px solid var(--border)}.anom-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#b8c5d0;vertical-align:middle}.anom-table tr:hover td{background:rgba(255,255,255,.018)}.anom-table .bad{color:#ff6e6e}.anom-table .warn{color:#f5b942}.anom-plate{font-family:'DM Mono',monospace;color:#eef3f7}.anom-badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 8px;font-size:9.5px;font-weight:800;white-space:nowrap}.anom-badge.medidor{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-badge.alta{color:#f5bd56;background:rgba(245,185,66,.09);border:1px solid rgba(245,185,66,.14)}.anom-badge.baixa{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-detail-main{color:#c8d2dc;font-size:10.8px}.anom-detail-sub{font-size:9.8px;color:#647588;margin-top:2px}.anom-empty{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#8493a4}.anom-empty strong{color:#d8e0e7;font-size:14px}.anom-empty span{font-size:11.5px}
 /* Importação: progresso por fase, sem congelar a percepção de "leitura" */
 .import-progress-card{margin-top:10px;padding:12px 13px;border:1px solid var(--border);background:#101720;border-radius:11px}.import-progress-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11.5px}.import-progress-top strong{color:#dbe4ec}.import-progress-top span{font:700 10.5px 'DM Mono',monospace;color:#f17b50}.import-progress-track{height:5px;margin-top:9px;border-radius:999px;background:#0a1016;overflow:hidden}.import-progress-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#f08a4b);transition:width .18s ease}.import-progress-sub{font-size:10.5px;color:#748497;margin-top:7px}
 @media(max-width:1100px){.anom-kpis{grid-template-columns:1fr 1fr}.anom-filter-row{grid-template-columns:1fr 1fr}.anom-search,.anom-op{grid-column:span 1}}
-@media(max-width:650px){.anom-kpis{grid-template-columns:1fr}.anom-rules{width:100%;flex-wrap:wrap}.anom-filter-row{grid-template-columns:1fr}.anom-search,.anom-op{grid-column:auto}.anom-type-tabs{overflow:auto;flex-wrap:nowrap}.anom-type-tab{white-space:nowrap}}
+@media(max-width:650px){.anom-kpis{grid-template-columns:1fr}.anom-header-tools{width:100%;justify-content:stretch}.anom-import-ops-btn{width:100%;justify-content:center}.anom-rules{width:100%;flex-wrap:wrap}.anom-filter-row{grid-template-columns:1fr}.anom-search,.anom-op{grid-column:auto}.anom-type-tabs{overflow:auto;flex-wrap:nowrap}.anom-type-tab{white-space:nowrap}}
 </style>
 </head>
 <body>
@@ -1282,10 +1282,6 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 6 4-3 4 4 5-5 3 3"/></svg>
           Anomalias
         </button>
-        <button class="btn btn-secondary btn-sm" type="button" onclick="ignisOpenImportOpsConfig()">
-          <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7 16V8h10v8"/><path d="M9 8V5h6v3"/><path d="M12 12v4"/></svg>
-          Operações de importação <span class="import-ops-count" id="import-ops-count">6</span>
-        </button>
         <span class="pend-updated" id="pend-updated">—</span>
         <button class="btn btn-secondary btn-sm" type="button" onclick="renderPendencias(true)">
           <svg class="ui-icon" viewBox="0 0 24 24"><path d="M20 6v6h-6"/><path d="M4 18v-6h6"/><path d="M18.5 9A7 7 0 0 0 6.2 6.2L4 8"/><path d="M5.5 15A7 7 0 0 0 17.8 17.8L20 16"/></svg>
@@ -1332,7 +1328,12 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="page-title">Análise de Anomalias</div>
         <div class="page-sub">Medidores regressivos e eficiências fora dos limites configurados</div>
       </div>
-      <div class="anom-rules">
+      <div class="anom-header-tools">
+        <button class="btn btn-secondary btn-sm anom-import-ops-btn" type="button" onclick="ignisOpenAnomOpsConfig()" title="Escolher quais operações aparecem no relatório de anomalias">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16V8h10v8"/><path d="M9 8V5h6v3"/><path d="M12 12v4"/></svg>
+          Operações no relatório <span class="import-ops-count" id="anom-ops-count">6/6</span>
+        </button>
+        <div class="anom-rules">
         <span class="anom-rules-title">Limites de eficiência</span>
         <div class="pend-anom-setting high">
           <span class="pend-anom-label"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 19V5M7 10l5-5 5 5"/></svg>Alta</span>
@@ -1352,6 +1353,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
             <button type="button" class="pend-anom-step" onclick="ignisAjustarLimiteEficiencia('baixa',5)" aria-label="Aumentar limite baixo">+</button>
           </div>
         </div>
+      </div>
       </div>
     </div>
 
@@ -4001,22 +4003,45 @@ function ignisImportMonitorSnapshot(today=new Date()){
   return rows;
 }
 function ignisImportOpsStatusText(row){if(!row.latest)return'Sem dados monitorados';if(row.gap>=2)return`${row.gap} dias úteis sem atualização`;if(row.gap===1)return'1 dia útil de defasagem';return`Atualizado até ${pendFmtDate(row.latest)}`;}
-function ignisUpdateImportOpsCount(){const el=document.getElementById('import-ops-count');if(el)el.textContent=String(ignisEnsureImportOpsConfig().length);}
-function ignisOpenImportOpsConfig(){
-  ignisEnsureImportOpsConfig();let ov=document.getElementById('import-ops-config-modal');
-  if(!ov){ov=document.createElement('div');ov.id='import-ops-config-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal import-ops-modal"><div class="pend-detail-head"><div><div class="modal-title">Operações de importação</div><div class="pend-detail-sub">Monitoramento automático de atualização</div></div><button class="pend-close" onclick="closeModal('import-ops-config-modal')" aria-label="Fechar">×</button></div><div class="import-ops-note">O nome funciona por correspondência. Ex.: <strong>RIBAS</strong> também encontra <strong>SUZANO RIBAS</strong>.</div><div class="import-ops-list" id="import-ops-list"></div><div class="import-op-add"><input id="import-op-new" list="import-op-suggestions" placeholder="Adicionar operação ou termo"><datalist id="import-op-suggestions"></datalist><button class="btn btn-primary btn-sm" onclick="ignisAddImportOp()">Adicionar</button></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('import-ops-config-modal')">Concluído</button></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});}
-  ignisRenderImportOpsConfig();ov.classList.add('open');
+function ignisAnomReportDefaultOps(){
+  return [
+    {nome:'RIBAS',combustiveis:['DIESEL']},
+    {nome:'BRACELL',combustiveis:['DIESEL']},
+    {nome:'ALTO TAQUARI',combustiveis:['DIESEL']},
+    {nome:'COSTA RICA',combustiveis:['DIESEL']},
+    {nome:'ARACRUZ',combustiveis:['DIESEL']},
+    {nome:'RAIZEN',combustiveis:['DIESEL','GASOLINA','ETANOL']}
+  ];
 }
-function ignisRenderImportOpsConfig(){
-  const rules=ignisEnsureImportOpsConfig(),list=document.getElementById('import-ops-list');if(!list)return;const snap=ignisImportMonitorSnapshot();
-  list.innerHTML=rules.map((r,i)=>{const rk=ignisImportRuleKey(r.nome),sts=snap.filter(x=>ignisImportRuleKey(x.regra)===rk);const status=sts.length?sts.map(x=>`${x.combustivel}: ${x.latest?pendFmtDate(x.latest):'sem dados'}`).join(' · '):'Sem dados monitorados';return `<div class="import-op-row"><div><div class="import-op-name">${pendEsc(r.nome)}</div><div class="import-ops-status">${pendEsc(status)}</div></div><div class="import-op-fuels"><button class="import-fuel-chip diesel on" type="button" title="Diesel é obrigatório nas operações de importação">Diesel</button><button class="import-fuel-chip ${r.combustiveis.includes('GASOLINA')?'on':''}" type="button" onclick="ignisToggleImportOpFuel(${i},'GASOLINA')">Gasolina</button><button class="import-fuel-chip ${r.combustiveis.includes('ETANOL')?'on':''}" type="button" onclick="ignisToggleImportOpFuel(${i},'ETANOL')">Etanol</button></div><button class="import-op-remove" type="button" onclick="ignisRemoveImportOp(${i})" title="Remover"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg></button></div>`;}).join('')||'<div class="pend-empty">Nenhuma operação configurada.</div>';
-  const dl=document.getElementById('import-op-suggestions');if(dl){const ops=[...new Set([...(state.maquinas||[]).map(x=>x.operacao),...(state.abastecimentos||[]).map(x=>x.operacao)].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));dl.innerHTML=ops.map(o=>`<option value="${pendEsc(o)}"></option>`).join('');}
-  ignisUpdateImportOpsCount();
+function ignisEnsureAnomReportOps(){
+  const defs=ignisAnomReportDefaultOps();
+  if(!state.anomaliaOperacoesVisiveis||typeof state.anomaliaOperacoesVisiveis!=='object'||Array.isArray(state.anomaliaOperacoesVisiveis))state.anomaliaOperacoesVisiveis={};
+  defs.forEach(r=>{const k=ignisImportRuleKey(r.nome);if(typeof state.anomaliaOperacoesVisiveis[k]!=='boolean')state.anomaliaOperacoesVisiveis[k]=true;});
+  return defs;
 }
-function ignisSaveImportOpsConfig(){saveState({immediate:true});pendMarkDirty();try{renderPendencias(true)}catch(e){}ignisUpdateImportOpsCount();}
-function ignisAddImportOp(){const input=document.getElementById('import-op-new');const nome=String(input?.value||'').trim();if(!nome)return;const rules=ignisEnsureImportOpsConfig();const nk=ignisImportRuleKey(nome);if(rules.some(r=>ignisImportRuleKey(r.nome)===nk)){showToast('Essa operação já está configurada.','error');return;}rules.push({nome,combustiveis:['DIESEL']});if(input)input.value='';ignisSaveImportOpsConfig();ignisRenderImportOpsConfig();}
-function ignisRemoveImportOp(i){const rules=ignisEnsureImportOpsConfig();if(!rules[i])return;rules.splice(i,1);ignisSaveImportOpsConfig();ignisRenderImportOpsConfig();}
-function ignisToggleImportOpFuel(i,fuel){const rules=ignisEnsureImportOpsConfig(),r=rules[i];if(!r||fuel==='DIESEL')return;const has=r.combustiveis.includes(fuel);r.combustiveis=has?r.combustiveis.filter(x=>x!==fuel):[...r.combustiveis,fuel];ignisSaveImportOpsConfig();ignisRenderImportOpsConfig();}
+function ignisAnomReportVisibleCount(){const defs=ignisEnsureAnomReportOps();return defs.filter(r=>state.anomaliaOperacoesVisiveis[ignisImportRuleKey(r.nome)]!==false).length;}
+function ignisUpdateAnomOpsCount(){const el=document.getElementById('anom-ops-count');if(el){const defs=ignisEnsureAnomReportOps();el.textContent=`${ignisAnomReportVisibleCount()}/${defs.length}`;}}
+function ignisOpenAnomOpsConfig(){
+  ignisEnsureAnomReportOps();let ov=document.getElementById('anom-ops-config-modal');
+  if(!ov){ov=document.createElement('div');ov.id='anom-ops-config-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal import-ops-modal"><div class="pend-detail-head"><div><div class="modal-title">Operações no relatório de anomalias</div><div class="pend-detail-sub">Escolha quais operações ficam visíveis nesta análise</div></div><button class="pend-close" onclick="closeModal('anom-ops-config-modal')" aria-label="Fechar">×</button></div><div class="import-ops-note">O filtro funciona por correspondência: <strong>RIBAS</strong> também cobre <strong>SUZANO RIBAS</strong>. Para RIBAS, BRACELL, ALTO TAQUARI, COSTA RICA e ARACRUZ, o controle se aplica ao Diesel. Em RAIZEN, também a Gasolina e o Etanol.</div><div class="import-ops-list" id="anom-ops-list"></div><div class="anom-ops-actions"><button class="btn btn-secondary btn-sm" type="button" onclick="ignisSetAllAnomOps(true)">Exibir todas</button><button class="btn btn-secondary btn-sm" type="button" onclick="ignisSetAllAnomOps(false)">Ocultar todas</button></div><div class="modal-actions"><button class="btn btn-primary" onclick="closeModal('anom-ops-config-modal')">Concluído</button></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});}
+  ignisRenderAnomOpsConfig();ov.classList.add('open');
+}
+function ignisRenderAnomOpsConfig(){
+  const defs=ignisEnsureAnomReportOps(),list=document.getElementById('anom-ops-list');if(!list)return;
+  list.innerHTML=defs.map((r,i)=>{const k=ignisImportRuleKey(r.nome),on=state.anomaliaOperacoesVisiveis[k]!==false,fuel=r.combustiveis.map(x=>x.charAt(0)+x.slice(1).toLowerCase()).join(' · ');return `<div class="import-op-row anom-op-visibility-row"><div><div class="import-op-name">${pendEsc(r.nome)}</div><div class="import-ops-status">${pendEsc(fuel)}</div></div><button class="anom-op-toggle ${on?'on':''}" type="button" role="switch" aria-checked="${on?'true':'false'}" onclick="ignisToggleAnomReportOp(${i})"><span class="anom-op-toggle-track"><span class="anom-op-toggle-thumb"></span></span><span class="anom-op-toggle-label">${on?'Exibindo':'Oculta'}</span></button></div>`;}).join('');
+  ignisUpdateAnomOpsCount();
+}
+function ignisSaveAnomOps(){saveState({immediate:true});ignisUpdateAnomOpsCount();try{renderAnomalias(true)}catch(e){}}
+function ignisToggleAnomReportOp(i){const defs=ignisEnsureAnomReportOps(),r=defs[i];if(!r)return;const k=ignisImportRuleKey(r.nome);state.anomaliaOperacoesVisiveis[k]=!(state.anomaliaOperacoesVisiveis[k]!==false);ignisSaveAnomOps();ignisRenderAnomOpsConfig();}
+function ignisSetAllAnomOps(show){const defs=ignisEnsureAnomReportOps();defs.forEach(r=>state.anomaliaOperacoesVisiveis[ignisImportRuleKey(r.nome)]=!!show);ignisSaveAnomOps();ignisRenderAnomOpsConfig();}
+function ignisAnomReportRowVisible(row){
+  const defs=ignisEnsureAnomReportOps();
+  const op=ignisImportNorm(row?.operacao||row?.raw?.operacao||'');if(!op)return true;
+  const rule=defs.find(r=>op.includes(ignisImportRuleKey(r.nome)));if(!rule)return true;
+  const fuel=ignisImportFuelKey(row?.raw?.combustivel||row?.raw?.combustível||row?.raw?.fuel||row?.combustivel||'');
+  if(fuel&&!rule.combustiveis.includes(fuel))return true;
+  return state.anomaliaOperacoesVisiveis[ignisImportRuleKey(rule.nome)]!==false;
+}
 
 function pendCollect(){
   const issues=[], monitors=[]; const activeLabels={};
@@ -4052,18 +4077,7 @@ function pendCollect(){
   }
   const eficStatus=altas.length||baixas.length?'attention':'ok';
   monitors.push({name:'Eficiência entre abastecimentos',status:eficStatus,detail:altas.length||baixas.length?`${altas.length} alta(s) · ${baixas.length} baixa(s) · limites ${limiteBaixo.toFixed(0)}% / ${limiteEfic.toFixed(0)}%`:`Sem anomalias fora de ${limiteBaixo.toFixed(0)}%–${limiteEfic.toFixed(0)}%`});
-
-  const importRows=ignisImportMonitorSnapshot();
-  const importPend=importRows.filter(r=>r.status!=='ok');
-  if(!state.importacaoMonitorInicializado){
-    monitors.push({name:'Importações por operação',status:'waiting',detail:'Aguardando a próxima importação para iniciar o monitoramento'});
-  } else if(importPend.length){
-    const worst=[...importPend].sort((a,b)=>((b.gap??999)-(a.gap??999)))[0];
-    const sev=importPend.some(r=>r.status==='critical'||r.status==='missing')?'critical':'attention';
-    addIssue({id:'importacao',kind:'importacao',severity:sev,title:'Importações pendentes',count:importPend.length,keys:importPend.map(r=>'importacao:'+ignisImportRuleKey(r.regra)+'|'+r.combustivel),page:'abastecimentos',detail:`${importPend.length} operação/combustível precisam de atualização.`,highlightLabel:'Maior pendência',highlightValue:`${worst.regra} · ${worst.combustivel}`,highlightSub:ignisImportOpsStatusText(worst),rows:importPend,meta:`Regra operacional D-1 · ${importRows.length-importPend.length}/${importRows.length} atualizadas`});
-    monitors.push({name:'Importações por operação',status:sev,detail:`${importRows.length-importPend.length}/${importRows.length} operação/combustível atualizadas`});
-  }else if(importRows.length){monitors.push({name:'Importações por operação',status:'ok',detail:`${importRows.length}/${importRows.length} atualizadas no D-1`});}
-  else {const latest=pendLatestAbast();const gap=pendBusinessGap(latest);monitors.push({name:'Atualização dos abastecimentos',status:latest&&gap===0?'ok':'waiting',detail:latest?`Última data ${pendFmtDate(latest)}`:'Sem regras de importação configuradas'});}
+  {const latest=pendLatestAbast();const gap=pendBusinessGap(latest);monitors.push({name:'Atualização dos abastecimentos',status:latest&&gap===0?'ok':'waiting',detail:latest?`Última data ${pendFmtDate(latest)}`:'Sem dados de abastecimento'});}
 
   const agoraMed=new Date();
   const meds=typeof fechMedidorRows==='function'?fechMedidorRows(agoraMed.getFullYear(),agoraMed.getMonth()):[];
@@ -12511,7 +12525,8 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 .pend-nav-count{min-width:21px;height:19px;padding:0 6px;border-radius:999px;background:rgba(244,94,89,.13);border:1px solid rgba(244,94,89,.22);color:#ff7f79;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:auto}.sidebar.collapsed .pend-nav-count{display:none!important}
 .import-ops-count{display:inline-flex;min-width:18px;height:18px;padding:0 5px;border-radius:999px;align-items:center;justify-content:center;background:rgba(233,95,50,.12);color:#f08a62;font-size:9px;font-weight:800;margin-left:2px}
 .import-ops-modal{width:min(760px,94vw)!important;max-width:760px!important}.import-ops-list{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto;padding-right:3px}.import-op-row{display:grid;grid-template-columns:minmax(160px,1fr) auto 36px;gap:10px;align-items:center;padding:11px 12px;background:#111820;border:1px solid var(--border);border-radius:11px}.import-op-name{font-size:12.5px;font-weight:750;color:#edf2f6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.import-op-fuels{display:flex;gap:5px;align-items:center}.import-fuel-chip{height:27px;padding:0 9px;border-radius:8px;border:1px solid rgba(151,164,178,.13);background:#0d141c;color:#728294;font:750 9.5px 'DM Sans',sans-serif;cursor:pointer;transition:.13s}.import-fuel-chip.on{color:#f0a36f;border-color:rgba(233,95,50,.28);background:rgba(233,95,50,.08)}.import-fuel-chip.diesel{cursor:default;color:#f0a36f}.import-op-remove{width:32px;height:32px;border-radius:8px;border:1px solid rgba(244,94,89,.14);background:rgba(244,94,89,.04);color:#e56d69;display:flex;align-items:center;justify-content:center;cursor:pointer}.import-op-remove:hover{background:rgba(244,94,89,.09)}.import-op-remove .ui-icon{width:15px;height:15px}.import-op-add{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}.import-op-add input{height:41px;border:1px solid var(--border);border-radius:10px;background:#101720;color:#eef3f7;padding:0 12px;outline:0;font:600 12px 'DM Sans',sans-serif}.import-op-add input:focus{border-color:rgba(233,95,50,.45);box-shadow:0 0 0 3px rgba(233,95,50,.06)}.import-ops-note{font-size:10.8px;color:#718194;margin:8px 0 12px}.import-ops-status{font-size:10px;color:#718194;margin-top:3px}.import-status-ok{color:#35c891}.import-status-att{color:#f4b544}.import-status-bad{color:#f45e59}
-@media(max-width:620px){.import-op-row{grid-template-columns:1fr 36px}.import-op-fuels{grid-column:1/-1;grid-row:2}.import-op-add{grid-template-columns:1fr}.import-ops-modal{width:96vw!important}}
+.anom-op-visibility-row{grid-template-columns:minmax(180px,1fr) auto}.anom-op-toggle{height:34px;min-width:112px;padding:0 10px 0 8px;border:1px solid rgba(151,164,178,.14);background:#0d141c;border-radius:9px;color:#7d8c9d;display:flex;align-items:center;gap:8px;cursor:pointer;font:750 10px 'DM Sans',sans-serif;transition:.15s}.anom-op-toggle:hover{border-color:rgba(151,164,178,.24)}.anom-op-toggle.on{color:#39cb91;border-color:rgba(57,203,145,.22);background:rgba(57,203,145,.055)}.anom-op-toggle-track{width:30px;height:17px;border-radius:999px;background:#26313c;position:relative;display:block;transition:.15s}.anom-op-toggle-thumb{position:absolute;width:13px;height:13px;top:2px;left:2px;border-radius:50%;background:#7e8b98;transition:.15s}.anom-op-toggle.on .anom-op-toggle-track{background:rgba(57,203,145,.28)}.anom-op-toggle.on .anom-op-toggle-thumb{left:15px;background:#39cb91}.anom-op-toggle-label{min-width:43px;text-align:left}.anom-ops-actions{display:flex;gap:8px;margin-top:12px}
+@media(max-width:620px){.import-op-row{grid-template-columns:1fr 36px}.anom-op-visibility-row{grid-template-columns:1fr auto}.import-op-fuels{grid-column:1/-1;grid-row:2}.import-op-add{grid-template-columns:1fr}.import-ops-modal{width:96vw!important}}
 @media(max-width:1000px){.pend-kpis{grid-template-columns:repeat(2,1fr)}.pend-issue-grid,.pend-monitor-list{grid-template-columns:1fr}}
 @media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-rules{order:1;flex-wrap:wrap}.pend-anom-rules-title{width:100%}.pend-anom-setting{order:initial}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
 
@@ -12895,7 +12910,8 @@ function anomClearFilters(){const op=document.getElementById('anom-op'),q=docume
 function renderAnomalias(force=false){
   const page=document.getElementById('page-anomalias');if(!page)return;anomInitSelectors();
   const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear()),m=Number(document.getElementById('anom-month')?.value??new Date().getMonth());
-  const all=anomCollectRows(y,m),med=all.filter(r=>r.kind==='medidor'),altas=all.filter(r=>r.kind==='alta'),baixas=all.filter(r=>r.kind==='baixa');
+  const allRaw=anomCollectRows(y,m),all=allRaw.filter(ignisAnomReportRowVisible),med=all.filter(r=>r.kind==='medidor'),altas=all.filter(r=>r.kind==='alta'),baixas=all.filter(r=>r.kind==='baixa');
+  ignisUpdateAnomOpsCount();
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('anom-kpi-total',all.length.toLocaleString('pt-BR'));set('anom-kpi-medidor',med.length.toLocaleString('pt-BR'));set('anom-kpi-alta',altas.length.toLocaleString('pt-BR'));set('anom-kpi-baixa',baixas.length.toLocaleString('pt-BR'));
   const piorMed=med[0],maior=[...altas].sort((a,b)=>(b.eficiencia||0)-(a.eficiencia||0))[0],menor=[...baixas].sort((a,b)=>(a.eficiencia||0)-(b.eficiencia||0))[0];
   set('anom-kpi-total-sub',`${ANOM_MONTHS[m]} de ${y}`);set('anom-kpi-medidor-sub',piorMed?`${piorMed.placa} · ${piorMed.medida}`:'nenhuma regressão');set('anom-kpi-alta-sub',maior?`${maior.placa} · ${maior.eficiencia.toFixed(1)}%`:`acima de ${Math.round(ignisGetLimiteEficiencia())}%`);set('anom-kpi-baixa-sub',menor?`${menor.placa} · ${menor.eficiencia.toFixed(1)}%`:`abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`);
