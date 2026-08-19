@@ -1124,6 +1124,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   <nav class="nav">
     <div class="nav-section-label">Visão geral</div>
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span class="nav-label">Dashboard</span></div>
+    <div class="nav-item" id="nav-pendencias" onclick="showPage('pendencias',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3 3 7.5V13c0 4.6 3.5 7.7 9 8 5.5-.3 9-3.4 9-8V7.5L12 3Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></span><span class="nav-label">Central de Pendências</span><span id="pendencias-nav-badge" class="pend-nav-count">0</span></div>
     <div class="nav-item" onclick="showPage('comparativo',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span><span class="nav-label">Comparativo</span></div>
 
     <div class="nav-section-label">Operação</div>
@@ -1168,6 +1169,9 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div class="mob-nav-item active" id="mob-nav-dashboard" onclick="showPage('dashboard',this);updateMobNav('dashboard')">
       <span class="mob-icon">⊞</span>Dashboard
     </div>
+    <div class="mob-nav-item" id="mob-nav-pendencias" onclick="showPage('pendencias',this);updateMobNav('pendencias')">
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3 3 7.5V13c0 4.6 3.5 7.7 9 8 5.5-.3 9-3.4 9-8V7.5L12 3Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg></span>Pendências
+    </div>
     <div class="mob-nav-item" id="mob-nav-comparativo" onclick="showPage('comparativo',this);updateMobNav('comparativo')">
       <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg></span>Comparativo
     </div>
@@ -1196,6 +1200,52 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 </nav>
 
 <main class="main">
+
+
+  <!-- CENTRAL DE PENDÊNCIAS — STAGE 3 -->
+  <div id="page-pendencias" class="page">
+    <div class="pend-header">
+      <div>
+        <div class="page-title">Central de Pendências</div>
+        <div class="page-sub">O que precisa da sua atenção agora</div>
+      </div>
+      <div class="pend-header-actions">
+        <span class="pend-updated" id="pend-updated">—</span>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="renderPendencias(true)">
+          <svg class="ui-icon" viewBox="0 0 24 24"><path d="M20 6v6h-6"/><path d="M4 18v-6h6"/><path d="M18.5 9A7 7 0 0 0 6.2 6.2L4 8"/><path d="M5.5 15A7 7 0 0 0 17.8 17.8L20 16"/></svg>
+          Atualizar
+        </button>
+      </div>
+    </div>
+
+    <div class="pend-kpis">
+      <div class="pend-kpi critical"><div class="pend-kpi-label">Críticas</div><div class="pend-kpi-value" id="pend-kpi-critical">0</div><div class="pend-kpi-sub">grupos que exigem ação</div></div>
+      <div class="pend-kpi attention"><div class="pend-kpi-label">Atenções</div><div class="pend-kpi-value" id="pend-kpi-attention">0</div><div class="pend-kpi-sub">itens para acompanhar</div></div>
+      <div class="pend-kpi info"><div class="pend-kpi-label">Ocorrências</div><div class="pend-kpi-value" id="pend-kpi-occurrences">0</div><div class="pend-kpi-sub">registros envolvidos</div></div>
+      <div class="pend-kpi ok"><div class="pend-kpi-label">Resolvidas · 7 dias</div><div class="pend-kpi-value" id="pend-kpi-resolved">0</div><div class="pend-kpi-sub">saíram da fila automaticamente</div></div>
+    </div>
+
+    <section class="pend-section">
+      <div class="pend-section-head">
+        <div><div class="pend-section-title">Prioridade agora</div><div class="pend-section-sub" id="pend-priority-sub">Analisando dados...</div></div>
+      </div>
+      <div class="pend-issue-grid" id="pend-issues"></div>
+    </section>
+
+    <section class="pend-section">
+      <div class="pend-section-head">
+        <div><div class="pend-section-title">Monitoramentos automáticos</div><div class="pend-section-sub">O IGNIS consolida os sinais das ferramentas já existentes</div></div>
+      </div>
+      <div class="pend-monitor-list" id="pend-monitors"></div>
+    </section>
+
+    <section class="pend-section" id="pend-resolved-section" style="display:none">
+      <div class="pend-section-head">
+        <div><div class="pend-section-title">Resolvidas recentemente</div><div class="pend-section-sub">Pendências que deixaram de existir após atualização dos dados</div></div>
+      </div>
+      <div class="pend-resolved-list" id="pend-resolved-list"></div>
+    </section>
+  </div>
 
   <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
@@ -2449,6 +2499,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
       <label class="form-label">Permissões de acesso</label>
       <div class="perm-grid">
         <label class="perm-item"><input type="checkbox" data-perm="dashboard"> ⊞ Dashboard</label>
+        <label class="perm-item"><input type="checkbox" data-perm="pendencias"> Central de Pendências</label>
         <label class="perm-item"><input type="checkbox" data-perm="comparativo"> Comparativo</label>
         <label class="perm-item"><input type="checkbox" data-perm="abastecimentos"> ⛽ Abastecimentos</label>
         <label class="perm-item"><input type="checkbox" data-perm="maquinas">Frota e Equipamentos</label>
@@ -2669,7 +2720,7 @@ let abastFiltrados = [];
 // trocar de aba podia executar milhões de comparações. Estes índices são
 // reconstruídos somente quando os dados mudam e transformam buscas por placa em O(1).
 const _IGNIS_EMPTY = Object.freeze([]);
-const _IGNIS_PAGES = ['dashboard','comparativo','abastecimentos','maquinas','relatorio','excluir','arla','kmcomp','metarota','recon','config'];
+const _IGNIS_PAGES = ['dashboard','pendencias','comparativo','abastecimentos','maquinas','relatorio','excluir','arla','kmcomp','metarota','recon','config'];
 const _ignisPerf = {
   dirty: true,
   version: 0,
@@ -3024,6 +3075,7 @@ function saveState(options = {}) {
   const immediate = options === true || options?.immediate === true;
   // Invalida índices/telas imediatamente; o próximo render reconstrói só uma vez.
   markIgnisDataDirty('saveState');
+  if (typeof pendMarkDirty === 'function') pendMarkDirty();
 
   // 1. Snapshot completo e imutável do estado atual.
   const snapshot = cloneStateForSave(state);
@@ -3080,6 +3132,7 @@ window._authUser = null; // usuário logado atualmente
 function navIconSvg(name) {
   const icons = {
     dashboard:'<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+    pendencias:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3 3 7.5V13c0 4.6 3.5 7.7 9 8 5.5-.3 9-3.4 9-8V7.5L12 3Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>',
     comparativo:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>',
     abastecimentos:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg>',
     maquinas:'<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="6" rx="1.5"/><rect x="14" y="5" width="7" height="6" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg>',
@@ -3095,6 +3148,7 @@ function navIconSvg(name) {
 }
 const AUTH_PAGES = [
   { id:'dashboard',     label:'Dashboard',             group:'Visão geral' },
+  { id:'pendencias',    label:'Central de Pendências', group:'Visão geral' },
   { id:'comparativo',   label:'Comparativo',           group:'Visão geral' },
   { id:'abastecimentos',label:'Abastecimentos',        group:'Operação' },
   { id:'maquinas',      label:'Frota e Equipamentos',  group:'Operação' },
@@ -3368,6 +3422,7 @@ function loginEntrarApp() {
     new Promise(resolve => setTimeout(() => { console.warn('IGNIS: loadState excedeu 12s; liberando interface.'); resolve(); }, 12000))
   ]).then(() => {
     try { renderDashboard(); } catch(e) { console.error('Dashboard inicial:', e); }
+    try { pendAtualizarBadge(); } catch(e) { console.warn('Pendências badge:', e); }
     // A aba "A Excluir" é pesada e ficava sendo calculada mesmo escondida.
     // Agora ela é inicializada somente quando o usuário realmente a abre.
     const initSecundario = () => { try { onShowExcluir(); } catch(e) { console.warn('Excluir init:', e); } try { arlaInit(); arlaChecarLembrete(); } catch(e) { console.warn('Arla init:', e); } };
@@ -3385,7 +3440,8 @@ function loginSair() {
 function authRenderNav() {
   const u = window._authUser;
   if (!u) return;
-  const perms = u.role === 'adm' ? AUTH_PAGES.map(p=>p.id) : (u.perms || []);
+  const perms = u.role === 'adm' ? AUTH_PAGES.map(p=>p.id) : [...(u.perms || [])];
+  if (u.role === 'admin' && !perms.includes('pendencias')) perms.push('pendencias');
   const nav = document.querySelector('.nav');
   nav.innerHTML = '';
   let ultimoGrupo = '';
@@ -3409,7 +3465,9 @@ function authRenderNav() {
     div.id = 'nav-' + p.id;
     const navSuffix = p.id === 'arla'
       ? `<span id="arla-lembrete-badge" style="display:none" class="nav-alert-dot" title="Relatório mensal pendente"></span><span id="arla-nav-badge" style="display:none" class="nav-count-pill" title="Itens críticos">0</span>`
-      : '';
+      : p.id === 'pendencias'
+        ? `<span id="pendencias-nav-badge" class="pend-nav-count">0</span>`
+        : '';
     div.innerHTML = inner + `<span class="nav-label">${p.label}</span>` + navSuffix;
     div.onclick = () => showPage(p.id, div);
     nav.appendChild(div);
@@ -3610,6 +3668,142 @@ function hideBarTooltip() {
   if (t) t.style.display = 'none';
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STAGE 3 — CENTRAL DE PENDÊNCIAS / MONITORAMENTOS AUTOMÁTICOS
+// ══════════════════════════════════════════════════════════════════════════════
+function pendSvg(kind) {
+  const icons = {
+    consumo:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 18V9"/><path d="M10 18V5"/><path d="M16 18v-7"/><path d="M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/></svg>',
+    importacao:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>',
+    excluir:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg>',
+    arla:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg>',
+    km:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 17 17 4l3 3L7 20H4z"/><path d="m14 7 3 3"/><path d="M8 16l2 2"/></svg>',
+    recon:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M7 7h10"/><path d="m14 4 3 3-3 3"/><path d="M17 17H7"/><path d="m10 20-3-3 3-3"/></svg>',
+    ok:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>'
+  };
+  return icons[kind] || icons.ok;
+}
+function pendEsc(v){ return String(v ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function pendFmtDate(d){ return d instanceof Date && !isNaN(d) ? d.toLocaleDateString('pt-BR') : '—'; }
+function pendParseDate(v){
+  if(v instanceof Date) return new Date(v.getFullYear(),v.getMonth(),v.getDate());
+  const s=String(v||'').trim(); if(!s) return null;
+  let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+  const d=new Date(s); return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+function pendBusinessGap(latest, today=new Date()){
+  if(!latest) return null;
+  const end=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  let d=new Date(latest.getFullYear(),latest.getMonth(),latest.getDate()); d.setDate(d.getDate()+1);
+  let n=0; while(d<end){ const day=d.getDay(); if(day!==0&&day!==6)n++; d.setDate(d.getDate()+1); if(n>400)break; }
+  return n;
+}
+function pendGetReincidentes(){
+  const periodos=Object.entries(state.semanas||{}).sort((a,b)=>(a[1].dataIni||a[1].label||a[0]).localeCompare(b[1].dataIni||b[1].label||b[0]));
+  if(periodos.length<2) return [];
+  const hist={};
+  periodos.forEach(([id,p])=>{
+    const by={}; (p.registros||[]).forEach(r=>{ const k=r.placa; if(!k)return; if(!by[k])by[k]={l:0,h:0,tipo:getTipoIgnis(r)}; by[k].l+=Number(r.litros)||0; by[k].h+=Number(r.horas)||0; });
+    Object.entries(by).forEach(([placa,d])=>{
+      const maq=getMaquina(placa); const meta=Number(maq?.meta)||0; if(!meta)return;
+      const tipo=maq?.tipoIgnis||d.tipo||''; const kmL=tipo==='pesada'||tipo==='leve';
+      const media=kmL ? (d.l>0?d.h/d.l:0) : (d.h>0?d.l/d.h:0); if(!media)return;
+      const efic=kmL ? (media/meta*100) : (meta/media*100);
+      (hist[placa]||(hist[placa]=[])).push({id,label:p.label||id,efic,media,operacao:maq?.operacao||'',tipo});
+    });
+  });
+  const out=[]; Object.entries(hist).forEach(([placa,h])=>{ const ult=h.slice(-3); const abaixo=ult.filter(x=>x.efic<98); if(abaixo.length>=2){out.push({placa,operacao:abaixo[abaixo.length-1].operacao,pior:Math.min(...abaixo.map(x=>x.efic)),periodos:abaixo.length});}});
+  return out.sort((a,b)=>a.pior-b.pior);
+}
+function pendGetExcluir(){
+  let rows=window._excluirDadosTodos||window._excluirDados||[];
+  if(!rows.length){try{rows=JSON.parse(localStorage.getItem('excluir_dados')||'[]')||[];}catch(e){rows=[];}}
+  let concl=[];try{concl=JSON.parse(localStorage.getItem('excluir_concluidos')||'[]')||[];}catch(e){}
+  return rows.filter(r=>{
+    const key=(r.placa||'')+'|'+(r.data||'')+'|'+(r.hora||''); if(concl.includes(key))return false;
+    const aguard=String(r.status||'').toUpperCase().includes('AGUARDANDO'); if(!aguard)return false;
+    let horas=Number(r.horasPassadas);
+    const d=pendParseDate(r.data);
+    if(d){
+      const hm=String(r.hora||'').match(/^(\d{1,2}):(\d{2})/); if(hm)d.setHours(+hm[1],+hm[2],0,0);
+      horas=(Date.now()-d.getTime())/3600000;
+    }
+    return Number.isFinite(horas) ? horas>=72 : r.alerta72h===true;
+  });
+}
+function pendGetArla(){
+  let meses=state.arlaMeses||[]; if(!meses.length){try{meses=JSON.parse(localStorage.getItem('arla_meses')||'[]')||[];}catch(e){}}
+  const hoje=new Date(), prev=new Date(hoje.getFullYear(),hoje.getMonth()-1,1); const prevId='mes_'+prev.getFullYear()+'_'+String(prev.getMonth()+1).padStart(2,'0');
+  const deadlineMissing=!meses.some(m=>m.id===prevId); const dia=hoje.getDate();
+  const latest=[...meses].sort((a,b)=>String(a.id).localeCompare(String(b.id))).pop();
+  const dados=latest?.dados||[]; const crit=dados.filter(r=>r.status==='CRITICO'); const aten=dados.filter(r=>r.status==='ATENCAO');
+  return {meses,deadlineMissing,dia,prevId,prevLabel:prev.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}),latest,crit,aten};
+}
+function pendReadJSON(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch(e){return null;}}
+function pendLatestAbast(){let latest=null;(state.abastecimentos||[]).forEach(a=>{const d=pendParseDate(a.data);if(d&&(!latest||d>latest))latest=d;});return latest;}
+function pendCollect(){
+  const issues=[], monitors=[]; const activeLabels={};
+  const addIssue=(i)=>{issues.push(i);(i.keys||[i.id]).forEach(k=>activeLabels[k]=i.title);};
+
+  const reinc=pendGetReincidentes();
+  if(reinc.length){const worst=reinc[0]?.pior??100;addIssue({id:'consumo',kind:'consumo',severity:worst<90?'critical':'attention',title:'Consumo reincidente',count:reinc.length,keys:reinc.map(r=>'consumo:'+r.placa),page:'relatorio',detail:`${reinc.length} ativo${reinc.length>1?'s':''} abaixo de 98% em 2+ períodos. Pior eficiência: ${worst.toFixed(1)}%.`,meta:reinc.slice(0,5).map(r=>r.placa).join(', ')});monitors.push({name:'Consumo e reincidência',status:worst<90?'critical':'attention',detail:`${reinc.length} reincidente${reinc.length>1?'s':''}`});}
+  else monitors.push({name:'Consumo e reincidência',status:'ok',detail:'Nenhuma reincidência detectada'});
+
+  const latest=pendLatestAbast(); const gap=pendBusinessGap(latest);
+  if(!latest){addIssue({id:'importacao',kind:'importacao',severity:'critical',title:'Sem dados de abastecimento',count:1,keys:['importacao-atrasada'],page:'abastecimentos',detail:'Não há abastecimentos disponíveis para validar a atualização.',meta:'Importação necessária'});monitors.push({name:'Atualização dos abastecimentos',status:'critical',detail:'Sem dados disponíveis'});}
+  else if(gap>=1){const sev=gap>=2?'critical':'attention';addIssue({id:'importacao',kind:'importacao',severity:sev,title:'Atualização de abastecimentos',count:gap,keys:['importacao-atrasada'],page:'abastecimentos',detail:`${gap} dia${gap>1?'s':''} útil${gap>1?'eis':' '} sem dados após ${pendFmtDate(latest)}.`,meta:'Regra operacional D-1'});monitors.push({name:'Atualização dos abastecimentos',status:sev,detail:`Última data ${pendFmtDate(latest)} · ${gap} dia(s) útil(eis) de defasagem`});}
+  else monitors.push({name:'Atualização dos abastecimentos',status:'ok',detail:`Atualizado até ${pendFmtDate(latest)}`});
+
+  const excl=pendGetExcluir(); const excluirTemFonte=!!(window._excluirDadosTodos?.length||localStorage.getItem('excluir_dados'));
+  if(excl.length){addIssue({id:'excluir',kind:'excluir',severity:'critical',title:'Exclusões acima de 72h',count:excl.length,keys:excl.map(r=>'excluir:'+(r.placa||'')+'|'+(r.data||'')+'|'+(r.hora||'')),page:'excluir',detail:`${excl.length} abastecimento${excl.length>1?'s':''} permanece${excl.length>1?'m':''} aguardando exclusão após o prazo.`,meta:excl.slice(0,5).map(r=>r.placa).join(', ')});monitors.push({name:'A Excluir · 72h',status:'critical',detail:`${excl.length} prazo${excl.length>1?'s':''} vencido${excl.length>1?'s':''}`});}
+  else monitors.push({name:'A Excluir · 72h',status:excluirTemFonte?'ok':'waiting',detail:excluirTemFonte?'Nenhum prazo vencido':'Aguardando relatório da aba A Excluir'});
+
+  const arla=pendGetArla();
+  if(arla.deadlineMissing){const sev=arla.dia>15?'critical':'attention'; const atraso=Math.max(0,arla.dia-15);addIssue({id:'arla-prazo',kind:'arla',severity:sev,title:'Relatório mensal de Arla',count:1,keys:['arla-prazo'],page:'arla',detail:arla.dia>15?`Relatório de ${arla.prevLabel} não importado · ${atraso} dia${atraso!==1?'s':''} em atraso.`:`Relatório de ${arla.prevLabel} ainda não importado · prazo dia 15.`,meta:'Controle mensal'});}
+  if(arla.crit.length){addIssue({id:'arla-critico',kind:'arla',severity:'critical',title:'Arla fora da faixa crítica',count:arla.crit.length,keys:arla.crit.map(r=>'arla:'+String(arla.latest?.id||'')+':'+r.placa),page:'arla',detail:`${arla.crit.length} placa${arla.crit.length>1?'s':''} em estado crítico no relatório ${arla.latest?.label||'mais recente'}.`,meta:arla.crit.slice(0,5).map(r=>r.placa).join(', ')});}
+  const arlaStatus=arla.deadlineMissing?(arla.dia>15?'critical':'attention'):(arla.crit.length?'critical':arla.aten.length?'attention':'ok');
+  const arlaDetail=arla.deadlineMissing?'Relatório mensal pendente':arla.latest?`${arla.crit.length} crítico(s) · ${arla.aten.length} atenção`:'Nenhum mês importado';
+  monitors.push({name:'Controle Arla',status:arla.latest||arla.deadlineMissing?arlaStatus:'waiting',detail:arlaDetail});
+
+  let km=pendReadJSON('ignis_km_summary');
+  if(!km && window._kmResultado){const r=window._kmResultado;km={at:Date.now(),label:r.label||'',alertas:(r.resultados||[]).filter(x=>x.status==='alerta').length,excessos:(r.resultados||[]).filter(x=>x.status==='excesso').length,atencao:(r.resultados||[]).filter(x=>x.status==='atencao').length,semNoSistema:(r.semNoSistema||[]).length,semNoCliente:(r.semNoCliente||[]).length};}
+  if(km){const crit=(km.alertas||0)+(km.excessos||0)+(km.semNoSistema||0);const att=(km.atencao||0)+(km.semNoCliente||0);if(crit||att){const sev=crit?'critical':'attention';addIssue({id:'km',kind:'km',severity:sev,title:'KM Comparativo',count:crit+att,keys:['km-comparativo'],page:'kmcomp',detail:crit?`${crit} ocorrência${crit>1?'s':''} crítica${crit>1?'s':''} no último comparativo.`:`${att} item${att>1?'s':''} em atenção no último comparativo.`,meta:km.label||'Última análise'});}monitors.push({name:'KM Comparativo',status:crit?'critical':att?'attention':'ok',detail:crit||att?`${crit} crítico(s) · ${att} atenção`:'Último comparativo sem pendências'});}
+  else monitors.push({name:'KM Comparativo',status:'waiting',detail:'Aguardando um comparativo para monitorar'});
+
+  const rc=pendReadJSON('ignis_recon_summary');
+  if(rc){const div=(rc.soO2P||0)+(rc.soTicket||0);if(div){addIssue({id:'recon',kind:'recon',severity:'critical',title:'Divergências O2P × Ticket',count:div,keys:['recon-divergencias'],page:'recon',detail:`${div} divergência${div>1?'s':''}: ${rc.soO2P||0} só no O2P e ${rc.soTicket||0} só na Ticket.`,meta:`${rc.ambos||0} registros conciliados`});}monitors.push({name:'O2P × Ticket',status:div?'critical':'ok',detail:div?`${div} divergência(s)`:'Última conciliação sem divergências'});}
+  else monitors.push({name:'O2P × Ticket',status:'waiting',detail:'Aguardando uma conciliação para monitorar'});
+
+  return {issues,monitors,activeLabels};
+}
+function pendSyncResolved(activeLabels){
+  const now=Date.now(); let prev=pendReadJSON('ignis_pendencias_snapshot')||{active:{}}; let hist=pendReadJSON('ignis_pendencias_resolvidas')||[];
+  Object.entries(prev.active||{}).forEach(([key,label])=>{if(!(key in activeLabels)){hist.unshift({key,label,at:now});}});
+  const seen=new Set(); hist=hist.filter(x=>x&&x.key&&x.at&&now-x.at<30*86400000).filter(x=>{const sig=x.key+'|'+new Date(x.at).toDateString();if(seen.has(sig))return false;seen.add(sig);return true;}).slice(0,80);
+  try{localStorage.setItem('ignis_pendencias_snapshot',JSON.stringify({active:activeLabels,at:now}));localStorage.setItem('ignis_pendencias_resolvidas',JSON.stringify(hist));}catch(e){}
+  return hist;
+}
+function pendGo(page){const el=document.getElementById('nav-'+page)||[...document.querySelectorAll('.nav-item')].find(n=>(n.getAttribute('onclick')||'').includes("'"+page+"'"));if(!document.getElementById('page-'+page)){showToast('Você não tem acesso a esta análise.','error');return;}showPage(page,el);}
+function pendIssueHTML(i){const sev=i.severity==='critical'?'Crítica':'Atenção';return `<article class="pend-issue ${i.severity}" onclick="pendGo('${i.page}')"><div class="pend-issue-icon">${pendSvg(i.kind)}</div><div class="pend-issue-body"><div class="pend-issue-top"><div class="pend-issue-title">${pendEsc(i.title)}</div><span class="pend-severity ${i.severity}">${sev}</span></div><div class="pend-issue-detail">${pendEsc(i.detail)}</div>${i.meta?`<div style="font-size:10.5px;color:var(--text3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pendEsc(i.meta)}</div>`:''}<div class="pend-issue-meta"><span class="pend-issue-count">${Number(i.count||1).toLocaleString('pt-BR')} ocorrência${Number(i.count||1)===1?'':'s'}</span><span class="pend-issue-action">Abrir análise <svg class="ui-icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></div></div></article>`;}
+function renderPendencias(force=false){
+  const page=document.getElementById('page-pendencias'); if(!page)return;
+  const {issues,monitors,activeLabels}=pendCollect(); const hist=pendSyncResolved(activeLabels); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
+  const critical=issues.filter(i=>i.severity==='critical').length, attention=issues.filter(i=>i.severity==='attention').length, occ=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0);
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)}; set('pend-kpi-critical',critical);set('pend-kpi-attention',attention);set('pend-kpi-occurrences',occ);set('pend-kpi-resolved',resolved7.length);
+  const up=document.getElementById('pend-updated');if(up)up.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const sub=document.getElementById('pend-priority-sub');if(sub)sub.textContent=issues.length?`${issues.length} grupo${issues.length>1?'s':''} de pendência · ${occ} ocorrência${occ!==1?'s':''}`:'Nenhuma pendência ativa detectada';
+  const list=document.getElementById('pend-issues');if(list)list.innerHTML=issues.length?issues.sort((a,b)=>(a.severity==='critical'?0:1)-(b.severity==='critical'?0:1)||b.count-a.count).map(pendIssueHTML).join(''):`<div class="pend-empty" style="grid-column:1/-1"><div class="pend-empty-icon">${pendSvg('ok')}</div><div class="pend-empty-title">Nenhuma pendência ativa</div><div class="pend-empty-sub">Os monitoramentos disponíveis não encontraram itens que exijam ação agora.</div></div>`;
+  const mon=document.getElementById('pend-monitors');if(mon)mon.innerHTML=monitors.map(m=>`<div class="pend-monitor"><span class="pend-monitor-dot ${m.status}"></span><div class="pend-monitor-copy"><div class="pend-monitor-name">${pendEsc(m.name)}</div><div class="pend-monitor-detail">${pendEsc(m.detail)}</div></div><span class="pend-monitor-status">${m.status==='ok'?'OK':m.status==='critical'?'Crítico':m.status==='attention'?'Atenção':'Sem análise'}</span></div>`).join('');
+  const sec=document.getElementById('pend-resolved-section'),rlist=document.getElementById('pend-resolved-list');if(sec&&rlist){sec.style.display=resolved7.length?'':'none';rlist.innerHTML=resolved7.slice(0,8).map(r=>`<div class="pend-resolved"><span class="pend-resolved-icon">${pendSvg('ok')}</span><span class="pend-resolved-label">${pendEsc(r.label||r.key)}</span><span class="pend-resolved-time">${new Date(r.at).toLocaleDateString('pt-BR')}</span></div>`).join('');}
+  pendAtualizarBadge(issues); _markPageClean('pendencias');
+}
+function pendAtualizarBadge(precomputed){
+  const issues=precomputed||pendCollect().issues; const total=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0); const badge=document.getElementById('pendencias-nav-badge'); if(badge){badge.textContent=total>99?'99+':total;badge.style.display=total?'inline-flex':'none';}
+}
+function pendMarkDirty(){try{_ignisPerf.pageDirty.add('pendencias');}catch(e){} if(document.getElementById('page-pendencias')?.classList.contains('active'))setTimeout(()=>renderPendencias(),0);else setTimeout(()=>{try{pendAtualizarBadge()}catch(e){}},50);}
+
 function showPage(page,el) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -3623,7 +3817,7 @@ function showPage(page,el) {
   // Se o estado e os filtros não mudaram desde a última visita, mantém o DOM já
   // pronto. Antes cada clique reconstruía tabelas/cards inteiros do zero.
   const precisaAtualizar = _isPageDirty(page);
-  const renders = {dashboard:renderDashboard,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
+  const renders = {dashboard:renderDashboard,pendencias:renderPendencias,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
   if(renders[page] && precisaAtualizar) renders[page]();
 
   if(page==='relatorio' && precisaAtualizar) { relPopularOps(); relgInit(); relChecarReincidencia(); _markPageClean(page); }
@@ -7093,6 +7287,7 @@ async function processarExcluirBuffer(buffer) {
 }
 
 function atualizarExcluirUI() {
+  if (typeof pendMarkDirty === 'function') setTimeout(pendMarkDirty,0);
   const todos = window._excluirDadosTodos || window._excluirDados || [];
   const alertas = window._excluirDados72h || [];
   
@@ -10520,6 +10715,10 @@ function kmComparar() {
   const atencao = resultados.filter(r => r.status === 'atencao');
   const ok = resultados.filter(r => r.status === 'ok');
   const excessos = resultados.filter(r => r.status === 'excesso');
+  try {
+    localStorage.setItem('ignis_km_summary', JSON.stringify({ at:Date.now(), label, alertas:alertas.length, excessos:excessos.length, atencao:atencao.length, semNoSistema:semNoSistema.length, semNoCliente:semNoCliente.length, ok:ok.length }));
+    if (typeof pendMarkDirty === 'function') pendMarkDirty();
+  } catch(e) {}
 
   // Badge nav
   const totalProblemas = alertas.length + excessos.length + semNoSistema.length;
@@ -11474,6 +11673,10 @@ function rcComparar() {
     ticket: _rcTicket.filter(r => !o2Set.has(r.data+'|'+r.placa)),
     ambos:  _rcO2P.filter(r =>  tkSet.has(r.data+'|'+r.placa))
   };
+  try {
+    localStorage.setItem('ignis_recon_summary', JSON.stringify({ at:Date.now(), totalO2P:_rcO2P.length, totalTicket:_rcTicket.length, soO2P:_rcDados.o2p.length, soTicket:_rcDados.ticket.length, ambos:_rcDados.ambos.length }));
+    if (typeof pendMarkDirty === 'function') pendMarkDirty();
+  } catch(e) {}
   document.getElementById('rc-badge-o2p').textContent    = _rcDados.o2p.length;
   document.getElementById('rc-badge-ticket').textContent = _rcDados.ticket.length;
   document.getElementById('rc-badge-ambos').textContent  = _rcDados.ambos.length;
@@ -11777,6 +11980,38 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 .ignis-cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 2px 5px;color:#687787;font-size:9.5px;font-weight:800;text-align:center;text-transform:uppercase}.ignis-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .ignis-cal-day{height:34px;border:1px solid transparent;background:transparent;color:#c7d0d9;border-radius:9px;font:600 11.5px 'DM Sans',sans-serif;cursor:pointer;transition:.12s;display:flex;align-items:center;justify-content:center}.ignis-cal-day:hover{background:#1b2530;border-color:rgba(151,164,178,.12);color:#fff}.ignis-cal-day.outside{color:#4f5c69}.ignis-cal-day.today{border-color:rgba(240,106,61,.48);color:#f47a50;background:rgba(240,106,61,.055)}.ignis-cal-day.selected{background:#e95f32!important;color:#fff!important;border-color:#e95f32!important;box-shadow:0 5px 14px rgba(233,95,50,.20)}
 .ignis-cal-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(151,164,178,.10);margin-top:10px;padding-top:10px}.ignis-cal-action{border:0;background:transparent;color:#91a2b3;font-size:10.5px;font-weight:700;padding:6px 8px;border-radius:7px;cursor:pointer}.ignis-cal-action:hover{background:#18212b;color:#f06a3d}@media(max-width:520px){#ignis-calendar-popover{width:min(306px,calc(100vw - 24px))}}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   IGNIS STAGE 3 — CENTRAL DE PENDÊNCIAS
+   ══════════════════════════════════════════════════════════════════════════════ */
+.pend-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
+.pend-header-actions{display:flex;align-items:center;gap:10px}
+.pend-updated{font-size:11.5px;color:var(--text3);white-space:nowrap}
+.pend-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.pend-kpi{background:#121922;border:1px solid var(--border);border-radius:14px;padding:17px 18px;min-height:112px;position:relative;overflow:hidden}
+.pend-kpi::after{content:'';position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.pend-kpi-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8392a4;font-weight:700;margin-bottom:8px}
+.pend-kpi-value{font-size:31px;line-height:1;font-weight:750;color:#fff}
+.pend-kpi-sub{font-size:11.5px;color:var(--text3);margin-top:9px}
+.pend-kpi.critical .pend-kpi-value{color:#f45e59}.pend-kpi.attention .pend-kpi-value{color:#f4b544}.pend-kpi.ok .pend-kpi-value{color:#35c891}.pend-kpi.info .pend-kpi-value{color:#8fb2d9}
+.pend-section{background:#111820;border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:18px}
+.pend-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.pend-section-title{font-size:15px;font-weight:720;color:#fff}.pend-section-sub{font-size:11.5px;color:var(--text3);margin-top:2px}
+.pend-issue-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pend-issue{background:#121922;border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start;min-height:132px;transition:border-color .16s,transform .16s,background .16s;cursor:pointer;position:relative}
+.pend-issue:hover{transform:translateY(-1px);border-color:rgba(233,95,50,.28);background:#141c25}
+.pend-issue-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:#0e151d;border:1px solid var(--border);color:#9fb0c2}.pend-issue-icon .ui-icon{width:20px;height:20px;stroke-width:2}
+.pend-issue.critical .pend-issue-icon{color:#f45e59;border-color:rgba(244,94,89,.24);background:rgba(244,94,89,.06)}
+.pend-issue.attention .pend-issue-icon{color:#f4b544;border-color:rgba(244,181,68,.22);background:rgba(244,181,68,.06)}
+.pend-issue-body{min-width:0;flex:1}.pend-issue-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}.pend-issue-title{font-size:13.5px;font-weight:720;color:#f4f6f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pend-severity{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;font-weight:800;padding:4px 7px;border-radius:999px;white-space:nowrap}.pend-severity.critical{color:#ff817c;background:rgba(244,94,89,.1)}.pend-severity.attention{color:#ffd073;background:rgba(244,181,68,.1)}
+.pend-issue-detail{font-size:12px;line-height:1.45;color:#9aa8b7;min-height:35px}.pend-issue-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}.pend-issue-count{font-size:12px;color:#dce4ec;font-weight:650}.pend-issue-action{font-size:11.5px;color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:5px}.pend-issue-action .ui-icon{width:13px;height:13px}
+.pend-empty{padding:34px 18px;text-align:center;border:1px dashed rgba(255,255,255,.08);border-radius:13px;background:rgba(255,255,255,.012)}.pend-empty-icon{width:42px;height:42px;margin:0 auto 10px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(53,200,145,.08);color:#35c891}.pend-empty-icon .ui-icon{width:21px;height:21px}.pend-empty-title{font-size:14px;font-weight:700;color:#e9eef3}.pend-empty-sub{font-size:11.5px;color:var(--text3);margin-top:4px}
+.pend-monitor-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pend-monitor{display:flex;align-items:center;gap:12px;padding:12px 13px;background:#121922;border:1px solid var(--border);border-radius:11px;min-height:65px}.pend-monitor-dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 4px rgba(255,255,255,.025)}.pend-monitor-dot.ok{background:#35c891}.pend-monitor-dot.critical{background:#f45e59}.pend-monitor-dot.attention{background:#f4b544}.pend-monitor-dot.waiting{background:#68788a}.pend-monitor-copy{min-width:0;flex:1}.pend-monitor-name{font-size:12.5px;font-weight:700;color:#e8edf2}.pend-monitor-detail{font-size:10.8px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pend-monitor-status{font-size:10px;color:#8292a5;white-space:nowrap}
+.pend-resolved-list{display:flex;flex-direction:column;gap:7px}.pend-resolved{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:rgba(53,200,145,.035);border:1px solid rgba(53,200,145,.08)}.pend-resolved-icon{color:#35c891;width:18px;height:18px;display:flex;align-items:center}.pend-resolved-icon .ui-icon{width:16px;height:16px}.pend-resolved-label{font-size:11.5px;color:#c1ccd7;flex:1}.pend-resolved-time{font-size:10px;color:var(--text3)}
+.pend-nav-count{min-width:21px;height:19px;padding:0 6px;border-radius:999px;background:rgba(244,94,89,.13);border:1px solid rgba(244,94,89,.22);color:#ff7f79;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:auto}.sidebar.collapsed .pend-nav-count{display:none!important}
+@media(max-width:1000px){.pend-kpis{grid-template-columns:repeat(2,1fr)}.pend-issue-grid,.pend-monitor-list{grid-template-columns:1fr}}
+@media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:space-between}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
+
 </style>
 <script id="ignis-custom-calendar-2026">
 (function(){
