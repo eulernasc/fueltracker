@@ -4228,8 +4228,11 @@ function renderDashboard() {
   document.getElementById('kpi-maq-delta').textContent=`${state.maquinas.length} total`;
 
   // Meta ideal média e eficiência
-  const maqsComMeta=list.map(a=>getMaquina(a.placa)).filter(m=>m&&m.meta>0);
-  const metaMedia=maqsComMeta.length>0?(maqsComMeta.reduce((s,m)=>s+m.meta,0)/maqsComMeta.length):0;
+  // Meta do painel: uma meta por ativo (não uma meta por abastecimento).
+  // Antes a mesma placa entrava várias vezes e distorcia a média/contagem.
+  const placasComMeta=[...new Set(list.map(a=>a.placa))];
+  const maqsComMeta=placasComMeta.map(placa=>getMaquina(placa)).filter(m=>m&&Number(m.meta)>0);
+  const metaMedia=maqsComMeta.length>0?(maqsComMeta.reduce((s,m)=>s+Number(m.meta||0),0)/maqsComMeta.length):0;
 
   // KPI Meta Ideal
   const metaEl=document.getElementById('kpi-media-meta');
@@ -4259,8 +4262,8 @@ function renderDashboard() {
     const icone='';
     eficEl.textContent=efic.toFixed(1);
     eficEl.style.color=cor;
-    const desvio=((media-metaMedia)/metaMedia*100);
-    eficSubEl.innerHTML=`<span style="color:${cor}">${desvio>0?'+':''}${desvio.toFixed(1)}% vs meta</span>`;
+    const diff=efic-100;
+    eficSubEl.innerHTML=`<span style="color:${cor}">${diff>=0?'+':''}${diff.toFixed(1)} p.p. vs 100%</span>`;
   } else {
     eficEl.textContent='—';
     eficEl.style.color='var(--text3)';
@@ -4280,8 +4283,14 @@ function renderDashboard() {
   if(document.getElementById('chart-period-label2')) document.getElementById('chart-period-label2').textContent=lbl;
   window._dashList  = list;
   window._dashIsKmL = isKmL;
+  // Se filtros principais mudaram, remove seleções de cards que não existem mais.
+  if(window._selectedOps && window._selectedOps.size){
+    const opsDisponiveis=new Set(list.map(a=>(getMaquina(a.placa)?.operacao||a.operacao||'Sem Operação').replace(/_/g,' ')));
+    [...window._selectedOps].forEach(op=>{ if(!opsDisponiveis.has(op)) window._selectedOps.delete(op); });
+  }
   populateModeloDropdown();
   renderOpChart(list, isKmL);
+  if(window._selectedOps && window._selectedOps.size) _updateDashboardKpisForOperationSelection();
   _renderBarAndRanking();
   relChecarReincidencia();
 }
@@ -4313,13 +4322,11 @@ function renderOpChart(list, isKmL=false) {
   c.innerHTML='<div class="operation-card-strip">'+ops.map(op=>{
     const d=byOp[op], meta=d.meta, m=d.media, efic=d.efic;
     const desvio=meta>0&&m>0?((m-meta)/meta*100):null;
-    // Status deve respeitar a meta real, sem tolerância escondida:
-    // L/h: menor ou igual à meta = atingiu. km/L: maior ou igual à meta = atingiu.
-    const atingiuMeta = meta>0 && m>0 ? (isKmL ? m>=meta : m<=meta) : false;
-    const desvioRuim = desvio===null ? null : (isKmL ? Math.max(0,-desvio) : Math.max(0,desvio));
-    const status=efic===null?'sem-meta':atingiuMeta?'ok':desvioRuim<=10?'attention':'critical';
-    const statusLabel=efic===null?'Sem meta':atingiuMeta?'Meta atingida':desvioRuim<=10?'Atenção':'Crítico';
-    const statusColor=efic===null?'var(--text3)':atingiuMeta?'var(--green)':desvioRuim<=10?'var(--yellow)':'var(--red)';
+    // Regra operacional do IGNIS: eficiência >= 98% é considerada dentro da meta.
+    const dentroMeta = efic!==null && efic>=98;
+    const status=efic===null?'sem-meta':dentroMeta?'ok':efic>=90?'attention':'critical';
+    const statusLabel=efic===null?'Sem meta':dentroMeta?'Dentro da meta':efic>=90?'Atenção':'Crítico';
+    const statusColor=efic===null?'var(--text3)':dentroMeta?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
     const ratio=meta>0&&m>0?Math.min(m/meta,1.45):0;
     const fillPct=Math.max(4,Math.min(100,ratio/1.45*100));
     const markerPct=100/1.45;
@@ -4333,10 +4340,74 @@ function renderOpChart(list, isKmL=false) {
         <span><small>Eficiência</small><strong style="color:${statusColor}">${efic!==null?efic.toFixed(1)+'%':'—'}</strong></span>
       </div>
       <div class="operation-progress"><span class="operation-fill" style="width:${fillPct}%;background:${statusColor}"></span>${meta>0?`<i style="left:${markerPct}%"></i>`:''}</div>
-      <div class="operation-foot operation-foot-single"><span>${d.maquinas.size} ativo${d.maquinas.size===1?'':'s'}</span>${desvioRuim!==null&&!atingiuMeta?`<span style="color:${statusColor}">${desvioRuim.toFixed(1)}% fora</span>`:''}</div>
+      <div class="operation-foot operation-foot-single"><span>${d.maquinas.size} ativo${d.maquinas.size===1?'':'s'}</span>${efic!==null&&!dentroMeta?`<span style="color:${statusColor}">${(100-efic).toFixed(1)} p.p. abaixo</span>`:''}</div>
     </button>`;
   }).join('')+'</div>';
 }
+function _getSelectedOperationDashboardList() {
+  const base = window._dashList || [];
+  const sel = window._selectedOps;
+  if (!sel || sel.size===0) return base;
+  return base.filter(a => {
+    const op=(getMaquina(a.placa)?.operacao||a.operacao||'Sem Operação').replace(/_/g,' ');
+    return sel.has(op);
+  });
+}
+
+function _updateDashboardKpisForOperationSelection() {
+  const list = _getSelectedOperationDashboardList();
+  const isKmL = !!window._dashIsKmL;
+  if (!list.length) return;
+
+  const totalL=list.reduce((s,a)=>s+(Number(a.litros)||0),0);
+  const totalH=list.reduce((s,a)=>s+(Number(a.horas)||0),0);
+  const media=isKmL?(totalL>0?totalH/totalL:0):(totalH>0?totalL/totalH:0);
+  const placas=[...new Set(list.map(a=>a.placa))];
+  const maqsComMeta=placas.map(p=>getMaquina(p)).filter(m=>m&&Number(m.meta)>0);
+  const metaMedia=maqsComMeta.length?maqsComMeta.reduce((s,m)=>s+Number(m.meta||0),0)/maqsComMeta.length:0;
+  const unidadeMedia=isKmL?'km/L':'L/h';
+
+  const setNum=(id,val,dec=0)=>{ const el=document.getElementById(id); if(el) el.textContent=Number(val||0).toFixed(dec); };
+  setNum('kpi-litros',totalL,0);
+  setNum('kpi-horas',totalH,0);
+  setNum('kpi-media',media,2);
+  setNum('kpi-maquinas',placas.length,0);
+
+  const maqDelta=document.getElementById('kpi-maq-delta');
+  if(maqDelta){
+    const sel=window._selectedOps;
+    maqDelta.textContent=sel&&sel.size===1?'na operação selecionada':`${state.maquinas.length} total`;
+  }
+
+  const metaIdealEl=document.getElementById('kpi-meta-ideal');
+  const metaUnitEl=document.getElementById('kpi-meta-unit');
+  const metaSubEl=document.getElementById('kpi-meta-sub');
+  if(metaMedia>0){
+    if(metaIdealEl) metaIdealEl.textContent=metaMedia.toFixed(2);
+    if(metaUnitEl) metaUnitEl.textContent=' '+unidadeMedia;
+    if(metaSubEl) metaSubEl.innerHTML=`<span style="color:var(--text3)">${maqsComMeta.length} ativo${maqsComMeta.length===1?'':'s'} c/ meta</span>`;
+  } else {
+    if(metaIdealEl) metaIdealEl.textContent='—';
+    if(metaUnitEl) metaUnitEl.textContent='';
+    if(metaSubEl) metaSubEl.innerHTML='<span style="color:var(--text3)">sem metas cadastradas</span>';
+  }
+
+  const eficEl=document.getElementById('kpi-eficiencia');
+  const eficSubEl=document.getElementById('kpi-efic-sub');
+  if(metaMedia>0&&media>0){
+    const efic=isKmL?(media/metaMedia)*100:(metaMedia/media)*100;
+    const cor=efic>=98?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
+    if(eficEl){ eficEl.textContent=efic.toFixed(1); eficEl.style.color=cor; }
+    if(eficSubEl){
+      const diff=efic-100;
+      eficSubEl.innerHTML=`<span style="color:${cor}">${diff>=0?'+':''}${diff.toFixed(1)} p.p. vs 100%</span>`;
+    }
+  } else {
+    if(eficEl){ eficEl.textContent='—'; eficEl.style.color='var(--text3)'; }
+    if(eficSubEl) eficSubEl.innerHTML='<span style="color:var(--text3)">sem metas</span>';
+  }
+}
+
 function opCardClick(e, op) {
   e.stopPropagation();
   if (!window._selectedOps) window._selectedOps = new Set();
@@ -4348,12 +4419,14 @@ function opCardClick(e, op) {
   }
   _opUpdateVisual();
   _renderBarAndRanking();
+  _updateDashboardKpisForOperationSelection();
 }
 
 function opClearSelection() {
   if (window._selectedOps) window._selectedOps.clear();
   _opUpdateVisual();
   _renderBarAndRanking();
+  _updateDashboardKpisForOperationSelection();
 }
 
 function _opUpdateVisual() {
@@ -4395,6 +4468,7 @@ document.addEventListener('click', function(e) {
     window._selectedOps.clear();
     _opUpdateVisual();
     _renderBarAndRanking();
+    _updateDashboardKpisForOperationSelection();
   }
 });
 
@@ -4411,14 +4485,11 @@ function renderBarChart(list, isKmL=false) {
     return {placa,...d,media,meta,efic,op:maq?.operacao||''};
   }).sort((a,b)=>(a.efic??999)-(b.efic??999)||a.placa.localeCompare(b.placa));
   const legend=document.getElementById('bar-chart-legend');
-  if(legend) legend.innerHTML='<div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Meta atingida</div><div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>Até 10% fora</div><div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Mais de 10% fora</div><div class="legend-item meta-legend">linha = meta</div>';
+  if(legend) legend.innerHTML='<div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>>= 98% da meta</div><div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>90–97,9%</div><div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>< 90%</div><div class="legend-item meta-legend">linha = meta</div>';
   const H=128, baseline=H*(100/135);
   c.innerHTML='<div class="efficiency-chart">'+items.map(it=>{
     const efic=it.efic;
-    const desvio=it.meta>0&&it.media>0?((it.media-it.meta)/it.meta*100):null;
-    const atingiuMeta = it.meta>0 && it.media>0 ? (isKmL ? it.media>=it.meta : it.media<=it.meta) : false;
-    const desvioRuim = desvio===null ? null : (isKmL ? Math.max(0,-desvio) : Math.max(0,desvio));
-    const color=efic===null?'var(--text3)':atingiuMeta?'var(--green)':desvioRuim<=10?'var(--yellow)':'var(--red)';
+    const color=efic===null?'var(--text3)':efic>=98?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
     const barH=efic===null?4:Math.max(4,Math.min(H,efic/135*H));
     const tip=`${it.placa} | ${(it.op||'—').replace(/_/g,' ')} | ${it.litros.toFixed(0)} L | ${it.media.toFixed(2)} ${unidadeMedia}${it.meta>0?' | meta '+it.meta.toFixed(2):''}${efic!==null?' | eficiência '+efic.toFixed(1)+'%':''}`;
     return `<div class="efficiency-column" onmouseenter="showBarTooltip(this,'${tip.replace(/'/g,"&apos;")}')" onmouseleave="hideBarTooltip()">
@@ -4442,7 +4513,8 @@ function renderRanking(list, isKmL=false) {
     const maq=getMaquina(p);
     const meta=maq?.meta||0;
     const desvio=meta>0?((media-meta)/meta*100):null;
-    return {placa:p,litros:d.litros,media,meta,desvio};
+    const efic=meta>0&&media>0?(isKmL?media/meta*100:meta/media*100):null;
+    return {placa:p,litros:d.litros,media,meta,desvio,efic};
   }).sort((a,b)=>{
     // Para L/h: maior desvio (pior) primeiro; para km/L: menor desvio (pior) primeiro
     const da=a.desvio!==null?a.desvio:0;
@@ -4451,14 +4523,14 @@ function renderRanking(list, isKmL=false) {
   });
   c.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">'+sorted.slice(0,8).map((item,i)=>{
     let alertColor, alertIcon, alertLabel, barColor;
-    if(item.desvio===null){
+    if(item.efic===null){
       alertColor='var(--text3)'; alertIcon='—'; alertLabel=''; barColor='var(--accent)';
+    } else if(item.efic>=98){
+      alertColor='var(--green)'; alertIcon='✓'; alertLabel=`Dentro da meta · ${item.efic.toFixed(1)}%`; barColor='var(--green)';
+    } else if(item.efic>=90){
+      alertColor='var(--yellow)'; alertIcon=''; alertLabel=`Atenção · ${item.efic.toFixed(1)}%`; barColor='var(--yellow)';
     } else {
-      const bomDesvio = isKmL ? item.desvio>=0 : item.desvio<=0;
-      const pct = Math.abs(item.desvio);
-      if(bomDesvio){ alertColor='var(--green)'; alertIcon='✓'; alertLabel='Dentro da meta'; barColor='var(--green)'; }
-      else if(pct<=10){ alertColor='var(--yellow)'; alertIcon='⚠'; alertLabel=`${item.desvio.toFixed(1)}% vs meta`; barColor='var(--yellow)'; }
-      else { alertColor='var(--red)'; alertIcon=''; alertLabel=`${item.desvio.toFixed(1)}% vs meta`; barColor='var(--red)'; }
+      alertColor='var(--red)'; alertIcon=''; alertLabel=`Crítico · ${item.efic.toFixed(1)}%`; barColor='var(--red)';
     }
     const barW=item.meta>0?Math.min(Math.max((item.media/item.meta)*60,8),100):0;
     return `<div class="ranking-item" style="flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px">
