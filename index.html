@@ -1262,6 +1262,10 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="page-sub">O que precisa da sua atenção agora</div>
       </div>
       <div class="pend-header-actions">
+        <div class="pend-anom-setting" title="Gera alerta quando a eficiência de um abastecimento ultrapassa este percentual">
+          <span>Eficiência alta</span>
+          <div class="pend-anom-input"><input id="pend-efic-limit" type="number" min="100" max="500" step="5" value="140" onchange="ignisSetLimiteEficiencia(this.value)"><b>%</b></div>
+        </div>
         <span class="pend-updated" id="pend-updated">—</span>
         <button class="btn btn-secondary btn-sm" type="button" onclick="renderPendencias(true)">
           <svg class="ui-icon" viewBox="0 0 24 24"><path d="M20 6v6h-6"/><path d="M4 18v-6h6"/><path d="M18.5 9A7 7 0 0 0 6.2 6.2L4 8"/><path d="M5.5 15A7 7 0 0 0 17.8 17.8L20 16"/></svg>
@@ -2787,7 +2791,7 @@ async function idbLoad() {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[] };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140 };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -2916,6 +2920,9 @@ function ensureExcelJSReady() { return _waitIgnisGlobal('ExcelJS', 'o gerador av
 
 async function loadState() {
   try { const s=localStorage.getItem('fueltracker_v3'); if(s) state=JSON.parse(s); } catch(e){}
+  if(!Array.isArray(state.medidorAnomalias))state.medidorAnomalias=[];
+  if(!Array.isArray(state.eficienciaAnomalias))state.eficienciaAnomalias=[];
+  if(!Number.isFinite(Number(state.eficienciaAnomaliaLimite)))state.eficienciaAnomaliaLimite=140;
   // IDB é usado APENAS como cache de abastecimentos/semanas em memória (o Firebase lean não os guarda).
   // NÃO é mais usado como "fonte de verdade" para recuperação — isso fazia o sistema reverter
   // exclusões intencionais ao detectar que o IDB tinha mais dados que o localStorage.
@@ -2997,6 +3004,9 @@ async function syncFromFirebase() {
 
       state = { ...state, ...dados };
       state._savedAt = tsFirebase;
+      if(!Array.isArray(state.medidorAnomalias))state.medidorAnomalias=[];
+      if(!Array.isArray(state.eficienciaAnomalias))state.eficienciaAnomalias=[];
+      if(!Number.isFinite(Number(state.eficienciaAnomaliaLimite)))state.eficienciaAnomaliaLimite=140;
       markIgnisDataDirty('firebase-sync');
       if (!state.metaRotaModelos) state.metaRotaModelos = {};
       // Salva versão leve no localStorage — sem abastecimentos e sem registros de semanas (já no Firebase em chunks)
@@ -3755,6 +3765,7 @@ function hideBarTooltip() {
 function pendSvg(kind) {
   const icons = {
     consumo:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 18V9"/><path d="M10 18V5"/><path d="M16 18v-7"/><path d="M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/></svg>',
+    eficiencia:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m5 13 4-4 3 3 6-7"/><path d="M15 5h3v3"/></svg>',
     importacao:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>',
     medidor:'<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l-3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/></svg>',
     excluir:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg>',
@@ -3856,6 +3867,24 @@ function pendCollect(){
   }
   else monitors.push({name:'Consumo e reincidência',status:'ok',detail:'Nenhuma reincidência detectada'});
 
+  const agoraEfic=new Date();
+  const limiteEfic=typeof ignisGetLimiteEficiencia==='function'?ignisGetLimiteEficiencia():140;
+  const altas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(agoraEfic.getFullYear(),agoraEfic.getMonth(),limiteEfic):[];
+  if(altas.length){
+    const pior=[...altas].sort((a,b)=>Number(b.eficiencia||0)-Number(a.eficiencia||0))[0];
+    addIssue({
+      id:'eficiencia-alta',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente alta',count:altas.length,
+      keys:altas.map(r=>'eficiencia-alta:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'abastecimentos',
+      detail:`${altas.length} abastecimento${altas.length>1?'s':''} acima do limite configurado de ${limiteEfic.toFixed(0)}%. Pode indicar abastecimento faltante ou dado incorreto.`,
+      highlightLabel:'Maior eficiência',
+      highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,
+      highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,
+      rows:altas,
+      meta:`Limite atual: ${limiteEfic.toFixed(0)}%`
+    });
+    monitors.push({name:'Eficiência entre abastecimentos',status:'attention',detail:`${altas.length} acima de ${limiteEfic.toFixed(0)}% · maior ${Number(pior?.eficiencia||0).toFixed(1)}%`});
+  } else monitors.push({name:'Eficiência entre abastecimentos',status:'ok',detail:`Nenhuma ocorrência acima de ${limiteEfic.toFixed(0)}% no mês atual`});
+
   const latest=pendLatestAbast(); const gap=pendBusinessGap(latest);
   if(!latest){addIssue({id:'importacao',kind:'importacao',severity:'critical',title:'Sem dados de abastecimento',count:1,keys:['importacao-atrasada'],page:'abastecimentos',detail:'Não há abastecimentos disponíveis para validar a atualização.',meta:'Importação necessária'});monitors.push({name:'Atualização dos abastecimentos',status:'critical',detail:'Sem dados disponíveis'});}
   else if(gap>=1){const sev=gap>=2?'critical':'attention';addIssue({id:'importacao',kind:'importacao',severity:sev,title:'Atualização de abastecimentos',count:gap,keys:['importacao-atrasada'],page:'abastecimentos',detail:`${gap} dia${gap>1?'s':''} útil${gap>1?'eis':' '} sem dados após ${pendFmtDate(latest)}.`,meta:'Regra operacional D-1'});monitors.push({name:'Atualização dos abastecimentos',status:sev,detail:`Última data ${pendFmtDate(latest)} · ${gap} dia(s) útil(eis) de defasagem`});}
@@ -3942,6 +3971,14 @@ function pendOpenDetails(issueId){
   } else if(issueId==='medidores'){
     th.innerHTML='<tr><th>Data</th><th>Placa</th><th>Medidor</th><th>Operação</th><th>Variação</th></tr>';
     tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.medidor)}</td><td>${pendEsc(r.operacao||'—')}</td><td><strong class="bad">${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}</strong></td></tr>`).join('');
+  } else if(issueId==='eficiencia-alta'){
+    const rows=[...issue.rows].sort((a,b)=>Number(b.eficiencia||0)-Number(a.eficiencia||0));
+    th.innerHTML='<tr><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas do dia</th><th>Litros</th><th>Realizado</th><th>Meta</th><th>Eficiência</th></tr>';
+    tb.innerHTML=rows.map((r,idx)=>{
+      const medida=(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'km':'h';
+      const un=r.unidade||((r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'km/L':'L/h');
+      return `<tr class="${idx===0?'worst':''}"><td>${pendEsc(fechFmt(fechParse(r.data)))}</td><td>${pendEsc(r.operacao||'—')}</td><td><strong>${pendEsc(r.placa)}</strong>${idx===0?'<span class="pend-worst-tag">Maior</span>':''}</td><td>${Number(r.kmHoras||0).toLocaleString('pt-BR',{maximumFractionDigits:2})} ${medida}</td><td>${Number(r.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})} L</td><td>${Number(r.media||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${un}</td><td>${Number(r.meta||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${un}</td><td><strong class="warn">${Number(r.eficiencia||0).toFixed(1)}%</strong></td></tr>`;
+    }).join('');
   } else {
     th.innerHTML='<tr><th>Registro</th><th>Detalhe</th></tr>'; tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(r.placa||'—')}</td><td>${pendEsc(r.operacao||'—')}</td></tr>`).join('');
   }
@@ -3953,6 +3990,7 @@ function renderPendencias(force=false){
   const {issues,monitors,activeLabels}=pendCollect(); const hist=pendSyncResolved(activeLabels); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
   const critical=issues.filter(i=>i.severity==='critical').length, attention=issues.filter(i=>i.severity==='attention').length, occ=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)}; set('pend-kpi-critical',critical);set('pend-kpi-attention',attention);set('pend-kpi-occurrences',occ);set('pend-kpi-resolved',resolved7.length);
+  const limEl=document.getElementById('pend-efic-limit');if(limEl&&document.activeElement!==limEl)limEl.value=String(Math.round(typeof ignisGetLimiteEficiencia==='function'?ignisGetLimiteEficiencia():140));
   const up=document.getElementById('pend-updated');if(up)up.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const sub=document.getElementById('pend-priority-sub');if(sub)sub.textContent=issues.length?`${issues.length} grupo${issues.length>1?'s':''} de pendência · ${occ} ocorrência${occ!==1?'s':''}`:'Nenhuma pendência ativa detectada';
   const list=document.getElementById('pend-issues');if(list)list.innerHTML=issues.length?issues.sort((a,b)=>(a.severity==='critical'?0:1)-(b.severity==='critical'?0:1)||b.count-a.count).map(pendIssueHTML).join(''):`<div class="pend-empty" style="grid-column:1/-1"><div class="pend-empty-icon">${pendSvg('ok')}</div><div class="pend-empty-title">Nenhuma pendência ativa</div><div class="pend-empty-sub">Os monitoramentos disponíveis não encontraram itens que exijam ação agora.</div></div>`;
@@ -5841,13 +5879,21 @@ function salvarAbastecimento() {
   if(!placa||!data||isNaN(litros)||isNaN(horas)){showToast('Preencha todos os campos','error');return;}
   if(litros<0||horas<0){showToast('Litros e KM/Horas não podem ser negativos. Corrija o medidor antes de salvar.','error');return;}
   const entry={placa,data,litros,horas,operador};
+  let opFinal='';
   if(editIdx>=0) {
-    const op=state.abastecimentos[editIdx]?.operacao||getMaquina(placa)?.operacao||'';
-    state.abastecimentos[editIdx]={...entry,operacao:op};
+    opFinal=state.abastecimentos[editIdx]?.operacao||getMaquina(placa)?.operacao||'';
+    state.abastecimentos[editIdx]={...entry,operacao:opFinal};
     showToast('Abastecimento atualizado!','success');
   } else {
-    state.abastecimentos.push({...entry,operacao:getMaquina(placa)?.operacao||''});
+    opFinal=getMaquina(placa)?.operacao||'';
+    state.abastecimentos.push({...entry,operacao:opFinal});
     showToast('Abastecimento salvo!','success');
+  }
+  if(typeof ignisRemoveEficienciaAnomalyKey==='function')ignisRemoveEficienciaAnomalyKey(placa,data,'Cadastro manual');
+  if(typeof ignisAvaliarEficienciaAlta==='function'){
+    const maq=getMaquina(placa);
+    const an=ignisAvaliarEficienciaAlta({placa,data,operacao:opFinal,modelo:maq?.modelo||'',tipoVeic:maq?.tipo||'',tipoIgnis:maq?.tipoIgnis||'',litros,kmHoras:horas,meta:Number(maq?.meta)||0,source:'Cadastro manual'});
+    if(an)ignisRecordEficienciaAnomaly(an);
   }
   saveState(); closeModal('modal-abast'); renderAbastecimentos(); renderDashboard();
 }
@@ -5943,6 +5989,7 @@ async function importarRelatorio(input) {
         const antesCount = state.abastecimentos.length;
         state.abastecimentos = state.abastecimentos.filter(a => a.periodoId !== idAntigo);
         if(typeof ignisRemoveMedidorAnomaliesRange==='function') ignisRemoveMedidorAnomaliesRange(pAntigo.dataIni,pAntigo.dataFim);
+        if(typeof ignisRemoveEficienciaAnomaliesRange==='function') ignisRemoveEficienciaAnomaliesRange(pAntigo.dataIni,pAntigo.dataFim);
         console.info(`Reimportação "${nomePeriodo}": removidos ${antesCount - state.abastecimentos.length} registro(s) do período antigo.`);
         delete state.semanas[idAntigo];
       }
@@ -6012,6 +6059,11 @@ async function importarRelatorio(input) {
             source: 'Importação semanal',
             periodo: nomePeriodo
           });
+        }
+        if(volReal>0 && kmReal>0 && typeof ignisAvaliarEficienciaAlta==='function'){
+          const metaEvento=mediaIdeal>0?mediaIdeal:(Number(getMaquina(placa)?.meta)||0);
+          const an=ignisAvaliarEficienciaAlta({placa,data:dataIniNova||document.getElementById('import-data-ini')?.value||'',operacao,modelo,tipoVeic:tipo,tipoIgnis,litros:volReal,kmHoras:kmReal,meta:metaEvento,source:'Importação semanal',periodo:nomePeriodo});
+          if(an)ignisRecordEficienciaAnomaly(an);
         }
 
         const maqExistente = maquinasImportMap.get(placa);
@@ -6145,9 +6197,10 @@ async function importarRelatorioDiario(input) {
       const anomaliasMedidorImport = typeof ignisDetectarMedidoresRaw==='function'
         ? ignisDetectarMedidoresRaw(raw, 'Relatório diário')
         : [];
+      const anomaliasEficienciaImport = [];
       let ignoradasExclusao = 0;
       let ignoradasArla = 0;
-      raw.forEach(row => {
+      raw.forEach((row,rowIdx) => {
         const placa = String(row['Placa']||'').trim().toUpperCase();
         if (!placa) return;
         const dataObj = parseDataBR(row['Data']);
@@ -6168,6 +6221,12 @@ async function importarRelatorioDiario(input) {
         const opUp = operacao.toUpperCase(), modUp = modelo.toUpperCase();
         if (modUp.startsWith('IEV')) { ignoradasExclusao++; return; }
         if (excluirOps.some(x => opUp.includes(x))) { ignoradasExclusao++; return; }
+        const tipUpRaw=tipoVeic.toUpperCase(); let tipoIgnisRaw; if(modUp.includes('MOFFETT')||placa.startsWith('EMP'))tipoIgnisRaw='empilhadeira'; else if(tipUpRaw==='VEICULO LEVE'||opUp.startsWith('VL')||opUp.includes('MERCADO LIVRE'))tipoIgnisRaw='leve'; else if(placa.startsWith('MAQ'))tipoIgnisRaw='maquina'; else if(placa.startsWith('TRA'))tipoIgnisRaw='trator'; else tipoIgnisRaw='pesada';
+        const metaEvento = mediaIdeal>0 ? mediaIdeal : (Number(getMaquina(placa)?.meta)||0);
+        if (litros>0 && kmReal>0 && metaEvento>0 && typeof ignisAvaliarEficienciaAlta==='function') {
+          const an=ignisAvaliarEficienciaAlta({placa,data:dataParaISO(dataObj),operacao,modelo,tipoVeic,tipoIgnis:tipoIgnisRaw,litros,kmHoras:kmReal,meta:metaEvento,source:'Relatório diário',rowIndex:rowIdx});
+          if(an)anomaliasEficienciaImport.push(an);
+        }
         if (kmRealRaw < 0) {
           anomaliasMedidorImport.push({
             placa,
@@ -6248,6 +6307,7 @@ async function importarRelatorioDiario(input) {
         conflitos.forEach(c => {
           state.abastecimentos = state.abastecimentos.filter(a => a.periodoId !== c.idAntigo);
           if(typeof ignisRemoveMedidorAnomaliesRange==='function') ignisRemoveMedidorAnomaliesRange(dataParaISO(c.bloco.inicio),dataParaISO(c.bloco.fim));
+          if(typeof ignisRemoveEficienciaAnomaliesRange==='function') ignisRemoveEficienciaAnomaliesRange(dataParaISO(c.bloco.inicio),dataParaISO(c.bloco.fim));
           delete state.semanas[c.idAntigo];
         });
       }
@@ -6340,6 +6400,9 @@ async function importarRelatorioDiario(input) {
           ignisRecordMedidorAnomaly(a);
         });
       }
+      if (anomaliasEficienciaImport.length && typeof ignisRecordEficienciaAnomaly === 'function') {
+        anomaliasEficienciaImport.forEach(ignisRecordEficienciaAnomaly);
+      }
 
       const salvoFirebase = await saveState({ immediate: true }); // confirma o lote inteiro antes de avisar sucesso
       renderHistoricoPeriodos();
@@ -6354,6 +6417,7 @@ async function importarRelatorioDiario(input) {
           ${ignoradasExclusao>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">⏭ ${ignoradasExclusao} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
           ${ignoradasArla>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">🧪 ${ignoradasArla} linha(s) de Arla ignorada(s) — tem controle dedicado na aba Arla 32</div>`:''}
           ${conflitos.length>0?`<div style="font-size:12px;color:var(--accent);margin-top:4px">🔄 ${conflitos.length} semana(s) substituída(s)</div>`:''}
+          ${anomaliasEficienciaImport.length>0?`<div style="font-size:12px;color:var(--yellow);margin-top:4px">${anomaliasEficienciaImport.length} eficiência(s) acima de ${ignisGetLimiteEficiencia().toFixed(0)}% enviada(s) para a Central de Pendências</div>`:''}
         </div>`;
       if (salvoFirebase) {
         showToast(`${semanasNovas} semanas importadas e confirmadas: ${registrosTotais} registros!`, 'success');
@@ -6460,13 +6524,13 @@ function limparTodosDados() {
 
   // Reseta estado em memória
   state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:state.sheetsUrl,
-            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[] };
+            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140 };
   _periodosSelec = new Set();
   window._selectedOps = new Set();
   window._dashList = []; window._dashIsKmL = false;
 
   // Limpa localStorage completamente
-  try { localStorage.removeItem('fueltracker_v3'); localStorage.removeItem('ignis_medidor_anomalias'); } catch(e){}
+  try { localStorage.removeItem('fueltracker_v3'); localStorage.removeItem('ignis_medidor_anomalias'); localStorage.removeItem('ignis_eficiencia_anomalias'); } catch(e){}
 
   // Limpa IDB completamente
   (async () => {
@@ -12190,7 +12254,11 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
    IGNIS STAGE 3 — CENTRAL DE PENDÊNCIAS
    ══════════════════════════════════════════════════════════════════════════════ */
 .pend-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
-.pend-header-actions{display:flex;align-items:center;gap:10px}
+.pend-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.pend-anom-setting{height:34px;display:flex;align-items:center;gap:9px;padding:0 9px 0 11px;border:1px solid rgba(151,164,178,.13);background:#121922;border-radius:9px;color:#8999aa;font-size:10.5px;font-weight:700;white-space:nowrap}
+.pend-anom-input{display:flex;align-items:center;gap:3px;height:24px;padding:0 6px;border-radius:7px;background:#0e151d;border:1px solid rgba(233,95,50,.18)}
+.pend-anom-input input{width:44px;border:0;outline:0;background:transparent;color:#f06a3d;font:800 11px 'DM Mono',monospace;text-align:right;padding:0;-moz-appearance:textfield}
+.pend-anom-input input::-webkit-inner-spin-button,.pend-anom-input input::-webkit-outer-spin-button{opacity:.45}.pend-anom-input b{color:#f06a3d;font-size:10px}
 .pend-updated{font-size:11.5px;color:var(--text3);white-space:nowrap}
 .pend-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .pend-kpi{background:#121922;border:1px solid var(--border);border-radius:14px;padding:17px 18px;min-height:112px;position:relative;overflow:hidden}
@@ -12215,7 +12283,7 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 .pend-resolved-list{display:flex;flex-direction:column;gap:7px}.pend-resolved{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:rgba(53,200,145,.035);border:1px solid rgba(53,200,145,.08)}.pend-resolved-icon{color:#35c891;width:18px;height:18px;display:flex;align-items:center}.pend-resolved-icon .ui-icon{width:16px;height:16px}.pend-resolved-label{font-size:11.5px;color:#c1ccd7;flex:1}.pend-resolved-time{font-size:10px;color:var(--text3)}
 .pend-nav-count{min-width:21px;height:19px;padding:0 6px;border-radius:999px;background:rgba(244,94,89,.13);border:1px solid rgba(244,94,89,.22);color:#ff7f79;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:auto}.sidebar.collapsed .pend-nav-count{display:none!important}
 @media(max-width:1000px){.pend-kpis{grid-template-columns:repeat(2,1fr)}.pend-issue-grid,.pend-monitor-list{grid-template-columns:1fr}}
-@media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:space-between}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
+@media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-setting{order:1}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
 
 </style>
 <script id="ignis-custom-calendar-2026">
@@ -12236,7 +12304,7 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 <script id="ignis-stage4-fechamento-js">
 const FECH_MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 function fechEsc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function fechIcon(kind){const m={abast:'<path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/>',dup:'<rect x="7" y="7" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',med:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l-3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/>',cons:'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/>',excl:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14"/>',arla:'<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 16h9"/>',km:'<path d="M4 17 17 4l3 3L7 20H4zM14 7l3 3"/>',recon:'<path d="M7 7h10m-3-3 3 3-3 3M17 17H7m3 3-3-3 3-3"/>',exec:'<path d="M5 3h14v18H5zM8 8h8M8 12h5m-5 4 2 2 5-5"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24">${m[kind]||m.exec}</svg>`;}
+function fechIcon(kind){const m={abast:'<path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/>',dup:'<rect x="7" y="7" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',med:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l-3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/>','efic-high':'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m5 13 4-4 3 3 6-7"/><path d="M15 5h3v3"/>',cons:'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/>',excl:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14"/>',arla:'<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 16h9"/>',km:'<path d="M4 17 17 4l3 3L7 20H4zM14 7l3 3"/>',recon:'<path d="M7 7h10m-3-3 3 3-3 3M17 17H7m3 3-3-3 3-3"/>',exec:'<path d="M5 3h14v18H5zM8 8h8M8 12h5m-5 4 2 2 5-5"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24">${m[kind]||m.exec}</svg>`;}
 function fechInitSelectors(){const ms=document.getElementById('fech-mes'),ys=document.getElementById('fech-ano');if(!ms||!ys)return;const now=new Date();if(!ms.options.length){FECH_MONTHS.forEach((n,i)=>ms.add(new Option(n,i)));}if(!ys.options.length){for(let y=now.getFullYear()+1;y>=now.getFullYear()-4;y--)ys.add(new Option(String(y),String(y)));}if(ms.dataset.init!=='1'){ms.value=String(now.getMonth());ys.value=String(now.getFullYear());ms.dataset.init='1';}}
 function fechSel(){fechInitSelectors();const m=Number(document.getElementById('fech-mes')?.value??new Date().getMonth()),y=Number(document.getElementById('fech-ano')?.value??new Date().getFullYear());return{m,y,key:`${y}-${String(m+1).padStart(2,'0')}`,label:`${FECH_MONTHS[m]} de ${y}`};}
 function fechParse(v){return typeof pendParseDate==='function'?pendParseDate(v):null;}
@@ -12345,6 +12413,71 @@ function ignisInferTipoMedidor(placa,modelo='',tipoVeic='',operacao=''){
 function ignisMedidorNome(tipo){
   return tipo==='pesada'||tipo==='leve'?'Odômetro':'Horímetro';
 }
+
+// ── Eficiência anormal entre abastecimentos ────────────────────────────────
+function ignisGetLimiteEficiencia(){
+  const n=Number(state?.eficienciaAnomaliaLimite);
+  return Number.isFinite(n)&&n>=100&&n<=500?n:140;
+}
+function ignisSetLimiteEficiencia(v){
+  let n=Number(v); if(!Number.isFinite(n))n=140; n=Math.max(100,Math.min(500,n));
+  state.eficienciaAnomaliaLimite=n;
+  saveState();
+  try{renderPendencias(true)}catch(e){}
+  try{renderFechamento(true)}catch(e){}
+  showToast(`Limite de eficiência alta ajustado para ${n.toFixed(0)}%.`,'success');
+}
+function ignisAvaliarEficienciaAlta(d){
+  const litros=Number(d?.litros)||0,kmHoras=Number(d?.kmHoras)||0,meta=Number(d?.meta)||0;
+  if(!(litros>0&&kmHoras>0&&meta>0))return null;
+  const tipo=d.tipoIgnis||ignisInferTipoMedidor(d.placa,d.modelo,d.tipoVeic,d.operacao);
+  const isKm=tipo==='pesada'||tipo==='leve';
+  const media=isKm?(kmHoras/litros):(litros/kmHoras);
+  if(!(media>0))return null;
+  const eficiencia=isKm?(media/meta*100):(meta/media*100);
+  if(!Number.isFinite(eficiencia)||eficiencia<=ignisGetLimiteEficiencia())return null;
+  return {
+    placa:String(d.placa||'').trim().toUpperCase(),data:String(d.data||''),operacao:String(d.operacao||''),
+    modelo:String(d.modelo||''),tipoVeic:String(d.tipoVeic||''),tipoIgnis:tipo,litros,kmHoras,media,meta,eficiencia,
+    unidade:isKm?'km/L':'L/h',source:String(d.source||'Importação'),periodo:String(d.periodo||''),
+    rowIndex:Number.isInteger(d.rowIndex)?d.rowIndex:null,limiteUsado:ignisGetLimiteEficiencia(),at:Date.now()
+  };
+}
+function ignisRecordEficienciaAnomaly(a){
+  if(!a||!a.placa||!Number.isFinite(Number(a.eficiencia)))return;
+  state.eficienciaAnomalias=Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[];
+  const item={...a,placa:String(a.placa||'').trim().toUpperCase(),eficiencia:Number(a.eficiencia),litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,at:Number(a.at)||Date.now()};
+  const sig=[item.placa,item.data,item.source,item.periodo,item.rowIndex??'',item.litros.toFixed(3),item.kmHoras.toFixed(3),item.eficiencia.toFixed(3)].join('|');
+  const exists=state.eficienciaAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|')===sig);
+  if(!exists)state.eficienciaAnomalias.push(item);
+  state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-800);
+  try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}
+}
+function ignisRemoveEficienciaAnomaliesRange(ini,fim){
+  const a=fechParse(ini),b=fechParse(fim);if(!a||!b)return;
+  const keep=x=>{const d=fechParse(x?.data);return !d||d<a||d>b;};
+  state.eficienciaAnomalias=(Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[]).filter(keep);
+  try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(ls.filter(keep)));}catch(e){}
+}
+function ignisRemoveEficienciaAnomalyKey(placa,data,source='Cadastro manual'){
+  const p=String(placa||'').trim().toUpperCase(),dt=String(data||'');
+  const keep=x=>!(String(x?.placa||'').trim().toUpperCase()===p&&String(x?.data||'')===dt&&String(x?.source||'')===source);
+  state.eficienciaAnomalias=(Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[]).filter(keep);
+  try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(ls.filter(keep)));}catch(e){}
+}
+function ignisEficienciaAnomRows(y,m,limite=ignisGetLimiteEficiencia()){
+  let arr=[];if(Array.isArray(state.eficienciaAnomalias))arr=arr.concat(state.eficienciaAnomalias);
+  try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))arr=arr.concat(ls);}catch(e){}
+  const seen=new Set(),out=[];
+  arr.forEach(r=>{
+    const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
+    const efic=Number(r?.eficiencia);if(!Number.isFinite(efic)||efic<=limite)return;
+    const sig=[String(r.placa||'').toUpperCase(),String(r.data||''),String(r.source||''),String(r.periodo||''),r.rowIndex??'',(Number(r.litros)||0).toFixed(3),(Number(r.kmHoras)||0).toFixed(3),efic.toFixed(3)].join('|');
+    if(seen.has(sig))return;seen.add(sig);out.push({...r,eficiencia:efic});
+  });
+  return out.sort((a,b)=>Number(b.eficiencia||0)-Number(a.eficiencia||0)||String(b.data||'').localeCompare(String(a.data||'')));
+}
+
 function ignisRecordMedidorAnomaly(a){
   if(!a||!a.placa)return;
   state.medidorAnomalias=Array.isArray(state.medidorAnomalias)?state.medidorAnomalias:[];
@@ -12440,6 +12573,7 @@ function fechBuild(){
   const coveredTo=coverage.latestEnd||last;
   const dups=fechDuplicates(rows);
   const med=fechMedidorRows(s.y,s.m);
+  const eficAltas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(s.y,s.m):[];
   const reinc=fechReincMonth(s.y,s.m);
   const excl=(typeof pendGetExcluir==='function'?pendGetExcluir():[]).filter(r=>{
     const d=fechParse(r.data);
@@ -12483,6 +12617,15 @@ function fechBuild(){
     detail:med.length?`${med.length} ocorrência(s) de odômetro/horímetro para correção.`:'Nenhuma variação negativa ou leitura regressiva identificada nos dados monitorados.',
     meta:med.length?med.slice(0,5).map(x=>`${x.placa} · ${x.medidor}`).join(' · '):'Validação automática: negativos + leitura menor que a anterior',
     page:'abastecimentos',rows:med
+  });
+
+  const maiorEfic=eficAltas[0];
+  add({
+    id:'efic-high',title:'Eficiência anormalmente alta',
+    state:eficAltas.length?'attention':'ok',blocking:false,
+    detail:eficAltas.length?`${eficAltas.length} abastecimento(s) acima do limite de ${ignisGetLimiteEficiencia().toFixed(0)}%.`:`Nenhum abastecimento acima de ${ignisGetLimiteEficiencia().toFixed(0)}%.`,
+    meta:maiorEfic?`Maior: ${maiorEfic.placa} · ${Number(maiorEfic.eficiencia).toFixed(1)}% · ${maiorEfic.operacao||'Sem operação'}`:'Validação por abastecimento concluída',
+    page:'pendencias'
   });
 
   const worst=reinc[0];
@@ -12532,7 +12675,7 @@ function fechBuild(){
     meta:'Disponível na aba Relatório',page:'relatorio'
   });
 
-  return{s,rows,checks,dups,med,reinc,excl,coverage};
+  return{s,rows,checks,dups,med,eficAltas,reinc,excl,coverage};
 }
 function fechCheckHTML(c){
   const label=c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':c.state==='optional'?'Opcional':'Pendente';
@@ -12583,6 +12726,14 @@ async function fechExportarExcel(){
       const mws=XLSX.utils.aoa_to_sheet(mr);
       mws['!cols']=[{wch:13},{wch:14},{wch:13},{wch:30},{wch:18},{wch:22},{wch:28}];
       XLSX.utils.book_append_sheet(wb,mws,'Medidores regressivos');
+    }
+    if(x.eficAltas?.length){
+      const er=[['Data','Operação','Placa','Tipo','KM/Horas do dia','Litros','Realizado','Meta','Eficiência %','Unidade','Origem'],...x.eficAltas.map(r=>[
+        r.data,r.operacao||'',r.placa,r.tipoIgnis||'',r.kmHoras,r.litros,r.media,r.meta,r.eficiencia,r.unidade||'',r.source||''
+      ])];
+      const ews=XLSX.utils.aoa_to_sheet(er);
+      ews['!cols']=[{wch:13},{wch:30},{wch:14},{wch:14},{wch:18},{wch:12},{wch:13},{wch:13},{wch:15},{wch:10},{wch:20}];
+      XLSX.utils.book_append_sheet(wb,ews,'Eficiência alta');
     }
     if(x.reinc.length){
       const rr=[['Placa','Operação','Pior eficiência','Períodos'],...x.reinc.map(r=>[r.placa,r.operacao,r.pior,r.periodos])];
