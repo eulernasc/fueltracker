@@ -996,6 +996,38 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 @media(max-width:900px){.kpi-icon{right:16px!important;top:18px!important}.operation-card{min-width:170px;flex-basis:170px}.dash-type-menu{width:100%!important}}
 </style>
 
+
+<style id="ignis-dashboard-analysis-fix">
+/* Dashboard analysis clarity — strict meta logic + readable labels */
+.operation-card{min-width:214px!important;max-width:228px!important;flex-basis:214px!important;padding:15px!important}
+.operation-name{font-size:11px!important;max-width:122px!important}
+.status-pill{font-size:9.5px!important;padding:4px 8px!important}
+.operation-primary strong{font-size:25px!important}
+.operation-primary span{font-size:11px!important}
+.operation-analysis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;padding:9px 0;border-top:1px solid rgba(255,255,255,.055)}
+.operation-analysis span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.operation-analysis small{font-size:9px;line-height:1.1;color:#7f8d9b;text-transform:uppercase;letter-spacing:.055em;font-weight:700}
+.operation-analysis strong{font-size:12px;line-height:1.25;color:#d7dee6;font-weight:700;white-space:nowrap}
+.operation-foot-single{justify-content:space-between!important;font-size:10px!important;margin-top:8px!important}
+.operation-meta{display:none!important}
+.dashboard-plate-card{min-height:360px!important}
+.efficiency-chart{height:278px!important;padding-bottom:12px!important;gap:18px!important}
+.efficiency-column{width:82px!important;flex-basis:82px!important}
+.efficiency-value{font-size:11px!important;margin-bottom:7px!important}
+.efficiency-plate{font-size:10.5px!important;margin-top:8px!important;color:#c4ced8!important}
+.efficiency-meta{font-size:10px!important;line-height:1.25!important;color:#9ba8b5!important;margin-top:5px!important;white-space:nowrap}
+.efficiency-score{font-size:10.5px;line-height:1.25;font-weight:750;margin-top:4px;white-space:nowrap}
+.efficiency-liters{display:none!important}
+#bar-chart-legend{gap:16px!important}.legend-item{font-size:10.5px!important}
+/* Arla navigation badges never overlap the flask icon */
+#nav-arla{display:flex!important;align-items:center!important}
+#nav-arla .nav-label{flex:1;min-width:0}
+.nav-count-pill{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:20px;padding:0 7px;border-radius:999px;background:rgba(239,68,68,.16);border:1px solid rgba(239,68,68,.34);color:#ff7770;font-size:10px;font-weight:800;line-height:1;margin-left:auto;flex-shrink:0}
+.nav-alert-dot{width:7px;height:7px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 3px rgba(245,158,11,.09);margin-left:auto;margin-right:6px;flex-shrink:0}
+#nav-arla .nav-alert-dot + .nav-count-pill{margin-left:0}
+.sidebar.collapsed #nav-arla .nav-count-pill,.sidebar.collapsed #nav-arla .nav-alert-dot{display:none!important}
+@media(max-width:900px){.operation-card{min-width:196px!important;flex-basis:196px!important}.efficiency-column{width:78px!important;flex-basis:78px!important}}
+</style>
 </head>
 <body>
 
@@ -1098,7 +1130,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div class="nav-section-label">Inteligência</div>
     <div class="nav-item" id="nav-relatorio" onclick="showPage('relatorio',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span><span id="rel-reincidencia-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">Relatório</span></div>
     <div class="nav-item" id="nav-excluir" onclick="showPage('excluir',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/><path d="M10 11v6M14 11v6"/></svg></span><span id="excluir-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span></span><span class="nav-label">A Excluir</span></div>
-    <div class="nav-item" id="nav-arla" onclick="showPage('arla',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg></span><span id="arla-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span><span id="arla-lembrete-badge" style="display:none" class="nav-mini-alert">!</span></span><span class="nav-label">Controle Arla</span></div>
+    <div class="nav-item" id="nav-arla" onclick="showPage('arla',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg></span></span><span class="nav-label">Controle Arla</span><span id="arla-lembrete-badge" style="display:none" class="nav-alert-dot" title="Relatório mensal pendente"></span><span id="arla-nav-badge" style="display:none" class="nav-count-pill" title="Itens críticos">0</span></div>
     <div class="nav-item" id="nav-kmcomp" onclick="showPage('kmcomp',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 17 17 4l3 3L7 20H4z"/><path d="m14 7 3 3"/><path d="M8 16l2 2"/></svg></span><span id="kmcomp-nav-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">KM Comparativo</span></div>
     <div class="nav-item" id="nav-metarota" onclick="showPage('metarota',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg></span><span class="nav-label">Meta por Rota</span></div>
     <div class="nav-item" onclick="showPage('recon',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M7 7h10"/><path d="m14 4 3 3-3 3"/><path d="M17 17H7"/><path d="m10 20-3-3 3-3"/></svg></span><span class="nav-label">O2P × Ticket</span></div>
@@ -3366,13 +3398,16 @@ function authRenderNav() {
     let inner = '';
     if (p.id === 'relatorio') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="rel-reincidencia-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span>`;
     else if (p.id === 'excluir') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="excluir-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span></span>`;
-    else if (p.id === 'arla') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="arla-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span><span id="arla-lembrete-badge" style="display:none" class="nav-mini-alert">!</span></span>`;
+    else if (p.id === 'arla') inner = `<span class="icon-wrap"><span class="icon">${p.icon}</span></span>`;
     else if (p.id === 'kmcomp') inner = `<span class="icon-wrap" style="position:relative;display:inline-flex"><span class="icon">${p.icon}</span><span id="kmcomp-nav-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span>`;
     else inner = `<span class="icon">${p.icon}</span>`;
     const div = document.createElement('div');
     div.className = 'nav-item' + (p.id === 'dashboard' ? ' active' : '');
     div.id = 'nav-' + p.id;
-    div.innerHTML = inner + `<span class="nav-label">${p.label}</span>`;
+    const navSuffix = p.id === 'arla'
+      ? `<span id="arla-lembrete-badge" style="display:none" class="nav-alert-dot" title="Relatório mensal pendente"></span><span id="arla-nav-badge" style="display:none" class="nav-count-pill" title="Itens críticos">0</span>`
+      : '';
+    div.innerHTML = inner + `<span class="nav-label">${p.label}</span>` + navSuffix;
     div.onclick = () => showPage(p.id, div);
     nav.appendChild(div);
   });
@@ -4278,9 +4313,13 @@ function renderOpChart(list, isKmL=false) {
   c.innerHTML='<div class="operation-card-strip">'+ops.map(op=>{
     const d=byOp[op], meta=d.meta, m=d.media, efic=d.efic;
     const desvio=meta>0&&m>0?((m-meta)/meta*100):null;
-    const status=efic===null?'sem-meta':efic>=98?'ok':efic>=90?'attention':'critical';
-    const statusLabel=efic===null?'Sem meta':efic>=98?'Dentro da meta':efic>=90?'Atenção':'Crítico';
-    const statusColor=efic===null?'var(--text3)':efic>=98?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
+    // Status deve respeitar a meta real, sem tolerância escondida:
+    // L/h: menor ou igual à meta = atingiu. km/L: maior ou igual à meta = atingiu.
+    const atingiuMeta = meta>0 && m>0 ? (isKmL ? m>=meta : m<=meta) : false;
+    const desvioRuim = desvio===null ? null : (isKmL ? Math.max(0,-desvio) : Math.max(0,desvio));
+    const status=efic===null?'sem-meta':atingiuMeta?'ok':desvioRuim<=10?'attention':'critical';
+    const statusLabel=efic===null?'Sem meta':atingiuMeta?'Meta atingida':desvioRuim<=10?'Atenção':'Crítico';
+    const statusColor=efic===null?'var(--text3)':atingiuMeta?'var(--green)':desvioRuim<=10?'var(--yellow)':'var(--red)';
     const ratio=meta>0&&m>0?Math.min(m/meta,1.45):0;
     const fillPct=Math.max(4,Math.min(100,ratio/1.45*100));
     const markerPct=100/1.45;
@@ -4289,9 +4328,12 @@ function renderOpChart(list, isKmL=false) {
     return `<button type="button" class="operation-card ${active?'selected':''}" data-op="${opEsc}" onclick="opCardClick(event,'${opEsc}')" style="opacity:${isSelected?1:.35}">
       <div class="operation-card-head"><span class="operation-name" title="${op}">${op}</span><span class="status-pill ${status}">${statusLabel}</span></div>
       <div class="operation-primary"><strong style="color:${statusColor}">${m.toFixed(2)}</strong><span>${unidadeMedia}</span></div>
-      <div class="operation-meta">Meta ${meta>0?meta.toFixed(2)+' '+unidadeMedia:'não cadastrada'}${desvio!==null?' · '+(desvio>0?'+':'')+desvio.toFixed(1)+'%':''}</div>
+      <div class="operation-analysis">
+        <span><small>Meta</small><strong>${meta>0?meta.toFixed(2)+' '+unidadeMedia:'—'}</strong></span>
+        <span><small>Eficiência</small><strong style="color:${statusColor}">${efic!==null?efic.toFixed(1)+'%':'—'}</strong></span>
+      </div>
       <div class="operation-progress"><span class="operation-fill" style="width:${fillPct}%;background:${statusColor}"></span>${meta>0?`<i style="left:${markerPct}%"></i>`:''}</div>
-      <div class="operation-foot"><span>${d.litros.toLocaleString('pt-BR',{maximumFractionDigits:0})} L</span><span>${d.maquinas.size} ativos</span></div>
+      <div class="operation-foot operation-foot-single"><span>${d.maquinas.size} ativo${d.maquinas.size===1?'':'s'}</span>${desvioRuim!==null&&!atingiuMeta?`<span style="color:${statusColor}">${desvioRuim.toFixed(1)}% fora</span>`:''}</div>
     </button>`;
   }).join('')+'</div>';
 }
@@ -4369,20 +4411,22 @@ function renderBarChart(list, isKmL=false) {
     return {placa,...d,media,meta,efic,op:maq?.operacao||''};
   }).sort((a,b)=>(a.efic??999)-(b.efic??999)||a.placa.localeCompare(b.placa));
   const legend=document.getElementById('bar-chart-legend');
-  if(legend) legend.innerHTML='<div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>≥ 98%</div><div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>90–97,9%</div><div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>&lt; 90%</div><div class="legend-item meta-legend">linha = 100% da meta</div>';
+  if(legend) legend.innerHTML='<div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Meta atingida</div><div class="legend-item"><span class="legend-dot" style="background:var(--yellow)"></span>Até 10% fora</div><div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Mais de 10% fora</div><div class="legend-item meta-legend">linha = meta</div>';
   const H=128, baseline=H*(100/135);
   c.innerHTML='<div class="efficiency-chart">'+items.map(it=>{
     const efic=it.efic;
-    const color=efic===null?'var(--text3)':efic>=98?'var(--green)':efic>=90?'var(--yellow)':'var(--red)';
-    const barH=efic===null?4:Math.max(4,Math.min(H,efic/135*H));
     const desvio=it.meta>0&&it.media>0?((it.media-it.meta)/it.meta*100):null;
+    const atingiuMeta = it.meta>0 && it.media>0 ? (isKmL ? it.media>=it.meta : it.media<=it.meta) : false;
+    const desvioRuim = desvio===null ? null : (isKmL ? Math.max(0,-desvio) : Math.max(0,desvio));
+    const color=efic===null?'var(--text3)':atingiuMeta?'var(--green)':desvioRuim<=10?'var(--yellow)':'var(--red)';
+    const barH=efic===null?4:Math.max(4,Math.min(H,efic/135*H));
     const tip=`${it.placa} | ${(it.op||'—').replace(/_/g,' ')} | ${it.litros.toFixed(0)} L | ${it.media.toFixed(2)} ${unidadeMedia}${it.meta>0?' | meta '+it.meta.toFixed(2):''}${efic!==null?' | eficiência '+efic.toFixed(1)+'%':''}`;
     return `<div class="efficiency-column" onmouseenter="showBarTooltip(this,'${tip.replace(/'/g,"&apos;")}')" onmouseleave="hideBarTooltip()">
       <div class="efficiency-value" style="color:${color}">${it.media.toFixed(2)}</div>
       <div class="efficiency-bar-zone"><div class="efficiency-target" style="bottom:${baseline}px"></div><div class="efficiency-bar" style="height:${barH}px;background:${color}"></div></div>
       <div class="efficiency-plate">${it.placa}</div>
-      <div class="efficiency-meta">${it.meta>0?'meta '+it.meta.toFixed(2):'sem meta'}</div>
-      <div class="efficiency-liters">${it.litros.toLocaleString('pt-BR',{maximumFractionDigits:0})} L${efic!==null?' · '+efic.toFixed(0)+'%':''}</div>
+      <div class="efficiency-meta">${it.meta>0?'Meta '+it.meta.toFixed(2)+' '+unidadeMedia:'Sem meta'}</div>
+      <div class="efficiency-score" style="color:${color}">${efic!==null?'Eficiência '+efic.toFixed(1)+'%':'Eficiência —'}</div>
     </div>`;
   }).join('')+'</div>';
 }
