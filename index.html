@@ -1282,6 +1282,10 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 6 4-3 4 4 5-5 3 3"/></svg>
           Anomalias
         </button>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="ignisOpenImportOpsConfig()">
+          <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7 16V8h10v8"/><path d="M9 8V5h6v3"/><path d="M12 12v4"/></svg>
+          Operações de importação <span class="import-ops-count" id="import-ops-count">6</span>
+        </button>
         <span class="pend-updated" id="pend-updated">—</span>
         <button class="btn btn-secondary btn-sm" type="button" onclick="renderPendencias(true)">
           <svg class="ui-icon" viewBox="0 0 24 24"><path d="M20 6v6h-6"/><path d="M4 18v-6h6"/><path d="M18.5 9A7 7 0 0 0 6.2 6.2L4 8"/><path d="M5.5 15A7 7 0 0 0 17.8 17.8L20 16"/></svg>
@@ -3936,6 +3940,84 @@ function pendLatestAbast(){
   });
   return latest;
 }
+// ── Operações de importação monitoradas ─────────────────────────────────────
+function ignisImportNorm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim();}
+function ignisImportFuelKey(v){const n=ignisImportNorm(v);if(!n||n.includes('ARLA'))return'';if(n.includes('DIESEL'))return'DIESEL';if(n.includes('GASOLINA'))return'GASOLINA';if(n.includes('ETANOL')||n.includes('ALCOOL'))return'ETANOL';return'';}
+function ignisDefaultImportOpsRules(){
+  return [
+    {nome:'RIBAS',combustiveis:['DIESEL']},
+    {nome:'BRACELL',combustiveis:['DIESEL']},
+    {nome:'ALTO TAQUARI',combustiveis:['DIESEL']},
+    {nome:'COSTA RICA',combustiveis:['DIESEL']},
+    {nome:'ARACRUZ',combustiveis:['DIESEL']},
+    {nome:'RAIZEN',combustiveis:['DIESEL','GASOLINA','ETANOL']}
+  ];
+}
+function ignisEnsureImportOpsConfig(){
+  if(!Array.isArray(state.importacaoMonitorRegras))state.importacaoMonitorRegras=ignisDefaultImportOpsRules();
+  state.importacaoMonitorRegras=state.importacaoMonitorRegras.map(r=>{
+    if(typeof r==='string')r={nome:r,combustiveis:['DIESEL']};
+    const nome=String(r?.nome||'').trim();
+    let combustiveis=Array.isArray(r?.combustiveis)?r.combustiveis.map(x=>ignisImportFuelKey(x)).filter(Boolean):['DIESEL'];
+    combustiveis=[...new Set(combustiveis)];if(!combustiveis.includes('DIESEL'))combustiveis.unshift('DIESEL');
+    return {nome,combustiveis};
+  }).filter(r=>r.nome);
+  if(!Array.isArray(state.importacaoMonitorEventos))state.importacaoMonitorEventos=[];
+  return state.importacaoMonitorRegras;
+}
+function ignisImportRuleKey(nome){return ignisImportNorm(nome);}
+function ignisImportMatchRule(operacao){
+  const op=ignisImportNorm(operacao);if(!op)return null;
+  return ignisEnsureImportOpsConfig().find(r=>op.includes(ignisImportRuleKey(r.nome)))||null;
+}
+function ignisImportMonitorCollect(batch,operacao,combustivel,dataObj){
+  if(!(batch instanceof Map))return;
+  const rule=ignisImportMatchRule(operacao);if(!rule)return;
+  const fuel=ignisImportFuelKey(combustivel);if(!fuel||!rule.combustiveis.includes(fuel))return;
+  const data=dataObj instanceof Date&&!isNaN(dataObj)?dataParaISO(dataObj):String(dataObj||'');if(!data)return;
+  const key=[ignisImportRuleKey(rule.nome),fuel,data].join('|');
+  batch.set(key,{regra:rule.nome,operacao:String(operacao||rule.nome),combustivel:fuel,data});
+}
+function ignisImportMonitorCommit(batch){
+  ignisEnsureImportOpsConfig();state.importacaoMonitorInicializado=true;
+  if(!(batch instanceof Map)||!batch.size)return 0;
+  const sig=x=>[ignisImportRuleKey(x.regra),x.combustivel,x.data].join('|');
+  const seen=new Set(state.importacaoMonitorEventos.map(sig));let n=0;
+  for(const e of batch.values()){const k=sig(e);if(seen.has(k))continue;seen.add(k);state.importacaoMonitorEventos.push(e);n++;}
+  state.importacaoMonitorEventos=state.importacaoMonitorEventos.sort((a,b)=>String(a.data).localeCompare(String(b.data))).slice(-2200);return n;
+}
+function ignisImportMonitorRemoveRange(ini,fim){
+  ignisEnsureImportOpsConfig();const a=pendParseDate(ini),b=pendParseDate(fim);if(!a||!b)return;
+  state.importacaoMonitorEventos=state.importacaoMonitorEventos.filter(e=>{const d=pendParseDate(e.data);return !d||d<a||d>b;});
+}
+function ignisImportMonitorSnapshot(today=new Date()){
+  const rules=ignisEnsureImportOpsConfig(),events=state.importacaoMonitorEventos||[],rows=[];
+  rules.forEach(rule=>rule.combustiveis.forEach(fuel=>{
+    const rk=ignisImportRuleKey(rule.nome);let latest=null,opReal='';
+    events.forEach(e=>{if(ignisImportRuleKey(e.regra)!==rk||e.combustivel!==fuel)return;const d=pendParseDate(e.data);if(d&&(!latest||d>latest)){latest=d;opReal=e.operacao||rule.nome;}});
+    const gap=latest?pendBusinessGap(latest,today):null;
+    rows.push({regra:rule.nome,operacao:opReal||rule.nome,combustivel:fuel,latest,gap,status:!latest?'missing':gap>=2?'critical':gap===1?'attention':'ok'});
+  }));
+  return rows;
+}
+function ignisImportOpsStatusText(row){if(!row.latest)return'Sem dados monitorados';if(row.gap>=2)return`${row.gap} dias úteis sem atualização`;if(row.gap===1)return'1 dia útil de defasagem';return`Atualizado até ${pendFmtDate(row.latest)}`;}
+function ignisUpdateImportOpsCount(){const el=document.getElementById('import-ops-count');if(el)el.textContent=String(ignisEnsureImportOpsConfig().length);}
+function ignisOpenImportOpsConfig(){
+  ignisEnsureImportOpsConfig();let ov=document.getElementById('import-ops-config-modal');
+  if(!ov){ov=document.createElement('div');ov.id='import-ops-config-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal import-ops-modal"><div class="pend-detail-head"><div><div class="modal-title">Operações de importação</div><div class="pend-detail-sub">Monitoramento automático de atualização</div></div><button class="pend-close" onclick="closeModal('import-ops-config-modal')" aria-label="Fechar">×</button></div><div class="import-ops-note">O nome funciona por correspondência. Ex.: <strong>RIBAS</strong> também encontra <strong>SUZANO RIBAS</strong>.</div><div class="import-ops-list" id="import-ops-list"></div><div class="import-op-add"><input id="import-op-new" list="import-op-suggestions" placeholder="Adicionar operação ou termo"><datalist id="import-op-suggestions"></datalist><button class="btn btn-primary btn-sm" onclick="ignisAddImportOp()">Adicionar</button></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('import-ops-config-modal')">Concluído</button></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});}
+  ignisRenderImportOpsConfig();ov.classList.add('open');
+}
+function ignisRenderImportOpsConfig(){
+  const rules=ignisEnsureImportOpsConfig(),list=document.getElementById('import-ops-list');if(!list)return;const snap=ignisImportMonitorSnapshot();
+  list.innerHTML=rules.map((r,i)=>{const rk=ignisImportRuleKey(r.nome),sts=snap.filter(x=>ignisImportRuleKey(x.regra)===rk);const status=sts.length?sts.map(x=>`${x.combustivel}: ${x.latest?pendFmtDate(x.latest):'sem dados'}`).join(' · '):'Sem dados monitorados';return `<div class="import-op-row"><div><div class="import-op-name">${pendEsc(r.nome)}</div><div class="import-ops-status">${pendEsc(status)}</div></div><div class="import-op-fuels"><button class="import-fuel-chip diesel on" type="button" title="Diesel é obrigatório nas operações de importação">Diesel</button><button class="import-fuel-chip ${r.combustiveis.includes('GASOLINA')?'on':''}" type="button" onclick="ignisToggleImportOpFuel(${i},'GASOLINA')">Gasolina</button><button class="import-fuel-chip ${r.combustiveis.includes('ETANOL')?'on':''}" type="button" onclick="ignisToggleImportOpFuel(${i},'ETANOL')">Etanol</button></div><button class="import-op-remove" type="button" onclick="ignisRemoveImportOp(${i})" title="Remover"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg></button></div>`;}).join('')||'<div class="pend-empty">Nenhuma operação configurada.</div>';
+  const dl=document.getElementById('import-op-suggestions');if(dl){const ops=[...new Set([...(state.maquinas||[]).map(x=>x.operacao),...(state.abastecimentos||[]).map(x=>x.operacao)].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));dl.innerHTML=ops.map(o=>`<option value="${pendEsc(o)}"></option>`).join('');}
+  ignisUpdateImportOpsCount();
+}
+function ignisSaveImportOpsConfig(){saveState({immediate:true});pendMarkDirty();try{renderPendencias(true)}catch(e){}ignisUpdateImportOpsCount();}
+function ignisAddImportOp(){const input=document.getElementById('import-op-new');const nome=String(input?.value||'').trim();if(!nome)return;const rules=ignisEnsureImportOpsConfig();const nk=ignisImportRuleKey(nome);if(rules.some(r=>ignisImportRuleKey(r.nome)===nk)){showToast('Essa operação já está configurada.','error');return;}rules.push({nome,combustiveis:['DIESEL']});if(input)input.value='';ignisSaveImportOpsConfig();ignisRenderImportOpsConfig();}
+function ignisRemoveImportOp(i){const rules=ignisEnsureImportOpsConfig();if(!rules[i])return;rules.splice(i,1);ignisSaveImportOpsConfig();ignisRenderImportOpsConfig();}
+function ignisToggleImportOpFuel(i,fuel){const rules=ignisEnsureImportOpsConfig(),r=rules[i];if(!r||fuel==='DIESEL')return;const has=r.combustiveis.includes(fuel);r.combustiveis=has?r.combustiveis.filter(x=>x!==fuel):[...r.combustiveis,fuel];ignisSaveImportOpsConfig();ignisRenderImportOpsConfig();}
+
 function pendCollect(){
   const issues=[], monitors=[]; const activeLabels={};
   const addIssue=(i)=>{issues.push(i);(i.keys||[i.id]).forEach(k=>activeLabels[k]=i.title);};
@@ -3971,10 +4053,17 @@ function pendCollect(){
   const eficStatus=altas.length||baixas.length?'attention':'ok';
   monitors.push({name:'Eficiência entre abastecimentos',status:eficStatus,detail:altas.length||baixas.length?`${altas.length} alta(s) · ${baixas.length} baixa(s) · limites ${limiteBaixo.toFixed(0)}% / ${limiteEfic.toFixed(0)}%`:`Sem anomalias fora de ${limiteBaixo.toFixed(0)}%–${limiteEfic.toFixed(0)}%`});
 
-  const latest=pendLatestAbast(); const gap=pendBusinessGap(latest);
-  if(!latest){addIssue({id:'importacao',kind:'importacao',severity:'critical',title:'Sem dados de abastecimento',count:1,keys:['importacao-atrasada'],page:'abastecimentos',detail:'Não há abastecimentos disponíveis para validar a atualização.',meta:'Importação necessária'});monitors.push({name:'Atualização dos abastecimentos',status:'critical',detail:'Sem dados disponíveis'});}
-  else if(gap>=1){const sev=gap>=2?'critical':'attention';addIssue({id:'importacao',kind:'importacao',severity:sev,title:'Atualização de abastecimentos',count:gap,keys:['importacao-atrasada'],page:'abastecimentos',detail:`${gap} dia${gap>1?'s':''} útil${gap>1?'eis':' '} sem dados após ${pendFmtDate(latest)}.`,meta:'Regra operacional D-1'});monitors.push({name:'Atualização dos abastecimentos',status:sev,detail:`Última data ${pendFmtDate(latest)} · ${gap} dia(s) útil(eis) de defasagem`});}
-  else monitors.push({name:'Atualização dos abastecimentos',status:'ok',detail:`Atualizado até ${pendFmtDate(latest)}`});
+  const importRows=ignisImportMonitorSnapshot();
+  const importPend=importRows.filter(r=>r.status!=='ok');
+  if(!state.importacaoMonitorInicializado){
+    monitors.push({name:'Importações por operação',status:'waiting',detail:'Aguardando a próxima importação para iniciar o monitoramento'});
+  } else if(importPend.length){
+    const worst=[...importPend].sort((a,b)=>((b.gap??999)-(a.gap??999)))[0];
+    const sev=importPend.some(r=>r.status==='critical'||r.status==='missing')?'critical':'attention';
+    addIssue({id:'importacao',kind:'importacao',severity:sev,title:'Importações pendentes',count:importPend.length,keys:importPend.map(r=>'importacao:'+ignisImportRuleKey(r.regra)+'|'+r.combustivel),page:'abastecimentos',detail:`${importPend.length} operação/combustível precisam de atualização.`,highlightLabel:'Maior pendência',highlightValue:`${worst.regra} · ${worst.combustivel}`,highlightSub:ignisImportOpsStatusText(worst),rows:importPend,meta:`Regra operacional D-1 · ${importRows.length-importPend.length}/${importRows.length} atualizadas`});
+    monitors.push({name:'Importações por operação',status:sev,detail:`${importRows.length-importPend.length}/${importRows.length} operação/combustível atualizadas`});
+  }else if(importRows.length){monitors.push({name:'Importações por operação',status:'ok',detail:`${importRows.length}/${importRows.length} atualizadas no D-1`});}
+  else {const latest=pendLatestAbast();const gap=pendBusinessGap(latest);monitors.push({name:'Atualização dos abastecimentos',status:latest&&gap===0?'ok':'waiting',detail:latest?`Última data ${pendFmtDate(latest)}`:'Sem regras de importação configuradas'});}
 
   const agoraMed=new Date();
   const meds=typeof fechMedidorRows==='function'?fechMedidorRows(agoraMed.getFullYear(),agoraMed.getMonth()):[];
@@ -4055,6 +4144,9 @@ function pendOpenDetails(issueId){
   } else if(issueId==='arla-critico'){
     th.innerHTML='<tr><th>Placa</th><th>Operação</th><th>Percentual</th><th>Segmento</th></tr>';
     tb.innerHTML=issue.rows.map(r=>`<tr><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.operacao)}</td><td>${Number.isFinite(r.pct)?Number(r.pct).toFixed(1)+'%':'—'}</td><td>${pendEsc(r.segmento)}</td></tr>`).join('');
+  } else if(issueId==='importacao'){
+    th.innerHTML='<tr><th>Operação</th><th>Combustível</th><th>Último dado</th><th>Situação</th></tr>';
+    tb.innerHTML=[...issue.rows].sort((a,b)=>(b.gap??999)-(a.gap??999)||String(a.regra).localeCompare(String(b.regra))).map(r=>`<tr><td><strong>${pendEsc(r.regra)}</strong><div style="font-size:10px;color:var(--text3);margin-top:2px">${pendEsc(r.operacao||r.regra)}</div></td><td>${pendEsc(r.combustivel)}</td><td>${r.latest?pendEsc(pendFmtDate(r.latest)):'—'}</td><td><strong class="${r.status==='critical'||r.status==='missing'?'bad':'warn'}">${pendEsc(ignisImportOpsStatusText(r))}</strong></td></tr>`).join('');
   } else if(issueId==='medidores'){
     th.innerHTML='<tr><th>Data</th><th>Placa</th><th>Medidor</th><th>Operação</th><th>Variação</th></tr>';
     tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.medidor)}</td><td>${pendEsc(r.operacao||'—')}</td><td><strong class="bad">${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}</strong></td></tr>`).join('');
@@ -4074,6 +4166,7 @@ function pendOpenDetails(issueId){
 }
 function renderPendencias(force=false){
   const page=document.getElementById('page-pendencias'); if(!page)return;
+  ignisUpdateImportOpsCount();
   const {issues,monitors,activeLabels}=pendCollect(); const hist=pendSyncResolved(activeLabels); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
   const critical=issues.filter(i=>i.severity==='critical').length, attention=issues.filter(i=>i.severity==='attention').length, occ=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)}; set('pend-kpi-critical',critical);set('pend-kpi-attention',attention);set('pend-kpi-occurrences',occ);set('pend-kpi-resolved',resolved7.length);
@@ -5937,7 +6030,7 @@ function toggleSelecionarTodosPeriodos(){
 function ignisRemoverPeriodos(ids){
   const uniq=[...new Set((ids||[]).filter(id=>state.semanas?.[id]))];if(!uniq.length)return{periodos:0,registros:0};
   const ranges=uniq.map(id=>{const p=state.semanas[id];return{id,p,ini:fechParse(p?.dataIni),fim:fechParse(p?.dataFim)};});
-  ranges.forEach(({p})=>{if(p?.dataIni&&p?.dataFim){try{ignisRemoveMedidorAnomaliesRange?.(p.dataIni,p.dataFim)}catch(e){}try{ignisRemoveEficienciaAnomaliesRange?.(p.dataIni,p.dataFim)}catch(e){}}});
+  ranges.forEach(({p})=>{if(p?.dataIni&&p?.dataFim){try{ignisRemoveMedidorAnomaliesRange?.(p.dataIni,p.dataFim)}catch(e){}try{ignisRemoveEficienciaAnomaliesRange?.(p.dataIni,p.dataFim)}catch(e){}try{ignisImportMonitorRemoveRange?.(p.dataIni,p.dataFim)}catch(e){}}});
   const selected=new Set(uniq);const before=state.abastecimentos.length;
   state.abastecimentos=state.abastecimentos.filter(a=>{
     if(a.periodoId&&selected.has(a.periodoId))return false;
@@ -6315,6 +6408,7 @@ async function importarRelatorioDiario(input) {
         ? ignisDetectarMedidoresRaw(raw, 'Relatório diário')
         : [];
       const anomaliasEficienciaImport = [];
+      const importMonitorBatch = new Map();
       let ignoradasExclusao = 0;
       let ignoradasArla = 0;
       raw.forEach((row,rowIdx) => {
@@ -6340,6 +6434,7 @@ async function importarRelatorioDiario(input) {
         const opUp = operacao.toUpperCase(), modUp = modelo.toUpperCase();
         if (modUp.startsWith('IEV')) { ignoradasExclusao++; return; }
         if (excluirOps.some(x => opUp.includes(x))) { ignoradasExclusao++; return; }
+        if(typeof ignisImportMonitorCollect==='function')ignisImportMonitorCollect(importMonitorBatch,operacao,combustivel,dataObj);
         const tipUpRaw=tipoVeic.toUpperCase(); let tipoIgnisRaw; if(modUp.includes('MOFFETT')||placa.startsWith('EMP'))tipoIgnisRaw='empilhadeira'; else if(tipUpRaw==='VEICULO LEVE'||opUp.startsWith('VL')||opUp.includes('MERCADO LIVRE'))tipoIgnisRaw='leve'; else if(placa.startsWith('MAQ'))tipoIgnisRaw='maquina'; else if(placa.startsWith('TRA'))tipoIgnisRaw='trator'; else tipoIgnisRaw='pesada';
         const metaEvento = mediaIdeal>0 ? mediaIdeal : (Number(getMaquina(placa)?.meta)||0);
         if (combustivelParaAnomalia && litros>0 && kmReal>0 && metaEvento>0 && typeof ignisAvaliarEficienciaAnomalia==='function') {
@@ -6366,6 +6461,7 @@ async function importarRelatorioDiario(input) {
 
         linhas.push({ data: dataObj, placa, operacao, modelo, tipoVeic, litros, kmReal, mediaIdeal, valorLitro });
       });
+      if(typeof ignisImportMonitorCommit==='function')ignisImportMonitorCommit(importMonitorBatch);
       linhas.sort((a,b) => a.data - b.data);
       ignisImportProgress(previewEl,58,'Consolidando períodos','Separando semanas e agrupando por placa');await ignisNextFrame();
 
@@ -12413,6 +12509,9 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 .pend-monitor-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pend-monitor{display:flex;align-items:center;gap:12px;padding:12px 13px;background:#121922;border:1px solid var(--border);border-radius:11px;min-height:65px}.pend-monitor-dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 4px rgba(255,255,255,.025)}.pend-monitor-dot.ok{background:#35c891}.pend-monitor-dot.critical{background:#f45e59}.pend-monitor-dot.attention{background:#f4b544}.pend-monitor-dot.waiting{background:#68788a}.pend-monitor-copy{min-width:0;flex:1}.pend-monitor-name{font-size:12.5px;font-weight:700;color:#e8edf2}.pend-monitor-detail{font-size:10.8px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pend-monitor-status{font-size:10px;color:#8292a5;white-space:nowrap}
 .pend-resolved-list{display:flex;flex-direction:column;gap:7px}.pend-resolved{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:rgba(53,200,145,.035);border:1px solid rgba(53,200,145,.08)}.pend-resolved-icon{color:#35c891;width:18px;height:18px;display:flex;align-items:center}.pend-resolved-icon .ui-icon{width:16px;height:16px}.pend-resolved-label{font-size:11.5px;color:#c1ccd7;flex:1}.pend-resolved-time{font-size:10px;color:var(--text3)}
 .pend-nav-count{min-width:21px;height:19px;padding:0 6px;border-radius:999px;background:rgba(244,94,89,.13);border:1px solid rgba(244,94,89,.22);color:#ff7f79;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:auto}.sidebar.collapsed .pend-nav-count{display:none!important}
+.import-ops-count{display:inline-flex;min-width:18px;height:18px;padding:0 5px;border-radius:999px;align-items:center;justify-content:center;background:rgba(233,95,50,.12);color:#f08a62;font-size:9px;font-weight:800;margin-left:2px}
+.import-ops-modal{width:min(760px,94vw)!important;max-width:760px!important}.import-ops-list{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto;padding-right:3px}.import-op-row{display:grid;grid-template-columns:minmax(160px,1fr) auto 36px;gap:10px;align-items:center;padding:11px 12px;background:#111820;border:1px solid var(--border);border-radius:11px}.import-op-name{font-size:12.5px;font-weight:750;color:#edf2f6;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.import-op-fuels{display:flex;gap:5px;align-items:center}.import-fuel-chip{height:27px;padding:0 9px;border-radius:8px;border:1px solid rgba(151,164,178,.13);background:#0d141c;color:#728294;font:750 9.5px 'DM Sans',sans-serif;cursor:pointer;transition:.13s}.import-fuel-chip.on{color:#f0a36f;border-color:rgba(233,95,50,.28);background:rgba(233,95,50,.08)}.import-fuel-chip.diesel{cursor:default;color:#f0a36f}.import-op-remove{width:32px;height:32px;border-radius:8px;border:1px solid rgba(244,94,89,.14);background:rgba(244,94,89,.04);color:#e56d69;display:flex;align-items:center;justify-content:center;cursor:pointer}.import-op-remove:hover{background:rgba(244,94,89,.09)}.import-op-remove .ui-icon{width:15px;height:15px}.import-op-add{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:12px}.import-op-add input{height:41px;border:1px solid var(--border);border-radius:10px;background:#101720;color:#eef3f7;padding:0 12px;outline:0;font:600 12px 'DM Sans',sans-serif}.import-op-add input:focus{border-color:rgba(233,95,50,.45);box-shadow:0 0 0 3px rgba(233,95,50,.06)}.import-ops-note{font-size:10.8px;color:#718194;margin:8px 0 12px}.import-ops-status{font-size:10px;color:#718194;margin-top:3px}.import-status-ok{color:#35c891}.import-status-att{color:#f4b544}.import-status-bad{color:#f45e59}
+@media(max-width:620px){.import-op-row{grid-template-columns:1fr 36px}.import-op-fuels{grid-column:1/-1;grid-row:2}.import-op-add{grid-template-columns:1fr}.import-ops-modal{width:96vw!important}}
 @media(max-width:1000px){.pend-kpis{grid-template-columns:repeat(2,1fr)}.pend-issue-grid,.pend-monitor-list{grid-template-columns:1fr}}
 @media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-rules{order:1;flex-wrap:wrap}.pend-anom-rules-title{width:100%}.pend-anom-setting{order:initial}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
 
