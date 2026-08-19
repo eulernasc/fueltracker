@@ -6324,8 +6324,10 @@ async function importarRelatorioDiario(input) {
         if (!dataObj || isNaN(dataObj)) return;
         // Esse relatório mistura todos os combustíveis numa tabela só (Diesel, Gasolina, Etanol, GLP, ARLA...).
         // Arla não é combustível de propulsão — tem aba dedicada (Controle de Arla 32) — então é ignorado aqui.
-        const combustivel = String(row['Combustível']||'').trim().toUpperCase();
-        if (combustivel === 'ARLA') { ignoradasArla++; return; }
+        const combustivel = String(ignisValorRow(row,['combustivel','tipo de combustivel','produto','produto combustivel'])||'').trim();
+        const combustivelUp = ignisTextoNormAnom(combustivel);
+        if (combustivelUp.includes('ARLA')) { ignoradasArla++; return; }
+        const combustivelParaAnomalia = ignisEhCombustivelAnomalia(combustivel);
         const operacao = String(row['Operação']||'').trim();
         const modelo   = String(row['Modelo']||'').trim();
         const tipoVeic = String(row['Tipo de Veículo']||'').trim();
@@ -6340,11 +6342,11 @@ async function importarRelatorioDiario(input) {
         if (excluirOps.some(x => opUp.includes(x))) { ignoradasExclusao++; return; }
         const tipUpRaw=tipoVeic.toUpperCase(); let tipoIgnisRaw; if(modUp.includes('MOFFETT')||placa.startsWith('EMP'))tipoIgnisRaw='empilhadeira'; else if(tipUpRaw==='VEICULO LEVE'||opUp.startsWith('VL')||opUp.includes('MERCADO LIVRE'))tipoIgnisRaw='leve'; else if(placa.startsWith('MAQ'))tipoIgnisRaw='maquina'; else if(placa.startsWith('TRA'))tipoIgnisRaw='trator'; else tipoIgnisRaw='pesada';
         const metaEvento = mediaIdeal>0 ? mediaIdeal : (Number(getMaquina(placa)?.meta)||0);
-        if (litros>0 && kmReal>0 && metaEvento>0 && typeof ignisAvaliarEficienciaAnomalia==='function') {
-          const an=ignisAvaliarEficienciaAnomalia({placa,data:dataParaISO(dataObj),operacao,modelo,tipoVeic,tipoIgnis:tipoIgnisRaw,litros,kmHoras:kmReal,meta:metaEvento,source:'Relatório diário',rowIndex:rowIdx});
+        if (combustivelParaAnomalia && litros>0 && kmReal>0 && metaEvento>0 && typeof ignisAvaliarEficienciaAnomalia==='function') {
+          const an=ignisAvaliarEficienciaAnomalia({placa,data:dataParaISO(dataObj),operacao,modelo,tipoVeic,tipoIgnis:tipoIgnisRaw,litros,kmHoras:kmReal,meta:metaEvento,source:'Relatório diário',rowIndex:rowIdx,combustivel,propulsaoOnly:true});
           if(an)anomaliasEficienciaImport.push(an);
         }
-        if (kmRealRaw < 0) {
+        if (combustivelParaAnomalia && kmRealRaw < 0) {
           anomaliasMedidorImport.push({
             placa,
             data: dataParaISO(dataObj),
@@ -6354,7 +6356,10 @@ async function importarRelatorioDiario(input) {
             valor: kmRealRaw,
             motivo: 'Variação negativa de KM/Horas',
             campo: 'Km Real',
-            source: 'Relatório diário'
+            source: 'Relatório diário',
+            combustivel,
+            propulsaoOnly:true,
+            rowIndex:rowIdx
           });
         }
         if (litros <= 0) return;
@@ -6539,7 +6544,7 @@ async function importarRelatorioDiario(input) {
           ${ignoradasExclusao>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${ignoradasExclusao} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
           ${ignoradasArla>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${ignoradasArla} linha(s) de Arla ignorada(s) — tem controle dedicado na aba Arla 32</div>`:''}
           ${conflitos.length>0?`<div style="font-size:12px;color:var(--accent);margin-top:4px">${conflitos.length} semana(s) substituída(s)</div>`:''}
-          ${anomaliasEficienciaImport.length>0?`<div style="font-size:12px;color:var(--yellow);margin-top:4px">${anomaliasEficienciaImport.filter(x=>x.faixa==='alta').length} alta(s) · ${anomaliasEficienciaImport.filter(x=>x.faixa==='baixa').length} baixa(s) enviadas para Anomalias</div>`:''}
+          ${anomaliasEficienciaImport.length>0?`<div style="font-size:12px;color:var(--yellow);margin-top:4px">${anomaliasEficienciaImport.filter(x=>x.faixa==='alta').length} alta(s) · ${anomaliasEficienciaImport.filter(x=>x.faixa==='baixa').length} baixa(s) de combustível enviadas para Anomalias</div>`:''}
         </div>`;
       if (salvoFirebase) {
         showToast(`${semanasNovas} semanas importadas e confirmadas: ${registrosTotais} registros!`, 'success');
@@ -12483,24 +12488,83 @@ function ignisValorRow(row,norms){
   for(const [k,v] of Object.entries(row||{})){if(norms.includes(ignisHeaderNorm(k)))return v;}
   return '';
 }
+function ignisTextoNormAnom(v){
+  return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function ignisEhDiesel(v){
+  const n=ignisTextoNormAnom(v);
+  return !!n && n.includes('DIESEL');
+}
+function ignisCombustivelAnomaliaChave(v){
+  const n=ignisTextoNormAnom(v);
+  if(!n || n.includes('ARLA')) return '';
+  if(n.includes('DIESEL')) return 'DIESEL';
+  if(n.includes('GASOLINA')) return 'GASOLINA';
+  if(n.includes('ETANOL') || n.includes('ALCOOL')) return 'ETANOL';
+  return '';
+}
+function ignisEhCombustivelAnomalia(v){
+  return !!ignisCombustivelAnomaliaChave(v);
+}
+function ignisOperacaoInvalidaAnomalia(v){
+  const n=ignisTextoNormAnom(v);
+  return !n || n==='NAO DEFINIDO' || n==='SEM OPERACAO' || n==='OPERACAO NAO DEFINIDA' || n==='NAO INFORMADO';
+}
+function ignisAnomaliaRegistroValido(r){
+  if(!r)return false;
+  if(ignisOperacaoInvalidaAnomalia(r.operacao))return false;
+  // Relatórios diários misturam combustíveis. Só entram anomalias de combustíveis
+  // de propulsão autorizados (Diesel, Gasolina e Etanol); ARLA fica sempre fora.
+  // dieselOnly permanece aceito apenas por compatibilidade com registros criados
+  // pela versão imediatamente anterior.
+  const diario=String(r.source||'').toLowerCase().includes('relatório diário'.toLowerCase()) || String(r.source||'').toLowerCase().includes('relatorio diario');
+  if(diario){
+    return r.propulsaoOnly===true || r.dieselOnly===true || ignisEhCombustivelAnomalia(r.combustivel);
+  }
+  return r.propulsaoOnly===true || r.dieselOnly===true || !r.combustivel || ignisEhCombustivelAnomalia(r.combustivel);
+}
 function ignisDetectarMedidoresRaw(raw,source='Importação'){
   if(!Array.isArray(raw)||!raw.length)return [];
-  const headers=[];const headerSeen=new Set();for(const r of raw.slice(0,12)){if(!r||typeof r!=='object')continue;for(const k of Object.keys(r)){if(!headerSeen.has(k)){headerSeen.add(k);headers.push(k);}}}if(!headers.length)return []; const byNorm=new Map();
-  headers.forEach(k=>{const n=ignisHeaderNorm(k);if(n&&!byNorm.has(n))byNorm.set(n,k);});
+  const headers=[];const headerSeen=new Set();
+  for(const r of raw.slice(0,12)){if(!r||typeof r!=='object')continue;for(const k of Object.keys(r)){if(!headerSeen.has(k)){headerSeen.add(k);headers.push(k);}}}
+  if(!headers.length)return [];
+  const byNorm=new Map();headers.forEach(k=>{const n=ignisHeaderNorm(k);if(n&&!byNorm.has(n))byNorm.set(n,k);});
   const keyFor=(names)=>{for(const n of names){const k=byNorm.get(n);if(k)return k;}return null;};
-  const kPlaca=keyFor(['placa']),kData=keyFor(['data','data abastecimento','data do abastecimento','dt abastecimento']),kOp=keyFor(['operacao']),kModelo=keyFor(['modelo']),kTipo=keyFor(['tipo de veiculo','tipo veiculo','tipo']);
+  const kPlaca=keyFor(['placa']),kData=keyFor(['data','data abastecimento','data do abastecimento','dt abastecimento']),kOp=keyFor(['operacao']),kModelo=keyFor(['modelo']),kTipo=keyFor(['tipo de veiculo','tipo veiculo','tipo']),kComb=keyFor(['combustivel','tipo de combustivel','produto','produto combustivel']);
+  // Sem a coluna de combustível não existe como garantir comparação entre abastecimentos do mesmo combustível.
+  if(!kComb)return [];
   const medFields=headers.map((campo,fieldIdx)=>{const medidor=ignisCampoMedidorAbsoluto(campo);if(!medidor)return null;const h=ignisHeaderNorm(campo);const fase=/\b(anterior|inicial)\b/.test(h)?0:/\b(atual|final)\b/.test(h)?2:1;return{campo,fieldIdx,medidor,fase};}).filter(Boolean);
   if(!medFields.length)return [];
   const leituras=[]; const anom=[];
   raw.forEach((row,rowIdx)=>{
+    const combustivel=String(row[kComb]||'').trim();
+    const combustivelChave=ignisCombustivelAnomaliaChave(combustivel);
+    if(!combustivelChave)return; // Diesel, Gasolina ou Etanol; ARLA e demais ficam fora
     const placa=String(kPlaca?row[kPlaca]:'').trim().toUpperCase();if(!placa)return;
     const dataVal=kData?row[kData]:'';const dataObj=typeof parseDataBR==='function'?parseDataBR(dataVal):null;const data=dataObj&&!isNaN(dataObj)?dataParaISO(dataObj):String(dataVal||'');
     const operacao=String(kOp?row[kOp]:'').trim(),modelo=String(kModelo?row[kModelo]:'').trim(),tipoVeic=String(kTipo?row[kTipo]:'').trim();
-    for(const f of medFields){const valor=ignisNumeroSeguro(row[f.campo]);if(valor<0){anom.push({placa,data,operacao,modelo,tipoVeic,medidor:f.medidor,valor,motivo:'Leitura negativa',campo:f.campo,source});continue;}if(valor===0)continue;leituras.push({placa,data,dataObj,operacao,modelo,tipoVeic,medidor:f.medidor,valor,campo:f.campo,rowIdx,fieldIdx:f.fieldIdx,fase:f.fase});}
+    if(ignisOperacaoInvalidaAnomalia(operacao))return;
+    for(const f of medFields){
+      const valor=ignisNumeroSeguro(row[f.campo]);
+      if(valor<0){anom.push({placa,data,operacao,modelo,tipoVeic,medidor:f.medidor,valor,motivo:'Leitura negativa',campo:f.campo,source,combustivel,combustivelChave,propulsaoOnly:true,rowIndex:rowIdx});continue;}
+      if(valor===0)continue;
+      leituras.push({placa,data,dataObj,operacao,modelo,tipoVeic,medidor:f.medidor,valor,campo:f.campo,rowIdx,fieldIdx:f.fieldIdx,fase:f.fase,combustivel,combustivelChave,propulsaoOnly:true});
+    }
   });
   const grupos=new Map();
-  leituras.forEach(r=>{const k=r.placa+'|'+r.medidor;let arr=grupos.get(k);if(!arr){arr=[];grupos.set(k,arr);}arr.push(r);});
-  grupos.forEach(arr=>{arr.sort((a,b)=>{const da=a.dataObj?.getTime?.()||0,db=b.dataObj?.getTime?.()||0;return da-db||a.rowIdx-b.rowIdx||a.fase-b.fase||a.fieldIdx-b.fieldIdx;});let prev=null;for(const cur of arr){if(prev&&cur.valor<prev.valor){anom.push({placa:cur.placa,data:cur.data,operacao:cur.operacao||prev.operacao,modelo:cur.modelo||prev.modelo,tipoVeic:cur.tipoVeic||prev.tipoVeic,medidor:cur.medidor,valor:cur.valor-prev.valor,valorAnterior:prev.valor,valorAtual:cur.valor,motivo:'Leitura menor que a anterior',campo:cur.campo,source});}prev=cur;}});
+  // Nunca compara Diesel com Gasolina/Etanol (ou vice-versa): cada combustível
+  // mantém sua própria sequência de leituras para a mesma placa e medidor.
+  leituras.forEach(r=>{const k=r.placa+'|'+r.medidor+'|'+r.combustivelChave;let arr=grupos.get(k);if(!arr){arr=[];grupos.set(k,arr);}arr.push(r);});
+  grupos.forEach(arr=>{
+    arr.sort((a,b)=>{const da=a.dataObj?.getTime?.()||0,db=b.dataObj?.getTime?.()||0;return da-db||a.rowIdx-b.rowIdx||a.fase-b.fase||a.fieldIdx-b.fieldIdx;});
+    let prev=null;
+    for(const cur of arr){
+      if(prev&&cur.valor<prev.valor){
+        anom.push({placa:cur.placa,data:cur.data,operacao:cur.operacao||prev.operacao,modelo:cur.modelo||prev.modelo,tipoVeic:cur.tipoVeic||prev.tipoVeic,medidor:cur.medidor,valor:cur.valor-prev.valor,valorAnterior:prev.valor,valorAtual:cur.valor,motivo:'Leitura menor que a anterior',campo:cur.campo,source,combustivel:cur.combustivel,combustivelChave:cur.combustivelChave,propulsaoOnly:true,rowIndex:cur.rowIdx});
+      }
+      prev=cur;
+    }
+  });
   return anom;
 }
 function ignisInferTipoMedidor(placa,modelo='',tipoVeic='',operacao=''){
@@ -12550,6 +12614,10 @@ function ignisAjustarLimiteEficiencia(tipo,delta){
   ignisSetLimiteEficienciaBaixa(n);
 }
 function ignisAvaliarEficienciaAnomalia(d){
+  if(!d||ignisOperacaoInvalidaAnomalia(d.operacao))return null;
+  if(String(d.source||'').toLowerCase().includes('relatório diário'.toLowerCase())||String(d.source||'').toLowerCase().includes('relatorio diario')){
+    if(!(d.propulsaoOnly===true||d.dieselOnly===true||ignisEhCombustivelAnomalia(d.combustivel)))return null;
+  } else if(d.combustivel && !ignisEhCombustivelAnomalia(d.combustivel)) return null;
   const litros=Number(d?.litros)||0,kmHoras=Number(d?.kmHoras)||0,meta=Number(d?.meta)||0;
   if(!(litros>0&&kmHoras>0&&meta>0))return null;
   const tipo=d.tipoIgnis||ignisInferTipoMedidor(d.placa,d.modelo,d.tipoVeic,d.operacao);
@@ -12558,7 +12626,7 @@ function ignisAvaliarEficienciaAnomalia(d){
   const eficiencia=isKm?(media/meta*100):(meta/media*100);if(!Number.isFinite(eficiencia))return null;
   const alta=ignisGetLimiteEficiencia(),baixa=ignisGetLimiteEficienciaBaixa();
   const faixa=eficiencia>alta?'alta':eficiencia<baixa?'baixa':'';if(!faixa)return null;
-  return {placa:String(d.placa||'').trim().toUpperCase(),data:String(d.data||''),operacao:String(d.operacao||''),modelo:String(d.modelo||''),tipoVeic:String(d.tipoVeic||''),tipoIgnis:tipo,litros,kmHoras,media,meta,eficiencia,faixa,unidade:isKm?'km/L':'L/h',source:String(d.source||'Importação'),periodo:String(d.periodo||''),rowIndex:Number.isInteger(d.rowIndex)?d.rowIndex:null,limiteUsado:faixa==='alta'?alta:baixa,at:Date.now()};
+  return {placa:String(d.placa||'').trim().toUpperCase(),data:String(d.data||''),operacao:String(d.operacao||''),modelo:String(d.modelo||''),tipoVeic:String(d.tipoVeic||''),tipoIgnis:tipo,litros,kmHoras,media,meta,eficiencia,faixa,unidade:isKm?'km/L':'L/h',source:String(d.source||'Importação'),periodo:String(d.periodo||''),rowIndex:Number.isInteger(d.rowIndex)?d.rowIndex:null,combustivel:String(d.combustivel||''),propulsaoOnly:d.propulsaoOnly===true||d.dieselOnly===true||ignisEhCombustivelAnomalia(d.combustivel),limiteUsado:faixa==='alta'?alta:baixa,at:Date.now()};
 }
 // Compatibilidade com chamadas antigas.
 function ignisAvaliarEficienciaAlta(d){return ignisAvaliarEficienciaAnomalia(d);}
@@ -12566,7 +12634,7 @@ function ignisRecordEficienciaAnomaly(a){
   if(!a||!a.placa||!Number.isFinite(Number(a.eficiencia)))return;
   state.eficienciaAnomalias=Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[];
   const ef=Number(a.eficiencia),faixa=a.faixa||(ef>=100?'alta':'baixa');
-  const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,at:Number(a.at)||Date.now()};
+  const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,combustivel:String(a.combustivel||''),propulsaoOnly:a.propulsaoOnly===true||a.dieselOnly===true||ignisEhCombustivelAnomalia(a.combustivel),at:Number(a.at)||Date.now()};
   const sig=[item.placa,item.data,item.source,item.periodo,item.rowIndex??'',item.litros.toFixed(3),item.kmHoras.toFixed(3),item.eficiencia.toFixed(3)].join('|');
   const exists=state.eficienciaAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|')===sig);
   if(!exists)state.eficienciaAnomalias.push(item);state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-1200);
@@ -12578,7 +12646,7 @@ function ignisRecordEficienciaAnomaliesBatch(items){
   state.eficienciaAnomalias=Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[];
   const sigOf=x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|');
   const seen=new Set(state.eficienciaAnomalias.map(sigOf));let added=0;
-  for(const a of items){if(!a||!a.placa||!Number.isFinite(Number(a.eficiencia)))continue;const ef=Number(a.eficiencia),faixa=a.faixa||(ef>=100?'alta':'baixa');const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,at:Number(a.at)||Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.eficienciaAnomalias.push(item);added++;}
+  for(const a of items){if(!a||!a.placa||!Number.isFinite(Number(a.eficiencia)))continue;const ef=Number(a.eficiencia),faixa=a.faixa||(ef>=100?'alta':'baixa');const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,combustivel:String(a.combustivel||''),propulsaoOnly:a.propulsaoOnly===true||a.dieselOnly===true||ignisEhCombustivelAnomalia(a.combustivel),at:Number(a.at)||Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.eficienciaAnomalias.push(item);added++;}
   state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-1200);try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}return added;
 }
 function ignisRemoveEficienciaAnomaliesRange(ini,fim){
@@ -12594,7 +12662,7 @@ function ignisRemoveEficienciaAnomalyKey(placa,data,source='Cadastro manual'){
 function ignisEficienciaAnomBaseRows(y,m){
   let arr=[];if(Array.isArray(state.eficienciaAnomalias))arr=arr.concat(state.eficienciaAnomalias);
   try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))arr=arr.concat(ls);}catch(e){}
-  const seen=new Set(),out=[];arr.forEach(r=>{const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;const efic=Number(r?.eficiencia);if(!Number.isFinite(efic))return;const sig=[String(r.placa||'').toUpperCase(),String(r.data||''),String(r.source||''),String(r.periodo||''),r.rowIndex??'',(Number(r.litros)||0).toFixed(3),(Number(r.kmHoras)||0).toFixed(3),efic.toFixed(3)].join('|');if(seen.has(sig))return;seen.add(sig);out.push({...r,eficiencia:efic,faixa:r.faixa||(efic>=100?'alta':'baixa')});});return out;
+  const seen=new Set(),out=[];arr.forEach(r=>{if(!ignisAnomaliaRegistroValido(r))return;const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;const efic=Number(r?.eficiencia);if(!Number.isFinite(efic))return;const sig=[String(r.placa||'').toUpperCase(),String(r.data||''),String(r.source||''),String(r.periodo||''),r.rowIndex??'',(Number(r.litros)||0).toFixed(3),(Number(r.kmHoras)||0).toFixed(3),efic.toFixed(3)].join('|');if(seen.has(sig))return;seen.add(sig);out.push({...r,eficiencia:efic,faixa:r.faixa||(efic>=100?'alta':'baixa')});});return out;
 }
 function ignisEficienciaAnomRows(y,m,limite=ignisGetLimiteEficiencia()){return ignisEficienciaAnomBaseRows(y,m).filter(r=>r.eficiencia>limite).sort((a,b)=>b.eficiencia-a.eficiencia||String(b.data||'').localeCompare(String(a.data||'')));}
 function ignisEficienciaBaixaRows(y,m,limite=ignisGetLimiteEficienciaBaixa()){return ignisEficienciaAnomBaseRows(y,m).filter(r=>r.eficiencia<limite).sort((a,b)=>a.eficiencia-b.eficiencia||String(b.data||'').localeCompare(String(a.data||'')));}
@@ -12616,6 +12684,9 @@ function ignisRecordMedidorAnomaly(a){
     campo:String(a.campo||''),
     source:String(a.source||'Importação'),
     periodo:String(a.periodo||''),
+    combustivel:String(a.combustivel||''),
+    propulsaoOnly:a.propulsaoOnly===true||a.dieselOnly===true||ignisEhCombustivelAnomalia(a.combustivel),
+    rowIndex:Number.isInteger(a.rowIndex)?a.rowIndex:null,
     at:Date.now()
   };
   const sig=[item.placa,item.data,item.medidor,item.valor.toFixed(3),item.valorAnterior??'',item.valorAtual??'',item.source].join('|');
@@ -12630,7 +12701,7 @@ function ignisRecordMedidorAnomaliesBatch(items){
   state.medidorAnomalias=Array.isArray(state.medidorAnomalias)?state.medidorAnomalias:[];
   const sigOf=x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.medidor||''),(Number(x.valor)||0).toFixed(3),x.valorAnterior??'',x.valorAtual??'',String(x.source||'Importação')].join('|');
   const seen=new Set(state.medidorAnomalias.map(sigOf)); let added=0;
-  for(const a of items){if(!a||!a.placa)continue;const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);const item={placa:String(a.placa||'').trim().toUpperCase(),data:String(a.data||''),operacao:String(a.operacao||''),tipoIgnis:tipo,medidor:String(a.medidor||ignisMedidorNome(tipo)),valor:Number(a.valor)||0,valorAnterior:Number.isFinite(Number(a.valorAnterior))?Number(a.valorAnterior):null,valorAtual:Number.isFinite(Number(a.valorAtual))?Number(a.valorAtual):null,motivo:String(a.motivo||'Variação negativa'),campo:String(a.campo||''),source:String(a.source||'Importação'),periodo:String(a.periodo||''),at:Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.medidorAnomalias.push(item);added++;}
+  for(const a of items){if(!a||!a.placa)continue;const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);const item={placa:String(a.placa||'').trim().toUpperCase(),data:String(a.data||''),operacao:String(a.operacao||''),tipoIgnis:tipo,medidor:String(a.medidor||ignisMedidorNome(tipo)),valor:Number(a.valor)||0,valorAnterior:Number.isFinite(Number(a.valorAnterior))?Number(a.valorAnterior):null,valorAtual:Number.isFinite(Number(a.valorAtual))?Number(a.valorAtual):null,motivo:String(a.motivo||'Variação negativa'),campo:String(a.campo||''),source:String(a.source||'Importação'),periodo:String(a.periodo||''),combustivel:String(a.combustivel||''),propulsaoOnly:a.propulsaoOnly===true||a.dieselOnly===true||ignisEhCombustivelAnomalia(a.combustivel),rowIndex:Number.isInteger(a.rowIndex)?a.rowIndex:null,at:Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.medidorAnomalias.push(item);added++;}
   state.medidorAnomalias=state.medidorAnomalias.slice(-1500);try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}return added;
 }
 function ignisRemoveMedidorAnomaliesRange(ini,fim){
@@ -12651,10 +12722,11 @@ function fechMedidorRows(y,m){
   }catch(e){}
   // Compatibilidade com registros antigos que eventualmente tenham preservado valor negativo.
   (state.abastecimentos||[]).forEach(r=>{
-    if(Number(r.horas)<0)arr.push({placa:r.placa,data:r.data,operacao:r.operacao,tipoIgnis:getTipoIgnis(r),medidor:ignisMedidorNome(getTipoIgnis(r)),valor:Number(r.horas),source:'Base histórica'});
+    if(Number(r.horas)<0 && ignisEhCombustivelAnomalia(r.combustivel))arr.push({placa:r.placa,data:r.data,operacao:r.operacao,tipoIgnis:getTipoIgnis(r),medidor:ignisMedidorNome(getTipoIgnis(r)),valor:Number(r.horas),source:'Base histórica',combustivel:r.combustivel,propulsaoOnly:true});
   });
   const seen=new Set(),out=[];
   arr.forEach(a=>{
+    if(!ignisAnomaliaRegistroValido(a))return;
     const d=fechParse(a.data); if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
     const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);
     const row={...a,tipoIgnis:tipo,medidor:a.medidor||ignisMedidorNome(tipo),valor:Number(a.valor)||0};
