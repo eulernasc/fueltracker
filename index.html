@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- IGNIS Stage 1 Performance — 18/08/2026 -->
-<meta name="ignis-build" content="2026-08-18-stage2-polish-general">
+<meta name="ignis-build" content="2026-08-19-stage2-polish-loading-hotfix">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
-<script type="module">
+<script type="module" async>
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1009,6 +1009,18 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div style="height:100%;background:var(--accent);border-radius:2px;animation:kf-progress 1.5s ease-in-out infinite"></div>
   </div>
 </div>
+<script id="ignis-loading-failsafe">
+(function(){
+  const releaseLoading = () => {
+    const loader = document.getElementById('ignis-loading');
+    if (!loader || loader.style.display === 'none') return;
+    loader.style.display = 'none';
+    const login = document.getElementById('login-screen');
+    if (login && !window._authUser) login.style.display = 'flex';
+  };
+  window.setTimeout(releaseLoading, 3500);
+})();
+</script>
 
 <!-- ══ TELA DE LOGIN ══ -->
 <div id="login-screen">
@@ -3450,8 +3462,15 @@ async function confirmarExcluirUsuario(id) {
 }
 
 // Inicializa ao carregar
-document.addEventListener('DOMContentLoaded', () => {
+let __ignisLoginBooted = false;
+function bootIgnisLoginOnce(){
+  if (__ignisLoginBooted) return;
+  __ignisLoginBooted = true;
   loginInit();
+}
+bootIgnisLoginOnce();
+document.addEventListener('DOMContentLoaded', () => {
+  bootIgnisLoginOnce();
   const tip = document.createElement('div');
   tip.id = 'bar-tooltip';
   tip.style.cssText = 'position:fixed;background:#1e1916;border:1px solid rgba(233,95,50,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:#f0ebe4;pointer-events:none;z-index:9999;max-width:300px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.6);line-height:1.6';
