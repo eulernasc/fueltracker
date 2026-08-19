@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- IGNIS Stage 1 Performance — 18/08/2026 -->
-<meta name="ignis-build" content="2026-08-19-login-stable-v2">
+<meta name="ignis-build" content="2026-08-19-sync-storage-v3">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,20 +39,99 @@ const withTimeout = (promise, ms) => Promise.race([
 // fueltracker/dados  → abastecimentos, máquinas, períodos, configs
 // fueltracker/usuarios → SOMENTE usuários (nunca tocado pelo saveState)
 
+// ── STORAGE V3: dados pesados separados em chunks ───────────────────────────
+// Motivo: o documento principal do Firestore tem limite de tamanho. À medida que
+// o IGNIS ganhou Anomalias + histórico de Arla, salvar tudo no mesmo documento
+// podia fazer a gravação inteira falhar. Os dados ficavam só no cache local e
+// desapareciam ao dar Ctrl+F5 / em outro computador. Agora as coleções grandes
+// são versionadas separadamente e o manifesto principal só muda DEPOIS que todos
+// os chunks foram confirmados.
+const FB_STORAGE_VERSION = 3;
+const FB_MAX_CHUNKS = 800;
+
+function fbVersion() {
+  return `v${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+async function fbWriteChunkSeries(prefix, version, items, chunkSize) {
+  const arr = Array.isArray(items) ? items : [];
+  const total = Math.ceil(arr.length / chunkSize);
+  if (!total) return 0;
+  if (total > FB_MAX_CHUNKS) throw new Error(`${prefix}: quantidade de chunks muito alta (${total})`);
+
+  // Limita concorrência para não saturar o navegador/rede em bases grandes.
+  const jobs = Array.from({length: total}, (_, i) => async () => {
+    const chunk = arr.slice(i * chunkSize, (i + 1) * chunkSize);
+    await withTimeout(setDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`), {
+      registros: chunk, chunk: i, total, version
+    }), 20000);
+  });
+  for (let i = 0; i < jobs.length; i += 18) {
+    await Promise.all(jobs.slice(i, i + 18).map(fn => fn()));
+  }
+  return total;
+}
+
+async function fbReadChunkSeries(prefix, version, total) {
+  total = Number(total || 0);
+  if (!total) return [];
+  if (!Number.isInteger(total) || total < 0 || total > FB_MAX_CHUNKS) {
+    throw new Error(`${prefix}: manifesto inválido (${total} chunks)`);
+  }
+  const out = [];
+  for (let base = 0; base < total; base += 24) {
+    const size = Math.min(24, total - base);
+    const snaps = await Promise.all(Array.from({length:size}, (_, off) => {
+      const i = base + off;
+      return withTimeout(getDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`)), 15000);
+    }));
+    snaps.forEach((snap, off) => {
+      const i = base + off;
+      if (!snap.exists()) throw new Error(`${prefix}: chunk ${i+1}/${total} não encontrado`);
+      out.push(...(snap.data().registros || []));
+    });
+  }
+  return out;
+}
+
+function fbDeleteChunkSeries(prefix, version, total) {
+  total = Number(total || 0);
+  if (!version || !total) return;
+  // Limpeza é manutenção: nunca bloqueia um save já confirmado.
+  (async () => {
+    for (let base = 0; base < total; base += 20) {
+      await Promise.allSettled(Array.from({length:Math.min(20,total-base)}, (_, off) =>
+        deleteDoc(doc(db, 'fueltracker', `${prefix}_${version}_${base+off}`))
+      ));
+    }
+  })().catch(() => {});
+}
+
 window.fbSave = async function(data) {
   try {
-    // Snapshot imutável: evita que uma importação/edição altere os arrays enquanto
-    // o Firebase ainda está gravando os chunks.
     const snapshot = typeof structuredClone === 'function'
       ? structuredClone(data)
       : JSON.parse(JSON.stringify(data));
 
-    const { _users, abastecimentos, semanas, ...restData } = snapshot;
+    // Tudo que cresce muito sai do documento principal.
+    const {
+      _users,
+      abastecimentos,
+      semanas,
+      maquinas,
+      medidorAnomalias,
+      eficienciaAnomalias,
+      arlaMeses,
+      // Estrutura antiga de monitoramento por importação foi descontinuada.
+      importacaoMonitorEventos,
+      importacaoMonitorRegras,
+      importacaoMonitorInicializado,
+      ...restData
+    } = snapshot;
 
-    // Remove registros das semanas antes de salvar — são reconstruídos no load.
     const semanasSemRegistros = {};
     Object.entries(semanas || {}).forEach(([id, periodo]) => {
-      const { registros, ...semMeta } = periodo;
+      const { registros, ...semMeta } = periodo || {};
       semanasSemRegistros[id] = {
         ...semMeta,
         count: Array.isArray(registros)
@@ -61,65 +140,54 @@ window.fbSave = async function(data) {
       };
     });
 
-    const mainRef = doc(db, "fueltracker", "dados");
-    let versaoAnterior = null;
-    let chunksAnteriores = 0;
-
-    // Lê somente o manifesto atual para poder limpar a versão antiga depois.
+    const mainRef = doc(db, 'fueltracker', 'dados');
+    let antigo = {};
     try {
-      const atualSnap = await withTimeout(getDoc(mainRef), 8000);
-      if (atualSnap.exists()) {
-        const atual = atualSnap.data();
-        versaoAnterior = atual._abastVersion || null;
-        chunksAnteriores = Number(atual._abastChunks || 0);
-      }
+      const atualSnap = await withTimeout(getDoc(mainRef), 10000);
+      if (atualSnap.exists()) antigo = atualSnap.data() || {};
     } catch (e) {
-      console.warn('Não foi possível ler o manifesto anterior; o save continuará:', e);
+      console.warn('IGNIS: não foi possível ler o manifesto anterior; o save continuará.', e);
     }
 
+    const version = fbVersion();
     const abast = Array.isArray(abastecimentos) ? abastecimentos : [];
-    const chunkSize = 400;
-    const numChunks = Math.max(1, Math.ceil(abast.length / chunkSize));
-    const versao = `v${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const maqs  = Array.isArray(maquinas) ? maquinas : [];
+    const meds  = Array.isArray(medidorAnomalias) ? medidorAnomalias : [];
+    const efics = Array.isArray(eficienciaAnomalias) ? eficienciaAnomalias : [];
+    const arla  = Array.isArray(arlaMeses) ? arlaMeses : [];
 
-    // Grava chunks + manifesto no MESMO batch. Assim o Firestore nunca fica com
-    // metadados novos apontando para chunks antigos/parciais.
-    const batch = writeBatch(db);
-    for (let i = 0; i < numChunks; i++) {
-      const chunk = abast.slice(i * chunkSize, (i + 1) * chunkSize);
-      batch.set(doc(db, "fueltracker", `abast_${versao}_${i}`), {
-        registros: chunk,
-        chunk: i,
-        total: numChunks,
-        version: versao
-      });
-    }
+    // 1) Primeiro grava TODOS os dados pesados. O manifesto antigo continua válido
+    // se qualquer uma destas gravações falhar.
+    const abastChunks = await fbWriteChunkSeries('abast', version, abast, 260);
+    const maqChunks   = await fbWriteChunkSeries('maq',   version, maqs,  260);
+    const medChunks   = await fbWriteChunkSeries('med',   version, meds,  220);
+    const eficChunks  = await fbWriteChunkSeries('efic',  version, efics, 180);
+    // Cada mês de Arla pode carregar centenas/milhares de linhas; 1 mês/documento.
+    const arlaChunks  = await fbWriteChunkSeries('arla',  version, arla,  1);
 
-    batch.set(mainRef, {
+    // 2) Só depois atualiza o manifesto/fonte de verdade.
+    await withTimeout(setDoc(mainRef, {
       ...restData,
       semanas: semanasSemRegistros,
+      _storageVersion: FB_STORAGE_VERSION,
       _hasAbast: true,
-      _storageVersion: 2,
-      _abastVersion: versao,
-      _abastChunks: numChunks,
-      _abastCount: abast.length
-    });
+      _abastVersion: version, _abastChunks: abastChunks, _abastCount: abast.length,
+      _maqVersion: version,   _maqChunks: maqChunks,     _maqCount: maqs.length,
+      _medVersion: version,   _medChunks: medChunks,     _medCount: meds.length,
+      _eficVersion: version,  _eficChunks: eficChunks,   _eficCount: efics.length,
+      _arlaVersion: version,  _arlaChunks: arlaChunks,   _arlaCount: arla.length
+    }), 20000);
 
-    await withTimeout(batch.commit(), 30000);
-
-    // A versão nova já está confirmada. A limpeza da anterior é apenas manutenção
-    // e não pode transformar um save bem-sucedido em erro.
-    if (versaoAnterior && versaoAnterior !== versao && chunksAnteriores > 0) {
-      Promise.allSettled(
-        Array.from({ length: chunksAnteriores }, (_, i) =>
-          deleteDoc(doc(db, "fueltracker", `abast_${versaoAnterior}_${i}`))
-        )
-      ).catch(() => {});
-    }
+    // 3) Limpa versões antigas só depois da confirmação do manifesto novo.
+    fbDeleteChunkSeries('abast', antigo._abastVersion, antigo._abastChunks);
+    fbDeleteChunkSeries('maq',   antigo._maqVersion,   antigo._maqChunks);
+    fbDeleteChunkSeries('med',   antigo._medVersion,   antigo._medChunks);
+    fbDeleteChunkSeries('efic',  antigo._eficVersion,  antigo._eficChunks);
+    fbDeleteChunkSeries('arla',  antigo._arlaVersion,  antigo._arlaChunks);
 
     return true;
   } catch(e) {
-    console.error("Firebase save error:", e);
+    console.error('Firebase save error:', e);
     return false;
   }
 };
@@ -127,101 +195,87 @@ window.fbSave = async function(data) {
 window.fbLoad = async function() {
   window._fbLoadFailed = false;
   try {
-    const snap = await withTimeout(getDoc(doc(db, "fueltracker", "dados")), 8000);
+    const snap = await withTimeout(getDoc(doc(db, 'fueltracker', 'dados')), 10000);
     if (!snap.exists()) return null;
     const dados = snap.data();
+    const storageV = Number(dados._storageVersion || 0);
 
+    let abastecimentos = [];
     if (dados._hasAbast) {
-      let abastecimentos = [];
-
-      if (dados._storageVersion === 2 && dados._abastVersion) {
-        // Formato novo: lê exatamente a quantidade declarada no manifesto.
-        const total = Number(dados._abastChunks || 0);
-        if (!Number.isInteger(total) || total < 1 || total > 500) {
-          throw new Error(`Manifesto de abastecimentos inválido (${total} chunks)`);
-        }
-
-        const snaps = await Promise.all(
-          Array.from({ length: total }, (_, i) =>
-            withTimeout(getDoc(doc(db, "fueltracker", `abast_${dados._abastVersion}_${i}`)), 10000)
-          )
-        );
-
-        snaps.forEach((chunkSnap, i) => {
-          if (!chunkSnap.exists()) throw new Error(`Chunk ${i + 1}/${total} não encontrado no Firebase`);
-          abastecimentos = abastecimentos.concat(chunkSnap.data().registros || []);
-        });
+      if (dados._abastVersion) {
+        abastecimentos = await fbReadChunkSeries('abast', dados._abastVersion, dados._abastChunks);
       } else {
-        // Compatibilidade com os dados antigos. Antes havia um limite fixo de 20
-        // chunks (8.000 registros), que fazia os períodos mais novos desaparecerem.
-        const primeiro = await withTimeout(getDoc(doc(db, "fueltracker", "abast_0")), 10000);
+        // Compatibilidade com formato legado abast_0, abast_1...
+        const primeiro = await withTimeout(getDoc(doc(db, 'fueltracker', 'abast_0')), 12000);
         if (primeiro.exists()) {
           const primeiroData = primeiro.data();
           const total = Math.max(1, Number(primeiroData.total || 1));
-          if (!Number.isInteger(total) || total > 500) {
-            throw new Error(`Quantidade de chunks legados inválida (${total})`);
-          }
-
-          abastecimentos = abastecimentos.concat(primeiroData.registros || []);
+          abastecimentos.push(...(primeiroData.registros || []));
           if (total > 1) {
-            const restantes = await Promise.all(
-              Array.from({ length: total - 1 }, (_, idx) => {
-                const i = idx + 1;
-                return withTimeout(getDoc(doc(db, "fueltracker", "abast_" + i)), 10000);
-              })
-            );
-            restantes.forEach((chunkSnap, idx) => {
-              if (!chunkSnap.exists()) throw new Error(`Chunk legado ${idx + 2}/${total} não encontrado`);
-              abastecimentos = abastecimentos.concat(chunkSnap.data().registros || []);
-            });
+            for (let base=1; base<total; base+=24) {
+              const size=Math.min(24,total-base);
+              const snaps=await Promise.all(Array.from({length:size},(_,off)=>
+                withTimeout(getDoc(doc(db,'fueltracker','abast_'+(base+off))),12000)
+              ));
+              snaps.forEach((s,off)=>{ if(!s.exists()) throw new Error(`Chunk legado ${base+off}/${total} não encontrado`); abastecimentos.push(...(s.data().registros||[])); });
+            }
           }
         }
       }
+    }
+    dados.abastecimentos = abastecimentos;
 
-      dados.abastecimentos = abastecimentos;
+    // Storage v3: restaura dados grandes que não ficam mais no manifesto principal.
+    if (storageV >= 3) {
+      const [maqs, meds, efics, arla] = await Promise.all([
+        fbReadChunkSeries('maq',  dados._maqVersion,  dados._maqChunks),
+        fbReadChunkSeries('med',  dados._medVersion,  dados._medChunks),
+        fbReadChunkSeries('efic', dados._eficVersion, dados._eficChunks),
+        fbReadChunkSeries('arla', dados._arlaVersion, dados._arlaChunks)
+      ]);
+      dados.maquinas = maqs;
+      dados.medidorAnomalias = meds;
+      dados.eficienciaAnomalias = efics;
+      dados.arlaMeses = arla;
+    }
+    // Em storage v1/v2, esses campos continuam inline e são mantidos como vieram.
 
-      // Reconstrói registros das semanas. Antes fazia um .filter() completo para
-      // CADA período (O(períodos × registros)). Agora agrupa tudo em uma passada.
-      if (dados.semanas) {
-        const porPeriodo = new Map();
-        abastecimentos.forEach(a => {
-          if (!a.periodoId) return;
-          let regs = porPeriodo.get(a.periodoId);
-          if (!regs) porPeriodo.set(a.periodoId, regs = []);
-          regs.push(a);
-        });
-        Object.keys(dados.semanas).forEach(id => {
-          const periodo = dados.semanas[id];
-          let regs = porPeriodo.get(id) || [];
-
-          // Compatibilidade com registros antigos sem periodoId: só faz a varredura
-          // pesada quando este período realmente não tem vínculo salvo.
-          if (regs.length === 0 && periodo.dataIni && periodo.dataFim) {
-            const ini = periodo.dataIni;
-            const fim = periodo.dataFim;
-            regs = abastecimentos.filter(a => {
-              if (a.periodoId && a.periodoId !== id) return false;
-              const data = a.data || '';
-              return data >= ini && data <= fim;
-            });
-            regs.forEach(a => { if (!a.periodoId) a.periodoId = id; });
-          }
-
-          periodo.registros = regs;
-          periodo.count = regs.length;
-        });
-      }
+    // Reconstrói registros das semanas em UMA passada.
+    if (dados.semanas) {
+      const porPeriodo = new Map();
+      abastecimentos.forEach(a => {
+        if (!a?.periodoId) return;
+        let regs = porPeriodo.get(a.periodoId);
+        if (!regs) porPeriodo.set(a.periodoId, regs = []);
+        regs.push(a);
+      });
+      Object.keys(dados.semanas).forEach(id => {
+        const periodo = dados.semanas[id];
+        let regs = porPeriodo.get(id) || [];
+        if (regs.length === 0 && periodo.dataIni && periodo.dataFim) {
+          const ini = periodo.dataIni, fim = periodo.dataFim;
+          regs = abastecimentos.filter(a => {
+            if (a.periodoId && a.periodoId !== id) return false;
+            const data = a.data || '';
+            return data >= ini && data <= fim;
+          });
+          regs.forEach(a => { if (!a.periodoId) a.periodoId = id; });
+        }
+        periodo.registros = regs;
+        periodo.count = regs.length;
+      });
     }
 
-    delete dados._hasAbast;
-    delete dados._storageVersion;
-    delete dados._abastVersion;
-    delete dados._abastChunks;
-    delete dados._abastCount;
+    // Remove somente metadados internos do storage.
+    [
+      '_hasAbast','_storageVersion','_abastVersion','_abastChunks','_abastCount',
+      '_maqVersion','_maqChunks','_maqCount','_medVersion','_medChunks','_medCount',
+      '_eficVersion','_eficChunks','_eficCount','_arlaVersion','_arlaChunks','_arlaCount'
+    ].forEach(k => delete dados[k]);
     return dados;
   } catch(e) {
     window._fbLoadFailed = true;
-    console.error("Firebase load error:", e);
+    console.error('Firebase load error:', e);
     return null;
   }
 };
@@ -3016,21 +3070,27 @@ async function loadState() {
   if(!Array.isArray(state.eficienciaAnomalias))state.eficienciaAnomalias=[];
   if(!Number.isFinite(Number(state.eficienciaAnomaliaLimite)))state.eficienciaAnomaliaLimite=140;
   if(!Number.isFinite(Number(state.eficienciaAnomaliaLimiteBaixa)))state.eficienciaAnomaliaLimiteBaixa=60;
+  // Remove cache de monitoramento de importação descontinuado (não faz parte do relatório de Anomalias).
+  delete state.importacaoMonitorEventos; delete state.importacaoMonitorRegras; delete state.importacaoMonitorInicializado;
+  window._ultimoSaveAt = Math.max(Number(window._ultimoSaveAt||0), Number(state._savedAt||0));
   // IDB é usado APENAS como cache de abastecimentos/semanas em memória (o Firebase lean não os guarda).
   // NÃO é mais usado como "fonte de verdade" para recuperação — isso fazia o sistema reverter
   // exclusões intencionais ao detectar que o IDB tinha mais dados que o localStorage.
   // A lógica agora é: Firebase sempre ganha; IDB só serve pra preencher a memória antes do Firebase responder.
   try {
     const idb = await idbLoad();
-    if (idb && idb._idbAt && idb.abastecimentos?.length > 0) {
-      // Preenche memória com dados do IDB apenas se o localStorage lean não tem abastecimentos
-      // (que é sempre o caso — o lean nunca guarda os registros pesados)
-      if (!state.abastecimentos?.length) {
-        state.abastecimentos = idb.abastecimentos || [];
+    if (idb) {
+      const idbTs = Number(idb._savedAt || idb._idbAt || 0);
+      const localTs = Number(state._savedAt || 0);
+      if (idbTs > localTs) {
+        // Cache completo mais novo: normalmente significa que houve uma importação
+        // local que ainda não conseguiu chegar ao Firebase. Preserva para reenvio.
+        state = { ...state, ...idb, _savedAt:idbTs };
+      } else {
+        if (!state.abastecimentos?.length && idb.abastecimentos?.length) state.abastecimentos = idb.abastecimentos;
+        if ((!state.semanas || !Object.keys(state.semanas).length) && idb.semanas) state.semanas = idb.semanas;
       }
-      if (!state.semanas || !Object.keys(state.semanas).length) {
-        state.semanas = idb.semanas || {};
-      }
+      window._ultimoSaveAt = Math.max(Number(window._ultimoSaveAt||0), idbTs, Number(state._savedAt||0));
     }
   } catch(e) { console.warn('IDB load skip:', e); }
   // Migrar preços antigos do localStorage para o state (única vez)
@@ -3116,6 +3176,9 @@ async function syncFromFirebase() {
         localStorage.setItem('fueltracker_v3', JSON.stringify(_lean));
       } catch(e) { console.warn('localStorage quota ignorada (dados no Firebase):', e); }
       window._ultimoSaveAt = tsFirebase;
+      state._savedAt = tsFirebase;
+      // Mantém o cache completo alinhado à fonte de verdade para outros reloads.
+      idbSave({ ...state, _savedAt: tsFirebase });
 
       // Antes o sistema regravava todos os chunks em TODO carregamento da página.
       // Agora só persiste se realmente houve merge de configurações locais.
@@ -3160,8 +3223,10 @@ async function syncFromFirebase() {
       else showToast('Dados sincronizados! ☁️', 'success');
 
     } else if (temDadosLocal && tsLocal > tsFirebase) {
-      saveState();
-      updateSyncStatus('connected');
+      // O cache local é mais novo (ex.: importação cuja gravação Firebase falhou).
+      // Reenvia antes de aceitar a versão antiga da nuvem, evitando sumir após Ctrl+F5.
+      const recuperado = await saveState({ immediate:true });
+      updateSyncStatus(recuperado ? 'connected' : 'error');
     } else {
       updateSyncStatus('connected');
     }
@@ -3258,11 +3323,17 @@ function saveState(options = {}) {
   if (typeof pendMarkDirty === 'function') pendMarkDirty();
   try{_ignisPerf.pageDirty.add('fechamento')}catch(e){}
 
-  // 1. Snapshot completo e imutável do estado atual.
+  // 1. Snapshot completo e imutável do estado atual + relógio local de recuperação.
+  const localSaveAt = Date.now();
+  state._savedAt = localSaveAt;
+  window._ultimoSaveAt = Math.max(Number(window._ultimoSaveAt||0), localSaveAt);
   const snapshot = cloneStateForSave(state);
+  snapshot._savedAt = localSaveAt;
+  delete snapshot.importacaoMonitorEventos; delete snapshot.importacaoMonitorRegras; delete snapshot.importacaoMonitorInicializado;
 
   // 2. IDB local imediato — backup completo, sem limite pequeno do localStorage.
-  idbSave({ ...snapshot, _savedAt: Date.now() });
+  // Se a nuvem falhar, esse timestamp impede o Firebase antigo de apagar a importação no reload.
+  idbSave(snapshot);
 
   // 3. localStorage leve — sem abastecimentos e sem registros duplicados das semanas.
   try {
@@ -3626,8 +3697,7 @@ function authRenderNav() {
   const u = window._authUser;
   if (!u) return;
   const perms = u.role === 'adm' ? AUTH_PAGES.map(p=>p.id) : [...(u.perms || [])];
-  if (u.role === 'admin' && !perms.includes('pendencias')) perms.push('pendencias');
-  if (u.role === 'admin' && !perms.includes('fechamento')) perms.push('fechamento');
+  if (u.role === 'admin') ['pendencias','fechamento','anomalias'].forEach(p=>{if(!perms.includes(p))perms.push(p);});
   const nav = document.querySelector('.nav');
   nav.innerHTML = '';
   let ultimoGrupo = '';
@@ -3972,26 +4042,9 @@ function ignisImportMatchRule(operacao){
   const op=ignisImportNorm(operacao);if(!op)return null;
   return ignisEnsureImportOpsConfig().find(r=>op.includes(ignisImportRuleKey(r.nome)))||null;
 }
-function ignisImportMonitorCollect(batch,operacao,combustivel,dataObj){
-  if(!(batch instanceof Map))return;
-  const rule=ignisImportMatchRule(operacao);if(!rule)return;
-  const fuel=ignisImportFuelKey(combustivel);if(!fuel||!rule.combustiveis.includes(fuel))return;
-  const data=dataObj instanceof Date&&!isNaN(dataObj)?dataParaISO(dataObj):String(dataObj||'');if(!data)return;
-  const key=[ignisImportRuleKey(rule.nome),fuel,data].join('|');
-  batch.set(key,{regra:rule.nome,operacao:String(operacao||rule.nome),combustivel:fuel,data});
-}
-function ignisImportMonitorCommit(batch){
-  ignisEnsureImportOpsConfig();state.importacaoMonitorInicializado=true;
-  if(!(batch instanceof Map)||!batch.size)return 0;
-  const sig=x=>[ignisImportRuleKey(x.regra),x.combustivel,x.data].join('|');
-  const seen=new Set(state.importacaoMonitorEventos.map(sig));let n=0;
-  for(const e of batch.values()){const k=sig(e);if(seen.has(k))continue;seen.add(k);state.importacaoMonitorEventos.push(e);n++;}
-  state.importacaoMonitorEventos=state.importacaoMonitorEventos.sort((a,b)=>String(a.data).localeCompare(String(b.data))).slice(-2200);return n;
-}
-function ignisImportMonitorRemoveRange(ini,fim){
-  ignisEnsureImportOpsConfig();const a=pendParseDate(ini),b=pendParseDate(fim);if(!a||!b)return;
-  state.importacaoMonitorEventos=state.importacaoMonitorEventos.filter(e=>{const d=pendParseDate(e.data);return !d||d<a||d>b;});
-}
+function ignisImportMonitorCollect(){ return; }
+function ignisImportMonitorCommit(){ return 0; }
+function ignisImportMonitorRemoveRange(){ return; }
 function ignisImportMonitorSnapshot(today=new Date()){
   const rules=ignisEnsureImportOpsConfig(),events=state.importacaoMonitorEventos||[],rows=[];
   rules.forEach(rule=>rule.combustiveis.forEach(fuel=>{
@@ -4180,7 +4233,7 @@ function pendOpenDetails(issueId){
 }
 function renderPendencias(force=false){
   const page=document.getElementById('page-pendencias'); if(!page)return;
-  ignisUpdateImportOpsCount();
+  try {
   const {issues,monitors,activeLabels}=pendCollect(); const hist=pendSyncResolved(activeLabels); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
   const critical=issues.filter(i=>i.severity==='critical').length, attention=issues.filter(i=>i.severity==='attention').length, occ=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)}; set('pend-kpi-critical',critical);set('pend-kpi-attention',attention);set('pend-kpi-occurrences',occ);set('pend-kpi-resolved',resolved7.length);
@@ -4191,9 +4244,17 @@ function renderPendencias(force=false){
   const mon=document.getElementById('pend-monitors');if(mon)mon.innerHTML=monitors.map(m=>`<div class="pend-monitor"><span class="pend-monitor-dot ${m.status}"></span><div class="pend-monitor-copy"><div class="pend-monitor-name">${pendEsc(m.name)}</div><div class="pend-monitor-detail">${pendEsc(m.detail)}</div></div><span class="pend-monitor-status">${m.status==='ok'?'OK':m.status==='critical'?'Crítico':m.status==='attention'?'Atenção':'Sem análise'}</span></div>`).join('');
   const sec=document.getElementById('pend-resolved-section'),rlist=document.getElementById('pend-resolved-list');if(sec&&rlist){sec.style.display=resolved7.length?'':'none';rlist.innerHTML=resolved7.slice(0,8).map(r=>`<div class="pend-resolved"><span class="pend-resolved-icon">${pendSvg('ok')}</span><span class="pend-resolved-label">${pendEsc(r.label||r.key)}</span><span class="pend-resolved-time">${new Date(r.at).toLocaleDateString('pt-BR')}</span></div>`).join('');}
   pendAtualizarBadge(issues); _markPageClean('pendencias');
+  } catch(e) {
+    console.error('Central de Pendências:', e);
+    const sub=document.getElementById('pend-priority-sub');if(sub)sub.textContent='Falha ao analisar os dados — clique em Atualizar para tentar novamente';
+    const list=document.getElementById('pend-issues');if(list)list.innerHTML=`<div class="pend-empty" style="grid-column:1/-1"><div class="pend-empty-title">Não foi possível concluir a análise</div><div class="pend-empty-sub">${pendEsc(e?.message||'Erro inesperado')}</div></div>`;
+    const mon=document.getElementById('pend-monitors');if(mon)mon.innerHTML='';
+  }
 }
 function pendAtualizarBadge(precomputed){
-  const issues=precomputed||pendCollect().issues; const total=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0); const badge=document.getElementById('pendencias-nav-badge'); if(badge){badge.textContent=total>99?'99+':total;badge.style.display=total?'inline-flex':'none';}
+  try {
+    const issues=precomputed||pendCollect().issues; const total=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0); const badge=document.getElementById('pendencias-nav-badge'); if(badge){badge.textContent=total>99?'99+':total;badge.style.display=total?'inline-flex':'none';}
+  } catch(e) { console.warn('Badge de pendências:',e); }
 }
 function pendMarkDirty(){try{_ignisPerf.pageDirty.add('pendencias');}catch(e){} if(document.getElementById('page-pendencias')?.classList.contains('active'))setTimeout(()=>renderPendencias(),0);else setTimeout(()=>{try{pendAtualizarBadge()}catch(e){}},50);}
 
