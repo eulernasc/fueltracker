@@ -1068,7 +1068,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 .fech-check-detail{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.45}
 .fech-check-meta{font-size:11px;color:var(--text3);margin-top:4px}
 .fech-status{display:inline-flex;align-items:center;justify-content:center;min-width:88px;height:28px;padding:0 10px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
-.fech-status.ok{background:rgba(42,157,106,.12);color:#39c98a}.fech-status.attention{background:rgba(232,148,26,.12);color:#f0aa39}.fech-status.blocked{background:rgba(239,91,91,.12);color:#ff6a6a}.fech-status.waiting{background:rgba(126,142,160,.12);color:#9aa8b8}
+.fech-status.ok{background:rgba(42,157,106,.12);color:#39c98a}.fech-status.attention{background:rgba(232,148,26,.12);color:#f0aa39}.fech-status.blocked{background:rgba(239,91,91,.12);color:#ff6a6a}.fech-status.waiting{background:rgba(126,142,160,.12);color:#9aa8b8}.fech-status.optional{background:rgba(126,142,160,.10);color:#9aa8b8}.fech-check.optional .fech-check-icon{color:#8190a2;background:rgba(126,142,160,.07);border-color:rgba(126,142,160,.15)}
 .fech-check-actions{display:flex;gap:7px;align-items:center;justify-content:flex-end;margin-top:7px;flex-wrap:wrap}
 .fech-mini-btn{border:1px solid var(--border);background:#111820;color:var(--text2);border-radius:9px;padding:6px 9px;font:650 11px 'DM Sans',sans-serif;cursor:pointer}.fech-mini-btn:hover{border-color:rgba(226,88,36,.42);color:var(--accent)}
 .fech-blockers{display:flex;flex-direction:column;gap:8px}.fech-blocker{padding:11px 12px;border:1px solid rgba(239,91,91,.16);background:rgba(239,91,91,.055);border-radius:11px}.fech-blocker strong{display:block;font-size:12px;color:#ff7676}.fech-blocker span{display:block;font-size:11px;color:var(--text2);margin-top:3px;line-height:1.4}
@@ -5839,6 +5839,7 @@ function salvarAbastecimento() {
   const operador=document.getElementById('abast-operador').value;
   const editIdx=parseInt(document.getElementById('abast-edit-idx').value);
   if(!placa||!data||isNaN(litros)||isNaN(horas)){showToast('Preencha todos os campos','error');return;}
+  if(litros<0||horas<0){showToast('Litros e KM/Horas não podem ser negativos. Corrija o medidor antes de salvar.','error');return;}
   const entry={placa,data,litros,horas,operador};
   if(editIdx>=0) {
     const op=state.abastecimentos[editIdx]?.operacao||getMaquina(placa)?.operacao||'';
@@ -5955,7 +5956,7 @@ async function importarRelatorio(input) {
         const placa    = String(row[2]||'').trim().toUpperCase(); // Coluna C
         const modelo   = String(row[3]||'').trim();   // Coluna D
         const tipo     = String(row[4]||'').trim();   // Coluna E
-        const kmRealRaw = parseFloat(row[6])||0;      // Coluna G — Km Real (pode ser negativo em correção de medidor)
+        const kmRealRaw = ignisNumeroSeguro(row[6]);      // Coluna G — Km Real; parser preserva negativos e formatos pt-BR
         const kmReal   = kmRealRaw;
         const volReal  = parseFloat(row[9])||0;       // Coluna J — Vol. Real
         const mediaIdeal = parseFloat(row[12])||0;    // Coluna M — Média Ideal
@@ -6006,6 +6007,8 @@ async function importarRelatorio(input) {
             operacao,
             tipoIgnis,
             valor: kmRealRaw,
+            motivo: 'Variação negativa de KM/Horas',
+            campo: 'Km Real',
             source: 'Importação semanal',
             periodo: nomePeriodo
           });
@@ -6137,7 +6140,11 @@ async function importarRelatorioDiario(input) {
 
       // 1ª passada: parseia e filtra linhas válidas, ordenadas por data (pra "última operação vence" em trocas no meio do período)
       const linhas = [];
-      const anomaliasMedidorImport = [];
+      // Faz uma varredura independente do cálculo de consumo. Assim valores negativos
+      // e leituras absolutas regressivas de odômetro/horímetro não são perdidos por filtros.
+      const anomaliasMedidorImport = typeof ignisDetectarMedidoresRaw==='function'
+        ? ignisDetectarMedidoresRaw(raw, 'Relatório diário')
+        : [];
       let ignoradasExclusao = 0;
       let ignoradasArla = 0;
       raw.forEach(row => {
@@ -6153,7 +6160,7 @@ async function importarRelatorioDiario(input) {
         const modelo   = String(row['Modelo']||'').trim();
         const tipoVeic = String(row['Tipo de Veículo']||'').trim();
         const litros   = parseFloat(row['Litros Abast.']) || 0;
-        const kmRealRaw = parseFloat(row['Km Real']) || 0;
+        const kmRealRaw = ignisNumeroSeguro(ignisValorRow(row,['km real','horas','hora real']));
         const kmReal   = Math.max(0, kmRealRaw); // negativo = correção/regressão do medidor, não soma km fictício
         const mediaIdeal = parseFloat(row['Média Ideal']) || 0;
         const valorLitro  = parseFloat(row['Valor Litro']) || 0;
@@ -6169,6 +6176,8 @@ async function importarRelatorioDiario(input) {
             modelo,
             tipoVeic,
             valor: kmRealRaw,
+            motivo: 'Variação negativa de KM/Horas',
+            campo: 'Km Real',
             source: 'Relatório diário'
           });
         }
@@ -12239,6 +12248,90 @@ function fechFmt(d){return d?d.toLocaleDateString('pt-BR'):'—';}
 function fechDuplicates(rows){const mp=new Map();rows.forEach((r,idx)=>{const placa=String(r.placa||'').trim().toUpperCase();if(!placa)return;const data=String(r.data||'');const hora=String(r.hora||'').trim();const l=Number(r.litros)||0,h=Number(r.horas)||0,op=String(r.operacao||''),pid=String(r.periodoId||'');const key=hora?`${placa}|${data}|${hora}|${l.toFixed(3)}|${pid}`:`${placa}|${data}|${l.toFixed(3)}|${h.toFixed(3)}|${op}|${pid}`;if(!mp.has(key))mp.set(key,[]);mp.get(key).push({r,idx});});return [...mp.values()].filter(g=>g.length>1);}
 function fechReincMonth(y,m){const periods=Object.entries(state.semanas||{}).filter(([,p])=>{const a=fechParse(p.dataIni),b=fechParse(p.dataFim);return a&&b&&a<=new Date(y,m+1,0)&&b>=new Date(y,m,1);}).sort((a,b)=>String(a[1].dataIni).localeCompare(String(b[1].dataIni)));const hist={};periods.forEach(([id,p])=>{const by={};(p.registros||[]).forEach(r=>{const d=fechParse(r.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;const k=r.placa;if(!k)return;if(!by[k])by[k]={l:0,h:0,tipo:getTipoIgnis(r)};by[k].l+=Number(r.litros)||0;by[k].h+=Number(r.horas)||0;});Object.entries(by).forEach(([placa,d])=>{const maq=getMaquina(placa),meta=Number(maq?.meta)||0;if(!meta)return;const tipo=maq?.tipoIgnis||d.tipo||'',kml=tipo==='pesada'||tipo==='leve';const media=kml?(d.l>0?d.h/d.l:0):(d.h>0?d.l/d.h:0);if(!media)return;const efic=kml?media/meta*100:meta/media*100;(hist[placa]||(hist[placa]=[])).push({efic,op:maq?.operacao||'',id});});});const arr=[];Object.entries(hist).forEach(([placa,a])=>{const low=a.filter(x=>x.efic<98);if(low.length>=2)arr.push({placa,pior:Math.min(...low.map(x=>x.efic)),periodos:low.length,operacao:low.at(-1)?.op||''});});return arr.sort((a,b)=>a.pior-b.pior);}
 
+function ignisNumeroSeguro(v){
+  if(typeof v==='number')return Number.isFinite(v)?v:0;
+  let str=String(v??'').trim();
+  if(!str)return 0;
+  // Preserva sinais que parseFloat costuma perder em formatos brasileiros e planilhas exportadas.
+  str=str.replace(/[−–—]/g,'-').replace(/\u00a0/g,' ').trim();
+  let negPar=/^\(.*\)$/.test(str); if(negPar)str=str.slice(1,-1);
+  str=str.replace(/[^0-9,.-]/g,'');
+  if(!str)return 0;
+  const lastComma=str.lastIndexOf(','),lastDot=str.lastIndexOf('.');
+  if(lastComma>=0&&lastDot>=0){
+    if(lastComma>lastDot)str=str.replace(/\./g,'').replace(',','.');
+    else str=str.replace(/,/g,'');
+  }else if(lastComma>=0){
+    const parts=str.split(',');
+    if(parts.length===2&&parts[1].length<=3)str=parts[0]+'.'+parts[1];
+    else str=str.replace(/,/g,'');
+  }else{
+    const dots=(str.match(/\./g)||[]).length;
+    // Em exportações pt-BR, ponto isolado com grupos de 3 dígitos é separador de milhar.
+    if(dots>=1&&/^-?\d{1,3}(?:\.\d{3})+$/.test(str))str=str.replace(/\./g,'');
+    else if(dots>1){const parts=str.split('.');const dec=parts.pop();str=parts.join('')+'.'+dec;}
+  }
+  let n=Number(str); if(!Number.isFinite(n))n=0; return negPar?-Math.abs(n):n;
+}
+function ignisHeaderNorm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
+function ignisCampoMedidorAbsoluto(header){
+  const h=ignisHeaderNorm(header);
+  if(!h)return null;
+  // Km Real/KM Produtivo são variações do período, não leitura absoluta do painel.
+  if(/\b(km real|km produtivo|km ideal|media|eficiencia|variacao|var km|km h)\b/.test(h))return null;
+  if(h.includes('horimetro'))return 'Horímetro';
+  if(h.includes('odometro')||h.includes('hodometro'))return 'Odômetro';
+  // Alguns relatórios usam "KM Atual/Anterior/Inicial/Final" para o odômetro.
+  if(/\b(km|quilometragem)\b/.test(h)&&/\b(atual|anterior|inicial|final|leitura)\b/.test(h))return 'Odômetro';
+  return null;
+}
+function ignisValorRow(row,norms){
+  for(const [k,v] of Object.entries(row||{})){if(norms.includes(ignisHeaderNorm(k)))return v;}
+  return '';
+}
+function ignisDetectarMedidoresRaw(raw,source='Importação'){
+  if(!Array.isArray(raw)||!raw.length)return [];
+  const leituras=[]; const anom=[];
+  raw.forEach((row,rowIdx)=>{
+    const placa=String(ignisValorRow(row,['placa'])||'').trim().toUpperCase();
+    if(!placa)return;
+    const dataVal=ignisValorRow(row,['data','data abastecimento','data do abastecimento','dt abastecimento']);
+    const dataObj=typeof parseDataBR==='function'?parseDataBR(dataVal):null;
+    const data=dataObj&&!isNaN(dataObj)?dataParaISO(dataObj):String(dataVal||'');
+    const operacao=String(ignisValorRow(row,['operacao'])||'').trim();
+    const modelo=String(ignisValorRow(row,['modelo'])||'').trim();
+    const tipoVeic=String(ignisValorRow(row,['tipo de veiculo','tipo veiculo','tipo'])||'').trim();
+    let fieldIdx=0;
+    for(const [campo,rawVal] of Object.entries(row||{})){
+      const medidor=ignisCampoMedidorAbsoluto(campo); if(!medidor){fieldIdx++;continue;}
+      const valor=ignisNumeroSeguro(rawVal); const h=ignisHeaderNorm(campo);
+      if(valor<0){
+        anom.push({placa,data,operacao,modelo,tipoVeic,medidor,valor,motivo:'Leitura negativa',campo,source});
+        fieldIdx++;continue;
+      }
+      if(valor===0){fieldIdx++;continue;}
+      const fase=/\b(anterior|inicial)\b/.test(h)?0:/\b(atual|final)\b/.test(h)?2:1;
+      leituras.push({placa,data,dataObj,operacao,modelo,tipoVeic,medidor,valor,campo,rowIdx,fieldIdx,fase});
+      fieldIdx++;
+    }
+  });
+  const grupos=new Map();
+  leituras.forEach(r=>{const k=r.placa+'|'+r.medidor;(grupos.get(k)||grupos.set(k,[]).get(k)).push(r);});
+  grupos.forEach(arr=>{
+    arr.sort((a,b)=>{
+      const da=a.dataObj?.getTime?.()||0,db=b.dataObj?.getTime?.()||0;
+      return da-db||a.rowIdx-b.rowIdx||a.fase-b.fase||a.fieldIdx-b.fieldIdx;
+    });
+    let prev=null;
+    for(const cur of arr){
+      if(prev&&cur.valor<prev.valor){
+        anom.push({placa:cur.placa,data:cur.data,operacao:cur.operacao||prev.operacao,modelo:cur.modelo||prev.modelo,tipoVeic:cur.tipoVeic||prev.tipoVeic,medidor:cur.medidor,valor:cur.valor-prev.valor,valorAnterior:prev.valor,valorAtual:cur.valor,motivo:'Leitura menor que a anterior',campo:cur.campo,source});
+      }
+      prev=cur;
+    }
+  });
+  return anom;
+}
 function ignisInferTipoMedidor(placa,modelo='',tipoVeic='',operacao=''){
   const p=String(placa||'').toUpperCase(),m=String(modelo||'').toUpperCase(),t=String(tipoVeic||'').toUpperCase(),o=String(operacao||'').toUpperCase();
   const cadastrado=typeof getMaquina==='function'?getMaquina(p):null;
@@ -12261,14 +12354,18 @@ function ignisRecordMedidorAnomaly(a){
     data:String(a.data||''),
     operacao:String(a.operacao||''),
     tipoIgnis:tipo,
-    medidor:ignisMedidorNome(tipo),
+    medidor:String(a.medidor||ignisMedidorNome(tipo)),
     valor:Number(a.valor)||0,
+    valorAnterior:Number.isFinite(Number(a.valorAnterior))?Number(a.valorAnterior):null,
+    valorAtual:Number.isFinite(Number(a.valorAtual))?Number(a.valorAtual):null,
+    motivo:String(a.motivo||'Variação negativa'),
+    campo:String(a.campo||''),
     source:String(a.source||'Importação'),
     periodo:String(a.periodo||''),
     at:Date.now()
   };
-  const sig=[item.placa,item.data,item.valor.toFixed(3),item.source].join('|');
-  const exists=state.medidorAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),(Number(x.valor)||0).toFixed(3),String(x.source||'Importação')].join('|')===sig);
+  const sig=[item.placa,item.data,item.medidor,item.valor.toFixed(3),item.valorAnterior??'',item.valorAtual??'',item.source].join('|');
+  const exists=state.medidorAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.medidor||''),(Number(x.valor)||0).toFixed(3),x.valorAnterior??'',x.valorAtual??'',String(x.source||'Importação')].join('|')===sig);
   if(!exists)state.medidorAnomalias.push(item);
   state.medidorAnomalias=state.medidorAnomalias.slice(-1500);
   try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}
@@ -12298,7 +12395,7 @@ function fechMedidorRows(y,m){
     const d=fechParse(a.data); if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
     const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);
     const row={...a,tipoIgnis:tipo,medidor:a.medidor||ignisMedidorNome(tipo),valor:Number(a.valor)||0};
-    const sig=[String(row.placa||'').toUpperCase(),String(row.data||''),row.valor.toFixed(3),String(row.source||'')].join('|');
+    const sig=[String(row.placa||'').toUpperCase(),String(row.data||''),String(row.medidor||''),row.valor.toFixed(3),row.valorAnterior??'',row.valorAtual??'',String(row.source||'')].join('|');
     if(seen.has(sig))return;seen.add(sig);out.push(row);
   });
   return out.sort((a,b)=>String(b.data||'').localeCompare(String(a.data||''))||String(a.placa||'').localeCompare(String(b.placa||'')));
@@ -12325,8 +12422,8 @@ function fechOpenMedidores(){
     overlay.innerHTML=`<div class="modal pend-detail-modal"><div class="pend-detail-head"><div><div class="modal-title">Odômetros e horímetros para correção</div><div class="pend-detail-sub" id="fech-medidor-sub"></div></div><button class="pend-close" onclick="closeModal('fech-medidor-modal')" aria-label="Fechar">×</button></div><div class="pend-detail-table-wrap"><table class="pend-detail-table"><thead><tr><th>Data</th><th>Placa</th><th>Medidor</th><th>Operação</th><th>Variação</th><th>Origem</th></tr></thead><tbody id="fech-medidor-body"></tbody></table></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('fech-medidor-modal')">Fechar</button><button class="btn btn-primary" onclick="closeModal('fech-medidor-modal');pendGo('abastecimentos')">Abrir abastecimentos</button></div></div>`;
     document.body.appendChild(overlay);
   }
-  document.getElementById('fech-medidor-sub').textContent=`${rows.length.toLocaleString('pt-BR')} ocorrência${rows.length===1?'':'s'} em ${s.label} · valores negativos indicam regressão/correção do medidor`;
-  document.getElementById('fech-medidor-body').innerHTML=rows.map(r=>`<tr><td>${fechEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${fechEsc(r.placa)}</strong></td><td>${fechEsc(r.medidor)}</td><td>${fechEsc(r.operacao||'—')}</td><td><strong class="bad">${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}</strong></td><td>${fechEsc(r.source||'Importação')}</td></tr>`).join('');
+  document.getElementById('fech-medidor-sub').textContent=`${rows.length.toLocaleString('pt-BR')} ocorrência${rows.length===1?'':'s'} em ${s.label} · inclui variação negativa e leitura absoluta menor que a anterior`;
+  document.getElementById('fech-medidor-body').innerHTML=rows.map(r=>{const leitura=(r.valorAnterior!=null&&r.valorAtual!=null)?`${Number(r.valorAnterior).toLocaleString('pt-BR',{maximumFractionDigits:2})} → ${Number(r.valorAtual).toLocaleString('pt-BR',{maximumFractionDigits:2})} (${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})})`:Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2});return `<tr><td>${fechEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${fechEsc(r.placa)}</strong></td><td>${fechEsc(r.medidor)}</td><td>${fechEsc(r.operacao||'—')}</td><td><strong class="bad">${fechEsc(leitura)}</strong><div style="font-size:10px;color:var(--text3);margin-top:2px">${fechEsc(r.motivo||'Regressão')}</div></td><td>${fechEsc(r.source||'Importação')}</td></tr>`;}).join('');
   overlay.classList.add('open');
 }
 function fechConfirms(key){if(state.fechConfirmacoes&&state.fechConfirmacoes[key])return state.fechConfirmacoes[key];try{return JSON.parse(localStorage.getItem('ignis_fech_confirms_'+key)||'{}')||{};}catch(e){return{};}}
@@ -12383,8 +12480,8 @@ function fechBuild(){
   add({
     id:'med',title:'Odômetro / horímetro regressivo',
     state:med.length?'blocked':'ok',blocking:!!med.length,
-    detail:med.length?`${med.length} ocorrência(s) com medidor menor que o anterior/correção negativa.`:'Nenhuma regressão de odômetro ou horímetro identificada nos dados monitorados.',
-    meta:med.length?med.slice(0,5).map(x=>`${x.placa} · ${x.medidor}`).join(' · '):'Validação automática ativa nas novas importações',
+    detail:med.length?`${med.length} ocorrência(s) de odômetro/horímetro para correção.`:'Nenhuma variação negativa ou leitura regressiva identificada nos dados monitorados.',
+    meta:med.length?med.slice(0,5).map(x=>`${x.placa} · ${x.medidor}`).join(' · '):'Validação automática: negativos + leitura menor que a anterior',
     page:'abastecimentos',rows:med
   });
 
@@ -12408,20 +12505,23 @@ function fechBuild(){
   add({id:'arla',title:'Controle mensal de Arla',...arla});
 
   const kmAuto=km&&fechLabelMatches(km.label,s.y,s.m),kmOk=kmAuto||conf.km;
+  const kmCrit=km?((km.alertas||0)+(km.excessos||0)+(km.semNoSistema||0)):0;
+  const kmAtt=km?((km.atencao||0)+(km.semNoCliente||0)):0;
   add({
-    id:'km',title:'KM Comparativo',
-    state:kmOk?'ok':km?'attention':'blocked',blocking:!kmOk,
-    detail:kmOk?(kmAuto?`Análise identificada para ${s.label}.`:'Análise confirmada manualmente para este fechamento.'):(km?`Última análise encontrada: ${km.label||'sem identificação do período'}.`:'Nenhum KM Comparativo registrado.'),
-    meta:km?`${(km.alertas||0)+(km.excessos||0)} crítico(s) · ${km.atencao||0} atenção`:'Execute o comparativo do mês',
+    id:'km',title:'KM Comparativo',optional:true,
+    state:kmOk?(kmCrit||kmAtt?'attention':'ok'):'optional',blocking:false,
+    detail:kmOk?(kmAuto?`Análise identificada para ${s.label}.`:'Análise opcional confirmada para este mês.'):'Não executado para este mês — ferramenta opcional.',
+    meta:kmOk&&km?`${kmCrit} crítico(s) · ${kmAtt} atenção`:'Use somente quando o fechamento exigir comparativo de KM',
     page:'kmcomp',confirmable:!!km&&!kmAuto,confirmed:!!conf.km
   });
 
   const rcMonths=Array.isArray(rc?.meses)?rc.meses:[],rcAuto=rcMonths.includes(s.key),rcOk=rcAuto||conf.recon;
+  const rcDiv=rc?((rc.soO2P||0)+(rc.soTicket||0)):0;
   add({
-    id:'recon',title:'O2P × Ticket',
-    state:rcOk?'ok':rc?'attention':'blocked',blocking:!rcOk,
-    detail:rcOk?(rcAuto?`Conciliação contém dados de ${s.label}.`:'Conciliação confirmada manualmente para este fechamento.'):(rc?'Existe uma conciliação recente, mas sem vínculo confirmado com o mês.':'Nenhuma conciliação registrada.'),
-    meta:rc?`${(rc.soO2P||0)+(rc.soTicket||0)} divergência(s) · ${rc.ambos||0} conciliados`:'Execute a conciliação do mês',
+    id:'recon',title:'O2P × Ticket',optional:true,
+    state:rcOk?(rcDiv?'attention':'ok'):'optional',blocking:false,
+    detail:rcOk?(rcAuto?`Conciliação contém dados de ${s.label}.`:'Conciliação opcional confirmada para este mês.'):'Não executado para este mês — ferramenta opcional.',
+    meta:rcOk&&rc?`${rcDiv} divergência(s) · ${rc.ambos||0} conciliados`:'Use somente quando houver necessidade de conciliação',
     page:'recon',confirmable:!!rc&&!rcAuto,confirmed:!!conf.recon
   });
 
@@ -12435,7 +12535,7 @@ function fechBuild(){
   return{s,rows,checks,dups,med,reinc,excl,coverage};
 }
 function fechCheckHTML(c){
-  const label=c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':'Pendente';
+  const label=c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':c.state==='optional'?'Opcional':'Pendente';
   const buttons=[];
   if(c.confirmable){
     buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechToggleConfirm('${c.id==='recon'?'recon':'km'}')">${c.confirmed?'Remover confirmação':'Confirmar este mês'}</button>`);
@@ -12447,8 +12547,8 @@ function fechCheckHTML(c){
   return `<div class="fech-check ${c.state}"><div class="fech-check-icon">${fechIcon(c.id)}</div><div><div class="fech-check-title">${fechEsc(c.title)}</div><div class="fech-check-detail">${fechEsc(c.detail)}</div><div class="fech-check-meta">${fechEsc(c.meta||'')}</div><div class="fech-check-actions">${buttons.join('')}</div></div><span class="fech-status ${c.state}">${label}</span></div>`;
 }
 function fechHistory(){if(Array.isArray(state.fechamentos))return state.fechamentos;try{return JSON.parse(localStorage.getItem('ignis_fechamentos_history')||'[]')||[];}catch(e){return[];}}
-function renderFechamento(force=false){fechInitSelectors();const x=fechBuild(),checks=x.checks,blockers=checks.filter(c=>c.blocking&&c.state!=='ok'),done=checks.filter(c=>c.state==='ok').length,percent=Math.round(done/checks.length*100),warn=checks.filter(c=>c.state==='attention').length,status=blockers.length?'Bloqueado':warn?'Com atenção':'Pronto';const cls=blockers.length?'blocked':warn?'attention':'ok';const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('fech-status-value',status);set('fech-status-sub',blockers.length?`${blockers.length} etapa(s) precisam ser resolvidas`:(warn?`${warn} ponto(s) de atenção, sem bloquear o fechamento`:'Todas as etapas obrigatórias estão concluídas'));set('fech-progress-value',percent+'%');set('fech-progress-sub',`${done} de ${checks.length} etapas concluídas`);set('fech-blockers-value',String(blockers.length));set('fech-records-value',x.rows.length.toLocaleString('pt-BR'));set('fech-records-sub',`${x.s.label} · abastecimentos analisados`);const k=document.getElementById('fech-kpi-status');if(k)k.className='fech-kpi fech-status-card '+cls;const v=document.getElementById('fech-status-value');if(v)v.className='fech-kpi-value '+cls;const bar=document.getElementById('fech-progress-bar');if(bar)bar.style.width=percent+'%';const list=document.getElementById('fech-check-list');if(list)list.innerHTML=checks.map(fechCheckHTML).join('');const b=document.getElementById('fech-blockers');if(b)b.innerHTML=blockers.length?`<div class="fech-blockers">${blockers.map(c=>`<div class="fech-blocker"><strong>${fechEsc(c.title)}</strong><span>${fechEsc(c.detail)}</span></div>`).join('')}</div>`:`<div class="fech-ready"><strong>Pronto para registrar.</strong><br>${warn?'Existem pontos de atenção, mas nenhum deles bloqueia o fechamento.':'Nenhum bloqueador foi identificado para este mês.'}</div>`;const ss=document.getElementById('fech-side-sub');if(ss)ss.textContent=blockers.length?'Resolva os bloqueadores antes de registrar o fechamento.':'O IGNIS validou as etapas obrigatórias deste mês.';const btn=document.getElementById('fech-btn-register');if(btn){btn.disabled=!!blockers.length;btn.title=blockers.length?'Resolva os bloqueadores para liberar o registro':'';}const hist=fechHistory();const hl=document.getElementById('fech-history-list');if(hl)hl.innerHTML=hist.length?hist.slice(0,6).map(h=>`<div class="fech-history-item"><div><div class="fech-history-title">${fechEsc(h.label)}</div><div class="fech-history-meta">${fechEsc(h.user||'Usuário')} · ${new Date(h.at).toLocaleString('pt-BR')}</div></div><div class="fech-history-score">${h.progress}%</div></div>`).join(''):'<div class="fech-panel-sub" style="margin:8px 0 0">Nenhum fechamento registrado neste navegador.</div>';}
-function fechRegistrar(){const x=fechBuild(),block=x.checks.filter(c=>c.blocking&&c.state!=='ok');if(block.length){showToast('Resolva os bloqueadores antes de registrar o fechamento.','error');return;}let hist=fechHistory();const snap={key:x.s.key,label:x.s.label,at:Date.now(),user:window._authUser?.nome||window._authUser?.id||'Usuário',progress:Math.round(x.checks.filter(c=>c.state==='ok').length/x.checks.length*100),records:x.rows.length,warnings:x.checks.filter(c=>c.state==='attention').length};hist=hist.filter(h=>h.key!==snap.key);hist.unshift(snap);hist=hist.slice(0,24);state.fechamentos=hist;try{localStorage.setItem('ignis_fechamentos_history',JSON.stringify(hist));}catch(e){};saveState({immediate:true});showToast('Fechamento de '+x.s.label+' registrado.','success');renderFechamento(true);}
+function renderFechamento(force=false){fechInitSelectors();const x=fechBuild(),checks=x.checks,required=checks.filter(c=>!c.optional),blockers=required.filter(c=>c.blocking&&c.state!=='ok'),done=required.filter(c=>c.state==='ok').length,percent=required.length?Math.round(done/required.length*100):100,warn=checks.filter(c=>c.state==='attention').length,status=blockers.length?'Bloqueado':warn?'Com atenção':'Pronto';const cls=blockers.length?'blocked':warn?'attention':'ok';const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('fech-status-value',status);set('fech-status-sub',blockers.length?`${blockers.length} etapa(s) precisam ser resolvidas`:(warn?`${warn} ponto(s) de atenção, sem bloquear o fechamento`:'Todas as etapas obrigatórias estão concluídas'));set('fech-progress-value',percent+'%');set('fech-progress-sub',`${done} de ${required.length} etapas obrigatórias concluídas`);set('fech-blockers-value',String(blockers.length));set('fech-records-value',x.rows.length.toLocaleString('pt-BR'));set('fech-records-sub',`${x.s.label} · abastecimentos analisados`);const k=document.getElementById('fech-kpi-status');if(k)k.className='fech-kpi fech-status-card '+cls;const v=document.getElementById('fech-status-value');if(v)v.className='fech-kpi-value '+cls;const bar=document.getElementById('fech-progress-bar');if(bar)bar.style.width=percent+'%';const list=document.getElementById('fech-check-list');if(list)list.innerHTML=checks.map(fechCheckHTML).join('');const b=document.getElementById('fech-blockers');if(b)b.innerHTML=blockers.length?`<div class="fech-blockers">${blockers.map(c=>`<div class="fech-blocker"><strong>${fechEsc(c.title)}</strong><span>${fechEsc(c.detail)}</span></div>`).join('')}</div>`:`<div class="fech-ready"><strong>Pronto para registrar.</strong><br>${warn?'Existem pontos de atenção, mas nenhum deles bloqueia o fechamento.':'Nenhum bloqueador foi identificado para este mês.'}</div>`;const ss=document.getElementById('fech-side-sub');if(ss)ss.textContent=blockers.length?'Resolva os bloqueadores antes de registrar o fechamento.':'O IGNIS validou as etapas obrigatórias deste mês.';const btn=document.getElementById('fech-btn-register');if(btn){btn.disabled=!!blockers.length;btn.title=blockers.length?'Resolva os bloqueadores para liberar o registro':'';}const hist=fechHistory();const hl=document.getElementById('fech-history-list');if(hl)hl.innerHTML=hist.length?hist.slice(0,6).map(h=>`<div class="fech-history-item"><div><div class="fech-history-title">${fechEsc(h.label)}</div><div class="fech-history-meta">${fechEsc(h.user||'Usuário')} · ${new Date(h.at).toLocaleString('pt-BR')}</div></div><div class="fech-history-score">${h.progress}%</div></div>`).join(''):'<div class="fech-panel-sub" style="margin:8px 0 0">Nenhum fechamento registrado neste navegador.</div>';}
+function fechRegistrar(){const x=fechBuild(),block=x.checks.filter(c=>c.blocking&&c.state!=='ok');if(block.length){showToast('Resolva os bloqueadores antes de registrar o fechamento.','error');return;}let hist=fechHistory();const snap={key:x.s.key,label:x.s.label,at:Date.now(),user:window._authUser?.nome||window._authUser?.id||'Usuário',progress:(()=>{const req=x.checks.filter(c=>!c.optional);return req.length?Math.round(req.filter(c=>c.state==='ok').length/req.length*100):100;})(),records:x.rows.length,warnings:x.checks.filter(c=>c.state==='attention').length};hist=hist.filter(h=>h.key!==snap.key);hist.unshift(snap);hist=hist.slice(0,24);state.fechamentos=hist;try{localStorage.setItem('ignis_fechamentos_history',JSON.stringify(hist));}catch(e){};saveState({immediate:true});showToast('Fechamento de '+x.s.label+' registrado.','success');renderFechamento(true);}
 async function fechExportarExcel(){
   const x=fechBuild();
   if(typeof ensureXLSXReady==='function' && !(await ensureXLSXReady()))return;
@@ -12461,7 +12561,7 @@ async function fechExportarExcel(){
       ['Etapa','Status','Bloqueia','Detalhe','Observação'],
       ...x.checks.map(c=>[
         c.title,
-        c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':'Pendente',
+        c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':c.state==='optional'?'Opcional':'Pendente',
         c.blocking?'Sim':'Não',
         c.detail,
         c.meta||''
