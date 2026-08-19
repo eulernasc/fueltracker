@@ -1262,9 +1262,10 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="page-sub">O que precisa da sua atenção agora</div>
       </div>
       <div class="pend-header-actions">
-        <div class="pend-anom-setting" title="Gera alerta quando a eficiência de um abastecimento ultrapassa este percentual">
-          <span>Eficiência alta</span>
-          <div class="pend-anom-input"><input id="pend-efic-limit" type="number" min="100" max="500" step="5" value="140" onchange="ignisSetLimiteEficiencia(this.value)"><b>%</b></div>
+        <div class="pend-anom-rules" title="Limites usados na análise automática de anomalias por abastecimento">
+          <span class="pend-anom-rules-title">Anomalias</span>
+          <div class="pend-anom-setting"><span>Alta &gt;</span><div class="pend-anom-input"><input id="pend-efic-limit" type="number" min="100" max="500" step="5" value="140" onchange="ignisSetLimiteEficiencia(this.value)"><b>%</b></div></div>
+          <div class="pend-anom-setting"><span>Baixa &lt;</span><div class="pend-anom-input"><input id="pend-efic-low-limit" type="number" min="1" max="99" step="5" value="60" onchange="ignisSetLimiteEficienciaBaixa(this.value)"><b>%</b></div></div>
         </div>
         <span class="pend-updated" id="pend-updated">—</span>
         <button class="btn btn-secondary btn-sm" type="button" onclick="renderPendencias(true)">
@@ -2130,7 +2131,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
 .import-primary-card:hover{border-color:rgba(255,107,44,.65);transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,0,0,.16)}
 .import-primary-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:#f66f3b;flex:none;background:transparent;border:0;border-radius:0}.import-primary-icon .ui-icon{width:27px;height:27px;stroke-width:2.1}
 .import-primary-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.import-primary-copy strong{font-size:14px}.import-primary-copy small{font-size:11.5px;color:var(--text2)}.import-primary-action{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
-.history-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:26px 0 10px;padding-top:18px;border-top:1px solid rgba(148,163,184,.12)}.history-title{font-size:12px;font-weight:700;color:#dce3ea;text-transform:uppercase;letter-spacing:.7px}.history-sub{font-size:10.5px;color:var(--text3);margin-top:2px}.history-list{display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto}
+.history-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:26px 0 10px;padding-top:18px;border-top:1px solid rgba(148,163,184,.12)}.history-title{font-size:12px;font-weight:700;color:#dce3ea;text-transform:uppercase;letter-spacing:.7px}.history-sub{font-size:10.5px;color:var(--text3);margin-top:2px}.history-list{display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto}.history-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}.history-delete-selected:not(:disabled){color:#ff7373;border-color:rgba(239,91,91,.3);background:rgba(239,91,91,.07)}.history-delete-selected:disabled{opacity:.42;cursor:not-allowed}.history-period-item{display:grid;grid-template-columns:28px minmax(0,1fr) 34px;align-items:center;gap:8px;padding:10px 10px;background:var(--bg3);border-radius:9px;border:1px solid var(--border);transition:.16s}.history-period-item:has(.history-period-check:checked){border-color:rgba(242,91,45,.42);background:rgba(242,91,45,.055)}.history-check-wrap{width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer}.history-period-check{appearance:none;width:17px;height:17px;border:1px solid #536273;border-radius:5px;background:#101720;display:grid;place-items:center;cursor:pointer}.history-period-check:checked{background:var(--accent);border-color:var(--accent)}.history-period-check:checked:after{content:'✓';font-size:12px;line-height:1;color:#fff;font-weight:900}.history-period-item .btn-icon{justify-self:end}
 
 /* Máquinas: ícones vetoriais, menos sensação de desenho */
 .machines-grid{gap:20px!important}.machine-card{padding:24px!important;border-radius:16px!important;cursor:default!important}.machine-card:hover{transform:none!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 10px 28px rgba(0,0,0,.18)!important}.machine-icon{width:32px!important;height:32px!important;border:0!important;background:transparent!important;border-radius:0!important;color:#f66f3b!important;display:flex!important;align-items:center!important;justify-content:center!important}.machine-icon .ui-icon{width:24px;height:24px;stroke-width:2.05}.machine-edit-btn{display:inline-flex!important;align-items:center!important;gap:7px!important;color:#a9b6c3!important}.machine-edit-btn .ui-icon{width:16px;height:16px;color:#f66f3b;stroke-width:2.05}.machine-edit-btn:hover{color:#fff!important}.machine-edit-btn:hover .ui-icon{color:var(--accent)}
@@ -2630,7 +2631,11 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
         <div class="history-title">Histórico de períodos</div>
         <div class="history-sub">Importações já processadas pelo Ignis</div>
       </div>
-      <button class="btn btn-secondary" id="btn-apagar-todos-periodos" onclick="limparTodosPeriodos()" style="display:none;padding:7px 11px;font-size:11px;color:var(--red);border-color:rgba(239,68,68,.25)">Apagar todos</button>
+      <div class="history-actions">
+        <button class="btn btn-secondary history-select-all" id="btn-selecionar-todos-periodos" onclick="toggleSelecionarTodosPeriodos()" style="display:none;padding:7px 10px;font-size:11px">Selecionar todos</button>
+        <button class="btn btn-secondary history-delete-selected" id="btn-apagar-selecionados-periodos" onclick="limparPeriodosSelecionados()" disabled style="display:none;padding:7px 10px;font-size:11px">Apagar selecionados <span id="periodos-selecionados-count">0</span></button>
+        <button class="btn btn-secondary" id="btn-apagar-todos-periodos" onclick="limparTodosPeriodos()" style="display:none;padding:7px 10px;font-size:11px;color:var(--red);border-color:rgba(239,68,68,.25)">Apagar todos</button>
+      </div>
     </div>
     <div id="historico-periodos" class="history-list"></div>
 
@@ -2791,7 +2796,7 @@ async function idbLoad() {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140 };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60 };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -2923,6 +2928,7 @@ async function loadState() {
   if(!Array.isArray(state.medidorAnomalias))state.medidorAnomalias=[];
   if(!Array.isArray(state.eficienciaAnomalias))state.eficienciaAnomalias=[];
   if(!Number.isFinite(Number(state.eficienciaAnomaliaLimite)))state.eficienciaAnomaliaLimite=140;
+  if(!Number.isFinite(Number(state.eficienciaAnomaliaLimiteBaixa)))state.eficienciaAnomaliaLimiteBaixa=60;
   // IDB é usado APENAS como cache de abastecimentos/semanas em memória (o Firebase lean não os guarda).
   // NÃO é mais usado como "fonte de verdade" para recuperação — isso fazia o sistema reverter
   // exclusões intencionais ao detectar que o IDB tinha mais dados que o localStorage.
@@ -3007,6 +3013,7 @@ async function syncFromFirebase() {
       if(!Array.isArray(state.medidorAnomalias))state.medidorAnomalias=[];
       if(!Array.isArray(state.eficienciaAnomalias))state.eficienciaAnomalias=[];
       if(!Number.isFinite(Number(state.eficienciaAnomaliaLimite)))state.eficienciaAnomaliaLimite=140;
+  if(!Number.isFinite(Number(state.eficienciaAnomaliaLimiteBaixa)))state.eficienciaAnomaliaLimiteBaixa=60;
       markIgnisDataDirty('firebase-sync');
       if (!state.metaRotaModelos) state.metaRotaModelos = {};
       // Salva versão leve no localStorage — sem abastecimentos e sem registros de semanas (já no Firebase em chunks)
@@ -3869,21 +3876,17 @@ function pendCollect(){
 
   const agoraEfic=new Date();
   const limiteEfic=typeof ignisGetLimiteEficiencia==='function'?ignisGetLimiteEficiencia():140;
+  const limiteBaixo=typeof ignisGetLimiteEficienciaBaixa==='function'?ignisGetLimiteEficienciaBaixa():60;
   const altas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(agoraEfic.getFullYear(),agoraEfic.getMonth(),limiteEfic):[];
+  const baixas=typeof ignisEficienciaBaixaRows==='function'?ignisEficienciaBaixaRows(agoraEfic.getFullYear(),agoraEfic.getMonth(),limiteBaixo):[];
   if(altas.length){
-    const pior=[...altas].sort((a,b)=>Number(b.eficiencia||0)-Number(a.eficiencia||0))[0];
-    addIssue({
-      id:'eficiencia-alta',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente alta',count:altas.length,
-      keys:altas.map(r=>'eficiencia-alta:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'abastecimentos',
-      detail:`${altas.length} abastecimento${altas.length>1?'s':''} acima do limite configurado de ${limiteEfic.toFixed(0)}%. Pode indicar abastecimento faltante ou dado incorreto.`,
-      highlightLabel:'Maior eficiência',
-      highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,
-      highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,
-      rows:altas,
-      meta:`Limite atual: ${limiteEfic.toFixed(0)}%`
-    });
-    monitors.push({name:'Eficiência entre abastecimentos',status:'attention',detail:`${altas.length} acima de ${limiteEfic.toFixed(0)}% · maior ${Number(pior?.eficiencia||0).toFixed(1)}%`});
-  } else monitors.push({name:'Eficiência entre abastecimentos',status:'ok',detail:`Nenhuma ocorrência acima de ${limiteEfic.toFixed(0)}% no mês atual`});
+    const pior=altas[0];addIssue({id:'eficiencia-alta',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente alta',count:altas.length,keys:altas.map(r=>'eficiencia-alta:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'abastecimentos',detail:`${altas.length} abastecimento${altas.length>1?'s':''} acima de ${limiteEfic.toFixed(0)}%.`,highlightLabel:'Maior eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:altas,meta:`Limite: > ${limiteEfic.toFixed(0)}%`});
+  }
+  if(baixas.length){
+    const pior=baixas[0];addIssue({id:'eficiencia-baixa',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente baixa',count:baixas.length,keys:baixas.map(r=>'eficiencia-baixa:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'abastecimentos',detail:`${baixas.length} abastecimento${baixas.length>1?'s':''} abaixo de ${limiteBaixo.toFixed(0)}%.`,highlightLabel:'Menor eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:baixas,meta:`Limite: < ${limiteBaixo.toFixed(0)}%`});
+  }
+  const eficStatus=altas.length||baixas.length?'attention':'ok';
+  monitors.push({name:'Eficiência entre abastecimentos',status:eficStatus,detail:altas.length||baixas.length?`${altas.length} alta(s) · ${baixas.length} baixa(s) · limites ${limiteBaixo.toFixed(0)}% / ${limiteEfic.toFixed(0)}%`:`Sem anomalias fora de ${limiteBaixo.toFixed(0)}%–${limiteEfic.toFixed(0)}%`});
 
   const latest=pendLatestAbast(); const gap=pendBusinessGap(latest);
   if(!latest){addIssue({id:'importacao',kind:'importacao',severity:'critical',title:'Sem dados de abastecimento',count:1,keys:['importacao-atrasada'],page:'abastecimentos',detail:'Não há abastecimentos disponíveis para validar a atualização.',meta:'Importação necessária'});monitors.push({name:'Atualização dos abastecimentos',status:'critical',detail:'Sem dados disponíveis'});}
@@ -3971,13 +3974,13 @@ function pendOpenDetails(issueId){
   } else if(issueId==='medidores'){
     th.innerHTML='<tr><th>Data</th><th>Placa</th><th>Medidor</th><th>Operação</th><th>Variação</th></tr>';
     tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.medidor)}</td><td>${pendEsc(r.operacao||'—')}</td><td><strong class="bad">${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}</strong></td></tr>`).join('');
-  } else if(issueId==='eficiencia-alta'){
-    const rows=[...issue.rows].sort((a,b)=>Number(b.eficiencia||0)-Number(a.eficiencia||0));
+  } else if(issueId==='eficiencia-alta'||issueId==='eficiencia-baixa'){
+    const baixa=issueId==='eficiencia-baixa';const rows=[...issue.rows].sort((a,b)=>baixa?Number(a.eficiencia||0)-Number(b.eficiencia||0):Number(b.eficiencia||0)-Number(a.eficiencia||0));
     th.innerHTML='<tr><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas do dia</th><th>Litros</th><th>Realizado</th><th>Meta</th><th>Eficiência</th></tr>';
     tb.innerHTML=rows.map((r,idx)=>{
       const medida=(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'km':'h';
       const un=r.unidade||((r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'km/L':'L/h');
-      return `<tr class="${idx===0?'worst':''}"><td>${pendEsc(fechFmt(fechParse(r.data)))}</td><td>${pendEsc(r.operacao||'—')}</td><td><strong>${pendEsc(r.placa)}</strong>${idx===0?'<span class="pend-worst-tag">Maior</span>':''}</td><td>${Number(r.kmHoras||0).toLocaleString('pt-BR',{maximumFractionDigits:2})} ${medida}</td><td>${Number(r.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})} L</td><td>${Number(r.media||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${un}</td><td>${Number(r.meta||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${un}</td><td><strong class="warn">${Number(r.eficiencia||0).toFixed(1)}%</strong></td></tr>`;
+      return `<tr class="${idx===0?'worst':''}"><td>${pendEsc(fechFmt(fechParse(r.data)))}</td><td>${pendEsc(r.operacao||'—')}</td><td><strong>${pendEsc(r.placa)}</strong>${idx===0?`<span class="pend-worst-tag">${baixa?'Menor':'Maior'}</span>`:''}</td><td>${Number(r.kmHoras||0).toLocaleString('pt-BR',{maximumFractionDigits:2})} ${medida}</td><td>${Number(r.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})} L</td><td>${Number(r.media||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${un}</td><td>${Number(r.meta||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${un}</td><td><strong class="${baixa?'bad':'warn'}">${Number(r.eficiencia||0).toFixed(1)}%</strong></td></tr>`;
     }).join('');
   } else {
     th.innerHTML='<tr><th>Registro</th><th>Detalhe</th></tr>'; tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(r.placa||'—')}</td><td>${pendEsc(r.operacao||'—')}</td></tr>`).join('');
@@ -3990,7 +3993,7 @@ function renderPendencias(force=false){
   const {issues,monitors,activeLabels}=pendCollect(); const hist=pendSyncResolved(activeLabels); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
   const critical=issues.filter(i=>i.severity==='critical').length, attention=issues.filter(i=>i.severity==='attention').length, occ=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)}; set('pend-kpi-critical',critical);set('pend-kpi-attention',attention);set('pend-kpi-occurrences',occ);set('pend-kpi-resolved',resolved7.length);
-  const limEl=document.getElementById('pend-efic-limit');if(limEl&&document.activeElement!==limEl)limEl.value=String(Math.round(typeof ignisGetLimiteEficiencia==='function'?ignisGetLimiteEficiencia():140));
+  const limEl=document.getElementById('pend-efic-limit');if(limEl&&document.activeElement!==limEl)limEl.value=String(Math.round(typeof ignisGetLimiteEficiencia==='function'?ignisGetLimiteEficiencia():140));const lowEl=document.getElementById('pend-efic-low-limit');if(lowEl&&document.activeElement!==lowEl)lowEl.value=String(Math.round(typeof ignisGetLimiteEficienciaBaixa==='function'?ignisGetLimiteEficienciaBaixa():60));
   const up=document.getElementById('pend-updated');if(up)up.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const sub=document.getElementById('pend-priority-sub');if(sub)sub.textContent=issues.length?`${issues.length} grupo${issues.length>1?'s':''} de pendência · ${occ} ocorrência${occ!==1?'s':''}`:'Nenhuma pendência ativa detectada';
   const list=document.getElementById('pend-issues');if(list)list.innerHTML=issues.length?issues.sort((a,b)=>(a.severity==='critical'?0:1)-(b.severity==='critical'?0:1)||b.count-a.count).map(pendIssueHTML).join(''):`<div class="pend-empty" style="grid-column:1/-1"><div class="pend-empty-icon">${pendSvg('ok')}</div><div class="pend-empty-title">Nenhuma pendência ativa</div><div class="pend-empty-sub">Os monitoramentos disponíveis não encontraram itens que exijam ação agora.</div></div>`;
@@ -5799,70 +5802,88 @@ function openImport() {
   if (modal) modal.classList.add('open');
 }
 
+function ignisPeriodoAttr(v){return String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function renderHistoricoPeriodos() {
   const c = document.getElementById('historico-periodos');
   const btnTodos = document.getElementById('btn-apagar-todos-periodos');
-  const periodos = Object.entries(state.semanas).sort((a,b) => (b[1].dataIni||b[1].label||b[0]).localeCompare(a[1].dataIni||a[1].label||a[0]));
-  if (btnTodos) btnTodos.style.display = periodos.length ? '' : 'none';
+  const btnSelTodos = document.getElementById('btn-selecionar-todos-periodos');
+  const btnSelecionados = document.getElementById('btn-apagar-selecionados-periodos');
+  const periodos = Object.entries(state.semanas||{}).sort((a,b) => (b[1].dataIni||b[1].label||b[0]).localeCompare(a[1].dataIni||a[1].label||a[0]));
+  [btnTodos,btnSelTodos,btnSelecionados].forEach(btn=>{if(btn)btn.style.display=periodos.length?'':'none'});
   if(!periodos.length){
     c.innerHTML='<div style="font-size:13px;color:var(--text3);text-align:center;padding:16px">Nenhum período importado ainda</div>';
+    updatePeriodoSelectionActions();
     return;
   }
   c.innerHTML = periodos.map(([id, p])=>{
-    // Conta direto de state.abastecimentos — fonte de verdade, não depende de cache
     const periodoCount = (() => {
       const byId = state.abastecimentos.filter(a => a.periodoId === id);
       if (byId.length > 0) return byId.length;
-      // Fallback por faixa de datas (registros sem periodoId)
       if (p.dataIni && p.dataFim) {
-        const ini = new Date(p.dataIni), fim = new Date(p.dataFim);
-        fim.setHours(23,59,59);
-        const byDate = state.abastecimentos.filter(a => { const d = new Date(a.data); return d >= ini && d <= fim; });
+        const ini = new Date(p.dataIni+'T00:00:00'), fim = new Date(p.dataFim+'T23:59:59');
+        const byDate = state.abastecimentos.filter(a => { const d = fechParse(a.data); return d && d >= ini && d <= fim; });
         if (byDate.length > 0) return byDate.length;
       }
-      // Último recurso: count salvo em cache
       return p.registros ? p.registros.length : (p.count ?? 0);
     })();
-    return `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:600">${p.label||id}</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:2px">${periodoCount} máquinas · importado em ${p.importedAt||'—'}${p.dataIni?` · ref: ${p.dataIni.split('-').reverse().join('/')} a ${(p.dataFim||p.dataIni).split('-').reverse().join('/')}`:''}  </div>
+    const safeId=ignisPeriodoAttr(id);
+    return `<div class="history-period-item">
+      <label class="history-check-wrap" title="Selecionar ${ignisPeriodoAttr(p.label||id)}"><input class="history-period-check" type="checkbox" value="${safeId}" onchange="updatePeriodoSelectionActions()"></label>
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:650">${p.label||id}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${periodoCount} registros · ${p.dataIni?`${p.dataIni.split('-').reverse().join('/')} a ${(p.dataFim||p.dataIni).split('-').reverse().join('/')}`:'sem referência'} · importado ${p.importedAt||'—'}</div>
       </div>
-      <button class="btn-icon del" onclick="verificarSenha(()=>limparPeriodo('${id}'))" title="Apagar período">🗑️</button>
+      <button class="btn-icon del" onclick="verificarSenha(()=>limparPeriodo('${String(id).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}'))" title="Apagar período"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/><path d="M10 11v6M14 11v6"/></svg></button>
     </div>`;
   }).join('');
+  updatePeriodoSelectionActions();
 }
-
+function getPeriodosSelecionados(){return [...document.querySelectorAll('.history-period-check:checked')].map(x=>x.value).filter(id=>state.semanas?.[id]);}
+function updatePeriodoSelectionActions(){
+  const checks=[...document.querySelectorAll('.history-period-check')], selected=checks.filter(x=>x.checked);
+  const btn=document.getElementById('btn-apagar-selecionados-periodos'),count=document.getElementById('periodos-selecionados-count'),all=document.getElementById('btn-selecionar-todos-periodos');
+  if(btn)btn.disabled=!selected.length;if(count)count.textContent=String(selected.length);
+  if(all)all.textContent=checks.length&&selected.length===checks.length?'Desmarcar todos':'Selecionar todos';
+}
+function toggleSelecionarTodosPeriodos(){
+  const checks=[...document.querySelectorAll('.history-period-check')];if(!checks.length)return;
+  const marcar=!checks.every(x=>x.checked);checks.forEach(x=>x.checked=marcar);updatePeriodoSelectionActions();
+}
+function ignisRemoverPeriodos(ids){
+  const uniq=[...new Set((ids||[]).filter(id=>state.semanas?.[id]))];if(!uniq.length)return{periodos:0,registros:0};
+  const ranges=uniq.map(id=>{const p=state.semanas[id];return{id,p,ini:fechParse(p?.dataIni),fim:fechParse(p?.dataFim)};});
+  ranges.forEach(({p})=>{if(p?.dataIni&&p?.dataFim){try{ignisRemoveMedidorAnomaliesRange?.(p.dataIni,p.dataFim)}catch(e){}try{ignisRemoveEficienciaAnomaliesRange?.(p.dataIni,p.dataFim)}catch(e){}}});
+  const selected=new Set(uniq);const before=state.abastecimentos.length;
+  state.abastecimentos=state.abastecimentos.filter(a=>{
+    if(a.periodoId&&selected.has(a.periodoId))return false;
+    if(a.periodoId)return true;
+    const d=fechParse(a.data);if(!d)return true;
+    return !ranges.some(r=>r.ini&&r.fim&&d>=r.ini&&d<=r.fim);
+  });
+  uniq.forEach(id=>delete state.semanas[id]);
+  const removidos=before-state.abastecimentos.length;
+  saveState({immediate:true});idbSave({ ...state, _savedAt: Date.now() });
+  try{updateFilters();renderDashboard();pendMarkDirty();}catch(e){}
+  return{periodos:uniq.length,registros:removidos};
+}
 function limparPeriodo(id) {
-  const p = state.semanas[id];
-  if(!p) return;
-  if(!confirm(`Apagar o período "${p.label||id}"? Os abastecimentos deste período também serão removidos.`)) return;
-  const antes = state.abastecimentos.length;
-  state.abastecimentos = state.abastecimentos.filter(a => a.periodoId !== id);
-  const removidos = antes - state.abastecimentos.length;
-  delete state.semanas[id];
-  saveState();
-  idbSave({ ...state, _savedAt: Date.now() }); // atualiza IDB imediatamente pra não reverter essa exclusão
-  renderHistoricoPeriodos();
-  showToast(`Período "${p.label||id}" apagado! (${removidos} registro(s) removido(s))`, 'success');
+  const p = state.semanas[id];if(!p)return;
+  if(!confirm(`Apagar o período "${p.label||id}"? Os abastecimentos deste período também serão removidos.`))return;
+  const r=ignisRemoverPeriodos([id]);renderHistoricoPeriodos();showToast(`Período apagado · ${r.registros} registro(s) removido(s)`,'success');
 }
-
+function limparPeriodosSelecionados(){
+  const ids=getPeriodosSelecionados();if(!ids.length){showToast('Selecione pelo menos uma semana.','error');return;}
+  verificarSenha(()=>{
+    const labels=ids.map(id=>state.semanas[id]?.label||id);
+    if(!confirm(`Apagar ${ids.length} semana(s) selecionada(s)?\n\n${labels.join('\n')}\n\nOs abastecimentos e as anomalias ligadas a essas semanas também serão removidos.`))return;
+    const r=ignisRemoverPeriodos(ids);renderHistoricoPeriodos();showToast(`${r.periodos} semana(s) apagada(s) · ${r.registros} registro(s) removido(s)`,'success');
+  });
+}
 function limparTodosPeriodos() {
-  const periodos = Object.entries(state.semanas);
-  if (!periodos.length) return;
+  const periodos = Object.entries(state.semanas||{});if(!periodos.length)return;
   verificarSenha(() => {
-    if (!confirm(`Apagar TODOS os ${periodos.length} período(s) do histórico? Todos os abastecimentos vinculados a eles também serão removidos. Essa ação não pode ser desfeita.`)) return;
-    if (!confirm(`Confirme novamente: apagar os ${periodos.length} período(s) e todos os abastecimentos vinculados?`)) return;
-    const antes = state.abastecimentos.length;
-    state.abastecimentos = state.abastecimentos.filter(a => !a.periodoId);
-    const removidos = antes - state.abastecimentos.length;
-    state.semanas = {};
-    saveState();
-    idbSave({ ...state, _savedAt: Date.now() }); // atualiza IDB imediatamente pra não reverter essa exclusão
-    renderHistoricoPeriodos();
-    updateFilters(); renderDashboard();
-    showToast(`${periodos.length} período(s) apagado(s)! (${removidos} registro(s) removido(s))`, 'success');
+    if (!confirm(`Apagar TODOS os ${periodos.length} período(s) e os abastecimentos vinculados? Essa ação não pode ser desfeita.`)) return;
+    const r=ignisRemoverPeriodos(periodos.map(([id])=>id));renderHistoricoPeriodos();showToast(`${r.periodos} período(s) apagado(s) · ${r.registros} registro(s) removido(s)`,'success');
   });
 }
 
@@ -5890,9 +5911,9 @@ function salvarAbastecimento() {
     showToast('Abastecimento salvo!','success');
   }
   if(typeof ignisRemoveEficienciaAnomalyKey==='function')ignisRemoveEficienciaAnomalyKey(placa,data,'Cadastro manual');
-  if(typeof ignisAvaliarEficienciaAlta==='function'){
+  if(typeof ignisAvaliarEficienciaAnomalia==='function'){
     const maq=getMaquina(placa);
-    const an=ignisAvaliarEficienciaAlta({placa,data,operacao:opFinal,modelo:maq?.modelo||'',tipoVeic:maq?.tipo||'',tipoIgnis:maq?.tipoIgnis||'',litros,kmHoras:horas,meta:Number(maq?.meta)||0,source:'Cadastro manual'});
+    const an=ignisAvaliarEficienciaAnomalia({placa,data,operacao:opFinal,modelo:maq?.modelo||'',tipoVeic:maq?.tipo||'',tipoIgnis:maq?.tipoIgnis||'',litros,kmHoras:horas,meta:Number(maq?.meta)||0,source:'Cadastro manual'});
     if(an)ignisRecordEficienciaAnomaly(an);
   }
   saveState(); closeModal('modal-abast'); renderAbastecimentos(); renderDashboard();
@@ -6060,9 +6081,9 @@ async function importarRelatorio(input) {
             periodo: nomePeriodo
           });
         }
-        if(volReal>0 && kmReal>0 && typeof ignisAvaliarEficienciaAlta==='function'){
+        if(volReal>0 && kmReal>0 && typeof ignisAvaliarEficienciaAnomalia==='function'){
           const metaEvento=mediaIdeal>0?mediaIdeal:(Number(getMaquina(placa)?.meta)||0);
-          const an=ignisAvaliarEficienciaAlta({placa,data:dataIniNova||document.getElementById('import-data-ini')?.value||'',operacao,modelo,tipoVeic:tipo,tipoIgnis,litros:volReal,kmHoras:kmReal,meta:metaEvento,source:'Importação semanal',periodo:nomePeriodo});
+          const an=ignisAvaliarEficienciaAnomalia({placa,data:dataIniNova||document.getElementById('import-data-ini')?.value||'',operacao,modelo,tipoVeic:tipo,tipoIgnis,litros:volReal,kmHoras:kmReal,meta:metaEvento,source:'Importação semanal',periodo:nomePeriodo});
           if(an)ignisRecordEficienciaAnomaly(an);
         }
 
@@ -6223,8 +6244,8 @@ async function importarRelatorioDiario(input) {
         if (excluirOps.some(x => opUp.includes(x))) { ignoradasExclusao++; return; }
         const tipUpRaw=tipoVeic.toUpperCase(); let tipoIgnisRaw; if(modUp.includes('MOFFETT')||placa.startsWith('EMP'))tipoIgnisRaw='empilhadeira'; else if(tipUpRaw==='VEICULO LEVE'||opUp.startsWith('VL')||opUp.includes('MERCADO LIVRE'))tipoIgnisRaw='leve'; else if(placa.startsWith('MAQ'))tipoIgnisRaw='maquina'; else if(placa.startsWith('TRA'))tipoIgnisRaw='trator'; else tipoIgnisRaw='pesada';
         const metaEvento = mediaIdeal>0 ? mediaIdeal : (Number(getMaquina(placa)?.meta)||0);
-        if (litros>0 && kmReal>0 && metaEvento>0 && typeof ignisAvaliarEficienciaAlta==='function') {
-          const an=ignisAvaliarEficienciaAlta({placa,data:dataParaISO(dataObj),operacao,modelo,tipoVeic,tipoIgnis:tipoIgnisRaw,litros,kmHoras:kmReal,meta:metaEvento,source:'Relatório diário',rowIndex:rowIdx});
+        if (litros>0 && kmReal>0 && metaEvento>0 && typeof ignisAvaliarEficienciaAnomalia==='function') {
+          const an=ignisAvaliarEficienciaAnomalia({placa,data:dataParaISO(dataObj),operacao,modelo,tipoVeic,tipoIgnis:tipoIgnisRaw,litros,kmHoras:kmReal,meta:metaEvento,source:'Relatório diário',rowIndex:rowIdx});
           if(an)anomaliasEficienciaImport.push(an);
         }
         if (kmRealRaw < 0) {
@@ -6417,7 +6438,7 @@ async function importarRelatorioDiario(input) {
           ${ignoradasExclusao>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">⏭ ${ignoradasExclusao} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
           ${ignoradasArla>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">🧪 ${ignoradasArla} linha(s) de Arla ignorada(s) — tem controle dedicado na aba Arla 32</div>`:''}
           ${conflitos.length>0?`<div style="font-size:12px;color:var(--accent);margin-top:4px">🔄 ${conflitos.length} semana(s) substituída(s)</div>`:''}
-          ${anomaliasEficienciaImport.length>0?`<div style="font-size:12px;color:var(--yellow);margin-top:4px">${anomaliasEficienciaImport.length} eficiência(s) acima de ${ignisGetLimiteEficiencia().toFixed(0)}% enviada(s) para a Central de Pendências</div>`:''}
+          ${anomaliasEficienciaImport.length>0?`<div style="font-size:12px;color:var(--yellow);margin-top:4px">${anomaliasEficienciaImport.filter(x=>x.faixa==='alta').length} alta(s) · ${anomaliasEficienciaImport.filter(x=>x.faixa==='baixa').length} baixa(s) enviadas para Anomalias</div>`:''}
         </div>`;
       if (salvoFirebase) {
         showToast(`${semanasNovas} semanas importadas e confirmadas: ${registrosTotais} registros!`, 'success');
@@ -6524,7 +6545,7 @@ function limparTodosDados() {
 
   // Reseta estado em memória
   state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:state.sheetsUrl,
-            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140 };
+            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60 };
   _periodosSelec = new Set();
   window._selectedOps = new Set();
   window._dashList = []; window._dashIsKmL = false;
@@ -12255,7 +12276,7 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
    ══════════════════════════════════════════════════════════════════════════════ */
 .pend-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
 .pend-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.pend-anom-setting{height:34px;display:flex;align-items:center;gap:9px;padding:0 9px 0 11px;border:1px solid rgba(151,164,178,.13);background:#121922;border-radius:9px;color:#8999aa;font-size:10.5px;font-weight:700;white-space:nowrap}
+.pend-anom-rules{display:flex;align-items:center;gap:6px;padding:4px 5px 4px 9px;border:1px solid rgba(151,164,178,.13);background:#101720;border-radius:10px}.pend-anom-rules-title{font-size:9.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#718195;margin-right:2px}.pend-anom-setting{height:30px;display:flex;align-items:center;gap:6px;padding:0 7px 0 9px;border:1px solid rgba(151,164,178,.12);background:#141c26;border-radius:8px;color:#9aa8b8;font-size:10.5px;font-weight:700;white-space:nowrap}
 .pend-anom-input{display:flex;align-items:center;gap:3px;height:24px;padding:0 6px;border-radius:7px;background:#0e151d;border:1px solid rgba(233,95,50,.18)}
 .pend-anom-input input{width:44px;border:0;outline:0;background:transparent;color:#f06a3d;font:800 11px 'DM Mono',monospace;text-align:right;padding:0;-moz-appearance:textfield}
 .pend-anom-input input::-webkit-inner-spin-button,.pend-anom-input input::-webkit-outer-spin-button{opacity:.45}.pend-anom-input b{color:#f06a3d;font-size:10px}
@@ -12283,7 +12304,7 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 .pend-resolved-list{display:flex;flex-direction:column;gap:7px}.pend-resolved{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:rgba(53,200,145,.035);border:1px solid rgba(53,200,145,.08)}.pend-resolved-icon{color:#35c891;width:18px;height:18px;display:flex;align-items:center}.pend-resolved-icon .ui-icon{width:16px;height:16px}.pend-resolved-label{font-size:11.5px;color:#c1ccd7;flex:1}.pend-resolved-time{font-size:10px;color:var(--text3)}
 .pend-nav-count{min-width:21px;height:19px;padding:0 6px;border-radius:999px;background:rgba(244,94,89,.13);border:1px solid rgba(244,94,89,.22);color:#ff7f79;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:auto}.sidebar.collapsed .pend-nav-count{display:none!important}
 @media(max-width:1000px){.pend-kpis{grid-template-columns:repeat(2,1fr)}.pend-issue-grid,.pend-monitor-list{grid-template-columns:1fr}}
-@media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-setting{order:1}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
+@media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-rules{order:1;flex-wrap:wrap}.pend-anom-setting{order:initial}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
 
 </style>
 <script id="ignis-custom-calendar-2026">
@@ -12304,7 +12325,7 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 <script id="ignis-stage4-fechamento-js">
 const FECH_MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 function fechEsc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function fechIcon(kind){const m={abast:'<path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/>',dup:'<rect x="7" y="7" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',med:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l-3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/>','efic-high':'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m5 13 4-4 3 3 6-7"/><path d="M15 5h3v3"/>',cons:'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/>',excl:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14"/>',arla:'<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 16h9"/>',km:'<path d="M4 17 17 4l3 3L7 20H4zM14 7l3 3"/>',recon:'<path d="M7 7h10m-3-3 3 3-3 3M17 17H7m3 3-3-3 3-3"/>',exec:'<path d="M5 3h14v18H5zM8 8h8M8 12h5m-5 4 2 2 5-5"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24">${m[kind]||m.exec}</svg>`;}
+function fechIcon(kind){const m={abast:'<path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/>',anom:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/>',dup:'<rect x="7" y="7" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',med:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l-3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/>','efic-high':'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m5 13 4-4 3 3 6-7"/><path d="M15 5h3v3"/>',cons:'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/>',excl:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14"/>',arla:'<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 16h9"/>',km:'<path d="M4 17 17 4l3 3L7 20H4zM14 7l3 3"/>',recon:'<path d="M7 7h10m-3-3 3 3-3 3M17 17H7m3 3-3-3 3-3"/>',exec:'<path d="M5 3h14v18H5zM8 8h8M8 12h5m-5 4 2 2 5-5"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24">${m[kind]||m.exec}</svg>`;}
 function fechInitSelectors(){const ms=document.getElementById('fech-mes'),ys=document.getElementById('fech-ano');if(!ms||!ys)return;const now=new Date();if(!ms.options.length){FECH_MONTHS.forEach((n,i)=>ms.add(new Option(n,i)));}if(!ys.options.length){for(let y=now.getFullYear()+1;y>=now.getFullYear()-4;y--)ys.add(new Option(String(y),String(y)));}if(ms.dataset.init!=='1'){ms.value=String(now.getMonth());ys.value=String(now.getFullYear());ms.dataset.init='1';}}
 function fechSel(){fechInitSelectors();const m=Number(document.getElementById('fech-mes')?.value??new Date().getMonth()),y=Number(document.getElementById('fech-ano')?.value??new Date().getFullYear());return{m,y,key:`${y}-${String(m+1).padStart(2,'0')}`,label:`${FECH_MONTHS[m]} de ${y}`};}
 function fechParse(v){return typeof pendParseDate==='function'?pendParseDate(v):null;}
@@ -12419,64 +12440,62 @@ function ignisGetLimiteEficiencia(){
   const n=Number(state?.eficienciaAnomaliaLimite);
   return Number.isFinite(n)&&n>=100&&n<=500?n:140;
 }
-function ignisSetLimiteEficiencia(v){
-  let n=Number(v); if(!Number.isFinite(n))n=140; n=Math.max(100,Math.min(500,n));
-  state.eficienciaAnomaliaLimite=n;
-  saveState();
-  try{renderPendencias(true)}catch(e){}
-  try{renderFechamento(true)}catch(e){}
-  showToast(`Limite de eficiência alta ajustado para ${n.toFixed(0)}%.`,'success');
+function ignisGetLimiteEficienciaBaixa(){
+  const n=Number(state?.eficienciaAnomaliaLimiteBaixa);
+  return Number.isFinite(n)&&n>=1&&n<100?n:60;
 }
-function ignisAvaliarEficienciaAlta(d){
+function ignisSetLimiteEficiencia(v){
+  let n=Number(v);if(!Number.isFinite(n))n=140;n=Math.max(100,Math.min(500,n));
+  state.eficienciaAnomaliaLimite=n;saveState({immediate:true});
+  try{renderPendencias(true)}catch(e){}try{renderFechamento(true)}catch(e){}
+  showToast(`Eficiência alta: alerta acima de ${n.toFixed(0)}%.`,'success');
+}
+function ignisSetLimiteEficienciaBaixa(v){
+  let n=Number(v);if(!Number.isFinite(n))n=60;n=Math.max(1,Math.min(99,n));
+  state.eficienciaAnomaliaLimiteBaixa=n;saveState({immediate:true});
+  try{renderPendencias(true)}catch(e){}try{renderFechamento(true)}catch(e){}
+  showToast(`Eficiência baixa: alerta abaixo de ${n.toFixed(0)}%.`,'success');
+}
+function ignisAvaliarEficienciaAnomalia(d){
   const litros=Number(d?.litros)||0,kmHoras=Number(d?.kmHoras)||0,meta=Number(d?.meta)||0;
   if(!(litros>0&&kmHoras>0&&meta>0))return null;
   const tipo=d.tipoIgnis||ignisInferTipoMedidor(d.placa,d.modelo,d.tipoVeic,d.operacao);
   const isKm=tipo==='pesada'||tipo==='leve';
-  const media=isKm?(kmHoras/litros):(litros/kmHoras);
-  if(!(media>0))return null;
-  const eficiencia=isKm?(media/meta*100):(meta/media*100);
-  if(!Number.isFinite(eficiencia)||eficiencia<=ignisGetLimiteEficiencia())return null;
-  return {
-    placa:String(d.placa||'').trim().toUpperCase(),data:String(d.data||''),operacao:String(d.operacao||''),
-    modelo:String(d.modelo||''),tipoVeic:String(d.tipoVeic||''),tipoIgnis:tipo,litros,kmHoras,media,meta,eficiencia,
-    unidade:isKm?'km/L':'L/h',source:String(d.source||'Importação'),periodo:String(d.periodo||''),
-    rowIndex:Number.isInteger(d.rowIndex)?d.rowIndex:null,limiteUsado:ignisGetLimiteEficiencia(),at:Date.now()
-  };
+  const media=isKm?(kmHoras/litros):(litros/kmHoras);if(!(media>0))return null;
+  const eficiencia=isKm?(media/meta*100):(meta/media*100);if(!Number.isFinite(eficiencia))return null;
+  const alta=ignisGetLimiteEficiencia(),baixa=ignisGetLimiteEficienciaBaixa();
+  const faixa=eficiencia>alta?'alta':eficiencia<baixa?'baixa':'';if(!faixa)return null;
+  return {placa:String(d.placa||'').trim().toUpperCase(),data:String(d.data||''),operacao:String(d.operacao||''),modelo:String(d.modelo||''),tipoVeic:String(d.tipoVeic||''),tipoIgnis:tipo,litros,kmHoras,media,meta,eficiencia,faixa,unidade:isKm?'km/L':'L/h',source:String(d.source||'Importação'),periodo:String(d.periodo||''),rowIndex:Number.isInteger(d.rowIndex)?d.rowIndex:null,limiteUsado:faixa==='alta'?alta:baixa,at:Date.now()};
 }
+// Compatibilidade com chamadas antigas.
+function ignisAvaliarEficienciaAlta(d){return ignisAvaliarEficienciaAnomalia(d);}
 function ignisRecordEficienciaAnomaly(a){
   if(!a||!a.placa||!Number.isFinite(Number(a.eficiencia)))return;
   state.eficienciaAnomalias=Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[];
-  const item={...a,placa:String(a.placa||'').trim().toUpperCase(),eficiencia:Number(a.eficiencia),litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,at:Number(a.at)||Date.now()};
+  const ef=Number(a.eficiencia),faixa=a.faixa||(ef>=100?'alta':'baixa');
+  const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,at:Number(a.at)||Date.now()};
   const sig=[item.placa,item.data,item.source,item.periodo,item.rowIndex??'',item.litros.toFixed(3),item.kmHoras.toFixed(3),item.eficiencia.toFixed(3)].join('|');
   const exists=state.eficienciaAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|')===sig);
-  if(!exists)state.eficienciaAnomalias.push(item);
-  state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-800);
+  if(!exists)state.eficienciaAnomalias.push(item);state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-1200);
   try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}
 }
 function ignisRemoveEficienciaAnomaliesRange(ini,fim){
-  const a=fechParse(ini),b=fechParse(fim);if(!a||!b)return;
-  const keep=x=>{const d=fechParse(x?.data);return !d||d<a||d>b;};
+  const a=fechParse(ini),b=fechParse(fim);if(!a||!b)return;const keep=x=>{const d=fechParse(x?.data);return !d||d<a||d>b;};
   state.eficienciaAnomalias=(Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[]).filter(keep);
   try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(ls.filter(keep)));}catch(e){}
 }
 function ignisRemoveEficienciaAnomalyKey(placa,data,source='Cadastro manual'){
-  const p=String(placa||'').trim().toUpperCase(),dt=String(data||'');
-  const keep=x=>!(String(x?.placa||'').trim().toUpperCase()===p&&String(x?.data||'')===dt&&String(x?.source||'')===source);
+  const p=String(placa||'').trim().toUpperCase(),dt=String(data||'');const keep=x=>!(String(x?.placa||'').trim().toUpperCase()===p&&String(x?.data||'')===dt&&String(x?.source||'')===source);
   state.eficienciaAnomalias=(Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[]).filter(keep);
   try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(ls.filter(keep)));}catch(e){}
 }
-function ignisEficienciaAnomRows(y,m,limite=ignisGetLimiteEficiencia()){
+function ignisEficienciaAnomBaseRows(y,m){
   let arr=[];if(Array.isArray(state.eficienciaAnomalias))arr=arr.concat(state.eficienciaAnomalias);
   try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))arr=arr.concat(ls);}catch(e){}
-  const seen=new Set(),out=[];
-  arr.forEach(r=>{
-    const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
-    const efic=Number(r?.eficiencia);if(!Number.isFinite(efic)||efic<=limite)return;
-    const sig=[String(r.placa||'').toUpperCase(),String(r.data||''),String(r.source||''),String(r.periodo||''),r.rowIndex??'',(Number(r.litros)||0).toFixed(3),(Number(r.kmHoras)||0).toFixed(3),efic.toFixed(3)].join('|');
-    if(seen.has(sig))return;seen.add(sig);out.push({...r,eficiencia:efic});
-  });
-  return out.sort((a,b)=>Number(b.eficiencia||0)-Number(a.eficiencia||0)||String(b.data||'').localeCompare(String(a.data||'')));
+  const seen=new Set(),out=[];arr.forEach(r=>{const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;const efic=Number(r?.eficiencia);if(!Number.isFinite(efic))return;const sig=[String(r.placa||'').toUpperCase(),String(r.data||''),String(r.source||''),String(r.periodo||''),r.rowIndex??'',(Number(r.litros)||0).toFixed(3),(Number(r.kmHoras)||0).toFixed(3),efic.toFixed(3)].join('|');if(seen.has(sig))return;seen.add(sig);out.push({...r,eficiencia:efic,faixa:r.faixa||(efic>=100?'alta':'baixa')});});return out;
 }
+function ignisEficienciaAnomRows(y,m,limite=ignisGetLimiteEficiencia()){return ignisEficienciaAnomBaseRows(y,m).filter(r=>r.eficiencia>limite).sort((a,b)=>b.eficiencia-a.eficiencia||String(b.data||'').localeCompare(String(a.data||'')));}
+function ignisEficienciaBaixaRows(y,m,limite=ignisGetLimiteEficienciaBaixa()){return ignisEficienciaAnomBaseRows(y,m).filter(r=>r.eficiencia<limite).sort((a,b)=>a.eficiencia-b.eficiencia||String(b.data||'').localeCompare(String(a.data||'')));}
 
 function ignisRecordMedidorAnomaly(a){
   if(!a||!a.placa)return;
@@ -12559,6 +12578,19 @@ function fechOpenMedidores(){
   document.getElementById('fech-medidor-body').innerHTML=rows.map(r=>{const leitura=(r.valorAnterior!=null&&r.valorAtual!=null)?`${Number(r.valorAnterior).toLocaleString('pt-BR',{maximumFractionDigits:2})} → ${Number(r.valorAtual).toLocaleString('pt-BR',{maximumFractionDigits:2})} (${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})})`:Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2});return `<tr><td>${fechEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${fechEsc(r.placa)}</strong></td><td>${fechEsc(r.medidor)}</td><td>${fechEsc(r.operacao||'—')}</td><td><strong class="bad">${fechEsc(leitura)}</strong><div style="font-size:10px;color:var(--text3);margin-top:2px">${fechEsc(r.motivo||'Regressão')}</div></td><td>${fechEsc(r.source||'Importação')}</td></tr>`;}).join('');
   overlay.classList.add('open');
 }
+function fechOpenAnomalias(){
+  const s=fechSel(),med=fechMedidorRows(s.y,s.m),altas=ignisEficienciaAnomRows(s.y,s.m),baixas=ignisEficienciaBaixaRows(s.y,s.m),total=med.length+altas.length+baixas.length;
+  if(!total){showToast('Nenhuma anomalia encontrada neste mês.','success');return;}
+  let overlay=document.getElementById('fech-anom-modal');if(!overlay){overlay=document.createElement('div');overlay.id='fech-anom-modal';overlay.className='modal-overlay';overlay.innerHTML=`<div class="modal pend-detail-modal" style="max-width:1120px"><div class="pend-detail-head"><div><div class="modal-title">Análise de anomalias</div><div class="pend-detail-sub" id="fech-anom-sub"></div></div><button class="pend-close" onclick="closeModal('fech-anom-modal')" aria-label="Fechar">×</button></div><div class="pend-detail-table-wrap"><table class="pend-detail-table"><thead><tr><th>Tipo</th><th>Data</th><th>Placa</th><th>Operação</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th></tr></thead><tbody id="fech-anom-body"></tbody></table></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('fech-anom-modal')">Fechar</button><button class="btn btn-primary" onclick="closeModal('fech-anom-modal');pendGo('pendencias')">Abrir Central</button></div></div>`;document.body.appendChild(overlay);}
+  document.getElementById('fech-anom-sub').textContent=`${s.label} · ${med.length} medidor(es) · ${altas.length} alta(s) · ${baixas.length} baixa(s)`;
+  const rows=[];
+  med.forEach(r=>rows.push({kind:'Medidor regressivo',sev:'bad',data:r.data,placa:r.placa,operacao:r.operacao||'—',km:'—',litros:'—',real:(r.valorAnterior!=null&&r.valorAtual!=null)?`${Number(r.valorAnterior).toLocaleString('pt-BR',{maximumFractionDigits:2})} → ${Number(r.valorAtual).toLocaleString('pt-BR',{maximumFractionDigits:2})}`:Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2}),meta:'—',efic:'—'}));
+  altas.forEach(r=>rows.push({kind:'Eficiência alta',sev:'warn',data:r.data,placa:r.placa,operacao:r.operacao||'—',km:Number(r.kmHoras||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),litros:Number(r.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),real:`${Number(r.media||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,meta:`${Number(r.meta||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,efic:Number(r.eficiencia||0).toFixed(1)+'%'}));
+  baixas.forEach(r=>rows.push({kind:'Eficiência baixa',sev:'bad',data:r.data,placa:r.placa,operacao:r.operacao||'—',km:Number(r.kmHoras||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),litros:Number(r.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),real:`${Number(r.media||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,meta:`${Number(r.meta||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,efic:Number(r.eficiencia||0).toFixed(1)+'%'}));
+  rows.sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
+  document.getElementById('fech-anom-body').innerHTML=rows.map(r=>`<tr><td><strong class="${r.sev}">${fechEsc(r.kind)}</strong></td><td>${fechEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${fechEsc(r.placa)}</strong></td><td>${fechEsc(r.operacao)}</td><td>${fechEsc(r.km)}</td><td>${fechEsc(r.litros)}</td><td>${fechEsc(r.real)}</td><td>${fechEsc(r.meta)}</td><td><strong class="${r.sev}">${fechEsc(r.efic)}</strong></td></tr>`).join('');overlay.classList.add('open');
+}
+
 function fechConfirms(key){if(state.fechConfirmacoes&&state.fechConfirmacoes[key])return state.fechConfirmacoes[key];try{return JSON.parse(localStorage.getItem('ignis_fech_confirms_'+key)||'{}')||{};}catch(e){return{};}}
 function fechToggleConfirm(kind){const s=fechSel(),c={...fechConfirms(s.key)};c[kind]=!c[kind];c.updatedAt=Date.now();state.fechConfirmacoes=state.fechConfirmacoes||{};state.fechConfirmacoes[s.key]=c;try{localStorage.setItem('ignis_fech_confirms_'+s.key,JSON.stringify(c));}catch(e){};saveState({immediate:true});renderFechamento(true);}
 function fechLabelMatches(label,y,m){const s=String(label||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const month=FECH_MONTHS[m].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const ab=month.slice(0,3);return (s.includes(month)||s.includes(ab)||s.includes(`${String(m+1).padStart(2,'0')}/${y}`)||s.includes(`${y}-${String(m+1).padStart(2,'0')}`))&&s.includes(String(y));}
@@ -12574,6 +12606,7 @@ function fechBuild(){
   const dups=fechDuplicates(rows);
   const med=fechMedidorRows(s.y,s.m);
   const eficAltas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(s.y,s.m):[];
+  const eficBaixas=typeof ignisEficienciaBaixaRows==='function'?ignisEficienciaBaixaRows(s.y,s.m):[];
   const reinc=fechReincMonth(s.y,s.m);
   const excl=(typeof pendGetExcluir==='function'?pendGetExcluir():[]).filter(r=>{
     const d=fechParse(r.data);
@@ -12611,22 +12644,10 @@ function fechBuild(){
     page:'abastecimentos'
   });
 
-  add({
-    id:'med',title:'Odômetro / horímetro regressivo',
-    state:med.length?'blocked':'ok',blocking:!!med.length,
-    detail:med.length?`${med.length} ocorrência(s) de odômetro/horímetro para correção.`:'Nenhuma variação negativa ou leitura regressiva identificada nos dados monitorados.',
-    meta:med.length?med.slice(0,5).map(x=>`${x.placa} · ${x.medidor}`).join(' · '):'Validação automática: negativos + leitura menor que a anterior',
-    page:'abastecimentos',rows:med
-  });
-
-  const maiorEfic=eficAltas[0];
-  add({
-    id:'efic-high',title:'Eficiência anormalmente alta',
-    state:eficAltas.length?'attention':'ok',blocking:false,
-    detail:eficAltas.length?`${eficAltas.length} abastecimento(s) acima do limite de ${ignisGetLimiteEficiencia().toFixed(0)}%.`:`Nenhum abastecimento acima de ${ignisGetLimiteEficiencia().toFixed(0)}%.`,
-    meta:maiorEfic?`Maior: ${maiorEfic.placa} · ${Number(maiorEfic.eficiencia).toFixed(1)}% · ${maiorEfic.operacao||'Sem operação'}`:'Validação por abastecimento concluída',
-    page:'pendencias'
-  });
+  const anomCount=med.length+eficAltas.length+eficBaixas.length;
+  const anomState=med.length?'blocked':(eficAltas.length||eficBaixas.length?'attention':'ok');
+  const anomDetail=anomCount?`${anomCount} ocorrência(s): ${med.length} medidor(es) regressivo(s) · ${eficAltas.length} eficiência(s) > ${ignisGetLimiteEficiencia().toFixed(0)}% · ${eficBaixas.length} eficiência(s) < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}%.`:'Nenhuma anomalia detectada nos dados monitorados.';
+  add({id:'anom',title:'Análise de anomalias',state:anomState,blocking:!!med.length,detail:anomDetail,meta:`Limites de eficiência: < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}% ou > ${ignisGetLimiteEficiencia().toFixed(0)}% · medidor regressivo bloqueia`,page:'pendencias',rows:[...med,...eficAltas,...eficBaixas],anom:{med,altas:eficAltas,baixas:eficBaixas}});
 
   const worst=reinc[0];
   add({
@@ -12675,7 +12696,7 @@ function fechBuild(){
     meta:'Disponível na aba Relatório',page:'relatorio'
   });
 
-  return{s,rows,checks,dups,med,eficAltas,reinc,excl,coverage};
+  return{s,rows,checks,dups,med,eficAltas,eficBaixas,reinc,excl,coverage};
 }
 function fechCheckHTML(c){
   const label=c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':c.state==='optional'?'Opcional':'Pendente';
@@ -12683,9 +12704,7 @@ function fechCheckHTML(c){
   if(c.confirmable){
     buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechToggleConfirm('${c.id==='recon'?'recon':'km'}')">${c.confirmed?'Remover confirmação':'Confirmar este mês'}</button>`);
   }
-  if(c.id==='med'&&c.rows?.length){
-    buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechOpenMedidores()">Ver ocorrências</button>`);
-  }
+  if(c.id==='anom'&&c.rows?.length){buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechOpenAnomalias()">Ver ocorrências</button>`);}
   buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();pendGo('${c.page}')">Abrir análise</button>`);
   return `<div class="fech-check ${c.state}"><div class="fech-check-icon">${fechIcon(c.id)}</div><div><div class="fech-check-title">${fechEsc(c.title)}</div><div class="fech-check-detail">${fechEsc(c.detail)}</div><div class="fech-check-meta">${fechEsc(c.meta||'')}</div><div class="fech-check-actions">${buttons.join('')}</div></div><span class="fech-status ${c.state}">${label}</span></div>`;
 }
@@ -12728,12 +12747,12 @@ async function fechExportarExcel(){
       XLSX.utils.book_append_sheet(wb,mws,'Medidores regressivos');
     }
     if(x.eficAltas?.length){
-      const er=[['Data','Operação','Placa','Tipo','KM/Horas do dia','Litros','Realizado','Meta','Eficiência %','Unidade','Origem'],...x.eficAltas.map(r=>[
-        r.data,r.operacao||'',r.placa,r.tipoIgnis||'',r.kmHoras,r.litros,r.media,r.meta,r.eficiencia,r.unidade||'',r.source||''
-      ])];
-      const ews=XLSX.utils.aoa_to_sheet(er);
-      ews['!cols']=[{wch:13},{wch:30},{wch:14},{wch:14},{wch:18},{wch:12},{wch:13},{wch:13},{wch:15},{wch:10},{wch:20}];
-      XLSX.utils.book_append_sheet(wb,ews,'Eficiência alta');
+      const er=[['Data','Operação','Placa','Tipo','KM/Horas do dia','Litros','Realizado','Meta','Eficiência %','Unidade','Origem'],...x.eficAltas.map(r=>[r.data,r.operacao||'',r.placa,r.tipoIgnis||'',r.kmHoras,r.litros,r.media,r.meta,r.eficiencia,r.unidade||'',r.source||''])];
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(er),'Eficiência alta');
+    }
+    if(x.eficBaixas?.length){
+      const er=[['Data','Operação','Placa','Tipo','KM/Horas do dia','Litros','Realizado','Meta','Eficiência %','Unidade','Origem'],...x.eficBaixas.map(r=>[r.data,r.operacao||'',r.placa,r.tipoIgnis||'',r.kmHoras,r.litros,r.media,r.meta,r.eficiencia,r.unidade||'',r.source||''])];
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(er),'Eficiência baixa');
     }
     if(x.reinc.length){
       const rr=[['Placa','Operação','Pior eficiência','Períodos'],...x.reinc.map(r=>[r.placa,r.operacao,r.pior,r.periodos])];
