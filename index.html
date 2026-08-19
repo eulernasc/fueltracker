@@ -1044,11 +1044,12 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 .fech-select:focus{border-color:rgba(226,88,36,.7);box-shadow:0 0 0 3px rgba(226,88,36,.11)}
 .fech-kpis{display:grid;grid-template-columns:1.15fr repeat(3,1fr);gap:14px;margin-bottom:18px}
 .fech-kpi{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:18px 20px;min-height:126px;position:relative;overflow:hidden}
-.fech-kpi.status.ok{border-color:rgba(42,157,106,.30)}.fech-kpi.status.attention{border-color:rgba(232,148,26,.32)}.fech-kpi.status.blocked{border-color:rgba(239,91,91,.34)}
+.fech-kpi.fech-status-card.ok{border-color:rgba(42,157,106,.30)}.fech-kpi.fech-status-card.attention{border-color:rgba(232,148,26,.32)}.fech-kpi.fech-status-card.blocked{border-color:rgba(239,91,91,.34)}
 .fech-kpi-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
 .fech-kpi-value{font-size:32px;line-height:1;font-weight:750;color:var(--text)}
 .fech-kpi-value.ok{color:var(--green)}.fech-kpi-value.attention{color:var(--yellow)}.fech-kpi-value.blocked{color:#ef5b5b}
 .fech-kpi-sub{font-size:12px;color:var(--text2);margin-top:10px;line-height:1.45}
+.fech-kpi{min-width:0}.fech-status-card{display:block!important;align-items:initial!important;gap:0!important}.fech-status-card .fech-kpi-value{font-size:clamp(25px,2.05vw,32px);white-space:nowrap}.fech-status-card .fech-kpi-sub{max-width:100%;overflow-wrap:anywhere}
 .fech-progress{height:7px;border-radius:999px;background:#0a1016;margin-top:14px;overflow:hidden;border:1px solid rgba(255,255,255,.035)}
 .fech-progress>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#f08a4b);transition:width .3s ease}
 .fech-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(310px,.72fr);gap:16px;align-items:start}
@@ -1310,7 +1311,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
       </div>
     </div>
     <div class="fech-kpis">
-      <div class="fech-kpi status" id="fech-kpi-status"><div class="fech-kpi-label">Status do fechamento</div><div class="fech-kpi-value" id="fech-status-value">—</div><div class="fech-kpi-sub" id="fech-status-sub">Analisando...</div></div>
+      <div class="fech-kpi fech-status-card" id="fech-kpi-status"><div class="fech-kpi-label">Status do fechamento</div><div class="fech-kpi-value" id="fech-status-value">—</div><div class="fech-kpi-sub" id="fech-status-sub">Analisando...</div></div>
       <div class="fech-kpi"><div class="fech-kpi-label">Progresso</div><div class="fech-kpi-value" id="fech-progress-value">0%</div><div class="fech-progress"><span id="fech-progress-bar" style="width:0%"></span></div><div class="fech-kpi-sub" id="fech-progress-sub">0 de 0 etapas</div></div>
       <div class="fech-kpi"><div class="fech-kpi-label">Bloqueadores</div><div class="fech-kpi-value" id="fech-blockers-value">0</div><div class="fech-kpi-sub">itens que impedem concluir o mês</div></div>
       <div class="fech-kpi"><div class="fech-kpi-label">Registros no mês</div><div class="fech-kpi-value" id="fech-records-value">0</div><div class="fech-kpi-sub" id="fech-records-sub">abastecimentos analisados</div></div>
@@ -2786,7 +2787,7 @@ async function idbLoad() {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{} };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[] };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -3755,6 +3756,7 @@ function pendSvg(kind) {
   const icons = {
     consumo:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 18V9"/><path d="M10 18V5"/><path d="M16 18v-7"/><path d="M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/></svg>',
     importacao:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>',
+    medidor:'<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l-3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/></svg>',
     excluir:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/></svg>',
     arla:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg>',
     km:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 17 17 4l3 3L7 20H4z"/><path d="m14 7 3 3"/><path d="M8 16l2 2"/></svg>',
@@ -3821,7 +3823,18 @@ function pendGetArla(){
   return {meses,deadlineMissing,dia,prevId,prevLabel:prev.toLocaleDateString('pt-BR',{month:'long',year:'numeric'}),latest,crit,aten};
 }
 function pendReadJSON(key){try{return JSON.parse(localStorage.getItem(key)||'null');}catch(e){return null;}}
-function pendLatestAbast(){let latest=null;(state.abastecimentos||[]).forEach(a=>{const d=pendParseDate(a.data);if(d&&(!latest||d>latest))latest=d;});return latest;}
+function pendLatestAbast(){
+  let latest=null;
+  (state.abastecimentos||[]).forEach(a=>{const d=pendParseDate(a.data);if(d&&(!latest||d>latest))latest=d;});
+  // Os registros semanais usam a data inicial do período como referência.
+  // Para validar atualização, o correto é considerar a cobertura importada (dataFim).
+  Object.values(state.semanas||{}).forEach(p=>{
+    const d=pendParseDate(p?.dataFim);
+    const count=Number(p?.count ?? p?.registros?.length ?? 0);
+    if(d&&count>0&&(!latest||d>latest))latest=d;
+  });
+  return latest;
+}
 function pendCollect(){
   const issues=[], monitors=[]; const activeLabels={};
   const addIssue=(i)=>{issues.push(i);(i.keys||[i.id]).forEach(k=>activeLabels[k]=i.title);};
@@ -3847,6 +3860,24 @@ function pendCollect(){
   if(!latest){addIssue({id:'importacao',kind:'importacao',severity:'critical',title:'Sem dados de abastecimento',count:1,keys:['importacao-atrasada'],page:'abastecimentos',detail:'Não há abastecimentos disponíveis para validar a atualização.',meta:'Importação necessária'});monitors.push({name:'Atualização dos abastecimentos',status:'critical',detail:'Sem dados disponíveis'});}
   else if(gap>=1){const sev=gap>=2?'critical':'attention';addIssue({id:'importacao',kind:'importacao',severity:sev,title:'Atualização de abastecimentos',count:gap,keys:['importacao-atrasada'],page:'abastecimentos',detail:`${gap} dia${gap>1?'s':''} útil${gap>1?'eis':' '} sem dados após ${pendFmtDate(latest)}.`,meta:'Regra operacional D-1'});monitors.push({name:'Atualização dos abastecimentos',status:sev,detail:`Última data ${pendFmtDate(latest)} · ${gap} dia(s) útil(eis) de defasagem`});}
   else monitors.push({name:'Atualização dos abastecimentos',status:'ok',detail:`Atualizado até ${pendFmtDate(latest)}`});
+
+  const agoraMed=new Date();
+  const meds=typeof fechMedidorRows==='function'?fechMedidorRows(agoraMed.getFullYear(),agoraMed.getMonth()):[];
+  if(meds.length){
+    addIssue({
+      id:'medidores',kind:'medidor',severity:'critical',title:'Odômetro / horímetro regressivo',
+      count:meds.length,keys:meds.map(r=>'medidor:'+r.placa+'|'+r.data+'|'+r.valor),page:'abastecimentos',
+      detail:`${meds.length} ocorrência${meds.length>1?'s':''} com medidor menor que o anterior/correção negativa no mês atual.`,
+      highlightLabel:'Primeira ocorrência',
+      highlightValue:`${meds[0].placa} · ${meds[0].medidor}`,
+      highlightSub:`${fechFmt(fechParse(meds[0].data))} · ${Number(meds[0].valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}`,
+      rows:meds,
+      meta:meds.slice(0,5).map(r=>r.placa).join(', ')
+    });
+    monitors.push({name:'Odômetro / horímetro',status:'critical',detail:`${meds.length} correção(ões) para conferir`});
+  } else {
+    monitors.push({name:'Odômetro / horímetro',status:'ok',detail:'Nenhuma regressão registrada no mês atual'});
+  }
 
   const excl=pendGetExcluir(); const excluirTemFonte=!!(window._excluirDadosTodos?.length||localStorage.getItem('excluir_dados'));
   if(excl.length){addIssue({id:'excluir',kind:'excluir',severity:'critical',title:'Exclusões acima de 72h',count:excl.length,keys:excl.map(r=>'excluir:'+(r.placa||'')+'|'+(r.data||'')+'|'+(r.hora||'')),page:'excluir',detail:`${excl.length} abastecimento${excl.length>1?'s':''} permanece${excl.length>1?'m':''} aguardando exclusão após o prazo.`,meta:excl.slice(0,5).map(r=>r.placa).join(', ')});monitors.push({name:'A Excluir · 72h',status:'critical',detail:`${excl.length} prazo${excl.length>1?'s':''} vencido${excl.length>1?'s':''}`});}
@@ -3908,6 +3939,9 @@ function pendOpenDetails(issueId){
   } else if(issueId==='arla-critico'){
     th.innerHTML='<tr><th>Placa</th><th>Operação</th><th>Percentual</th><th>Segmento</th></tr>';
     tb.innerHTML=issue.rows.map(r=>`<tr><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.operacao)}</td><td>${Number.isFinite(r.pct)?Number(r.pct).toFixed(1)+'%':'—'}</td><td>${pendEsc(r.segmento)}</td></tr>`).join('');
+  } else if(issueId==='medidores'){
+    th.innerHTML='<tr><th>Data</th><th>Placa</th><th>Medidor</th><th>Operação</th><th>Variação</th></tr>';
+    tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.medidor)}</td><td>${pendEsc(r.operacao||'—')}</td><td><strong class="bad">${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}</strong></td></tr>`).join('');
   } else {
     th.innerHTML='<tr><th>Registro</th><th>Detalhe</th></tr>'; tb.innerHTML=issue.rows.map(r=>`<tr><td>${pendEsc(r.placa||'—')}</td><td>${pendEsc(r.operacao||'—')}</td></tr>`).join('');
   }
@@ -5907,6 +5941,7 @@ async function importarRelatorio(input) {
         // (que pode estar vazio/desatualizado e deixar duplicados invisíveis no dashboard)
         const antesCount = state.abastecimentos.length;
         state.abastecimentos = state.abastecimentos.filter(a => a.periodoId !== idAntigo);
+        if(typeof ignisRemoveMedidorAnomaliesRange==='function') ignisRemoveMedidorAnomaliesRange(pAntigo.dataIni,pAntigo.dataFim);
         console.info(`Reimportação "${nomePeriodo}": removidos ${antesCount - state.abastecimentos.length} registro(s) do período antigo.`);
         delete state.semanas[idAntigo];
       }
@@ -5920,7 +5955,8 @@ async function importarRelatorio(input) {
         const placa    = String(row[2]||'').trim().toUpperCase(); // Coluna C
         const modelo   = String(row[3]||'').trim();   // Coluna D
         const tipo     = String(row[4]||'').trim();   // Coluna E
-        const kmReal   = parseFloat(row[6])||0;       // Coluna G — Km Real
+        const kmRealRaw = parseFloat(row[6])||0;      // Coluna G — Km Real (pode ser negativo em correção de medidor)
+        const kmReal   = kmRealRaw;
         const volReal  = parseFloat(row[9])||0;       // Coluna J — Vol. Real
         const mediaIdeal = parseFloat(row[12])||0;    // Coluna M — Média Ideal
         const precoMedio = parseFloat(row[18])||0;    // Coluna S — Preço Médio do Combustível
@@ -5961,6 +5997,18 @@ async function importarRelatorio(input) {
           tipoIgnis = 'trator';
         } else {
           tipoIgnis = 'pesada';
+        }
+
+        if(kmRealRaw < 0 && typeof ignisRecordMedidorAnomaly === 'function'){
+          ignisRecordMedidorAnomaly({
+            placa,
+            data: dataIniNova || document.getElementById('import-data-ini')?.value || '',
+            operacao,
+            tipoIgnis,
+            valor: kmRealRaw,
+            source: 'Importação semanal',
+            periodo: nomePeriodo
+          });
         }
 
         const maqExistente = maquinasImportMap.get(placa);
@@ -6089,6 +6137,7 @@ async function importarRelatorioDiario(input) {
 
       // 1ª passada: parseia e filtra linhas válidas, ordenadas por data (pra "última operação vence" em trocas no meio do período)
       const linhas = [];
+      const anomaliasMedidorImport = [];
       let ignoradasExclusao = 0;
       let ignoradasArla = 0;
       raw.forEach(row => {
@@ -6104,13 +6153,25 @@ async function importarRelatorioDiario(input) {
         const modelo   = String(row['Modelo']||'').trim();
         const tipoVeic = String(row['Tipo de Veículo']||'').trim();
         const litros   = parseFloat(row['Litros Abast.']) || 0;
-        const kmReal   = Math.max(0, parseFloat(row['Km Real']) || 0); // negativo = correção de odômetro, não soma km fictício
+        const kmRealRaw = parseFloat(row['Km Real']) || 0;
+        const kmReal   = Math.max(0, kmRealRaw); // negativo = correção/regressão do medidor, não soma km fictício
         const mediaIdeal = parseFloat(row['Média Ideal']) || 0;
         const valorLitro  = parseFloat(row['Valor Litro']) || 0;
 
         const opUp = operacao.toUpperCase(), modUp = modelo.toUpperCase();
         if (modUp.startsWith('IEV')) { ignoradasExclusao++; return; }
         if (excluirOps.some(x => opUp.includes(x))) { ignoradasExclusao++; return; }
+        if (kmRealRaw < 0) {
+          anomaliasMedidorImport.push({
+            placa,
+            data: dataParaISO(dataObj),
+            operacao,
+            modelo,
+            tipoVeic,
+            valor: kmRealRaw,
+            source: 'Relatório diário'
+          });
+        }
         if (litros <= 0) return;
 
         linhas.push({ data: dataObj, placa, operacao, modelo, tipoVeic, litros, kmReal, mediaIdeal, valorLitro });
@@ -6177,6 +6238,7 @@ async function importarRelatorioDiario(input) {
         }
         conflitos.forEach(c => {
           state.abastecimentos = state.abastecimentos.filter(a => a.periodoId !== c.idAntigo);
+          if(typeof ignisRemoveMedidorAnomaliesRange==='function') ignisRemoveMedidorAnomaliesRange(dataParaISO(c.bloco.inicio),dataParaISO(c.bloco.fim));
           delete state.semanas[c.idAntigo];
         });
       }
@@ -6261,6 +6323,13 @@ async function importarRelatorioDiario(input) {
           Object.assign(backup, state.dieselPrecos);
           localStorage.setItem('ignis_diesel_backup', JSON.stringify(backup));
         } catch(e) {}
+      }
+
+      if (anomaliasMedidorImport.length && typeof ignisRecordMedidorAnomaly === 'function') {
+        anomaliasMedidorImport.forEach(a => {
+          a.tipoIgnis = ignisInferTipoMedidor(a.placa, a.modelo, a.tipoVeic, a.operacao);
+          ignisRecordMedidorAnomaly(a);
+        });
       }
 
       const salvoFirebase = await saveState({ immediate: true }); // confirma o lote inteiro antes de avisar sucesso
@@ -6382,13 +6451,13 @@ function limparTodosDados() {
 
   // Reseta estado em memória
   state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:state.sheetsUrl,
-            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{} };
+            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[] };
   _periodosSelec = new Set();
   window._selectedOps = new Set();
   window._dashList = []; window._dashIsKmL = false;
 
   // Limpa localStorage completamente
-  try { localStorage.removeItem('fueltracker_v3'); } catch(e){}
+  try { localStorage.removeItem('fueltracker_v3'); localStorage.removeItem('ignis_medidor_anomalias'); } catch(e){}
 
   // Limpa IDB completamente
   (async () => {
@@ -12158,7 +12227,7 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 <script id="ignis-stage4-fechamento-js">
 const FECH_MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 function fechEsc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function fechIcon(kind){const m={abast:'<path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/>',dup:'<rect x="7" y="7" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',cons:'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/>',excl:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14"/>',arla:'<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 16h9"/>',km:'<path d="M4 17 17 4l3 3L7 20H4zM14 7l3 3"/>',recon:'<path d="M7 7h10m-3-3 3 3-3 3M17 17H7m3 3-3-3 3-3"/>',exec:'<path d="M5 3h14v18H5zM8 8h8M8 12h5m-5 4 2 2 5-5"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24">${m[kind]||m.exec}</svg>`;}
+function fechIcon(kind){const m={abast:'<path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/>',dup:'<rect x="7" y="7" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',med:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l-3 2"/><path d="M4 4l3 3M20 4l-3 3"/><path d="M8 20h8"/>',cons:'<path d="M4 18V9M10 18V5M16 18v-7M22 18H2"/><path d="m4 7 5-3 5 3 6-4"/>',excl:'<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14"/>',arla:'<path d="M9 3h6M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3M7.5 16h9"/>',km:'<path d="M4 17 17 4l3 3L7 20H4zM14 7l3 3"/>',recon:'<path d="M7 7h10m-3-3 3 3-3 3M17 17H7m3 3-3-3 3-3"/>',exec:'<path d="M5 3h14v18H5zM8 8h8M8 12h5m-5 4 2 2 5-5"/>'};return `<svg class="ui-icon" viewBox="0 0 24 24">${m[kind]||m.exec}</svg>`;}
 function fechInitSelectors(){const ms=document.getElementById('fech-mes'),ys=document.getElementById('fech-ano');if(!ms||!ys)return;const now=new Date();if(!ms.options.length){FECH_MONTHS.forEach((n,i)=>ms.add(new Option(n,i)));}if(!ys.options.length){for(let y=now.getFullYear()+1;y>=now.getFullYear()-4;y--)ys.add(new Option(String(y),String(y)));}if(ms.dataset.init!=='1'){ms.value=String(now.getMonth());ys.value=String(now.getFullYear());ms.dataset.init='1';}}
 function fechSel(){fechInitSelectors();const m=Number(document.getElementById('fech-mes')?.value??new Date().getMonth()),y=Number(document.getElementById('fech-ano')?.value??new Date().getFullYear());return{m,y,key:`${y}-${String(m+1).padStart(2,'0')}`,label:`${FECH_MONTHS[m]} de ${y}`};}
 function fechParse(v){return typeof pendParseDate==='function'?pendParseDate(v):null;}
@@ -12169,25 +12238,264 @@ function fechExpectedDate(y,m){const n=new Date();const cur=y===n.getFullYear()&
 function fechFmt(d){return d?d.toLocaleDateString('pt-BR'):'—';}
 function fechDuplicates(rows){const mp=new Map();rows.forEach((r,idx)=>{const placa=String(r.placa||'').trim().toUpperCase();if(!placa)return;const data=String(r.data||'');const hora=String(r.hora||'').trim();const l=Number(r.litros)||0,h=Number(r.horas)||0,op=String(r.operacao||''),pid=String(r.periodoId||'');const key=hora?`${placa}|${data}|${hora}|${l.toFixed(3)}|${pid}`:`${placa}|${data}|${l.toFixed(3)}|${h.toFixed(3)}|${op}|${pid}`;if(!mp.has(key))mp.set(key,[]);mp.get(key).push({r,idx});});return [...mp.values()].filter(g=>g.length>1);}
 function fechReincMonth(y,m){const periods=Object.entries(state.semanas||{}).filter(([,p])=>{const a=fechParse(p.dataIni),b=fechParse(p.dataFim);return a&&b&&a<=new Date(y,m+1,0)&&b>=new Date(y,m,1);}).sort((a,b)=>String(a[1].dataIni).localeCompare(String(b[1].dataIni)));const hist={};periods.forEach(([id,p])=>{const by={};(p.registros||[]).forEach(r=>{const d=fechParse(r.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;const k=r.placa;if(!k)return;if(!by[k])by[k]={l:0,h:0,tipo:getTipoIgnis(r)};by[k].l+=Number(r.litros)||0;by[k].h+=Number(r.horas)||0;});Object.entries(by).forEach(([placa,d])=>{const maq=getMaquina(placa),meta=Number(maq?.meta)||0;if(!meta)return;const tipo=maq?.tipoIgnis||d.tipo||'',kml=tipo==='pesada'||tipo==='leve';const media=kml?(d.l>0?d.h/d.l:0):(d.h>0?d.l/d.h:0);if(!media)return;const efic=kml?media/meta*100:meta/media*100;(hist[placa]||(hist[placa]=[])).push({efic,op:maq?.operacao||'',id});});});const arr=[];Object.entries(hist).forEach(([placa,a])=>{const low=a.filter(x=>x.efic<98);if(low.length>=2)arr.push({placa,pior:Math.min(...low.map(x=>x.efic)),periodos:low.length,operacao:low.at(-1)?.op||''});});return arr.sort((a,b)=>a.pior-b.pior);}
+
+function ignisInferTipoMedidor(placa,modelo='',tipoVeic='',operacao=''){
+  const p=String(placa||'').toUpperCase(),m=String(modelo||'').toUpperCase(),t=String(tipoVeic||'').toUpperCase(),o=String(operacao||'').toUpperCase();
+  const cadastrado=typeof getMaquina==='function'?getMaquina(p):null;
+  if(cadastrado?.tipoIgnis)return cadastrado.tipoIgnis;
+  if(m.includes('MOFFETT')||p.startsWith('EMP'))return 'empilhadeira';
+  if(t==='VEICULO LEVE'||o.startsWith('VL')||o.includes('MERCADO LIVRE'))return 'leve';
+  if(p.startsWith('MAQ'))return 'maquina';
+  if(p.startsWith('TRA'))return 'trator';
+  return 'pesada';
+}
+function ignisMedidorNome(tipo){
+  return tipo==='pesada'||tipo==='leve'?'Odômetro':'Horímetro';
+}
+function ignisRecordMedidorAnomaly(a){
+  if(!a||!a.placa)return;
+  state.medidorAnomalias=Array.isArray(state.medidorAnomalias)?state.medidorAnomalias:[];
+  const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);
+  const item={
+    placa:String(a.placa||'').trim().toUpperCase(),
+    data:String(a.data||''),
+    operacao:String(a.operacao||''),
+    tipoIgnis:tipo,
+    medidor:ignisMedidorNome(tipo),
+    valor:Number(a.valor)||0,
+    source:String(a.source||'Importação'),
+    periodo:String(a.periodo||''),
+    at:Date.now()
+  };
+  const sig=[item.placa,item.data,item.valor.toFixed(3),item.source].join('|');
+  const exists=state.medidorAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),(Number(x.valor)||0).toFixed(3),String(x.source||'Importação')].join('|')===sig);
+  if(!exists)state.medidorAnomalias.push(item);
+  state.medidorAnomalias=state.medidorAnomalias.slice(-1500);
+  try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}
+}
+function ignisRemoveMedidorAnomaliesRange(ini,fim){
+  const a=fechParse(ini),b=fechParse(fim); if(!a||!b)return;
+  const keep=x=>{const d=fechParse(x?.data);return !d||d<a||d>b;};
+  state.medidorAnomalias=(Array.isArray(state.medidorAnomalias)?state.medidorAnomalias:[]).filter(keep);
+  try{
+    const ls=JSON.parse(localStorage.getItem('ignis_medidor_anomalias')||'[]');
+    if(Array.isArray(ls))localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(ls.filter(keep)));
+  }catch(e){}
+}
+function fechMedidorRows(y,m){
+  let arr=[];
+  if(Array.isArray(state.medidorAnomalias))arr=arr.concat(state.medidorAnomalias);
+  try{
+    const ls=JSON.parse(localStorage.getItem('ignis_medidor_anomalias')||'[]');
+    if(Array.isArray(ls))arr=arr.concat(ls);
+  }catch(e){}
+  // Compatibilidade com registros antigos que eventualmente tenham preservado valor negativo.
+  (state.abastecimentos||[]).forEach(r=>{
+    if(Number(r.horas)<0)arr.push({placa:r.placa,data:r.data,operacao:r.operacao,tipoIgnis:getTipoIgnis(r),medidor:ignisMedidorNome(getTipoIgnis(r)),valor:Number(r.horas),source:'Base histórica'});
+  });
+  const seen=new Set(),out=[];
+  arr.forEach(a=>{
+    const d=fechParse(a.data); if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
+    const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);
+    const row={...a,tipoIgnis:tipo,medidor:a.medidor||ignisMedidorNome(tipo),valor:Number(a.valor)||0};
+    const sig=[String(row.placa||'').toUpperCase(),String(row.data||''),row.valor.toFixed(3),String(row.source||'')].join('|');
+    if(seen.has(sig))return;seen.add(sig);out.push(row);
+  });
+  return out.sort((a,b)=>String(b.data||'').localeCompare(String(a.data||''))||String(a.placa||'').localeCompare(String(b.placa||'')));
+}
+function fechPeriodCoverage(y,m){
+  const start=new Date(y,m,1),end=new Date(y,m+1,0);
+  const periods=[];
+  Object.entries(state.semanas||{}).forEach(([id,p])=>{
+    const a=fechParse(p?.dataIni),b=fechParse(p?.dataFim);
+    const count=Number(p?.count ?? p?.registros?.length ?? 0);
+    if(!a||!b||count<=0||a>end||b<start)return;
+    periods.push({id,label:p.label||id,dataIni:a,dataFim:b,count});
+  });
+  periods.sort((a,b)=>a.dataIni-b.dataIni);
+  const latestEnd=periods.reduce((mx,p)=>!mx||p.dataFim>mx?p.dataFim:mx,null);
+  return{periods,latestEnd};
+}
+function fechOpenMedidores(){
+  const s=fechSel(),rows=fechMedidorRows(s.y,s.m);
+  if(!rows.length){showToast('Nenhuma regressão de medidor encontrada neste mês.','success');return;}
+  let overlay=document.getElementById('fech-medidor-modal');
+  if(!overlay){
+    overlay=document.createElement('div');overlay.id='fech-medidor-modal';overlay.className='modal-overlay';
+    overlay.innerHTML=`<div class="modal pend-detail-modal"><div class="pend-detail-head"><div><div class="modal-title">Odômetros e horímetros para correção</div><div class="pend-detail-sub" id="fech-medidor-sub"></div></div><button class="pend-close" onclick="closeModal('fech-medidor-modal')" aria-label="Fechar">×</button></div><div class="pend-detail-table-wrap"><table class="pend-detail-table"><thead><tr><th>Data</th><th>Placa</th><th>Medidor</th><th>Operação</th><th>Variação</th><th>Origem</th></tr></thead><tbody id="fech-medidor-body"></tbody></table></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('fech-medidor-modal')">Fechar</button><button class="btn btn-primary" onclick="closeModal('fech-medidor-modal');pendGo('abastecimentos')">Abrir abastecimentos</button></div></div>`;
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('fech-medidor-sub').textContent=`${rows.length.toLocaleString('pt-BR')} ocorrência${rows.length===1?'':'s'} em ${s.label} · valores negativos indicam regressão/correção do medidor`;
+  document.getElementById('fech-medidor-body').innerHTML=rows.map(r=>`<tr><td>${fechEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${fechEsc(r.placa)}</strong></td><td>${fechEsc(r.medidor)}</td><td>${fechEsc(r.operacao||'—')}</td><td><strong class="bad">${Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}</strong></td><td>${fechEsc(r.source||'Importação')}</td></tr>`).join('');
+  overlay.classList.add('open');
+}
 function fechConfirms(key){if(state.fechConfirmacoes&&state.fechConfirmacoes[key])return state.fechConfirmacoes[key];try{return JSON.parse(localStorage.getItem('ignis_fech_confirms_'+key)||'{}')||{};}catch(e){return{};}}
 function fechToggleConfirm(kind){const s=fechSel(),c={...fechConfirms(s.key)};c[kind]=!c[kind];c.updatedAt=Date.now();state.fechConfirmacoes=state.fechConfirmacoes||{};state.fechConfirmacoes[s.key]=c;try{localStorage.setItem('ignis_fech_confirms_'+s.key,JSON.stringify(c));}catch(e){};saveState({immediate:true});renderFechamento(true);}
 function fechLabelMatches(label,y,m){const s=String(label||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const month=FECH_MONTHS[m].toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const ab=month.slice(0,3);return (s.includes(month)||s.includes(ab)||s.includes(`${String(m+1).padStart(2,'0')}/${y}`)||s.includes(`${y}-${String(m+1).padStart(2,'0')}`))&&s.includes(String(y));}
 function fechArlaCheck(y,m){let meses=state.arlaMeses||[];if(!meses.length){try{meses=JSON.parse(localStorage.getItem('arla_meses')||'[]')||[];}catch(e){}}const id=`mes_${y}_${String(m+1).padStart(2,'0')}`,item=meses.find(x=>x.id===id);const due=new Date(y,m+1,15,23,59,59),now=new Date();if(item){const crit=(item.dados||[]).filter(r=>r.status==='CRITICO').length,att=(item.dados||[]).filter(r=>r.status==='ATENCAO').length;return{state:crit?'attention':'ok',blocking:false,detail:crit?`${crit} crítico(s) no relatório; análise necessária.`:`Relatório importado${att?` · ${att} atenção`:''}.`,meta:item.importadoEm?`Importado em ${item.importadoEm}`:'Relatório disponível',page:'arla'};}if(now>due)return{state:'blocked',blocking:true,detail:`Relatório de ${FECH_MONTHS[m]} ainda não importado.`,meta:`Prazo encerrado em ${due.toLocaleDateString('pt-BR')}`,page:'arla'};return{state:'attention',blocking:false,detail:`Relatório de ${FECH_MONTHS[m]} ainda não importado.`,meta:`Prazo até ${due.toLocaleDateString('pt-BR')}`,page:'arla'};}
-function fechBuild(){const s=fechSel(),rows=fechRows(s.y,s.m),exp=fechExpectedDate(s.y,s.m),dates=rows.map(r=>fechParse(r.data)).filter(Boolean).sort((a,b)=>a-b),last=dates.at(-1)||null,dups=fechDuplicates(rows),reinc=fechReincMonth(s.y,s.m),excl=(typeof pendGetExcluir==='function'?pendGetExcluir():[]).filter(r=>{const d=fechParse(r.data);return !d||(d.getFullYear()===s.y&&d.getMonth()===s.m);}),arla=fechArlaCheck(s.y,s.m),conf=fechConfirms(s.key),km=state.kmSummary||(typeof pendReadJSON==='function'?pendReadJSON('ignis_km_summary'):null),rc=state.reconSummary||(typeof pendReadJSON==='function'?pendReadJSON('ignis_recon_summary'):null);const checks=[];const add=o=>checks.push(o);
-let importState='waiting',importBlock=true,importDetail='Nenhum registro no mês.',importMeta='Importe os abastecimentos do período';if(rows.length){if(!exp){importState='attention';importBlock=false;importDetail=`${rows.length.toLocaleString('pt-BR')} registros encontrados.`;importMeta='Mês futuro ou em preparação';}else if(last&&last>=exp){importState='ok';importBlock=false;importDetail=`Dados atualizados até ${fechFmt(last)}.`;importMeta=`Esperado até ${fechFmt(exp)} · ${rows.length.toLocaleString('pt-BR')} registros`;}else{importState='blocked';importBlock=true;importDetail=`Último dado em ${fechFmt(last)}; esperado até ${fechFmt(exp)}.`;importMeta=`${rows.length.toLocaleString('pt-BR')} registros no mês`;}}add({id:'abast',title:'Abastecimentos do mês',state:importState,blocking:importBlock,detail:importDetail,meta:importMeta,page:'abastecimentos'});
-add({id:'dup',title:'Possíveis duplicidades',state:dups.length?'blocked':'ok',blocking:!!dups.length,detail:dups.length?`${dups.length} grupo(s) de registros idênticos precisam de conferência.`:'Nenhuma possível duplicidade exata detectada.',meta:dups.length?`${dups.reduce((a,g)=>a+g.length,0)} registros envolvidos`:`${rows.length.toLocaleString('pt-BR')} registros verificados`,page:'abastecimentos'});
-const worst=reinc[0];add({id:'cons',title:'Consumo e reincidência',state:reinc.length?(worst.pior<90?'attention':'attention'):'ok',blocking:false,detail:reinc.length?`${reinc.length} ativo(s) abaixo de 98% em 2 ou mais períodos.`:'Nenhuma reincidência abaixo de 98% no mês.',meta:worst?`Pior: ${worst.placa} · ${worst.pior.toFixed(1)}% · ${worst.operacao||'Sem operação'}`:'Análise concluída',page:'relatorio'});
-add({id:'excl',title:'Exclusões acima de 72h',state:excl.length?'blocked':'ok',blocking:!!excl.length,detail:excl.length?`${excl.length} abastecimento(s) do mês continuam pendentes após 72h.`:'Nenhuma exclusão vencida identificada para o mês.',meta:excl.length?excl.slice(0,4).map(x=>x.placa).join(', '):'Controle operacional em dia',page:'excluir'});
-add({id:'arla',title:'Controle mensal de Arla',...arla});
-let kmAuto=km&&fechLabelMatches(km.label,s.y,s.m),kmOk=kmAuto||conf.km;add({id:'km',title:'KM Comparativo',state:kmOk?'ok':km?'attention':'blocked',blocking:!kmOk,detail:kmOk?(kmAuto?`Análise identificada para ${s.label}.`:'Análise confirmada manualmente para este fechamento.'):(km?`Última análise encontrada: ${km.label||'sem identificação do período'}.`:'Nenhum KM Comparativo registrado.'),meta:km?`${(km.alertas||0)+(km.excessos||0)} crítico(s) · ${km.atencao||0} atenção`:'Execute o comparativo do mês',page:'kmcomp',confirmable:!!km&&!kmAuto,confirmed:!!conf.km});
-const rcMonths=Array.isArray(rc?.meses)?rc.meses:[],rcAuto=rcMonths.includes(s.key),rcOk=rcAuto||conf.recon;add({id:'recon',title:'O2P × Ticket',state:rcOk?'ok':rc?'attention':'blocked',blocking:!rcOk,detail:rcOk?(rcAuto?`Conciliação contém dados de ${s.label}.`:'Conciliação confirmada manualmente para este fechamento.'):(rc?'Existe uma conciliação recente, mas sem vínculo confirmado com o mês.':'Nenhuma conciliação registrada.'),meta:rc?`${(rc.soO2P||0)+(rc.soTicket||0)} divergência(s) · ${rc.ambos||0} conciliados`:'Execute a conciliação do mês',page:'recon',confirmable:!!rc&&!rcAuto,confirmed:!!conf.recon});
-add({id:'exec',title:'Relatório executivo',state:rows.length?'ok':'blocked',blocking:!rows.length,detail:rows.length?'Base do mês disponível para gerar o relatório executivo.':'Sem base mensal para gerar o relatório.',meta:'Disponível na aba Relatório',page:'relatorio'});
-return{s,rows,checks,dups,reinc,excl};}
-function fechCheckHTML(c){const label=c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':'Pendente';const action=c.confirmable?`<button class="fech-mini-btn" onclick="event.stopPropagation();fechToggleConfirm('${c.id==='recon'?'recon':'km'}')">${c.confirmed?'Remover confirmação':'Confirmar este mês'}</button>`:'';return `<div class="fech-check ${c.state}"><div class="fech-check-icon">${fechIcon(c.id)}</div><div><div class="fech-check-title">${fechEsc(c.title)}</div><div class="fech-check-detail">${fechEsc(c.detail)}</div><div class="fech-check-meta">${fechEsc(c.meta||'')}</div>${action?`<div class="fech-check-actions">${action}<button class="fech-mini-btn" onclick="event.stopPropagation();pendGo('${c.page}')">Abrir análise</button></div>`:`<div class="fech-check-actions"><button class="fech-mini-btn" onclick="event.stopPropagation();pendGo('${c.page}')">Abrir análise</button></div>`}</div><span class="fech-status ${c.state}">${label}</span></div>`;}
+function fechBuild(){
+  const s=fechSel();
+  const rows=fechRows(s.y,s.m);
+  const exp=fechExpectedDate(s.y,s.m);
+  const dates=rows.map(r=>fechParse(r.data)).filter(Boolean).sort((a,b)=>a-b);
+  const last=dates.at(-1)||null;
+  const coverage=fechPeriodCoverage(s.y,s.m);
+  const coveredTo=coverage.latestEnd||last;
+  const dups=fechDuplicates(rows);
+  const med=fechMedidorRows(s.y,s.m);
+  const reinc=fechReincMonth(s.y,s.m);
+  const excl=(typeof pendGetExcluir==='function'?pendGetExcluir():[]).filter(r=>{
+    const d=fechParse(r.data);
+    return !d||(d.getFullYear()===s.y&&d.getMonth()===s.m);
+  });
+  const arla=fechArlaCheck(s.y,s.m);
+  const conf=fechConfirms(s.key);
+  const km=state.kmSummary||(typeof pendReadJSON==='function'?pendReadJSON('ignis_km_summary'):null);
+  const rc=state.reconSummary||(typeof pendReadJSON==='function'?pendReadJSON('ignis_recon_summary'):null);
+  const checks=[];const add=o=>checks.push(o);
+
+  let importState='waiting',importBlock=true,importDetail='Nenhum registro no mês.',importMeta='Importe os abastecimentos do período';
+  if(rows.length){
+    if(!exp){
+      importState='attention';importBlock=false;
+      importDetail=`${rows.length.toLocaleString('pt-BR')} registros encontrados.`;
+      importMeta='Mês futuro ou em preparação';
+    }else if(coveredTo&&coveredTo>=exp){
+      importState='ok';importBlock=false;
+      importDetail=`Cobertura importada até ${fechFmt(coveredTo)}.`;
+      importMeta=`Esperado até ${fechFmt(exp)} · ${coverage.periods.length||'—'} período(s) · ${rows.length.toLocaleString('pt-BR')} registros`;
+    }else{
+      importState='blocked';importBlock=true;
+      importDetail=`Cobertura importada até ${fechFmt(coveredTo)}; esperado até ${fechFmt(exp)}.`;
+      importMeta=`${rows.length.toLocaleString('pt-BR')} registros no mês`;
+    }
+  }
+  add({id:'abast',title:'Abastecimentos do mês',state:importState,blocking:importBlock,detail:importDetail,meta:importMeta,page:'abastecimentos'});
+
+  add({
+    id:'dup',title:'Possíveis duplicidades',
+    state:dups.length?'blocked':'ok',blocking:!!dups.length,
+    detail:dups.length?`${dups.length} grupo(s) de registros idênticos precisam de conferência.`:'Nenhuma possível duplicidade exata detectada.',
+    meta:dups.length?`${dups.reduce((a,g)=>a+g.length,0)} registros envolvidos`:`${rows.length.toLocaleString('pt-BR')} registros verificados`,
+    page:'abastecimentos'
+  });
+
+  add({
+    id:'med',title:'Odômetro / horímetro regressivo',
+    state:med.length?'blocked':'ok',blocking:!!med.length,
+    detail:med.length?`${med.length} ocorrência(s) com medidor menor que o anterior/correção negativa.`:'Nenhuma regressão de odômetro ou horímetro identificada nos dados monitorados.',
+    meta:med.length?med.slice(0,5).map(x=>`${x.placa} · ${x.medidor}`).join(' · '):'Validação automática ativa nas novas importações',
+    page:'abastecimentos',rows:med
+  });
+
+  const worst=reinc[0];
+  add({
+    id:'cons',title:'Consumo e reincidência',
+    state:reinc.length?'attention':'ok',blocking:false,
+    detail:reinc.length?`${reinc.length} ativo(s) abaixo de 98% em 2 ou mais períodos.`:'Nenhuma reincidência abaixo de 98% no mês.',
+    meta:worst?`Pior: ${worst.placa} · ${worst.pior.toFixed(1)}% · ${worst.operacao||'Sem operação'}`:'Análise concluída',
+    page:'relatorio'
+  });
+
+  add({
+    id:'excl',title:'Exclusões acima de 72h',
+    state:excl.length?'blocked':'ok',blocking:!!excl.length,
+    detail:excl.length?`${excl.length} abastecimento(s) do mês continuam pendentes após 72h.`:'Nenhuma exclusão vencida identificada para o mês.',
+    meta:excl.length?excl.slice(0,4).map(x=>x.placa).join(', '):'Controle operacional em dia',
+    page:'excluir'
+  });
+
+  add({id:'arla',title:'Controle mensal de Arla',...arla});
+
+  const kmAuto=km&&fechLabelMatches(km.label,s.y,s.m),kmOk=kmAuto||conf.km;
+  add({
+    id:'km',title:'KM Comparativo',
+    state:kmOk?'ok':km?'attention':'blocked',blocking:!kmOk,
+    detail:kmOk?(kmAuto?`Análise identificada para ${s.label}.`:'Análise confirmada manualmente para este fechamento.'):(km?`Última análise encontrada: ${km.label||'sem identificação do período'}.`:'Nenhum KM Comparativo registrado.'),
+    meta:km?`${(km.alertas||0)+(km.excessos||0)} crítico(s) · ${km.atencao||0} atenção`:'Execute o comparativo do mês',
+    page:'kmcomp',confirmable:!!km&&!kmAuto,confirmed:!!conf.km
+  });
+
+  const rcMonths=Array.isArray(rc?.meses)?rc.meses:[],rcAuto=rcMonths.includes(s.key),rcOk=rcAuto||conf.recon;
+  add({
+    id:'recon',title:'O2P × Ticket',
+    state:rcOk?'ok':rc?'attention':'blocked',blocking:!rcOk,
+    detail:rcOk?(rcAuto?`Conciliação contém dados de ${s.label}.`:'Conciliação confirmada manualmente para este fechamento.'):(rc?'Existe uma conciliação recente, mas sem vínculo confirmado com o mês.':'Nenhuma conciliação registrada.'),
+    meta:rc?`${(rc.soO2P||0)+(rc.soTicket||0)} divergência(s) · ${rc.ambos||0} conciliados`:'Execute a conciliação do mês',
+    page:'recon',confirmable:!!rc&&!rcAuto,confirmed:!!conf.recon
+  });
+
+  add({
+    id:'exec',title:'Relatório executivo',
+    state:rows.length?'ok':'blocked',blocking:!rows.length,
+    detail:rows.length?'Base do mês disponível para gerar o relatório executivo.':'Sem base mensal para gerar o relatório.',
+    meta:'Disponível na aba Relatório',page:'relatorio'
+  });
+
+  return{s,rows,checks,dups,med,reinc,excl,coverage};
+}
+function fechCheckHTML(c){
+  const label=c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':'Pendente';
+  const buttons=[];
+  if(c.confirmable){
+    buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechToggleConfirm('${c.id==='recon'?'recon':'km'}')">${c.confirmed?'Remover confirmação':'Confirmar este mês'}</button>`);
+  }
+  if(c.id==='med'&&c.rows?.length){
+    buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechOpenMedidores()">Ver ocorrências</button>`);
+  }
+  buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();pendGo('${c.page}')">Abrir análise</button>`);
+  return `<div class="fech-check ${c.state}"><div class="fech-check-icon">${fechIcon(c.id)}</div><div><div class="fech-check-title">${fechEsc(c.title)}</div><div class="fech-check-detail">${fechEsc(c.detail)}</div><div class="fech-check-meta">${fechEsc(c.meta||'')}</div><div class="fech-check-actions">${buttons.join('')}</div></div><span class="fech-status ${c.state}">${label}</span></div>`;
+}
 function fechHistory(){if(Array.isArray(state.fechamentos))return state.fechamentos;try{return JSON.parse(localStorage.getItem('ignis_fechamentos_history')||'[]')||[];}catch(e){return[];}}
-function renderFechamento(force=false){fechInitSelectors();const x=fechBuild(),checks=x.checks,blockers=checks.filter(c=>c.blocking&&c.state!=='ok'),done=checks.filter(c=>c.state==='ok').length,percent=Math.round(done/checks.length*100),warn=checks.filter(c=>c.state==='attention').length,status=blockers.length?'Bloqueado':warn?'Com atenção':'Pronto';const cls=blockers.length?'blocked':warn?'attention':'ok';const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('fech-status-value',status);set('fech-status-sub',blockers.length?`${blockers.length} etapa(s) precisam ser resolvidas`:(warn?`${warn} ponto(s) de atenção, sem bloquear o fechamento`:'Todas as etapas obrigatórias estão concluídas'));set('fech-progress-value',percent+'%');set('fech-progress-sub',`${done} de ${checks.length} etapas concluídas`);set('fech-blockers-value',String(blockers.length));set('fech-records-value',x.rows.length.toLocaleString('pt-BR'));set('fech-records-sub',`${x.s.label} · abastecimentos analisados`);const k=document.getElementById('fech-kpi-status');if(k)k.className='fech-kpi status '+cls;const v=document.getElementById('fech-status-value');if(v)v.className='fech-kpi-value '+cls;const bar=document.getElementById('fech-progress-bar');if(bar)bar.style.width=percent+'%';const list=document.getElementById('fech-check-list');if(list)list.innerHTML=checks.map(fechCheckHTML).join('');const b=document.getElementById('fech-blockers');if(b)b.innerHTML=blockers.length?`<div class="fech-blockers">${blockers.map(c=>`<div class="fech-blocker"><strong>${fechEsc(c.title)}</strong><span>${fechEsc(c.detail)}</span></div>`).join('')}</div>`:`<div class="fech-ready"><strong>Pronto para registrar.</strong><br>${warn?'Existem pontos de atenção, mas nenhum deles bloqueia o fechamento.':'Nenhum bloqueador foi identificado para este mês.'}</div>`;const ss=document.getElementById('fech-side-sub');if(ss)ss.textContent=blockers.length?'Resolva os bloqueadores antes de registrar o fechamento.':'O IGNIS validou as etapas obrigatórias deste mês.';const btn=document.getElementById('fech-btn-register');if(btn){btn.disabled=!!blockers.length;btn.title=blockers.length?'Resolva os bloqueadores para liberar o registro':'';}const hist=fechHistory();const hl=document.getElementById('fech-history-list');if(hl)hl.innerHTML=hist.length?hist.slice(0,6).map(h=>`<div class="fech-history-item"><div><div class="fech-history-title">${fechEsc(h.label)}</div><div class="fech-history-meta">${fechEsc(h.user||'Usuário')} · ${new Date(h.at).toLocaleString('pt-BR')}</div></div><div class="fech-history-score">${h.progress}%</div></div>`).join(''):'<div class="fech-panel-sub" style="margin:8px 0 0">Nenhum fechamento registrado neste navegador.</div>';}
+function renderFechamento(force=false){fechInitSelectors();const x=fechBuild(),checks=x.checks,blockers=checks.filter(c=>c.blocking&&c.state!=='ok'),done=checks.filter(c=>c.state==='ok').length,percent=Math.round(done/checks.length*100),warn=checks.filter(c=>c.state==='attention').length,status=blockers.length?'Bloqueado':warn?'Com atenção':'Pronto';const cls=blockers.length?'blocked':warn?'attention':'ok';const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('fech-status-value',status);set('fech-status-sub',blockers.length?`${blockers.length} etapa(s) precisam ser resolvidas`:(warn?`${warn} ponto(s) de atenção, sem bloquear o fechamento`:'Todas as etapas obrigatórias estão concluídas'));set('fech-progress-value',percent+'%');set('fech-progress-sub',`${done} de ${checks.length} etapas concluídas`);set('fech-blockers-value',String(blockers.length));set('fech-records-value',x.rows.length.toLocaleString('pt-BR'));set('fech-records-sub',`${x.s.label} · abastecimentos analisados`);const k=document.getElementById('fech-kpi-status');if(k)k.className='fech-kpi fech-status-card '+cls;const v=document.getElementById('fech-status-value');if(v)v.className='fech-kpi-value '+cls;const bar=document.getElementById('fech-progress-bar');if(bar)bar.style.width=percent+'%';const list=document.getElementById('fech-check-list');if(list)list.innerHTML=checks.map(fechCheckHTML).join('');const b=document.getElementById('fech-blockers');if(b)b.innerHTML=blockers.length?`<div class="fech-blockers">${blockers.map(c=>`<div class="fech-blocker"><strong>${fechEsc(c.title)}</strong><span>${fechEsc(c.detail)}</span></div>`).join('')}</div>`:`<div class="fech-ready"><strong>Pronto para registrar.</strong><br>${warn?'Existem pontos de atenção, mas nenhum deles bloqueia o fechamento.':'Nenhum bloqueador foi identificado para este mês.'}</div>`;const ss=document.getElementById('fech-side-sub');if(ss)ss.textContent=blockers.length?'Resolva os bloqueadores antes de registrar o fechamento.':'O IGNIS validou as etapas obrigatórias deste mês.';const btn=document.getElementById('fech-btn-register');if(btn){btn.disabled=!!blockers.length;btn.title=blockers.length?'Resolva os bloqueadores para liberar o registro':'';}const hist=fechHistory();const hl=document.getElementById('fech-history-list');if(hl)hl.innerHTML=hist.length?hist.slice(0,6).map(h=>`<div class="fech-history-item"><div><div class="fech-history-title">${fechEsc(h.label)}</div><div class="fech-history-meta">${fechEsc(h.user||'Usuário')} · ${new Date(h.at).toLocaleString('pt-BR')}</div></div><div class="fech-history-score">${h.progress}%</div></div>`).join(''):'<div class="fech-panel-sub" style="margin:8px 0 0">Nenhum fechamento registrado neste navegador.</div>';}
 function fechRegistrar(){const x=fechBuild(),block=x.checks.filter(c=>c.blocking&&c.state!=='ok');if(block.length){showToast('Resolva os bloqueadores antes de registrar o fechamento.','error');return;}let hist=fechHistory();const snap={key:x.s.key,label:x.s.label,at:Date.now(),user:window._authUser?.nome||window._authUser?.id||'Usuário',progress:Math.round(x.checks.filter(c=>c.state==='ok').length/x.checks.length*100),records:x.rows.length,warnings:x.checks.filter(c=>c.state==='attention').length};hist=hist.filter(h=>h.key!==snap.key);hist.unshift(snap);hist=hist.slice(0,24);state.fechamentos=hist;try{localStorage.setItem('ignis_fechamentos_history',JSON.stringify(hist));}catch(e){};saveState({immediate:true});showToast('Fechamento de '+x.s.label+' registrado.','success');renderFechamento(true);}
-async function fechExportarExcel(){const x=fechBuild();if(typeof ensureXLSXReady==='function' && !(await ensureXLSXReady()))return;try{const rows=[['IGNIS — Fechamento Inteligente',x.s.label],['Gerado em',new Date().toLocaleString('pt-BR')],['Registros',x.rows.length],[],['Etapa','Status','Bloqueia','Detalhe','Observação'],...x.checks.map(c=>[c.title,c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':'Pendente',c.blocking?'Sim':'Não',c.detail,c.meta||''])];const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:28},{wch:16},{wch:11},{wch:62},{wch:42}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Fechamento');if(x.dups.length){const dr=[['Placa','Data','Litros','KM/H','Operação'],...x.dups.flat().map(z=>[z.r.placa,z.r.data,z.r.litros,z.r.horas,z.r.operacao||''])];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dr),'Possíveis duplicidades');}if(x.reinc.length){const rr=[['Placa','Operação','Pior eficiência','Períodos'],...x.reinc.map(r=>[r.placa,r.operacao,r.pior,r.periodos])];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rr),'Reincidências');}XLSX.writeFile(wb,`IGNIS_Fechamento_${x.s.key}.xlsx`);showToast('Resumo do fechamento exportado em Excel.','success');}catch(e){console.error(e);showToast('Não foi possível exportar o resumo.','error');}}
+async function fechExportarExcel(){
+  const x=fechBuild();
+  if(typeof ensureXLSXReady==='function' && !(await ensureXLSXReady()))return;
+  try{
+    const rows=[
+      ['IGNIS — Fechamento Inteligente',x.s.label],
+      ['Gerado em',new Date().toLocaleString('pt-BR')],
+      ['Registros',x.rows.length],
+      [],
+      ['Etapa','Status','Bloqueia','Detalhe','Observação'],
+      ...x.checks.map(c=>[
+        c.title,
+        c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':'Pendente',
+        c.blocking?'Sim':'Não',
+        c.detail,
+        c.meta||''
+      ])
+    ];
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:28},{wch:16},{wch:11},{wch:62},{wch:42}];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Fechamento');
+
+    if(x.dups.length){
+      const dr=[['Placa','Data','Litros','KM/H','Operação'],...x.dups.flat().map(z=>[z.r.placa,z.r.data,z.r.litros,z.r.horas,z.r.operacao||''])];
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(dr),'Possíveis duplicidades');
+    }
+    if(x.med.length){
+      const mr=[['Data','Placa','Medidor','Operação','Variação negativa','Origem','Período'],...x.med.map(r=>[
+        r.data,r.placa,r.medidor,r.operacao||'',r.valor,r.source||'',r.periodo||''
+      ])];
+      const mws=XLSX.utils.aoa_to_sheet(mr);
+      mws['!cols']=[{wch:13},{wch:14},{wch:13},{wch:30},{wch:18},{wch:22},{wch:28}];
+      XLSX.utils.book_append_sheet(wb,mws,'Medidores regressivos');
+    }
+    if(x.reinc.length){
+      const rr=[['Placa','Operação','Pior eficiência','Períodos'],...x.reinc.map(r=>[r.placa,r.operacao,r.pior,r.periodos])];
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rr),'Reincidências');
+    }
+
+    XLSX.writeFile(wb,`IGNIS_Fechamento_${x.s.key}.xlsx`);
+    showToast('Resumo do fechamento exportado em Excel.','success');
+  }catch(e){
+    console.error(e);
+    showToast('Não foi possível exportar o resumo.','error');
+  }
+}
 </script>
 
 </body>
