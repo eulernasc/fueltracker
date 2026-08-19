@@ -658,7 +658,7 @@ body{overflow-x:hidden;}
 .nav-badge-abs{position:absolute;top:-5px;right:-6px;margin:0 !important;width:15px;height:15px;font-size:9px;}
 
 /* ── VISUAL ENHANCEMENTS ─────────────────────────────────────────── */
-#bar-tooltip{position:fixed;background:#1e1916;border:1px solid rgba(233,95,50,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);pointer-events:none;z-index:9999;max-width:320px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+#bar-tooltip{position:fixed;background:linear-gradient(180deg,#171e27 0%,#111820 100%);border:1px solid rgba(151,164,178,.22);border-radius:13px;padding:0;font-size:12px;color:#eef3f8;pointer-events:none;z-index:9999;min-width:210px;max-width:310px;display:none;box-shadow:0 16px 40px rgba(0,0,0,.42),0 0 0 1px rgba(0,0,0,.18);overflow:hidden;}
 .page{animation:ignis-fadein .25s ease;}
 @keyframes ignis-fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .login-card{animation:ignis-card-in .45s cubic-bezier(.22,.68,0,1.2);}
@@ -3555,14 +3555,24 @@ if (document.readyState === 'loading') {
   bootIgnisLoginOnce();
 }
 document.addEventListener('DOMContentLoaded', () => {
-  const tip = document.createElement('div');
-  tip.id = 'bar-tooltip';
-  tip.style.cssText = 'position:fixed;background:#1e1916;border:1px solid rgba(233,95,50,.4);border-radius:10px;padding:10px 14px;font-size:12px;color:#f0ebe4;pointer-events:none;z-index:9999;max-width:300px;display:none;box-shadow:0 4px 20px rgba(0,0,0,.6);line-height:1.6';
-  document.body.appendChild(tip);
+  let tip = document.getElementById('bar-tooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'bar-tooltip';
+    document.body.appendChild(tip);
+  }
   document.addEventListener('mousemove', e => {
-    if (tip.style.display !== 'none') {
-      tip.style.left = (e.clientX + 16) + 'px';
-      tip.style.top  = (e.clientY - 8) + 'px';
+    if (tip.style.display !== 'none' && tip.style.display !== '') {
+      const gap = 16;
+      const w = tip.offsetWidth || 240;
+      const h = tip.offsetHeight || 150;
+      let left = e.clientX + gap;
+      let top = e.clientY - 12;
+      if (left + w + 10 > window.innerWidth) left = e.clientX - w - gap;
+      if (top + h + 10 > window.innerHeight) top = window.innerHeight - h - 10;
+      if (top < 10) top = 10;
+      tip.style.left = left + 'px';
+      tip.style.top = top + 'px';
     }
   });
 });
@@ -3570,12 +3580,29 @@ document.addEventListener('DOMContentLoaded', () => {
 function showBarTooltip(el, raw) {
   const t = document.getElementById('bar-tooltip');
   if (!t) return;
-  const [placa, op, stats] = raw.split(' | ');
-  const rows = (stats||'').split(' · ').filter(Boolean).map(s => {
-    const idx = s.indexOf(':'); if(idx<0) return `<span style="color:#f0ebe4">${s}</span>`;
-    return `<span style="color:#9a8f85">${s.substring(0,idx)}</span> <b style="color:#f0ebe4">${s.substring(idx+1).trim()}</b>`;
-  }).join('<br>');
-  t.innerHTML = `<div style="font-weight:700;color:#e95f32;margin-bottom:4px;font-size:13px">${placa||''}</div><div style="color:#9a8f85;font-size:11px;margin-bottom:6px">${op||''}</div>${rows}`;
+  const parts = String(raw || '').split(' | ').map(s => s.trim()).filter(Boolean);
+  const placa = parts[0] || '—';
+  const operacao = (parts[1] || '—').replace(/_/g,' ');
+  const volume = parts[2] || '—';
+  const media = parts[3] || '—';
+  const metaRaw = parts.find(p => /^meta\s/i.test(p));
+  const eficRaw = parts.find(p => /^efici[eê]ncia\s/i.test(p));
+  const meta = metaRaw ? metaRaw.replace(/^meta\s*/i,'') : '—';
+  const eficiencia = eficRaw ? eficRaw.replace(/^efici[eê]ncia\s*/i,'') : '—';
+  const eficNum = parseFloat(String(eficiencia).replace(',','.'));
+  const status = Number.isFinite(eficNum) ? (eficNum >= 98 ? 'Dentro da meta' : eficNum >= 90 ? 'Atenção' : 'Crítico') : '';
+  const statusClass = Number.isFinite(eficNum) ? (eficNum >= 98 ? 'ok' : eficNum >= 90 ? 'warn' : 'bad') : '';
+  t.innerHTML = `
+    <div class="ignis-tip-head">
+      <div><div class="ignis-tip-plate">${placa}</div><div class="ignis-tip-op">${operacao}</div></div>
+      ${status ? `<span class="ignis-tip-status ${statusClass}">${status}</span>` : ''}
+    </div>
+    <div class="ignis-tip-grid">
+      <div class="ignis-tip-row"><span>Volume</span><strong>${volume}</strong></div>
+      <div class="ignis-tip-row"><span>Média realizada</span><strong>${media}</strong></div>
+      <div class="ignis-tip-row"><span>Meta</span><strong>${meta}</strong></div>
+      <div class="ignis-tip-row"><span>Eficiência</span><strong class="${statusClass}">${eficiencia}</strong></div>
+    </div>`;
   t.style.display = 'block';
 }
 function hideBarTooltip() {
@@ -11677,7 +11704,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .efficiency-target{height:2px!important;background:#d7e0e8!important;opacity:.78!important;box-shadow:0 0 0 1px rgba(10,15,20,.35)!important}
 .efficiency-bar{width:34px!important;border-radius:8px 8px 3px 3px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 5px 12px rgba(0,0,0,.16)!important}
 .efficiency-plate{font-size:10.5px!important;margin-top:8px!important;color:#d0d8e1!important}
-.efficiency-meta{font-size:9.7px!important;color:#8e9baa!important;margin-top:4px!important}
+.efficiency-meta{font-size:10.8px!important;color:#9ba9b7!important;margin-top:4px!important;font-weight:650!important}
 .efficiency-score{font-size:10.2px!important;margin-top:3px!important}
 .meta-legend{padding-left:8px!important;border-left:1px solid rgba(255,255,255,.12)!important}
 
@@ -11722,5 +11749,43 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .fin-chart-row{grid-template-columns:1fr!important;gap:5px!important}
 }
 </style>
+
+<style id="ignis-tooltip-calendar-2026">
+#bar-tooltip .ignis-tip-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:13px 14px 11px;border-bottom:1px solid rgba(151,164,178,.12);background:rgba(255,255,255,.018)}
+#bar-tooltip .ignis-tip-plate{font:800 13px/1.2 'DM Mono',monospace;color:#f06a3d;letter-spacing:.02em}
+#bar-tooltip .ignis-tip-op{margin-top:5px;color:#9ba8b6;font-size:10.5px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bar-tooltip .ignis-tip-status{font-size:9px;font-weight:800;padding:4px 7px;border-radius:999px;white-space:nowrap;border:1px solid transparent}
+#bar-tooltip .ignis-tip-status.ok{color:#45d39a;background:rgba(52,201,139,.10);border-color:rgba(52,201,139,.18)}
+#bar-tooltip .ignis-tip-status.warn{color:#f2bd55;background:rgba(242,184,75,.10);border-color:rgba(242,184,75,.18)}
+#bar-tooltip .ignis-tip-status.bad{color:#f36a63;background:rgba(240,95,87,.10);border-color:rgba(240,95,87,.18)}
+#bar-tooltip .ignis-tip-grid{padding:8px 14px 10px}
+#bar-tooltip .ignis-tip-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:5px 0;color:#8f9dac;font-size:10.5px}
+#bar-tooltip .ignis-tip-row+.ignis-tip-row{border-top:1px solid rgba(151,164,178,.07)}
+#bar-tooltip .ignis-tip-row strong{font:700 11.5px/1.2 'DM Mono',monospace;color:#edf3f8;text-align:right}
+#bar-tooltip .ignis-tip-row strong.ok{color:#45d39a}#bar-tooltip .ignis-tip-row strong.warn{color:#f2bd55}#bar-tooltip .ignis-tip-row strong.bad{color:#f36a63}
+input[type="date"].ignis-date-input{cursor:pointer!important;color-scheme:dark!important;padding-right:42px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23f06a3d' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M16 3v4M8 3v4M3 10h18'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 13px center!important;background-size:17px!important}
+input[type="date"].ignis-date-input::-webkit-calendar-picker-indicator{opacity:0!important;pointer-events:none!important;width:22px!important}
+input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!important;box-shadow:0 0 0 3px rgba(240,106,61,.09)!important}
+#ignis-calendar-popover{position:fixed;z-index:10050;width:306px;background:linear-gradient(180deg,#171e27 0%,#111820 100%);border:1px solid rgba(151,164,178,.20);border-radius:15px;box-shadow:0 22px 55px rgba(0,0,0,.48),0 0 0 1px rgba(0,0,0,.16);padding:12px;display:none;color:#eef3f8;font-family:'DM Sans',sans-serif;user-select:none}
+.ignis-cal-head{display:grid;grid-template-columns:1fr 34px 34px;gap:6px;align-items:center;margin-bottom:10px}.ignis-cal-month{font-size:13px;font-weight:800;color:#eef3f8;text-transform:capitalize;padding:0 4px}
+.ignis-cal-nav{width:34px;height:34px;border:1px solid rgba(151,164,178,.12);background:#121922;color:#9eadbb;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}.ignis-cal-nav:hover{color:#f06a3d;border-color:rgba(240,106,61,.28);background:#171f29}.ignis-cal-nav svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8}
+.ignis-cal-week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 2px 5px;color:#687787;font-size:9.5px;font-weight:800;text-align:center;text-transform:uppercase}.ignis-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.ignis-cal-day{height:34px;border:1px solid transparent;background:transparent;color:#c7d0d9;border-radius:9px;font:600 11.5px 'DM Sans',sans-serif;cursor:pointer;transition:.12s;display:flex;align-items:center;justify-content:center}.ignis-cal-day:hover{background:#1b2530;border-color:rgba(151,164,178,.12);color:#fff}.ignis-cal-day.outside{color:#4f5c69}.ignis-cal-day.today{border-color:rgba(240,106,61,.48);color:#f47a50;background:rgba(240,106,61,.055)}.ignis-cal-day.selected{background:#e95f32!important;color:#fff!important;border-color:#e95f32!important;box-shadow:0 5px 14px rgba(233,95,50,.20)}
+.ignis-cal-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(151,164,178,.10);margin-top:10px;padding-top:10px}.ignis-cal-action{border:0;background:transparent;color:#91a2b3;font-size:10.5px;font-weight:700;padding:6px 8px;border-radius:7px;cursor:pointer}.ignis-cal-action:hover{background:#18212b;color:#f06a3d}@media(max-width:520px){#ignis-calendar-popover{width:min(306px,calc(100vw - 24px))}}
+</style>
+<script id="ignis-custom-calendar-2026">
+(function(){
+  let activeInput=null,viewDate=new Date(),pop=null;const months=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'],weekdays=['D','S','T','Q','Q','S','S'];const pad=n=>String(n).padStart(2,'0'),iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,fromIso=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(v||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null};
+  function ensurePopover(){if(pop)return pop;pop=document.createElement('div');pop.id='ignis-calendar-popover';pop.innerHTML=`<div class="ignis-cal-head"><div class="ignis-cal-month"></div><button class="ignis-cal-nav prev" type="button" aria-label="Mês anterior"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><button class="ignis-cal-nav next" type="button" aria-label="Próximo mês"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></div><div class="ignis-cal-week">${weekdays.map(d=>`<span>${d}</span>`).join('')}</div><div class="ignis-cal-grid"></div><div class="ignis-cal-foot"><button type="button" class="ignis-cal-action clear">Limpar</button><button type="button" class="ignis-cal-action today-btn">Hoje</button></div>`;document.body.appendChild(pop);pop.querySelector('.prev').onclick=e=>{e.stopPropagation();viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1,1);render()};pop.querySelector('.next').onclick=e=>{e.stopPropagation();viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+1,1);render()};pop.querySelector('.clear').onclick=e=>{e.stopPropagation();setValue('')};pop.querySelector('.today-btn').onclick=e=>{e.stopPropagation();setValue(iso(new Date()))};pop.addEventListener('click',e=>e.stopPropagation());return pop}
+  function render(){ensurePopover();pop.querySelector('.ignis-cal-month').textContent=`${months[viewDate.getMonth()]} de ${viewDate.getFullYear()}`;const grid=pop.querySelector('.ignis-cal-grid');grid.innerHTML='';const y=viewDate.getFullYear(),m=viewDate.getMonth(),first=new Date(y,m,1),start=new Date(y,m,1-first.getDay()),selected=activeInput?fromIso(activeInput.value):null,today=new Date();for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),b=document.createElement('button');b.type='button';b.className='ignis-cal-day';b.textContent=d.getDate();if(d.getMonth()!==m)b.classList.add('outside');if(d.toDateString()===today.toDateString())b.classList.add('today');if(selected&&d.toDateString()===selected.toDateString())b.classList.add('selected');b.onclick=e=>{e.stopPropagation();setValue(iso(d))};grid.appendChild(b)}}
+  function setValue(value){if(!activeInput)return;activeInput.value=value;activeInput.dispatchEvent(new Event('change',{bubbles:true}));close()}
+  function position(){if(!activeInput||!pop)return;const r=activeInput.getBoundingClientRect();pop.style.display='block';const w=pop.offsetWidth,h=pop.offsetHeight,gap=8;let left=Math.min(r.left,window.innerWidth-w-10);left=Math.max(10,left);let top=r.bottom+gap;if(top+h>window.innerHeight-10&&r.top-h-gap>10)top=r.top-h-gap;else top=Math.min(top,window.innerHeight-h-10);pop.style.left=left+'px';pop.style.top=Math.max(10,top)+'px'}
+  function open(input){activeInput=input;const selected=fromIso(input.value);viewDate=selected?new Date(selected):new Date();viewDate.setDate(1);render();position()}function close(){if(pop)pop.style.display='none';activeInput=null}
+  function enhance(input){if(!input||input.dataset.ignisCalendar==='1')return;input.dataset.ignisCalendar='1';input.classList.add('ignis-date-input');input.readOnly=true;input.addEventListener('mousedown',e=>{e.preventDefault()});input.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open(input)});input.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(input)}else if(e.key==='Escape')close()})}
+  function scan(root=document){if(root.matches?.('input[type="date"]'))enhance(root);root.querySelectorAll?.('input[type="date"]').forEach(enhance)}
+  const boot=()=>{ensurePopover();scan();document.addEventListener('click',close);window.addEventListener('resize',()=>{if(activeInput)position()});window.addEventListener('scroll',()=>{if(activeInput)position()},true);const obs=new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)scan(n)})));obs.observe(document.body,{childList:true,subtree:true})};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+})();
+</script>
+
 </body>
 </html>
