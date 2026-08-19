@@ -1079,6 +1079,18 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 @media(max-width:620px){.fech-kpis{grid-template-columns:1fr}.fech-check{grid-template-columns:36px minmax(0,1fr)}.fech-check>.fech-status{grid-column:2;justify-self:start}.fech-toolbar{width:100%}.fech-select{flex:1;min-width:130px}}
 </style>
 
+
+<style id="ignis-anomalias-page-css">
+/* Tela dedicada de Anomalias */
+.anom-header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}.anom-rules{display:flex;align-items:center;gap:8px;padding:7px;border:1px solid var(--border);background:var(--bg2);border-radius:13px}.anom-rules-title{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7d8da0;padding:0 6px}
+.anom-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.anom-kpi{appearance:none;text-align:left;background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:16px 18px;min-height:112px;color:var(--text);cursor:pointer;transition:.16s;position:relative;overflow:hidden}.anom-kpi:hover{border-color:rgba(255,255,255,.12);transform:translateY(-1px)}.anom-kpi.active{border-color:rgba(233,95,50,.52);box-shadow:inset 0 0 0 1px rgba(233,95,50,.13)}.anom-kpi span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#8292a5}.anom-kpi strong{display:block;font:750 29px 'DM Mono',monospace;margin-top:9px;color:#fff}.anom-kpi small{display:block;font-size:10.5px;color:#78889a;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.anom-kpi.medidor strong{color:#ff7676}.anom-kpi.alta strong{color:#f4b544}.anom-kpi.baixa strong{color:#ef6262}.anom-kpi.all strong{color:#f0f4f7}
+.anom-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden}.anom-toolbar{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:12px}.anom-type-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.anom-type-tab{height:34px;padding:0 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#8999aa;font:700 11.5px 'DM Sans',sans-serif;cursor:pointer}.anom-type-tab:hover{background:rgba(255,255,255,.035);color:#fff}.anom-type-tab.active{background:rgba(233,95,50,.1);border-color:rgba(233,95,50,.28);color:#f58a63}.anom-filter-row{display:grid;grid-template-columns:150px 105px minmax(220px,1fr) minmax(230px,1.15fr) auto;gap:9px;align-items:center}.anom-select,.anom-search{height:42px;border:1px solid var(--border);border-radius:11px;background:#101720;color:var(--text);font:600 12px 'DM Sans',sans-serif}.anom-select{padding:0 34px 0 12px;outline:none}.anom-select:focus,.anom-search:focus-within{border-color:rgba(233,95,50,.5);box-shadow:0 0 0 3px rgba(233,95,50,.07)}.anom-search{display:flex;align-items:center;gap:8px;padding:0 11px}.anom-search .ui-icon{width:16px;height:16px;color:#728295}.anom-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#fff;font:500 12px 'DM Sans',sans-serif}.anom-summary{padding:10px 16px;font-size:11.5px;color:#8191a3;border-bottom:1px solid rgba(255,255,255,.04)}.anom-summary strong{color:#dce5ed}
+.anom-table-wrap{overflow:auto;max-height:58vh;scrollbar-width:thin;scrollbar-color:#364351 #0d141b}.anom-table{width:100%;min-width:1180px;border-collapse:collapse;font-size:11.5px}.anom-table th{position:sticky;top:0;z-index:2;background:#151d26;color:#8192a5;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:9.5px;padding:11px 12px;border-bottom:1px solid var(--border)}.anom-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#b8c5d0;vertical-align:middle}.anom-table tr:hover td{background:rgba(255,255,255,.018)}.anom-table .bad{color:#ff6e6e}.anom-table .warn{color:#f5b942}.anom-plate{font-family:'DM Mono',monospace;color:#eef3f7}.anom-badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 8px;font-size:9.5px;font-weight:800;white-space:nowrap}.anom-badge.medidor{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-badge.alta{color:#f5bd56;background:rgba(245,185,66,.09);border:1px solid rgba(245,185,66,.14)}.anom-badge.baixa{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-detail-main{color:#c8d2dc;font-size:10.8px}.anom-detail-sub{font-size:9.8px;color:#647588;margin-top:2px}.anom-empty{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#8493a4}.anom-empty strong{color:#d8e0e7;font-size:14px}.anom-empty span{font-size:11.5px}
+/* Importação: progresso por fase, sem congelar a percepção de "leitura" */
+.import-progress-card{margin-top:10px;padding:12px 13px;border:1px solid var(--border);background:#101720;border-radius:11px}.import-progress-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11.5px}.import-progress-top strong{color:#dbe4ec}.import-progress-top span{font:700 10.5px 'DM Mono',monospace;color:#f17b50}.import-progress-track{height:5px;margin-top:9px;border-radius:999px;background:#0a1016;overflow:hidden}.import-progress-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#f08a4b);transition:width .18s ease}.import-progress-sub{font-size:10.5px;color:#748497;margin-top:7px}
+@media(max-width:1100px){.anom-kpis{grid-template-columns:1fr 1fr}.anom-filter-row{grid-template-columns:1fr 1fr}.anom-search,.anom-op{grid-column:span 1}}
+@media(max-width:650px){.anom-kpis{grid-template-columns:1fr}.anom-rules{width:100%;flex-wrap:wrap}.anom-filter-row{grid-template-columns:1fr}.anom-search,.anom-op{grid-column:auto}.anom-type-tabs{overflow:auto;flex-wrap:nowrap}.anom-type-tab{white-space:nowrap}}
+</style>
 </head>
 <body>
 
@@ -1181,6 +1193,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 
     <div class="nav-section-label">Inteligência</div>
         <div class="nav-item" id="nav-fechamento" onclick="showPage('fechamento',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h5"/><path d="m8 16 2 2 5-5"/></svg></span><span class="nav-label">Fechamento</span></div>
+    <div class="nav-item" id="nav-anomalias" onclick="showPage('anomalias',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 19h18"/><path d="M5 15l4-5 4 3 6-8"/><circle cx="5" cy="15" r="1"/><circle cx="9" cy="10" r="1"/><circle cx="13" cy="13" r="1"/><circle cx="19" cy="5" r="1"/></svg></span><span class="nav-label">Anomalias</span></div>
 <div class="nav-item" id="nav-relatorio" onclick="showPage('relatorio',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span><span id="rel-reincidencia-badge" style="display:none" class="excl-badge nav-badge-abs">!</span></span><span class="nav-label">Relatório</span></div>
     <div class="nav-item" id="nav-excluir" onclick="showPage('excluir',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/><path d="M10 11v6M14 11v6"/></svg></span><span id="excluir-nav-badge" style="display:none" class="excl-badge nav-badge-abs">0</span></span><span class="nav-label">A Excluir</span></div>
     <div class="nav-item" id="nav-arla" onclick="showPage('arla',this)"><span class="icon-wrap"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg></span></span><span class="nav-label">Controle Arla</span><span id="arla-lembrete-badge" style="display:none" class="nav-alert-dot" title="Relatório mensal pendente"></span><span id="arla-nav-badge" style="display:none" class="nav-count-pill" title="Itens críticos">0</span></div>
@@ -1245,6 +1258,9 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div class="mob-nav-item" id="mob-nav-fechamento" onclick="showPage('fechamento',this);updateMobNav('fechamento')">
       <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h5"/><path d="m8 16 2 2 5-5"/></svg></span>Fechamento
     </div>
+    <div class="mob-nav-item" id="mob-nav-anomalias" onclick="showPage('anomalias',this);updateMobNav('anomalias')">
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 19h18"/><path d="M5 15l4-5 4 3 6-8"/></svg></span>Anomalias
+    </div>
     <div class="mob-nav-item" id="mob-nav-config" onclick="showPage('config',this);updateMobNav('config')">
       <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21v4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></span>Config
     </div>
@@ -1262,11 +1278,10 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="page-sub">O que precisa da sua atenção agora</div>
       </div>
       <div class="pend-header-actions">
-        <div class="pend-anom-rules" title="Limites usados na análise automática de anomalias por abastecimento">
-          <span class="pend-anom-rules-title">Anomalias</span>
-          <div class="pend-anom-setting"><span>Alta &gt;</span><div class="pend-anom-input"><input id="pend-efic-limit" type="number" min="100" max="500" step="5" value="140" onchange="ignisSetLimiteEficiencia(this.value)"><b>%</b></div></div>
-          <div class="pend-anom-setting"><span>Baixa &lt;</span><div class="pend-anom-input"><input id="pend-efic-low-limit" type="number" min="1" max="99" step="5" value="60" onchange="ignisSetLimiteEficienciaBaixa(this.value)"><b>%</b></div></div>
-        </div>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="anomOpenPage('all')">
+          <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 6 4-3 4 4 5-5 3 3"/></svg>
+          Anomalias
+        </button>
         <span class="pend-updated" id="pend-updated">—</span>
         <button class="btn btn-secondary btn-sm" type="button" onclick="renderPendencias(true)">
           <svg class="ui-icon" viewBox="0 0 24 24"><path d="M20 6v6h-6"/><path d="M4 18v-6h6"/><path d="M18.5 9A7 7 0 0 0 6.2 6.2L4 8"/><path d="M5.5 15A7 7 0 0 0 17.8 17.8L20 16"/></svg>
@@ -1304,6 +1319,71 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     </section>
   </div>
 
+
+
+  <!-- ANÁLISE DE ANOMALIAS -->
+  <div id="page-anomalias" class="page">
+    <div class="anom-header">
+      <div>
+        <div class="page-title">Análise de Anomalias</div>
+        <div class="page-sub">Medidores regressivos e eficiências fora dos limites configurados</div>
+      </div>
+      <div class="anom-rules">
+        <span class="anom-rules-title">Limites de eficiência</span>
+        <div class="pend-anom-setting high">
+          <span class="pend-anom-label"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 19V5M7 10l5-5 5 5"/></svg>Alta</span>
+          <div class="pend-anom-control">
+            <button type="button" class="pend-anom-step" onclick="ignisAjustarLimiteEficiencia('alta',-5)" aria-label="Diminuir limite alto">−</button>
+            <input id="anom-efic-limit" type="text" inputmode="numeric" value="140" maxlength="3" aria-label="Limite de eficiência alta" onkeydown="if(event.key==='Enter'){this.blur()}" onchange="ignisSetLimiteEficiencia(this.value)">
+            <span class="pend-anom-percent">%</span>
+            <button type="button" class="pend-anom-step" onclick="ignisAjustarLimiteEficiencia('alta',5)" aria-label="Aumentar limite alto">+</button>
+          </div>
+        </div>
+        <div class="pend-anom-setting low">
+          <span class="pend-anom-label"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 5v14M7 14l5 5 5-5"/></svg>Baixa</span>
+          <div class="pend-anom-control">
+            <button type="button" class="pend-anom-step" onclick="ignisAjustarLimiteEficiencia('baixa',-5)" aria-label="Diminuir limite baixo">−</button>
+            <input id="anom-efic-low-limit" type="text" inputmode="numeric" value="60" maxlength="2" aria-label="Limite de eficiência baixa" onkeydown="if(event.key==='Enter'){this.blur()}" onchange="ignisSetLimiteEficienciaBaixa(this.value)">
+            <span class="pend-anom-percent">%</span>
+            <button type="button" class="pend-anom-step" onclick="ignisAjustarLimiteEficiencia('baixa',5)" aria-label="Aumentar limite baixo">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anom-kpis">
+      <button type="button" class="anom-kpi all active" data-anom-type="all" onclick="anomSetType('all')"><span>Total</span><strong id="anom-kpi-total">0</strong><small id="anom-kpi-total-sub">ocorrências no período</small></button>
+      <button type="button" class="anom-kpi medidor" data-anom-type="medidor" onclick="anomSetType('medidor')"><span>Medidor regressivo</span><strong id="anom-kpi-medidor">0</strong><small id="anom-kpi-medidor-sub">nenhuma regressão</small></button>
+      <button type="button" class="anom-kpi alta" data-anom-type="alta" onclick="anomSetType('alta')"><span>Eficiência alta</span><strong id="anom-kpi-alta">0</strong><small id="anom-kpi-alta-sub">acima do limite</small></button>
+      <button type="button" class="anom-kpi baixa" data-anom-type="baixa" onclick="anomSetType('baixa')"><span>Eficiência baixa</span><strong id="anom-kpi-baixa">0</strong><small id="anom-kpi-baixa-sub">abaixo do limite</small></button>
+    </div>
+
+    <section class="anom-panel">
+      <div class="anom-toolbar">
+        <div class="anom-type-tabs" role="tablist" aria-label="Tipo de anomalia">
+          <button type="button" class="anom-type-tab active" data-anom-type="all" onclick="anomSetType('all')">Todas</button>
+          <button type="button" class="anom-type-tab" data-anom-type="medidor" onclick="anomSetType('medidor')">Medidor regressivo</button>
+          <button type="button" class="anom-type-tab" data-anom-type="alta" onclick="anomSetType('alta')">Eficiência alta</button>
+          <button type="button" class="anom-type-tab" data-anom-type="baixa" onclick="anomSetType('baixa')">Eficiência baixa</button>
+        </div>
+        <div class="anom-filter-row">
+          <select id="anom-month" class="anom-select" onchange="renderAnomalias(true)"></select>
+          <select id="anom-year" class="anom-select anom-year" onchange="renderAnomalias(true)"></select>
+          <select id="anom-op" class="anom-select anom-op" onchange="renderAnomalias(true)"><option value="">Todas as operações</option></select>
+          <label class="anom-search"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="anom-search" type="search" placeholder="Buscar placa ou operação" oninput="anomDebouncedRender()"></label>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="anomClearFilters()">Limpar</button>
+        </div>
+      </div>
+      <div class="anom-summary" id="anom-summary">—</div>
+      <div class="anom-table-wrap" id="anom-table-wrap">
+        <table class="anom-table">
+          <thead><tr><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th></tr></thead>
+          <tbody id="anom-table-body"></tbody>
+        </table>
+      </div>
+      <div class="anom-empty" id="anom-empty" style="display:none"><strong>Nenhuma anomalia encontrada.</strong><span>Ajuste os filtros ou importe um período com ocorrências.</span></div>
+    </section>
+  </div>
 
   <!-- FECHAMENTO INTELIGENTE — STAGE 4 -->
   <div id="page-fechamento" class="page">
@@ -1666,7 +1746,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <button class="btn btn-danger btn-sm" onclick="verificarSenha(limparTodosDados)">Reset completo (local + Firebase)</button>
       </div>
       <div class="sheets-config" style="margin-top:16px;border-color:rgba(245,158,11,.4)">
-        <div class="sheets-config-title">⛽ Preço do Diesel por Operação</div>
+        <div class="sheets-config-title">Preço do Diesel por Operação</div>
         <div class="sheets-hint" style="margin-bottom:14px">Configure o preço por litro de cada operação para calcular o custo de ineficiência no Relatório Executivo.</div>
         <div id="diesel-preco-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1737,7 +1817,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <button class="btn btn-secondary btn-sm rel-tipo-btn" data-tipo="__maquinas__" onclick="relSetTipo(this,'__maquinas__')">⚙️ Máquinas</button>
           <button class="btn btn-secondary btn-sm rel-tipo-btn" data-tipo="__tratores__" onclick="relSetTipo(this,'__tratores__')">🚜 Tratores</button>
           <button class="btn btn-secondary btn-sm rel-tipo-btn" data-tipo="__pesada__" onclick="relSetTipo(this,'__pesada__')">🚛 Pesada</button>
-          <button class="btn btn-secondary btn-sm rel-tipo-btn" data-tipo="__leve__" onclick="relSetTipo(this,'__leve__')">🚗 Leve</button>
+          <button class="btn btn-secondary btn-sm rel-tipo-btn" data-tipo="__leve__" onclick="relSetTipo(this,'__leve__')">Leve</button>
           
         </div>
       </div>
@@ -1771,7 +1851,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <label class="form-label">Tipo(s) de Frota deste Grupo</label>
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="relg-tipos-container">
             <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="checkbox" class="relg-tipo-check" onchange="relgFiltrarOps()" value="__pesada__" style="accent-color:var(--accent)"> 🚛 Pesada</label>
-            <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="checkbox" class="relg-tipo-check" onchange="relgFiltrarOps()" value="__leve__" style="accent-color:var(--accent)"> 🚗 Leve</label>
+            <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="checkbox" class="relg-tipo-check" onchange="relgFiltrarOps()" value="__leve__" style="accent-color:var(--accent)"> Leve</label>
             <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="checkbox" class="relg-tipo-check" onchange="relgFiltrarOps()" value="__maquinas__" style="accent-color:var(--accent)"> ⚙️ Máquinas</label>
             <label style="display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="checkbox" class="relg-tipo-check" onchange="relgFiltrarOps()" value="__tratores__" style="accent-color:var(--accent)"> 🚜 Tratores</label>
             
@@ -1829,7 +1909,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
             <button class="btn btn-secondary btn-sm exec-tipo-btn" data-tipo="__maquinas__" onclick="execSetTipo(this,'__maquinas__')">⚙️ Máquinas</button>
             <button class="btn btn-secondary btn-sm exec-tipo-btn" data-tipo="__tratores__" onclick="execSetTipo(this,'__tratores__')">🚜 Tratores</button>
             <button class="btn btn-secondary btn-sm exec-tipo-btn" data-tipo="__pesada__" onclick="execSetTipo(this,'__pesada__')">🚛 Pesada</button>
-            <button class="btn btn-secondary btn-sm exec-tipo-btn" data-tipo="__leve__" onclick="execSetTipo(this,'__leve__')">🚗 Leve</button>
+            <button class="btn btn-secondary btn-sm exec-tipo-btn" data-tipo="__leve__" onclick="execSetTipo(this,'__leve__')">Leve</button>
             
           </div>
         </div>
@@ -2189,7 +2269,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
             style="width:64px;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:13px;text-align:center;font-family:monospace">
           <span style="font-size:12px;color:var(--text2)">% acima do cliente</span>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px">💡 Acima dessa % = ✅ OK. Deixe 0% para desativar a zona de atenção</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px">💡 Acima dessa % = OK. Deixe 0% para desativar a zona de atenção</div>
       </div>
       <div style="flex:1;min-width:260px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:12px 16px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -2294,7 +2374,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
       <button class="btn btn-primary btn-sm rc-tab" onclick="rcTab(this,'o2p')">⚠️ Só no O2P <span id="rc-badge-o2p" style="background:rgba(255,255,255,.2);border-radius:8px;padding:1px 7px;margin-left:4px">0</span></button>
       <button class="btn btn-secondary btn-sm rc-tab" onclick="rcTab(this,'ticket')">⚠️ Só na Ticket <span id="rc-badge-ticket" style="background:rgba(255,255,255,.15);border-radius:8px;padding:1px 7px;margin-left:4px">0</span></button>
-      <button class="btn btn-secondary btn-sm rc-tab" onclick="rcTab(this,'ambos')">✅ Em ambos <span id="rc-badge-ambos" style="background:rgba(255,255,255,.15);border-radius:8px;padding:1px 7px;margin-left:4px">0</span></button>
+      <button class="btn btn-secondary btn-sm rc-tab" onclick="rcTab(this,'ambos')">Em ambos <span id="rc-badge-ambos" style="background:rgba(255,255,255,.15);border-radius:8px;padding:1px 7px;margin-left:4px">0</span></button>
     </div>
     <div class="chart-card" style="padding:0;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;flex-wrap:wrap;gap:8px">
@@ -2354,7 +2434,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
           <div><div style="font-size:11px;color:var(--text3)">Coef. Rota</div><div id="mr-res-coefop" style="font-size:18px;font-weight:700;font-family:monospace">—</div></div>
           <div><div style="font-size:11px;color:var(--text3)">Desconto %</div><div id="mr-res-desconto" style="font-size:18px;font-weight:700;font-family:monospace">—</div></div>
           <div><div style="font-size:11px;color:var(--text3)">Total Variação</div><div id="mr-res-variacao" style="font-size:18px;font-weight:700;font-family:monospace">—</div></div>
-          <div style="grid-column:span 2"><div style="font-size:11px;color:var(--green)">✅ Meta Ajustada</div><div id="mr-res-ajustada" style="font-size:28px;font-weight:700;color:var(--green);font-family:monospace">—</div></div>
+          <div style="grid-column:span 2"><div style="font-size:11px;color:var(--green)">Meta Ajustada</div><div id="mr-res-ajustada" style="font-size:28px;font-weight:700;color:var(--green);font-family:monospace">—</div></div>
         </div>
       </div>
     </div>
@@ -2581,12 +2661,13 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
         <label class="perm-item"><input type="checkbox" data-perm="dashboard"> ⊞ Dashboard</label>
         <label class="perm-item"><input type="checkbox" data-perm="pendencias"> Central de Pendências</label>
         <label class="perm-item"><input type="checkbox" data-perm="fechamento"> Fechamento Inteligente</label>
+        <label class="perm-item"><input type="checkbox" data-perm="anomalias"> Anomalias</label>
         <label class="perm-item"><input type="checkbox" data-perm="comparativo"> Comparativo</label>
-        <label class="perm-item"><input type="checkbox" data-perm="abastecimentos"> ⛽ Abastecimentos</label>
+        <label class="perm-item"><input type="checkbox" data-perm="abastecimentos"> Abastecimentos</label>
         <label class="perm-item"><input type="checkbox" data-perm="maquinas">Frota e Equipamentos</label>
         <label class="perm-item"><input type="checkbox" data-perm="relatorio"> 📧 Relatório</label>
         <label class="perm-item"><input type="checkbox" data-perm="excluir"> 🗑️ A Excluir</label>
-        <label class="perm-item"><input type="checkbox" data-perm="arla"> 🧪 Arla</label>
+        <label class="perm-item"><input type="checkbox" data-perm="arla"> Arla</label>
         <label class="perm-item"><input type="checkbox" data-perm="kmcomp"> 📏 KM Comparativo</label>
         <label class="perm-item"><input type="checkbox" data-perm="metarota"> 🎯 Meta por Rota</label>
         <label class="perm-item"><input type="checkbox" data-perm="config"> ⚙️ Configurações</label>
@@ -3228,6 +3309,7 @@ function navIconSvg(name) {
     dashboard:'<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
     fechamento:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h5"/><path d="m8 16 2 2 5-5"/></svg>',
     pendencias:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3 3 7.5V13c0 4.6 3.5 7.7 9 8 5.5-.3 9-3.4 9-8V7.5L12 3Z"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>',
+    anomalias:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 19h18"/><path d="M5 15l4-5 4 3 6-8"/><circle cx="5" cy="15" r="1"/><circle cx="9" cy="10" r="1"/><circle cx="13" cy="13" r="1"/><circle cx="19" cy="5" r="1"/></svg>',
     comparativo:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>',
     abastecimentos:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg>',
     maquinas:'<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="6" rx="1.5"/><rect x="14" y="5" width="7" height="6" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg>',
@@ -3245,6 +3327,7 @@ const AUTH_PAGES = [
   { id:'dashboard',     label:'Dashboard',             group:'Visão geral' },
   { id:'pendencias',    label:'Central de Pendências', group:'Visão geral' },
   { id:'fechamento',   label:'Fechamento Inteligente', group:'Inteligência' },
+  { id:'anomalias',    label:'Anomalias',              group:'Inteligência' },
   { id:'comparativo',   label:'Comparativo',           group:'Visão geral' },
   { id:'abastecimentos',label:'Abastecimentos',        group:'Operação' },
   { id:'maquinas',      label:'Frota e Equipamentos',  group:'Operação' },
@@ -3880,10 +3963,10 @@ function pendCollect(){
   const altas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(agoraEfic.getFullYear(),agoraEfic.getMonth(),limiteEfic):[];
   const baixas=typeof ignisEficienciaBaixaRows==='function'?ignisEficienciaBaixaRows(agoraEfic.getFullYear(),agoraEfic.getMonth(),limiteBaixo):[];
   if(altas.length){
-    const pior=altas[0];addIssue({id:'eficiencia-alta',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente alta',count:altas.length,keys:altas.map(r=>'eficiencia-alta:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'abastecimentos',detail:`${altas.length} abastecimento${altas.length>1?'s':''} acima de ${limiteEfic.toFixed(0)}%.`,highlightLabel:'Maior eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:altas,meta:`Limite: > ${limiteEfic.toFixed(0)}%`});
+    const pior=altas[0];addIssue({id:'eficiencia-alta',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente alta',count:altas.length,keys:altas.map(r=>'eficiencia-alta:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'anomalias',detail:`${altas.length} abastecimento${altas.length>1?'s':''} acima de ${limiteEfic.toFixed(0)}%.`,highlightLabel:'Maior eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:altas,meta:`Limite: > ${limiteEfic.toFixed(0)}%`});
   }
   if(baixas.length){
-    const pior=baixas[0];addIssue({id:'eficiencia-baixa',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente baixa',count:baixas.length,keys:baixas.map(r=>'eficiencia-baixa:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'abastecimentos',detail:`${baixas.length} abastecimento${baixas.length>1?'s':''} abaixo de ${limiteBaixo.toFixed(0)}%.`,highlightLabel:'Menor eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:baixas,meta:`Limite: < ${limiteBaixo.toFixed(0)}%`});
+    const pior=baixas[0];addIssue({id:'eficiencia-baixa',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente baixa',count:baixas.length,keys:baixas.map(r=>'eficiencia-baixa:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'anomalias',detail:`${baixas.length} abastecimento${baixas.length>1?'s':''} abaixo de ${limiteBaixo.toFixed(0)}%.`,highlightLabel:'Menor eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:baixas,meta:`Limite: < ${limiteBaixo.toFixed(0)}%`});
   }
   const eficStatus=altas.length||baixas.length?'attention':'ok';
   monitors.push({name:'Eficiência entre abastecimentos',status:eficStatus,detail:altas.length||baixas.length?`${altas.length} alta(s) · ${baixas.length} baixa(s) · limites ${limiteBaixo.toFixed(0)}% / ${limiteEfic.toFixed(0)}%`:`Sem anomalias fora de ${limiteBaixo.toFixed(0)}%–${limiteEfic.toFixed(0)}%`});
@@ -3898,7 +3981,7 @@ function pendCollect(){
   if(meds.length){
     addIssue({
       id:'medidores',kind:'medidor',severity:'critical',title:'Odômetro / horímetro regressivo',
-      count:meds.length,keys:meds.map(r=>'medidor:'+r.placa+'|'+r.data+'|'+r.valor),page:'abastecimentos',
+      count:meds.length,keys:meds.map(r=>'medidor:'+r.placa+'|'+r.data+'|'+r.valor),page:'anomalias',
       detail:`${meds.length} ocorrência${meds.length>1?'s':''} com medidor menor que o anterior/correção negativa no mês atual.`,
       highlightLabel:'Primeira ocorrência',
       highlightValue:`${meds[0].placa} · ${meds[0].medidor}`,
@@ -3950,7 +4033,8 @@ function pendGo(page){const el=document.getElementById('nav-'+page)||[...documen
 function pendIssueHTML(i){
   const sev=i.severity==='critical'?'Crítica':'Atenção';
   const highlight=i.highlightValue?`<div class="pend-highlight"><div><span>${pendEsc(i.highlightLabel||'Destaque')}</span><strong>${pendEsc(i.highlightValue)}</strong></div>${i.highlightSub?`<small>${pendEsc(i.highlightSub)}</small>`:''}</div>`:'';
-  const details=i.rows?.length?`<button class="pend-detail-btn" onclick="event.stopPropagation();pendOpenDetails('${i.id}')">Ver ${i.id==='consumo'?'placas reincidentes':'detalhes'} <span>${Number(i.rows.length).toLocaleString('pt-BR')}</span></button>`:'';
+  const isAnom=['medidores','eficiencia-alta','eficiencia-baixa'].includes(i.id); const anomType=i.id==='medidores'?'medidor':i.id==='eficiencia-alta'?'alta':i.id==='eficiencia-baixa'?'baixa':'all';
+  const details=i.rows?.length?(isAnom?`<button class="pend-detail-btn" onclick="event.stopPropagation();anomOpenPage('${anomType}')">Abrir Anomalias <span>${Number(i.rows.length).toLocaleString('pt-BR')}</span></button>`:`<button class="pend-detail-btn" onclick="event.stopPropagation();pendOpenDetails('${i.id}')">Ver ${i.id==='consumo'?'placas reincidentes':'detalhes'} <span>${Number(i.rows.length).toLocaleString('pt-BR')}</span></button>`):'';
   return `<article class="pend-issue ${i.severity}" onclick="pendGo('${i.page}')"><div class="pend-issue-icon">${pendSvg(i.kind)}</div><div class="pend-issue-body"><div class="pend-issue-top"><div class="pend-issue-title">${pendEsc(i.title)}</div><span class="pend-severity ${i.severity}">${sev}</span></div><div class="pend-issue-detail">${pendEsc(i.detail)}</div>${highlight}${i.meta&&!i.highlightValue?`<div class="pend-preview">${pendEsc(i.meta)}</div>`:''}${details}<div class="pend-issue-meta"><span class="pend-issue-count">${Number(i.count||1).toLocaleString('pt-BR')} ocorrência${Number(i.count||1)===1?'':'s'}</span><span class="pend-issue-action">Abrir análise <svg class="ui-icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></div></div></article>`;
 }
 function pendOpenDetails(issueId){
@@ -4023,6 +4107,7 @@ function showPage(page,el) {
   if(renders[page] && precisaAtualizar) renders[page]();
 
   if(page==='fechamento') { renderFechamento(); _markPageClean(page); }
+  if(page==='anomalias') { renderAnomalias(); _markPageClean(page); }
 
   if(page==='relatorio' && precisaAtualizar) { relPopularOps(); relgInit(); relChecarReincidencia(); _markPageClean(page); }
   if(page==='config' && precisaAtualizar) {
@@ -4620,9 +4705,9 @@ function renderDashboard() {
   // Se não há dados, mostra mensagem útil com sugestões
   if (list.length === 0) {
     const sugestoes = {
-      '__maquinas__':     '🚛 Frota Pesada ou 🚗 Frota Leve',
+      '__maquinas__':     '🚛 Frota Pesada ou Frota Leve',
       '__tratores__':     '⚙️ Máquinas ou 🚛 Frota Pesada',
-      '__pesada__':       '⚙️ Máquinas ou 🚗 Frota Leve',
+      '__pesada__':       '⚙️ Máquinas ou Frota Leve',
       '__leve__':         '🚛 Frota Pesada ou ⚙️ Máquinas',
       '__empilhadeiras__':'⚙️ Máquinas ou 🚛 Frota Pesada',
     };
@@ -5669,7 +5754,7 @@ function corrigirOperacoesDesatualizadas() {
   saveState();
   renderMaquinas();
   const resumo = corrigidas <= 8 ? detalhes.join('\n') : detalhes.slice(0,8).join('\n') + `\n... e mais ${corrigidas-8}`;
-  alert(`✅ ${corrigidas} placa(s) corrigida(s) com base no abastecimento mais recente já importado:\n\n${resumo}`);
+  alert(`${corrigidas} placa(s) corrigida(s) com base no abastecimento mais recente já importado:\n\n${resumo}`);
   showToast(`${corrigidas} operação(ões) corrigida(s)`, 'success');
 }
 
@@ -6146,11 +6231,11 @@ async function importarRelatorio(input) {
       relChecarReincidencia();
       document.getElementById('import-preview').innerHTML=`
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px;margin-top:12px">
-          <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">✅ "${nomePeriodo}" importado!</div>
-          <div style="font-size:13px;color:var(--text2)">🚗 ${novaMaq} novo(s) veículo(s) · ⛽ ${dadosSemana.length} registro(s)</div>
-          ${precosAtualizados>0?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">💰 ${precosAtualizados} preço(s) de diesel atualizado(s) automaticamente</div>`:''}
+          <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">"${nomePeriodo}" importado!</div>
+          <div style="font-size:13px;color:var(--text2)">${novaMaq} novo(s) veículo(s) · ${dadosSemana.length} registro(s)</div>
+          ${precosAtualizados>0?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">${precosAtualizados} preço(s) de diesel atualizado(s) automaticamente</div>`:''}
           ${metaAtualizada>0?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">🎯 ${metaAtualizada} meta(s) atualizada(s)</div>`:''}
-          ${ignoradas>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">⏭ ${ignoradas} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
+          ${ignoradas>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${ignoradas} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
           <div style="font-size:12px;color:var(--accent);margin-top:8px">📊 Acesse o Comparativo para analisar os períodos!</div>
         </div>`;
       updateFilters(); renderDashboard();
@@ -6192,6 +6277,14 @@ function dataParaISO(d) {
   return `${y}-${m}-${day}`;
 }
 
+
+function ignisImportProgress(el,pct,title,sub=''){
+  if(!el)return; const n=Math.max(0,Math.min(100,Number(pct)||0));
+  el.innerHTML=`<div class="import-progress-card"><div class="import-progress-top"><strong>${title}</strong><span>${Math.round(n)}%</span></div><div class="import-progress-track"><span style="width:${n}%"></span></div>${sub?`<div class="import-progress-sub">${sub}</div>`:''}</div>`;
+}
+function ignisNextFrame(){return new Promise(resolve=>requestAnimationFrame(()=>resolve()));}
+function ignisRunIdle(fn){if('requestIdleCallback' in window)requestIdleCallback(fn,{timeout:1800});else setTimeout(fn,50);}
+
 async function importarRelatorioDiario(input) {
   if (!await ensureXLSXReady()) return;
   const file = input.files[0]; if (!file) return;
@@ -6200,14 +6293,17 @@ async function importarRelatorioDiario(input) {
     input.value=''; return;
   }
   const previewEl = document.getElementById('import-diario-preview');
-  previewEl.innerHTML = '<div style="font-size:13px;color:var(--text2);margin-top:10px">⏳ Lendo e consolidando o relatório...</div>';
+  ignisImportProgress(previewEl,5,'Lendo relatório','Preparando a planilha para análise');
 
   const reader = new FileReader();
   reader.onload = async function(e) {
     try {
+      await ignisNextFrame();
       const wb = XLSX.read(e.target.result, { type: 'array', dense: true, cellDates: false });
+      ignisImportProgress(previewEl,24,'Planilha lida','Identificando colunas e registros');await ignisNextFrame();
       const ws = wb.Sheets[wb.SheetNames[0]];
       const raw = kmLerComHeaderDinamico(ws); // mesma detecção robusta de cabeçalho do KM Comparativo
+      ignisImportProgress(previewEl,38,'Analisando dados',`${raw.length.toLocaleString('pt-BR')} linha(s) encontradas`);await ignisNextFrame();
 
       const excluirOps = ['MANUTENCAO','MANUTENÇÃO','LOCACAO','LOCAÇÃO','NAO DEFINIDO','NÃO DEFINIDO','DISPONIVEL','DISPONÍVEL','DESMOBILIZADA','VENDIDOS','SEMINOVOS'];
 
@@ -6266,6 +6362,7 @@ async function importarRelatorioDiario(input) {
         linhas.push({ data: dataObj, placa, operacao, modelo, tipoVeic, litros, kmReal, mediaIdeal, valorLitro });
       });
       linhas.sort((a,b) => a.data - b.data);
+      ignisImportProgress(previewEl,58,'Consolidando períodos','Separando semanas e agrupando por placa');await ignisNextFrame();
 
       if (!linhas.length) {
         previewEl.innerHTML = '<div style="color:var(--red);font-size:13px;margin-top:10px">Nenhuma linha válida encontrada nesse arquivo.</div>';
@@ -6314,6 +6411,7 @@ async function importarRelatorioDiario(input) {
       });
 
 
+      ignisImportProgress(previewEl,70,'Validando semanas','Conferindo períodos já existentes');await ignisNextFrame();
       const conflitos = [];
       blocos.forEach(b => {
         const dIni = dataParaISO(b.inicio), dFim = dataParaISO(b.fim);
@@ -6415,29 +6513,32 @@ async function importarRelatorioDiario(input) {
         } catch(e) {}
       }
 
-      if (anomaliasMedidorImport.length && typeof ignisRecordMedidorAnomaly === 'function') {
-        anomaliasMedidorImport.forEach(a => {
-          a.tipoIgnis = ignisInferTipoMedidor(a.placa, a.modelo, a.tipoVeic, a.operacao);
-          ignisRecordMedidorAnomaly(a);
-        });
+      if (anomaliasMedidorImport.length) {
+        anomaliasMedidorImport.forEach(a => { a.tipoIgnis = ignisInferTipoMedidor(a.placa, a.modelo, a.tipoVeic, a.operacao); });
+        if(typeof ignisRecordMedidorAnomaliesBatch==='function') ignisRecordMedidorAnomaliesBatch(anomaliasMedidorImport);
+        else if(typeof ignisRecordMedidorAnomaly==='function') anomaliasMedidorImport.forEach(ignisRecordMedidorAnomaly);
       }
-      if (anomaliasEficienciaImport.length && typeof ignisRecordEficienciaAnomaly === 'function') {
-        anomaliasEficienciaImport.forEach(ignisRecordEficienciaAnomaly);
+      if (anomaliasEficienciaImport.length) {
+        if(typeof ignisRecordEficienciaAnomaliesBatch==='function') ignisRecordEficienciaAnomaliesBatch(anomaliasEficienciaImport);
+        else if(typeof ignisRecordEficienciaAnomaly==='function') anomaliasEficienciaImport.forEach(ignisRecordEficienciaAnomaly);
       }
 
-      const salvoFirebase = await saveState({ immediate: true }); // confirma o lote inteiro antes de avisar sucesso
+      ignisImportProgress(previewEl,86,'Salvando dados','Análises concluídas. Sincronizando com o Firebase');await ignisNextFrame();
+      const savePromise = saveState({ immediate: true }); // mantém confirmação do lote sem abrir mão de segurança
       renderHistoricoPeriodos();
-      relChecarReincidencia();
-      updateFilters(); renderDashboard();
+      updateFilters(true);
+      ignisRunIdle(()=>{try{relChecarReincidencia()}catch(e){};try{renderPendencias(true)}catch(e){};try{renderAnomalias(true)}catch(e){}});
+      const salvoFirebase = await savePromise;
+      ignisImportProgress(previewEl,100,'Importação concluída','Dados processados e análises preservadas');
 
       previewEl.innerHTML = `
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px;margin-top:12px">
-          <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">✅ ${semanasNovas} semana(s) detectada(s) e importada(s)!</div>
-          <div style="font-size:13px;color:var(--text2)">🚗 ${novaMaq} novo(s) veículo(s) · ⛽ ${registrosTotais} registro(s) consolidado(s)</div>
-          ${precosAtualizados>0?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">💰 ${precosAtualizados} preço(s) de diesel atualizado(s)</div>`:''}
-          ${ignoradasExclusao>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">⏭ ${ignoradasExclusao} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
-          ${ignoradasArla>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">🧪 ${ignoradasArla} linha(s) de Arla ignorada(s) — tem controle dedicado na aba Arla 32</div>`:''}
-          ${conflitos.length>0?`<div style="font-size:12px;color:var(--accent);margin-top:4px">🔄 ${conflitos.length} semana(s) substituída(s)</div>`:''}
+          <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">${semanasNovas} semana(s) detectada(s) e importada(s)!</div>
+          <div style="font-size:13px;color:var(--text2)">${novaMaq} novo(s) veículo(s) · ${registrosTotais} registro(s) consolidado(s)</div>
+          ${precosAtualizados>0?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">${precosAtualizados} preço(s) de diesel atualizado(s)</div>`:''}
+          ${ignoradasExclusao>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${ignoradasExclusao} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
+          ${ignoradasArla>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${ignoradasArla} linha(s) de Arla ignorada(s) — tem controle dedicado na aba Arla 32</div>`:''}
+          ${conflitos.length>0?`<div style="font-size:12px;color:var(--accent);margin-top:4px">${conflitos.length} semana(s) substituída(s)</div>`:''}
           ${anomaliasEficienciaImport.length>0?`<div style="font-size:12px;color:var(--yellow);margin-top:4px">${anomaliasEficienciaImport.filter(x=>x.faixa==='alta').length} alta(s) · ${anomaliasEficienciaImport.filter(x=>x.faixa==='baixa').length} baixa(s) enviadas para Anomalias</div>`:''}
         </div>`;
       if (salvoFirebase) {
@@ -6592,7 +6693,7 @@ function copiarScriptApps() {
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 function showToast(msg,type='success') {
   const t=document.getElementById('toast');
-  t.textContent=(type==='success'?'✅ ':'❌ ')+msg;
+  t.textContent=(type==='success'?'':'❌ ')+msg;
   t.className=`toast ${type} show`;
   setTimeout(()=>t.classList.remove('show'),3500);
 }
@@ -6658,7 +6759,7 @@ function salvarSenha() {
   _sessaoAutorizada = true;
   saveState();
   msg.style.color='var(--green)';
-  msg.textContent='✅ Senha salva e sincronizada!';
+  msg.textContent='Senha salva e sincronizada!';
   document.getElementById('senha-atual').value = '';
   document.getElementById('nova-senha').value = '';
   document.getElementById('confirmar-nova-senha').value = '';
@@ -7317,7 +7418,7 @@ async function enviarBloco(blocoId) {
     await navigator.clipboard.write([
       new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })
     ]);
-    showToast('✅ Tabela copiada! Cole no corpo do e-mail (Ctrl+V)', 'success');
+    showToast('Tabela copiada! Cole no corpo do e-mail (Ctrl+V)', 'success');
   } catch(e) {
     showToast('⚠️ Copie manualmente o relatório', 'error');
   }
@@ -7425,7 +7526,7 @@ async function buscarPlanilhaSP() {
     document.getElementById('btn-excluir-atualizar').style.display = '';
     statusEl.style.display = '';
     statusEl.style.color = 'var(--green)';
-    statusEl.textContent = '✅ Carregado em ' + agora;
+    statusEl.textContent = 'Carregado em ' + agora;
   } catch(e) {
     bar.style.display = 'none';
     statusEl.style.display = '';
@@ -7568,7 +7669,7 @@ async function processarExcluirBuffer(buffer) {
   localStorage.setItem('excluir_dados', JSON.stringify(window._excluirDados.map(r => ({...r, dataObj: null}))));
 
   atualizarExcluirUI();
-  showToast('✅ ' + window._excluirDados.length + ' registros carregados!', 'success');
+  showToast('' + window._excluirDados.length + ' registros carregados!', 'success');
 }
 
 function atualizarExcluirUI() {
@@ -7654,7 +7755,7 @@ function marcarConcluido(placa, data, hora) {
   localStorage.setItem('excluir_dados', JSON.stringify(todos.map(r => ({...r, dataObj: null}))));
 
   atualizarExcluirUI();
-  showToast('✅ Marcado como excluído!', 'success');
+  showToast('Marcado como excluído!', 'success');
 }
 
 function renderExcluirLista() {
@@ -7698,7 +7799,7 @@ function copiarListaExcluir() {
     .join(' | ')
   ).join('\n');
   navigator.clipboard.writeText(texto)
-    .then(()=>showToast('✅ '+f.length+' registros copiados!','success'))
+    .then(()=>showToast(''+f.length+' registros copiados!','success'))
     .catch(()=>showToast('Erro ao copiar','error'));
 }
 
@@ -8043,9 +8144,9 @@ async function arlaImportarSegmentosPlanilha(input) {
       statusEl.textContent = '';
       resultEl.innerHTML = `
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:14px 16px;margin-top:12px">
-          <div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:6px">✅ Mapeamento importado da aba "${sheetName}"!</div>
-          <div style="font-size:12.5px;color:var(--text2)">🚛 ${novasPlacas} placa(s) nova(s) · 🔄 ${atualizadas} atualizada(s) · 🎯 ${segmentosUsados.size} segmento(s) distinto(s)</div>
-          ${semSegmento>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">⏭ ${semSegmento} linha(s) sem segmento preenchido na planilha (ignoradas)</div>`:''}
+          <div style="font-size:14px;font-weight:600;color:var(--green);margin-bottom:6px">Mapeamento importado da aba "${sheetName}"!</div>
+          <div style="font-size:12.5px;color:var(--text2)">🚛 ${novasPlacas} placa(s) nova(s) · ${atualizadas} atualizada(s) · 🎯 ${segmentosUsados.size} segmento(s) distinto(s)</div>
+          ${semSegmento>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${semSegmento} linha(s) sem segmento preenchido na planilha (ignoradas)</div>`:''}
         </div>`;
       showToast(`${novasPlacas + atualizadas} placa(s) mapeada(s) em ${segmentosUsados.size} segmento(s)`, 'success');
     } catch(err) {
@@ -8187,7 +8288,7 @@ function arlaProcessar(rows) {
   window._arlaState._pendingMesLabel = null;
   arlaExibirResultado();
   arlaChecarLembrete();
-  showToast('✅ ' + window._arlaState.processados.length + ' registros processados!', 'success');
+  showToast('' + window._arlaState.processados.length + ' registros processados!', 'success');
 }
 
 function arlaTrocarMes(mesId) {
@@ -8488,7 +8589,7 @@ function arlaRenderRelatorio() {
       const pctColor = r.status === 'IDEAL' ? 'var(--green)' : r.status === 'ATENCAO' ? '#f59e0b' : 'var(--red)';
       const badgeClass = r.status === 'IDEAL' ? 'arla-badge-ok' : r.status === 'ATENCAO' ? 'arla-badge-atencao' : 'arla-badge-fail';
       const dirSeta = r.direcao === 'baixo' ? '↓' : r.direcao === 'alto' ? '↑' : '';
-      const badgeLabel = r.status === 'IDEAL' ? '✅ IDEAL' : (r.status === 'ATENCAO' ? '🟡 ATENÇÃO ' : '🔴 CRÍTICO ') + dirSeta;
+      const badgeLabel = r.status === 'IDEAL' ? 'IDEAL' : (r.status === 'ATENCAO' ? '🟡 ATENÇÃO ' : '🔴 CRÍTICO ') + dirSeta;
       html += '<div class="arla-row">';
       html += '<span style="font-family:monospace;font-weight:700">' + r.placa + '</span>';
       html += '<span style="font-size:12px;color:var(--text2)">' + (r.modelo||'—') + '</span>';
@@ -8542,7 +8643,7 @@ function arlaAdicionarEGR() {
   saveState();
   inp.value = '';
   arlaRenderBancoEGR();
-  let msg = '✅ ' + adicionadas + ' placa(s) adicionada(s)!';
+  let msg = '' + adicionadas + ' placa(s) adicionada(s)!';
   if (duplicadas > 0) msg += ' (' + duplicadas + ' já existiam)';
   showToast(msg, 'success');
 }
@@ -8612,7 +8713,7 @@ function arlaSalvarGrupo() {
   saveState();
   arlaLimparFormGrupo();
   arlaRenderGrupos();
-  showToast('✅ Grupo salvo!', 'success');
+  showToast('Grupo salvo!', 'success');
 }
 
 function arlaLimparFormGrupo() {
@@ -8735,7 +8836,7 @@ function arlaBuildEmailHTML(registros, nomeGrupo, mesRef, obs) {
   return '<!DOCTYPE html><html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:transparent"><div style="clear:both">' +
     '<table width="620" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #cbd5e1">' +
     '<tr><td style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);padding:22px 24px">' +
-    '<div style="font-size:18px;font-weight:700;color:#fff">🧪 Ignis</div>' +
+    '<div style="font-size:18px;font-weight:700;color:#fff">Ignis</div>' +
     '<div style="font-size:12px;color:#93c5fd;margin-top:3px">Controle de Arla — ' + (mesRef || '') + (nomeGrupo ? ' · ' + nomeGrupo : '') + '</div>' +
     '</td></tr>' +
     '<tr><td style="background:#eff6ff;padding:10px 24px;font-size:12px;color:#1d4ed8;border-bottom:1px solid #bfdbfe">' +
@@ -8762,7 +8863,7 @@ function arlaEnviarEmailGrupo(grupoId) {
   if (!registros.length) { showToast('Nenhuma placa em estado crítico neste grupo', 'error'); return; }
   const html = arlaBuildEmailHTML(registros, g.nome, '', g.obs || '');
   navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([html], {type:'text/html'})})]).then(() => {
-    showToast('✅ Tabela copiada! Cole no e-mail (Ctrl+V)', 'success');
+    showToast('Tabela copiada! Cole no e-mail (Ctrl+V)', 'success');
   }).catch(() => showToast('Copie o relatório manualmente', 'error'));
   const assunto = encodeURIComponent('Ignis — Alerta Arla · ' + g.nome);
   setTimeout(() => window.open('mailto:' + g.emails + '?subject=' + assunto, '_blank'), 500);
@@ -8789,7 +8890,7 @@ function arlaEnviarEmail() {
 
   const html = arlaBuildEmailHTML(dados, opsLabel, '');
   navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([html], {type:'text/html'})})]).then(() => {
-    showToast('✅ Tabela copiada! Cole no e-mail (Ctrl+V)', 'success');
+    showToast('Tabela copiada! Cole no e-mail (Ctrl+V)', 'success');
   }).catch(() => showToast('Copie o relatório manualmente', 'error'));
 
   const assunto = encodeURIComponent('Ignis — Alerta Controle Arla' + (selectedOps.size > 0 ? ' — ' + opsLabel : ''));
@@ -8980,7 +9081,7 @@ function relgSalvar() {
   relgPersist();
   relgLimpar();
   relgRender();
-  showToast('✅ Grupo salvo!', 'success');
+  showToast('Grupo salvo!', 'success');
   setTimeout(() => { const lista = document.getElementById('relg-lista'); if (lista) lista.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
 }
 
@@ -9030,7 +9131,7 @@ function relgRender() {
   window._relGrupos.forEach(g => {
     const div = document.createElement('div');
     div.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px';
-    const tipoNomes = { '__pesada__': '🚛 Pesada', '__leve__': '🚗 Leve', '__maquinas__': '⚙️ Máquinas', '__tratores__': '🚜 Tratores', '__empilhadeiras__': '🏭 Empilhadeiras', '': '⊞ Todos' };
+    const tipoNomes = { '__pesada__': '🚛 Pesada', '__leve__': 'Leve', '__maquinas__': '⚙️ Máquinas', '__tratores__': '🚜 Tratores', '__empilhadeiras__': '🏭 Empilhadeiras', '': '⊞ Todos' };
     div.innerHTML =
       '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">' +
       '<div>' +
@@ -9590,7 +9691,7 @@ function renderExecutivo() {
     html += '<span style="font-size:16px;font-weight:700;color:var(--text3);font-family:monospace;width:24px">' + (i+1) + '</span>';
     html += '<div><div style="display:flex;align-items:center;gap:8px">';
     html += '<span style="font-size:14px;font-weight:700">' + op + '</span>';
-    if (naMeta) html += '<span style="background:rgba(34,197,94,.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">✅ NA META</span>';
+    if (naMeta) html += '<span style="background:rgba(34,197,94,.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">NA META</span>';
     if (semPrecoCfg) html += '<span style="background:rgba(245,158,11,.15);color:var(--yellow);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">⚠️ SEM PREÇO</span>';
     html += '</div>';
     html += '<div style="font-size:11px;color:var(--text2);margin-top:2px">' + d.maquinas.length + ' máquinas · ' + fmtL(d.totalL) + (d.preco ? ' · R$' + d.preco.toFixed(2) + '/L' : '') + '</div></div></div>';
@@ -9714,7 +9815,7 @@ function exportarExecutivoEmail() {
   const html = '<!DOCTYPE html><html><body style="margin:0;padding:20px 0;font-family:Arial,sans-serif;background:#e2e8f0">' +
     '<table width="680" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #cbd5e1">' +
     '<tr><td style="background:linear-gradient(135deg,#064e3b 0%,#065f46 100%);padding:24px 28px">' +
-    '<div style="font-size:20px;font-weight:700;color:#fff">⛽ Ignis</div>' +
+    '<div style="font-size:20px;font-weight:700;color:#fff">Ignis</div>' +
     '<div style="font-size:13px;color:#6ee7b7;margin-top:4px">Relatório Executivo de Economia — ' + labelPeriodo + '</div>' +
     '</td></tr>' +
     '<tr><td style="padding:20px 28px">' +
@@ -9724,12 +9825,12 @@ function exportarExecutivoEmail() {
     '<div style="font-size:22px;font-weight:700;color:#dc2626;font-family:monospace">' + fmtR(totalDesperdicadoR) + '</div>' +
     '</td><td style="width:8px"></td>' +
     '<td style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;text-align:center;width:33%">' +
-    '<div style="font-size:11px;color:#d97706;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">⛽ Litros Desperdiçados</div>' +
+    '<div style="font-size:11px;color:#d97706;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Litros Desperdiçados</div>' +
     '<div style="font-size:22px;font-weight:700;color:#d97706;font-family:monospace">' + fmtL(totalDesperdicadoL) + '</div>' +
     '<div style="font-size:11px;color:#92400e;margin-top:3px">' + pctDesperdicio.toFixed(1) + '% do total consumido</div>' +
     '</td><td style="width:8px"></td>' +
     '<td style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;text-align:center;width:33%">' +
-    '<div style="font-size:11px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">✅ Economia Potencial</div>' +
+    '<div style="font-size:11px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Economia Potencial</div>' +
     '<div style="font-size:22px;font-weight:700;color:#16a34a;font-family:monospace">' + fmtR(totalDesperdicadoR) + '</div>' +
     '<div style="font-size:11px;color:#166534;margin-top:3px">se todas atingissem 98%</div>' +
     '</td></tr></table></td></tr>' +
@@ -9743,7 +9844,7 @@ function exportarExecutivoEmail() {
     '</table></body></html>';
 
   navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([html], {type:'text/html'})})]).then(() => {
-    showToast('✅ Relatório copiado! Cole no e-mail (Ctrl+V)', 'success');
+    showToast('Relatório copiado! Cole no e-mail (Ctrl+V)', 'success');
   }).catch(() => showToast('Erro ao copiar', 'error'));
   const assunto = encodeURIComponent('Ignis — Relatório Executivo · ' + labelPeriodo);
   setTimeout(() => window.open('mailto:?subject=' + assunto, '_blank'), 500);
@@ -9867,7 +9968,7 @@ async function kmCarregarSistema(input) {
       const lbl = document.getElementById('km-sistema-label');
       box.classList.add('loaded');
       lbl.style.display = '';
-      lbl.textContent = '✅ ' + count + ' placas carregadas — ' + file.name;
+      lbl.textContent = '' + count + ' placas carregadas — ' + file.name;
       showToast('Sistema carregado: ' + count + ' placas', 'success');
       kmCheckReady();
     } catch(e) { showToast('Erro ao ler arquivo do sistema', 'error'); console.error(e); }
@@ -9901,7 +10002,7 @@ async function kmCarregarCliente(input) {
       const lbl = document.getElementById('km-cliente-label');
       box.classList.add('loaded');
       lbl.style.display = '';
-      lbl.textContent = '✅ ' + count + ' placas carregadas — ' + file.name;
+      lbl.textContent = '' + count + ' placas carregadas — ' + file.name;
       showToast('Cliente carregado: ' + count + ' placas', 'success');
       kmCheckReady();
     } catch(e) { showToast('Erro ao ler planilha do cliente', 'error'); console.error(e); }
@@ -10407,7 +10508,7 @@ function kmMensalRenderLinhas() {
     const status = mes.carregando
       ? '<span style="color:var(--yellow)">⏳ Lendo arquivo...</span>'
       : pronto
-        ? '<span style="color:var(--green);font-weight:700">✅ Pronto para exportar</span>'
+        ? '<span style="color:var(--green);font-weight:700">Pronto para exportar</span>'
         : mes.sistema || mes.cliente
           ? '<span style="color:var(--yellow)">⚠️ Falta um arquivo</span>'
           : '<span style="color:var(--text3)">Aguardando arquivos</span>';
@@ -11015,7 +11116,7 @@ function kmComparar() {
   // KPIs
   let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px">';
   html += kpiExec('📅 Comparativo', label, new Date().toLocaleDateString('pt-BR'), '#8b90a7');
-  html += kpiExec('✅ OK', ok.length + '', 'dentro dos limites', 'var(--green)');
+  html += kpiExec('OK', ok.length + '', 'dentro dos limites', 'var(--green)');
   const opsComMargem = Object.keys(margensOp).length; html += kpiExec('⚠️ Atenção', atencao.length + '', opsComMargem ? 'margem por operação configurada' : 'margem baixa (' + margemMinGlobal + '–' + margemAtencaoGlobal + '%)', 'var(--yellow)');
   html += kpiExec('🔴 Alerta', alertas.length + '', 'KM O2P abaixo do Produtivo', 'var(--red)');
   html += kpiExec('🚨 Excesso', excessos.length + '', 'KM O2P muito acima do Produtivo', excessos.length > 0 ? 'var(--red)' : 'var(--text3)');
@@ -11059,7 +11160,7 @@ function kmComparar() {
   html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">';
   html += '<div style="padding:14px 20px;border-bottom:1px solid var(--border);font-size:15px;font-weight:700">📍 Resumo por Operação</div>';
   html += '<div style="overflow-x:auto"><table><thead><tr>';
-  html += '<th>Operação</th><th style="text-align:center">Placas</th><th style="text-align:center">KM O2P</th><th style="text-align:center">KM Produtivo</th><th style="text-align:center">Diferença Total</th><th style="text-align:center">🔴 Alerta</th><th style="text-align:center">⚠️ Atenção</th><th style="text-align:center">✅ OK</th>';
+  html += '<th>Operação</th><th style="text-align:center">Placas</th><th style="text-align:center">KM O2P</th><th style="text-align:center">KM Produtivo</th><th style="text-align:center">Diferença Total</th><th style="text-align:center">🔴 Alerta</th><th style="text-align:center">⚠️ Atenção</th><th style="text-align:center">OK</th>';
   html += '</tr></thead><tbody>';
   Object.entries(byOpResumo).sort((a,b) => ((b[1].alerta + b[1].excesso) - (a[1].alerta + a[1].excesso)) || a[0].localeCompare(b[0])).forEach(([op, d]) => {
     const diff = d.kmS - d.kmC;
@@ -11092,7 +11193,7 @@ function kmComparar() {
   html += '</select>';
   // Filtro por status (inclui "sem correspondência")
   html += '<select class="filter-select" id="km-filtro-status" onchange="kmFiltrarTabela()" style="font-size:13px">';
-  html += '<option value="">Todos</option><option value="alerta">🔴 Alerta</option><option value="excesso">🚨 Excesso</option><option value="atencao">⚠️ Atenção</option><option value="ok">✅ OK</option><option value="sem_corr">🔍 Sem Correspondência</option></select>';
+  html += '<option value="">Todos</option><option value="alerta">🔴 Alerta</option><option value="excesso">🚨 Excesso</option><option value="atencao">⚠️ Atenção</option><option value="ok">OK</option><option value="sem_corr">🔍 Sem Correspondência</option></select>';
   html += '</div></div>';
 
   html += '<div style="overflow-x:auto"><table id="km-tabela"><thead><tr>';
@@ -11101,7 +11202,7 @@ function kmComparar() {
 
   resultados.forEach(r => {
     const statusMap = {
-      ok: ['km-status-ok', '✅ OK'],
+      ok: ['km-status-ok', 'OK'],
       atencao: ['km-status-atencao', '⚠️ Atenção'],
       alerta: ['km-status-alerta', '🔴 Alerta'],
       excesso: ['km-status-excesso', '🚨 Excesso'],
@@ -11694,7 +11795,7 @@ function kmCopiarEmail() {
     '</table></body></html>';
 
   navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })]).then(() => {
-    showToast('✅ E-mail copiado! Cole no corpo do e-mail (Ctrl+V)', 'success');
+    showToast('E-mail copiado! Cole no corpo do e-mail (Ctrl+V)', 'success');
   }).catch(() => showToast('Erro ao copiar', 'error'));
   const assunto = encodeURIComponent('Alerta KM Comparativo - ' + label);
   setTimeout(() => window.open('mailto:?subject=' + assunto, '_blank'), 500);
@@ -11759,7 +11860,7 @@ function kmGerarEmailDuplo() {
         </tr>`).join('');
       html += mkTabela('🔍 Só no cliente (' + semSist.length + ')', linhasSem, '#7c3aed','#ddd6fe','#f5f3ff');
     }
-    if (!html) html = '<div style="font-size:12px;color:#64748b;padding:8px 0">✅ Nenhuma ocorrência neste período.</div>';
+    if (!html) html = '<div style="font-size:12px;color:#64748b;padding:8px 0">Nenhuma ocorrência neste período.</div>';
     return html;
   };
 
@@ -11814,7 +11915,7 @@ function kmGerarEmailDuplo() {
   </table></body></html>`;
 
   navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }) })]).then(() => {
-    showToast('✅ E-mail comparativo copiado! Cole no Outlook (Ctrl+V)', 'success');
+    showToast('E-mail comparativo copiado! Cole no Outlook (Ctrl+V)', 'success');
   }).catch(() => showToast('Erro ao copiar', 'error'));
   const assunto = encodeURIComponent('KM Comparativo — ' + A.label + ' × ' + B.label);
   setTimeout(() => window.open('mailto:?subject=' + assunto, '_blank'), 500);
@@ -11932,7 +12033,7 @@ async function rcCarregarO2P(input) {
     data: rcParseData(r[1]), placa: String(r[3]||'').trim().toUpperCase(),
     operacao: String(r[2]||'').trim().replace(/_/g,' '), litros: parseFloat(r[8])||0, valor: parseFloat(r[9])||0
   })).filter(r => r.data && r.placa);
-  showToast('✅ O2P: '+_rcO2P.length+' registros', 'success');
+  showToast('O2P: '+_rcO2P.length+' registros', 'success');
   document.getElementById('rc-btn-comparar').disabled = !(_rcO2P.length && _rcTicket.length);
 }
 
@@ -11948,7 +12049,7 @@ async function rcCarregarTicket(input) {
   _rcTicket = _rcTicketRows.map(r => ({
     data: rcParseData(r[4]), placa: String(r[5]||'').trim().toUpperCase()
   })).filter(r => r.data && r.placa);
-  showToast('✅ Ticket: '+_rcTicket.length+' registros', 'success');
+  showToast('Ticket: '+_rcTicket.length+' registros', 'success');
   document.getElementById('rc-btn-comparar').disabled = !(_rcO2P.length && _rcTicket.length);
 }
 
@@ -12023,7 +12124,7 @@ async function rcExportar() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(d), 'Em_Ambos');
     XLSX.writeFile(wb, fname);
-    showToast('✅ Exportado!', 'success');
+    showToast('Exportado!', 'success');
     return;
   }
 
@@ -12043,7 +12144,7 @@ async function rcExportar() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([header, ...filtered]), labels[_rcAba]);
   XLSX.writeFile(wb, fname);
-  showToast('✅ Exportado! '+filtered.length+' linhas, '+header.length+' colunas.', 'success');
+  showToast('Exportado! '+filtered.length+' linhas, '+header.length+' colunas.', 'success');
 }
 
 </script>
@@ -12276,10 +12377,14 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
    ══════════════════════════════════════════════════════════════════════════════ */
 .pend-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
 .pend-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
-.pend-anom-rules{display:flex;align-items:center;gap:6px;padding:4px 5px 4px 9px;border:1px solid rgba(151,164,178,.13);background:#101720;border-radius:10px}.pend-anom-rules-title{font-size:9.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#718195;margin-right:2px}.pend-anom-setting{height:30px;display:flex;align-items:center;gap:6px;padding:0 7px 0 9px;border:1px solid rgba(151,164,178,.12);background:#141c26;border-radius:8px;color:#9aa8b8;font-size:10.5px;font-weight:700;white-space:nowrap}
-.pend-anom-input{display:flex;align-items:center;gap:3px;height:24px;padding:0 6px;border-radius:7px;background:#0e151d;border:1px solid rgba(233,95,50,.18)}
-.pend-anom-input input{width:44px;border:0;outline:0;background:transparent;color:#f06a3d;font:800 11px 'DM Mono',monospace;text-align:right;padding:0;-moz-appearance:textfield}
-.pend-anom-input input::-webkit-inner-spin-button,.pend-anom-input input::-webkit-outer-spin-button{opacity:.45}.pend-anom-input b{color:#f06a3d;font-size:10px}
+.pend-anom-rules{display:flex;align-items:center;gap:8px;padding:6px 7px 6px 10px;border:1px solid rgba(151,164,178,.14);background:#101720;border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.pend-anom-rules-title{font-size:9.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:#738397;margin-right:2px}
+.pend-anom-setting{height:36px;display:flex;align-items:center;gap:8px;padding:0 7px 0 10px;border:1px solid rgba(151,164,178,.13);background:#141c26;border-radius:10px;white-space:nowrap;transition:.15s}
+.pend-anom-setting:hover{border-color:rgba(151,164,178,.22);background:#161f29}.pend-anom-setting.high{--anom-color:#f0a63d}.pend-anom-setting.low{--anom-color:#74a9db}
+.pend-anom-label{display:flex;align-items:center;gap:5px;color:#a5b1be;font-size:10.5px;font-weight:750}.pend-anom-label .ui-icon{width:13px;height:13px;color:var(--anom-color);stroke-width:2.1}
+.pend-anom-control{height:28px;display:flex;align-items:center;border:1px solid rgba(151,164,178,.13);background:#0d141c;border-radius:8px;overflow:hidden;transition:.15s}.pend-anom-control:focus-within{border-color:color-mix(in srgb,var(--anom-color) 48%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--anom-color) 8%,transparent)}
+.pend-anom-control input{width:39px;height:26px;border:0;outline:0;background:transparent;color:#eef3f7;font:800 11.5px 'DM Mono',monospace;text-align:right;padding:0 2px}.pend-anom-percent{color:var(--anom-color);font-size:10px;font-weight:800;padding:0 4px 0 1px}
+.pend-anom-step{width:27px;height:27px;border:0;background:transparent;color:#728294;font:700 15px/1 'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.12s}.pend-anom-step:first-child{border-right:1px solid rgba(151,164,178,.09)}.pend-anom-step:last-child{border-left:1px solid rgba(151,164,178,.09)}.pend-anom-step:hover{background:rgba(255,255,255,.045);color:var(--anom-color)}.pend-anom-step:active{transform:scale(.93)}
 .pend-updated{font-size:11.5px;color:var(--text3);white-space:nowrap}
 .pend-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
 .pend-kpi{background:#121922;border:1px solid var(--border);border-radius:14px;padding:17px 18px;min-height:112px;position:relative;overflow:hidden}
@@ -12304,7 +12409,7 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 .pend-resolved-list{display:flex;flex-direction:column;gap:7px}.pend-resolved{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:rgba(53,200,145,.035);border:1px solid rgba(53,200,145,.08)}.pend-resolved-icon{color:#35c891;width:18px;height:18px;display:flex;align-items:center}.pend-resolved-icon .ui-icon{width:16px;height:16px}.pend-resolved-label{font-size:11.5px;color:#c1ccd7;flex:1}.pend-resolved-time{font-size:10px;color:var(--text3)}
 .pend-nav-count{min-width:21px;height:19px;padding:0 6px;border-radius:999px;background:rgba(244,94,89,.13);border:1px solid rgba(244,94,89,.22);color:#ff7f79;font-size:10px;font-weight:800;display:none;align-items:center;justify-content:center;margin-left:auto}.sidebar.collapsed .pend-nav-count{display:none!important}
 @media(max-width:1000px){.pend-kpis{grid-template-columns:repeat(2,1fr)}.pend-issue-grid,.pend-monitor-list{grid-template-columns:1fr}}
-@media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-rules{order:1;flex-wrap:wrap}.pend-anom-setting{order:initial}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
+@media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-rules{order:1;flex-wrap:wrap}.pend-anom-rules-title{width:100%}.pend-anom-setting{order:initial}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
 
 </style>
 <script id="ignis-custom-calendar-2026">
@@ -12380,45 +12485,22 @@ function ignisValorRow(row,norms){
 }
 function ignisDetectarMedidoresRaw(raw,source='Importação'){
   if(!Array.isArray(raw)||!raw.length)return [];
+  const headers=[];const headerSeen=new Set();for(const r of raw.slice(0,12)){if(!r||typeof r!=='object')continue;for(const k of Object.keys(r)){if(!headerSeen.has(k)){headerSeen.add(k);headers.push(k);}}}if(!headers.length)return []; const byNorm=new Map();
+  headers.forEach(k=>{const n=ignisHeaderNorm(k);if(n&&!byNorm.has(n))byNorm.set(n,k);});
+  const keyFor=(names)=>{for(const n of names){const k=byNorm.get(n);if(k)return k;}return null;};
+  const kPlaca=keyFor(['placa']),kData=keyFor(['data','data abastecimento','data do abastecimento','dt abastecimento']),kOp=keyFor(['operacao']),kModelo=keyFor(['modelo']),kTipo=keyFor(['tipo de veiculo','tipo veiculo','tipo']);
+  const medFields=headers.map((campo,fieldIdx)=>{const medidor=ignisCampoMedidorAbsoluto(campo);if(!medidor)return null;const h=ignisHeaderNorm(campo);const fase=/\b(anterior|inicial)\b/.test(h)?0:/\b(atual|final)\b/.test(h)?2:1;return{campo,fieldIdx,medidor,fase};}).filter(Boolean);
+  if(!medFields.length)return [];
   const leituras=[]; const anom=[];
   raw.forEach((row,rowIdx)=>{
-    const placa=String(ignisValorRow(row,['placa'])||'').trim().toUpperCase();
-    if(!placa)return;
-    const dataVal=ignisValorRow(row,['data','data abastecimento','data do abastecimento','dt abastecimento']);
-    const dataObj=typeof parseDataBR==='function'?parseDataBR(dataVal):null;
-    const data=dataObj&&!isNaN(dataObj)?dataParaISO(dataObj):String(dataVal||'');
-    const operacao=String(ignisValorRow(row,['operacao'])||'').trim();
-    const modelo=String(ignisValorRow(row,['modelo'])||'').trim();
-    const tipoVeic=String(ignisValorRow(row,['tipo de veiculo','tipo veiculo','tipo'])||'').trim();
-    let fieldIdx=0;
-    for(const [campo,rawVal] of Object.entries(row||{})){
-      const medidor=ignisCampoMedidorAbsoluto(campo); if(!medidor){fieldIdx++;continue;}
-      const valor=ignisNumeroSeguro(rawVal); const h=ignisHeaderNorm(campo);
-      if(valor<0){
-        anom.push({placa,data,operacao,modelo,tipoVeic,medidor,valor,motivo:'Leitura negativa',campo,source});
-        fieldIdx++;continue;
-      }
-      if(valor===0){fieldIdx++;continue;}
-      const fase=/\b(anterior|inicial)\b/.test(h)?0:/\b(atual|final)\b/.test(h)?2:1;
-      leituras.push({placa,data,dataObj,operacao,modelo,tipoVeic,medidor,valor,campo,rowIdx,fieldIdx,fase});
-      fieldIdx++;
-    }
+    const placa=String(kPlaca?row[kPlaca]:'').trim().toUpperCase();if(!placa)return;
+    const dataVal=kData?row[kData]:'';const dataObj=typeof parseDataBR==='function'?parseDataBR(dataVal):null;const data=dataObj&&!isNaN(dataObj)?dataParaISO(dataObj):String(dataVal||'');
+    const operacao=String(kOp?row[kOp]:'').trim(),modelo=String(kModelo?row[kModelo]:'').trim(),tipoVeic=String(kTipo?row[kTipo]:'').trim();
+    for(const f of medFields){const valor=ignisNumeroSeguro(row[f.campo]);if(valor<0){anom.push({placa,data,operacao,modelo,tipoVeic,medidor:f.medidor,valor,motivo:'Leitura negativa',campo:f.campo,source});continue;}if(valor===0)continue;leituras.push({placa,data,dataObj,operacao,modelo,tipoVeic,medidor:f.medidor,valor,campo:f.campo,rowIdx,fieldIdx:f.fieldIdx,fase:f.fase});}
   });
   const grupos=new Map();
-  leituras.forEach(r=>{const k=r.placa+'|'+r.medidor;(grupos.get(k)||grupos.set(k,[]).get(k)).push(r);});
-  grupos.forEach(arr=>{
-    arr.sort((a,b)=>{
-      const da=a.dataObj?.getTime?.()||0,db=b.dataObj?.getTime?.()||0;
-      return da-db||a.rowIdx-b.rowIdx||a.fase-b.fase||a.fieldIdx-b.fieldIdx;
-    });
-    let prev=null;
-    for(const cur of arr){
-      if(prev&&cur.valor<prev.valor){
-        anom.push({placa:cur.placa,data:cur.data,operacao:cur.operacao||prev.operacao,modelo:cur.modelo||prev.modelo,tipoVeic:cur.tipoVeic||prev.tipoVeic,medidor:cur.medidor,valor:cur.valor-prev.valor,valorAnterior:prev.valor,valorAtual:cur.valor,motivo:'Leitura menor que a anterior',campo:cur.campo,source});
-      }
-      prev=cur;
-    }
-  });
+  leituras.forEach(r=>{const k=r.placa+'|'+r.medidor;let arr=grupos.get(k);if(!arr){arr=[];grupos.set(k,arr);}arr.push(r);});
+  grupos.forEach(arr=>{arr.sort((a,b)=>{const da=a.dataObj?.getTime?.()||0,db=b.dataObj?.getTime?.()||0;return da-db||a.rowIdx-b.rowIdx||a.fase-b.fase||a.fieldIdx-b.fieldIdx;});let prev=null;for(const cur of arr){if(prev&&cur.valor<prev.valor){anom.push({placa:cur.placa,data:cur.data,operacao:cur.operacao||prev.operacao,modelo:cur.modelo||prev.modelo,tipoVeic:cur.tipoVeic||prev.tipoVeic,medidor:cur.medidor,valor:cur.valor-prev.valor,valorAnterior:prev.valor,valorAtual:cur.valor,motivo:'Leitura menor que a anterior',campo:cur.campo,source});}prev=cur;}});
   return anom;
 }
 function ignisInferTipoMedidor(placa,modelo='',tipoVeic='',operacao=''){
@@ -12447,14 +12529,25 @@ function ignisGetLimiteEficienciaBaixa(){
 function ignisSetLimiteEficiencia(v){
   let n=Number(v);if(!Number.isFinite(n))n=140;n=Math.max(100,Math.min(500,n));
   state.eficienciaAnomaliaLimite=n;saveState({immediate:true});
-  try{renderPendencias(true)}catch(e){}try{renderFechamento(true)}catch(e){}
+  try{renderPendencias(true)}catch(e){}try{renderFechamento(true)}catch(e){}try{renderAnomalias(true)}catch(e){}
   showToast(`Eficiência alta: alerta acima de ${n.toFixed(0)}%.`,'success');
 }
 function ignisSetLimiteEficienciaBaixa(v){
   let n=Number(v);if(!Number.isFinite(n))n=60;n=Math.max(1,Math.min(99,n));
   state.eficienciaAnomaliaLimiteBaixa=n;saveState({immediate:true});
-  try{renderPendencias(true)}catch(e){}try{renderFechamento(true)}catch(e){}
+  try{renderPendencias(true)}catch(e){}try{renderFechamento(true)}catch(e){}try{renderAnomalias(true)}catch(e){}
   showToast(`Eficiência baixa: alerta abaixo de ${n.toFixed(0)}%.`,'success');
+}
+function ignisAjustarLimiteEficiencia(tipo,delta){
+  if(tipo==='alta'){
+    const n=Math.max(100,Math.min(500,ignisGetLimiteEficiencia()+Number(delta||0)));
+    const el=document.getElementById('anom-efic-limit')||document.getElementById('pend-efic-limit');if(el)el.value=String(Math.round(n));
+    ignisSetLimiteEficiencia(n);
+    return;
+  }
+  const n=Math.max(1,Math.min(99,ignisGetLimiteEficienciaBaixa()+Number(delta||0)));
+  const el=document.getElementById('anom-efic-low-limit')||document.getElementById('pend-efic-low-limit');if(el)el.value=String(Math.round(n));
+  ignisSetLimiteEficienciaBaixa(n);
 }
 function ignisAvaliarEficienciaAnomalia(d){
   const litros=Number(d?.litros)||0,kmHoras=Number(d?.kmHoras)||0,meta=Number(d?.meta)||0;
@@ -12478,6 +12571,15 @@ function ignisRecordEficienciaAnomaly(a){
   const exists=state.eficienciaAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|')===sig);
   if(!exists)state.eficienciaAnomalias.push(item);state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-1200);
   try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}
+}
+
+function ignisRecordEficienciaAnomaliesBatch(items){
+  if(!Array.isArray(items)||!items.length)return 0;
+  state.eficienciaAnomalias=Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[];
+  const sigOf=x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|');
+  const seen=new Set(state.eficienciaAnomalias.map(sigOf));let added=0;
+  for(const a of items){if(!a||!a.placa||!Number.isFinite(Number(a.eficiencia)))continue;const ef=Number(a.eficiencia),faixa=a.faixa||(ef>=100?'alta':'baixa');const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,at:Number(a.at)||Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.eficienciaAnomalias.push(item);added++;}
+  state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-1200);try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}return added;
 }
 function ignisRemoveEficienciaAnomaliesRange(ini,fim){
   const a=fechParse(ini),b=fechParse(fim);if(!a||!b)return;const keep=x=>{const d=fechParse(x?.data);return !d||d<a||d>b;};
@@ -12521,6 +12623,15 @@ function ignisRecordMedidorAnomaly(a){
   if(!exists)state.medidorAnomalias.push(item);
   state.medidorAnomalias=state.medidorAnomalias.slice(-1500);
   try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}
+}
+
+function ignisRecordMedidorAnomaliesBatch(items){
+  if(!Array.isArray(items)||!items.length)return 0;
+  state.medidorAnomalias=Array.isArray(state.medidorAnomalias)?state.medidorAnomalias:[];
+  const sigOf=x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.medidor||''),(Number(x.valor)||0).toFixed(3),x.valorAnterior??'',x.valorAtual??'',String(x.source||'Importação')].join('|');
+  const seen=new Set(state.medidorAnomalias.map(sigOf)); let added=0;
+  for(const a of items){if(!a||!a.placa)continue;const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);const item={placa:String(a.placa||'').trim().toUpperCase(),data:String(a.data||''),operacao:String(a.operacao||''),tipoIgnis:tipo,medidor:String(a.medidor||ignisMedidorNome(tipo)),valor:Number(a.valor)||0,valorAnterior:Number.isFinite(Number(a.valorAnterior))?Number(a.valorAnterior):null,valorAtual:Number.isFinite(Number(a.valorAtual))?Number(a.valorAtual):null,motivo:String(a.motivo||'Variação negativa'),campo:String(a.campo||''),source:String(a.source||'Importação'),periodo:String(a.periodo||''),at:Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.medidorAnomalias.push(item);added++;}
+  state.medidorAnomalias=state.medidorAnomalias.slice(-1500);try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}return added;
 }
 function ignisRemoveMedidorAnomaliesRange(ini,fim){
   const a=fechParse(ini),b=fechParse(fim); if(!a||!b)return;
@@ -12579,16 +12690,50 @@ function fechOpenMedidores(){
   overlay.classList.add('open');
 }
 function fechOpenAnomalias(){
-  const s=fechSel(),med=fechMedidorRows(s.y,s.m),altas=ignisEficienciaAnomRows(s.y,s.m),baixas=ignisEficienciaBaixaRows(s.y,s.m),total=med.length+altas.length+baixas.length;
-  if(!total){showToast('Nenhuma anomalia encontrada neste mês.','success');return;}
-  let overlay=document.getElementById('fech-anom-modal');if(!overlay){overlay=document.createElement('div');overlay.id='fech-anom-modal';overlay.className='modal-overlay';overlay.innerHTML=`<div class="modal pend-detail-modal" style="max-width:1120px"><div class="pend-detail-head"><div><div class="modal-title">Análise de anomalias</div><div class="pend-detail-sub" id="fech-anom-sub"></div></div><button class="pend-close" onclick="closeModal('fech-anom-modal')" aria-label="Fechar">×</button></div><div class="pend-detail-table-wrap"><table class="pend-detail-table"><thead><tr><th>Tipo</th><th>Data</th><th>Placa</th><th>Operação</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th></tr></thead><tbody id="fech-anom-body"></tbody></table></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('fech-anom-modal')">Fechar</button><button class="btn btn-primary" onclick="closeModal('fech-anom-modal');pendGo('pendencias')">Abrir Central</button></div></div>`;document.body.appendChild(overlay);}
-  document.getElementById('fech-anom-sub').textContent=`${s.label} · ${med.length} medidor(es) · ${altas.length} alta(s) · ${baixas.length} baixa(s)`;
+  const s=fechSel();
+  anomOpenPage('all',s.y,s.m);
+}
+
+
+// ── TELA DEDICADA DE ANOMALIAS ──────────────────────────────────────────────
+window._anomUi = window._anomUi || {type:'all',searchTimer:null,forcedYear:null,forcedMonth:null,initialized:false};
+const ANOM_MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function anomEsc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function anomFmtNum(v,max=2){const n=Number(v);return Number.isFinite(n)?n.toLocaleString('pt-BR',{maximumFractionDigits:max}):'—';}
+function anomInitSelectors(){
+  const now=new Date(),mEl=document.getElementById('anom-month'),yEl=document.getElementById('anom-year');if(!mEl||!yEl)return;
+  const firstInit=!window._anomUi.initialized;if(!mEl.options.length)mEl.innerHTML=ANOM_MONTHS.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+  const years=new Set([now.getFullYear()]);
+  [...(state.medidorAnomalias||[]),...(state.eficienciaAnomalias||[])].forEach(r=>{const d=fechParse(r?.data);if(d)years.add(d.getFullYear());});
+  const ys=[...years].sort((a,b)=>b-a);const old=yEl.value;yEl.innerHTML=ys.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if(window._anomUi.forcedYear!=null){yEl.value=String(window._anomUi.forcedYear);mEl.value=String(window._anomUi.forcedMonth??now.getMonth());window._anomUi.forcedYear=null;window._anomUi.forcedMonth=null;}
+  else {if(old&&ys.includes(Number(old)))yEl.value=old;else yEl.value=String(now.getFullYear());if(firstInit)mEl.value=String(now.getMonth());else if(mEl.value==='')mEl.value=String(now.getMonth());}window._anomUi.initialized=true;
+  const hi=document.getElementById('anom-efic-limit'),lo=document.getElementById('anom-efic-low-limit');if(hi&&document.activeElement!==hi)hi.value=String(Math.round(ignisGetLimiteEficiencia()));if(lo&&document.activeElement!==lo)lo.value=String(Math.round(ignisGetLimiteEficienciaBaixa()));
+}
+function anomCollectRows(y,m){
   const rows=[];
-  med.forEach(r=>rows.push({kind:'Medidor regressivo',sev:'bad',data:r.data,placa:r.placa,operacao:r.operacao||'—',km:'—',litros:'—',real:(r.valorAnterior!=null&&r.valorAtual!=null)?`${Number(r.valorAnterior).toLocaleString('pt-BR',{maximumFractionDigits:2})} → ${Number(r.valorAtual).toLocaleString('pt-BR',{maximumFractionDigits:2})}`:Number(r.valor).toLocaleString('pt-BR',{maximumFractionDigits:2}),meta:'—',efic:'—'}));
-  altas.forEach(r=>rows.push({kind:'Eficiência alta',sev:'warn',data:r.data,placa:r.placa,operacao:r.operacao||'—',km:Number(r.kmHoras||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),litros:Number(r.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),real:`${Number(r.media||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,meta:`${Number(r.meta||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,efic:Number(r.eficiencia||0).toFixed(1)+'%'}));
-  baixas.forEach(r=>rows.push({kind:'Eficiência baixa',sev:'bad',data:r.data,placa:r.placa,operacao:r.operacao||'—',km:Number(r.kmHoras||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),litros:Number(r.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2}),real:`${Number(r.media||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,meta:`${Number(r.meta||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})} ${r.unidade||''}`,efic:Number(r.eficiencia||0).toFixed(1)+'%'}));
-  rows.sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
-  document.getElementById('fech-anom-body').innerHTML=rows.map(r=>`<tr><td><strong class="${r.sev}">${fechEsc(r.kind)}</strong></td><td>${fechEsc(fechFmt(fechParse(r.data)))}</td><td><strong>${fechEsc(r.placa)}</strong></td><td>${fechEsc(r.operacao)}</td><td>${fechEsc(r.km)}</td><td>${fechEsc(r.litros)}</td><td>${fechEsc(r.real)}</td><td>${fechEsc(r.meta)}</td><td><strong class="${r.sev}">${fechEsc(r.efic)}</strong></td></tr>`).join('');overlay.classList.add('open');
+  fechMedidorRows(y,m).forEach(r=>rows.push({kind:'medidor',kindLabel:'Medidor regressivo',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:r.medidor||'Medidor',kmHoras:null,litros:null,real:r.valorAnterior!=null&&r.valorAtual!=null?`${anomFmtNum(r.valorAnterior)} → ${anomFmtNum(r.valorAtual)}`:anomFmtNum(r.valor),meta:null,eficiencia:null,detail:r.motivo||'Leitura menor que a anterior',source:r.source||'Importação',raw:r}));
+  ignisEficienciaAnomRows(y,m).forEach(r=>rows.push({kind:'alta',kindLabel:'Eficiência alta',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'KM':'Horas',kmHoras:Number(r.kmHoras)||0,litros:Number(r.litros)||0,real:`${anomFmtNum(r.media)} ${r.unidade||''}`,meta:`${anomFmtNum(r.meta)} ${r.unidade||''}`,eficiencia:Number(r.eficiencia)||0,detail:`Acima de ${Math.round(ignisGetLimiteEficiencia())}%`,source:r.source||'Importação',raw:r}));
+  ignisEficienciaBaixaRows(y,m).forEach(r=>rows.push({kind:'baixa',kindLabel:'Eficiência baixa',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'KM':'Horas',kmHoras:Number(r.kmHoras)||0,litros:Number(r.litros)||0,real:`${anomFmtNum(r.media)} ${r.unidade||''}`,meta:`${anomFmtNum(r.meta)} ${r.unidade||''}`,eficiencia:Number(r.eficiencia)||0,detail:`Abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`,source:r.source||'Importação',raw:r}));
+  return rows;
+}
+function anomSetType(type){window._anomUi.type=type||'all';document.querySelectorAll('[data-anom-type]').forEach(el=>el.classList.toggle('active',el.dataset.anomType===window._anomUi.type));renderAnomalias(true);}
+function anomOpenPage(type='all',year=null,month=null){window._anomUi.type=type||'all';if(year!=null){window._anomUi.forcedYear=Number(year);window._anomUi.forcedMonth=Number(month);}const el=document.getElementById('nav-anomalias');showPage('anomalias',el);requestAnimationFrame(()=>{anomInitSelectors();anomSetType(window._anomUi.type);});}
+function anomDebouncedRender(){clearTimeout(window._anomUi.searchTimer);window._anomUi.searchTimer=setTimeout(()=>renderAnomalias(true),140);}
+function anomClearFilters(){const op=document.getElementById('anom-op'),q=document.getElementById('anom-search');if(op)op.value='';if(q)q.value='';anomSetType('all');}
+function renderAnomalias(force=false){
+  const page=document.getElementById('page-anomalias');if(!page)return;anomInitSelectors();
+  const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear()),m=Number(document.getElementById('anom-month')?.value??new Date().getMonth());
+  const all=anomCollectRows(y,m),med=all.filter(r=>r.kind==='medidor'),altas=all.filter(r=>r.kind==='alta'),baixas=all.filter(r=>r.kind==='baixa');
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('anom-kpi-total',all.length.toLocaleString('pt-BR'));set('anom-kpi-medidor',med.length.toLocaleString('pt-BR'));set('anom-kpi-alta',altas.length.toLocaleString('pt-BR'));set('anom-kpi-baixa',baixas.length.toLocaleString('pt-BR'));
+  const piorMed=med[0],maior=[...altas].sort((a,b)=>(b.eficiencia||0)-(a.eficiencia||0))[0],menor=[...baixas].sort((a,b)=>(a.eficiencia||0)-(b.eficiencia||0))[0];
+  set('anom-kpi-total-sub',`${ANOM_MONTHS[m]} de ${y}`);set('anom-kpi-medidor-sub',piorMed?`${piorMed.placa} · ${piorMed.medida}`:'nenhuma regressão');set('anom-kpi-alta-sub',maior?`${maior.placa} · ${maior.eficiencia.toFixed(1)}%`:`acima de ${Math.round(ignisGetLimiteEficiencia())}%`);set('anom-kpi-baixa-sub',menor?`${menor.placa} · ${menor.eficiencia.toFixed(1)}%`:`abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`);
+  const opEl=document.getElementById('anom-op');const selectedOp=opEl?.value||'';const ops=[...new Set(all.map(r=>r.operacao).filter(x=>x&&x!=='—'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));if(opEl){opEl.innerHTML='<option value="">Todas as operações</option>'+ops.map(o=>`<option value="${anomEsc(o)}">${anomEsc(String(o).replace(/_/g,' '))}</option>`).join('');if(ops.includes(selectedOp))opEl.value=selectedOp;}
+  const op=opEl?.value||'',q=String(document.getElementById('anom-search')?.value||'').trim().toUpperCase();let rows=all.filter(r=>(window._anomUi.type==='all'||r.kind===window._anomUi.type)&&(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q)));
+  const priority={medidor:0,baixa:1,alta:2};rows.sort((a,b)=>(priority[a.kind]-priority[b.kind])||(a.kind==='baixa'?(a.eficiencia||0)-(b.eficiencia||0):a.kind==='alta'?(b.eficiencia||0)-(a.eficiencia||0):String(b.date||'').localeCompare(String(a.date||'')))||String(a.placa).localeCompare(String(b.placa)));
+  const body=document.getElementById('anom-table-body'),wrap=document.getElementById('anom-table-wrap'),empty=document.getElementById('anom-empty'),summary=document.getElementById('anom-summary');if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} exibida${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'}`;
+  if(!rows.length){if(wrap)wrap.style.display='none';if(empty)empty.style.display='flex';if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
+  if(body)body.innerHTML=rows.map(r=>{const badge=r.kind==='medidor'?'medidor':r.kind;const medida=r.kmHoras==null?'—':`${anomFmtNum(r.kmHoras)} ${r.medida==='KM'?'km':'h'}`;const litros=r.litros==null?'—':`${anomFmtNum(r.litros)} L`;const ef=r.eficiencia==null?'—':`${r.eficiencia.toFixed(1)}%`;const efClass=r.kind==='baixa'?'bad':r.kind==='alta'?'warn':'';return `<tr><td><span class="anom-badge ${badge}">${anomEsc(r.kindLabel)}</span></td><td>${anomEsc(fechFmt(fechParse(r.date)))}</td><td title="${anomEsc(r.operacao)}">${anomEsc(String(r.operacao).replace(/_/g,' '))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(medida)}</td><td>${anomEsc(litros)}</td><td><strong>${anomEsc(r.real)}</strong></td><td>${anomEsc(r.meta??'—')}</td><td><strong class="${efClass}">${anomEsc(ef)}</strong></td><td><div class="anom-detail-main">${anomEsc(r.detail)}</div><div class="anom-detail-sub">${anomEsc(r.source)}</div></td></tr>`;}).join('');
 }
 
 function fechConfirms(key){if(state.fechConfirmacoes&&state.fechConfirmacoes[key])return state.fechConfirmacoes[key];try{return JSON.parse(localStorage.getItem('ignis_fech_confirms_'+key)||'{}')||{};}catch(e){return{};}}
@@ -12647,7 +12792,7 @@ function fechBuild(){
   const anomCount=med.length+eficAltas.length+eficBaixas.length;
   const anomState=med.length?'blocked':(eficAltas.length||eficBaixas.length?'attention':'ok');
   const anomDetail=anomCount?`${anomCount} ocorrência(s): ${med.length} medidor(es) regressivo(s) · ${eficAltas.length} eficiência(s) > ${ignisGetLimiteEficiencia().toFixed(0)}% · ${eficBaixas.length} eficiência(s) < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}%.`:'Nenhuma anomalia detectada nos dados monitorados.';
-  add({id:'anom',title:'Análise de anomalias',state:anomState,blocking:!!med.length,detail:anomDetail,meta:`Limites de eficiência: < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}% ou > ${ignisGetLimiteEficiencia().toFixed(0)}% · medidor regressivo bloqueia`,page:'pendencias',rows:[...med,...eficAltas,...eficBaixas],anom:{med,altas:eficAltas,baixas:eficBaixas}});
+  add({id:'anom',title:'Análise de anomalias',state:anomState,blocking:!!med.length,detail:anomDetail,meta:`Limites de eficiência: < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}% ou > ${ignisGetLimiteEficiencia().toFixed(0)}% · medidor regressivo bloqueia`,page:'anomalias',rows:[...med,...eficAltas,...eficBaixas],anom:{med,altas:eficAltas,baixas:eficBaixas}});
 
   const worst=reinc[0];
   add({
@@ -12704,8 +12849,8 @@ function fechCheckHTML(c){
   if(c.confirmable){
     buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechToggleConfirm('${c.id==='recon'?'recon':'km'}')">${c.confirmed?'Remover confirmação':'Confirmar este mês'}</button>`);
   }
-  if(c.id==='anom'&&c.rows?.length){buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechOpenAnomalias()">Ver ocorrências</button>`);}
-  buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();pendGo('${c.page}')">Abrir análise</button>`);
+  if(c.id==='anom'){buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();fechOpenAnomalias()">Abrir Anomalias</button>`);}
+  else buttons.push(`<button class="fech-mini-btn" onclick="event.stopPropagation();pendGo('${c.page}')">Abrir análise</button>`);
   return `<div class="fech-check ${c.state}"><div class="fech-check-icon">${fechIcon(c.id)}</div><div><div class="fech-check-title">${fechEsc(c.title)}</div><div class="fech-check-detail">${fechEsc(c.detail)}</div><div class="fech-check-meta">${fechEsc(c.meta||'')}</div><div class="fech-check-actions">${buttons.join('')}</div></div><span class="fech-status ${c.state}">${label}</span></div>`;
 }
 function fechHistory(){if(Array.isArray(state.fechamentos))return state.fechamentos;try{return JSON.parse(localStorage.getItem('ignis_fechamentos_history')||'[]')||[];}catch(e){return[];}}
