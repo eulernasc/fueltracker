@@ -3145,7 +3145,7 @@ function ensureExcelJSReady() { return _waitIgnisGlobal('ExcelJS', 'o gerador av
 // Como uma página web não consegue escolher diretamente um PWA específico,
 // o IGNIS tenta primeiro o manipulador de e-mail do Windows e só cai no
 // Outlook Web se nenhum aplicativo assumir a abertura em poucos segundos.
-function ignisDecodeUriSafe(v){ try { return decodeURIComponent(String(v||'')); } catch(e) { return String(v||''); } }
+function ignisDecodeUriSafe(v){ const s=String(v||'').replace(/\+/g,'%20'); try { return decodeURIComponent(s); } catch(e) { return String(v||'').replace(/\+/g,' '); } }
 function ignisAbrirOutlook(destinatarios='', assunto='', corpo='') {
   const lista = String(destinatarios||'').split(/[;,]+/).map(x=>x.trim()).filter(Boolean);
   const toMail = lista.join(',');
@@ -3160,12 +3160,14 @@ function ignisAbrirOutlook(destinatarios='', assunto='', corpo='') {
   const mailto = 'mailto:' + toMail + (mailParts.length ? '?' + mailParts.join('&') : '');
 
   // 2) Fallback web, preservando os mesmos destinatários/assunto/corpo
-  const webParams = new URLSearchParams();
-  if (toWeb) webParams.set('to', toWeb);
-  if (subject) webParams.set('subject', subject);
-  if (body) webParams.set('body', body);
-  webParams.set('popoutv2','1');
-  const webUrl = 'https://outlook.office.com/mail/deeplink/compose?' + webParams.toString();
+  // Outlook Web não interpreta '+' como espaço de forma consistente no deeplink.
+  // Montamos a query manualmente com encodeURIComponent para preservar assunto/corpo.
+  const webParts = [];
+  if (toWeb) webParts.push('to=' + encodeURIComponent(toWeb));
+  if (subject) webParts.push('subject=' + encodeURIComponent(subject));
+  if (body) webParts.push('body=' + encodeURIComponent(body));
+  webParts.push('popoutv2=1');
+  const webUrl = 'https://outlook.office.com/mail/deeplink/compose?' + webParts.join('&');
 
   let aplicativoAssumiu = false;
   let fallbackExecutado = false;
@@ -13137,14 +13139,49 @@ async function anomPersistReviews(deletedIds=[]){
 function anomReviewedFingerprints(){const set=new Set();anomEnsureReviews().forEach(r=>(r.fingerprints||[]).forEach(f=>set.add(f)));return set;}
 function anomReviewSample(rows,kind){let r=rows[0];if(kind==='alta')r=[...rows].sort((a,b)=>(b.eficiencia||0)-(a.eficiencia||0))[0];if(kind==='baixa')r=[...rows].sort((a,b)=>(a.eficiencia||0)-(b.eficiencia||0))[0];return r||{};}
 async function anomMarkPlate(kind,placa,status='resolvido'){
-  const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear()),m=Number(document.getElementById('anom-month')?.value??new Date().getMonth()),plate=String(placa||'').trim().toUpperCase();
-  const rows=anomCollectRows(y,m).filter(ignisAnomReportRowVisible).filter(r=>r.kind===kind&&String(r.placa||'').trim().toUpperCase()===plate);if(!rows.length)return;
-  const fps=[...new Set(rows.map(anomFingerprint))],reviews=anomEnsureReviews(),existing=reviews.find(r=>r.y===y&&r.m===m&&r.kind===kind&&String(r.placa).toUpperCase()===plate),sample=anomReviewSample(rows,kind),user=window._authUser?.nome||window._authUser?.id||'Usuário';
-  const payload={id:existing?.id||`rev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`,y,m,kind,placa:plate,operacao:sample.operacao||existing?.operacao||'—',status:'resolvido',fingerprints:[...new Set([...(existing?.fingerprints||[]),...fps])].slice(-300),occurrences:[...new Set([...(existing?.fingerprints||[]),...fps])].length,updatedAt:Date.now(),updatedBy:user,lastDate:sample.date||existing?.lastDate||'',sampleValue:sample.eficiencia!=null?Number(sample.eficiencia):sample.real||existing?.sampleValue||''};
-  if(existing)Object.assign(existing,payload);else reviews.push(payload);state.anomaliaRevisoes=reviews.slice(-800);await anomPersistReviews();renderAnomalias(true);showToast(`${plate}: ${rows.length} ocorrência${rows.length===1?'':'s'} movida${rows.length===1?'':'s'} para Resolvidas.`,'success');
+  const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear());
+  const m=Number(document.getElementById('anom-month')?.value??new Date().getMonth());
+  const plate=String(placa||'').trim().toUpperCase();
+  const allRows=anomCollectRows(y,m).filter(ignisAnomReportRowVisible);
+  const alreadyReviewed=anomReviewedFingerprints();
+  // Resolve tudo que estiver ABERTO para a mesma placa no mês, independente do tipo.
+  // Se no futuro surgir uma ocorrência diferente (fingerprint novo), ela volta para análise.
+  const rows=allRows.filter(r=>String(r.placa||'').trim().toUpperCase()===plate && !alreadyReviewed.has(r._fp||anomFingerprint(r)));
+  if(!rows.length)return;
+
+  const fps=[...new Set(rows.map(anomFingerprint))];
+  const kinds=[...new Set(rows.map(r=>r.kind))];
+  const reviews=anomEnsureReviews();
+
+  // Consolida históricos antigos por tipo desta placa em um único registro por placa/mês.
+  const oldSamePlate=reviews.filter(r=>r.y===y&&r.m===m&&String(r.placa||'').toUpperCase()===plate);
+  const oldFps=[...new Set(oldSamePlate.flatMap(r=>r.fingerprints||[]))];
+  const oldKinds=[...new Set(oldSamePlate.flatMap(r=>Array.isArray(r.kinds)?r.kinds:[r.kind]).filter(Boolean))];
+  const existing=oldSamePlate.find(r=>r.kind==='placa')||null;
+  const sample=anomReviewSample(rows,kind);
+  const user=window._authUser?.nome||window._authUser?.id||'Usuário';
+  const mergedFps=[...new Set([...oldFps,...fps])].slice(-600);
+  const mergedKinds=[...new Set([...oldKinds,...kinds])];
+
+  // Remove registros antigos separados por tipo para não duplicar a placa em Resolvidas.
+  const oldIds=new Set(oldSamePlate.map(r=>r.id).filter(Boolean));
+  const kept=reviews.filter(r=>!oldIds.has(r.id));
+  const payload={
+    id:existing?.id||`rev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`,
+    y,m,kind:'placa',kinds:mergedKinds,placa:plate,
+    operacao:sample.operacao||oldSamePlate.find(r=>r.operacao)?.operacao||'—',
+    status:'resolvido',fingerprints:mergedFps,occurrences:mergedFps.length,
+    updatedAt:Date.now(),updatedBy:user,lastDate:sample.date||'',
+    sampleValue:sample.eficiencia!=null?Number(sample.eficiencia):sample.real||''
+  };
+  state.anomaliaRevisoes=[...kept,payload].slice(-800);
+  // Remove também os IDs antigos do documento remoto antes de persistir o consolidado.
+  await anomPersistReviews([...oldIds].filter(id=>id!==payload.id));
+  renderAnomalias(true);
+  showToast(`${plate}: ${rows.length} ocorrência${rows.length===1?'':'s'} da placa movida${rows.length===1?'':'s'} para Resolvidas.`,'success');
 }
 async function anomUnreview(id){const arr=anomEnsureReviews(),idx=arr.findIndex(r=>r.id===id);if(idx<0)return;const plate=arr[idx].placa;arr.splice(idx,1);state.anomaliaRevisoes=arr;await anomPersistReviews([id]);renderAnomalias(true);showToast(`${plate}: revisão desmarcada.`,'success');}
-function anomReviewLabel(kind){return kind==='medidor'?'Medidor regressivo':kind==='alta'?'Eficiência alta':'Eficiência baixa';}
+function anomReviewLabel(kind,kinds=[]){if(kind==='placa'){const labels=[...new Set(kinds||[])].map(k=>k==='medidor'?'Medidor regressivo':k==='alta'?'Eficiência alta':k==='baixa'?'Eficiência baixa':k).filter(Boolean);return labels.length?labels.join(' + '):'Anomalias da placa';}return kind==='medidor'?'Medidor regressivo':kind==='alta'?'Eficiência alta':'Eficiência baixa';}
 
 // ── TELA DEDICADA DE ANOMALIAS ──────────────────────────────────────────────
 window._anomUi = window._anomUi || {type:'all',searchTimer:null,forcedYear:null,forcedMonth:null,initialized:false};
@@ -13187,14 +13224,14 @@ function renderAnomalias(force=false){
     if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> placa${rows.length===1?'':'s'} com histórico de revisão · a mesma anomalia reimportada permanece aqui sem duplicar`;
     if(head)head.innerHTML='<tr><th>Status</th><th>Anomalia</th><th>Placa</th><th>Operação</th><th>Ocorrências cobertas</th><th>Última revisão</th><th>Responsável</th><th>Ação</th></tr>';
     if(!rows.length){if(wrap)wrap.style.display='none';if(empty){empty.style.display='flex';empty.innerHTML='<strong>Nenhuma anomalia revisada neste mês.</strong><span>Marque uma ocorrência como resolvida para criar o histórico.</span>';}if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
-    if(body)body.innerHTML=rows.map(r=>`<tr><td><span class="anom-review-status corrigido">Resolvida</span></td><td>${anomEsc(anomReviewLabel(r.kind))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(String(r.operacao||'—').replace(/_/g,' '))}</td><td><strong>${Number(r.occurrences||r.fingerprints?.length||0)}</strong><div class="anom-history-meta">reimportações iguais permanecem resolvidas sem duplicar</div></td><td>${new Date(r.updatedAt||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</td><td>${anomEsc(r.updatedBy||'—')}</td><td><button class="anom-unreview" type="button" onclick="anomUnreview('${anomEsc(r.id)}')">Desmarcar</button></td></tr>`).join('');return;
+    if(body)body.innerHTML=rows.map(r=>`<tr><td><span class="anom-review-status corrigido">Resolvida</span></td><td>${anomEsc(anomReviewLabel(r.kind,r.kinds))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(String(r.operacao||'—').replace(/_/g,' '))}</td><td><strong>${Number(r.occurrences||r.fingerprints?.length||0)}</strong><div class="anom-history-meta">reimportações iguais permanecem resolvidas sem duplicar</div></td><td>${new Date(r.updatedAt||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</td><td>${anomEsc(r.updatedBy||'—')}</td><td><button class="anom-unreview" type="button" onclick="anomUnreview('${anomEsc(r.id)}')">Desmarcar</button></td></tr>`).join('');return;
   }
   let rows=open.filter(r=>(window._anomUi.type==='all'||r.kind===window._anomUi.type)&&(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q)));
   const priority={medidor:0,baixa:1,alta:2};rows.sort((a,b)=>(priority[a.kind]-priority[b.kind])||(a.kind==='baixa'?(a.eficiencia||0)-(b.eficiencia||0):a.kind==='alta'?(b.eficiencia||0)-(a.eficiencia||0):String(b.date||'').localeCompare(String(a.date||'')))||String(a.placa).localeCompare(String(b.placa)));
-  if(head)head.innerHTML='<tr><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th><th>Ação</th></tr>';
+  if(head)head.innerHTML='<tr><th>Ação</th><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th></tr>';
   if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} aberta${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'} · ${reviews.length} revisada${reviews.length===1?'':'s'}`;
   if(!rows.length){if(wrap)wrap.style.display='none';if(empty){empty.style.display='flex';empty.innerHTML='<strong>Nenhuma anomalia aberta encontrada.</strong><span>Ajuste os filtros ou consulte Resolvidas.</span>';}if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
-  if(body)body.innerHTML=rows.map(r=>{const badge=r.kind==='medidor'?'medidor':r.kind,medida=r.kmHoras==null?'—':`${anomFmtNum(r.kmHoras)} ${r.medida==='KM'?'km':'h'}`,litros=r.litros==null?'—':`${anomFmtNum(r.litros)} L`,ef=r.eficiencia==null?'—':`${r.eficiencia.toFixed(1)}%`,efClass=r.kind==='baixa'?'bad':r.kind==='alta'?'warn':'',plate=String(r.placa||'').replace(/'/g,"\\'");return `<tr><td><span class="anom-badge ${badge}">${anomEsc(r.kindLabel)}</span></td><td>${anomEsc(fechFmt(fechParse(r.date)))}</td><td title="${anomEsc(r.operacao)}">${anomEsc(String(r.operacao).replace(/_/g,' '))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(medida)}</td><td>${anomEsc(litros)}</td><td><strong>${anomEsc(r.real)}</strong></td><td>${anomEsc(r.meta??'—')}</td><td><strong class="${efClass}">${anomEsc(ef)}</strong></td><td><div class="anom-detail-main">${anomEsc(r.detail)}</div><div class="anom-detail-sub">${anomEsc(r.source)}</div></td><td class="anom-action-cell"><div class="anom-action-wrap"><button class="anom-review-btn fix" type="button" title="Resolve todas as ocorrências deste tipo desta placa no mês e mantém o histórico" onclick="anomMarkPlate('${r.kind}','${plate}','resolvido')">Resolver</button></div></td></tr>`;}).join('');
+  if(body)body.innerHTML=rows.map(r=>{const badge=r.kind==='medidor'?'medidor':r.kind,medida=r.kmHoras==null?'—':`${anomFmtNum(r.kmHoras)} ${r.medida==='KM'?'km':'h'}`,litros=r.litros==null?'—':`${anomFmtNum(r.litros)} L`,ef=r.eficiencia==null?'—':`${r.eficiencia.toFixed(1)}%`,efClass=r.kind==='baixa'?'bad':r.kind==='alta'?'warn':'',plate=String(r.placa||'').replace(/'/g,"\\'");return `<tr><td class="anom-action-cell"><div class="anom-action-wrap"><button class="anom-review-btn fix" type="button" title="Resolve todas as anomalias abertas desta placa no mês e mantém o histórico" onclick="anomMarkPlate('${r.kind}','${plate}','resolvido')">Resolver</button></div></td><td><span class="anom-badge ${badge}">${anomEsc(r.kindLabel)}</span></td><td>${anomEsc(fechFmt(fechParse(r.date)))}</td><td title="${anomEsc(r.operacao)}">${anomEsc(String(r.operacao).replace(/_/g,' '))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(medida)}</td><td>${anomEsc(litros)}</td><td><strong>${anomEsc(r.real)}</strong></td><td>${anomEsc(r.meta??'—')}</td><td><strong class="${efClass}">${anomEsc(ef)}</strong></td><td><div class="anom-detail-main">${anomEsc(r.detail)}</div><div class="anom-detail-sub">${anomEsc(r.source)}</div></td></tr>`;}).join('');
 }
 
 function fechConfirms(key){if(state.fechConfirmacoes&&state.fechConfirmacoes[key])return state.fechConfirmacoes[key];try{return JSON.parse(localStorage.getItem('ignis_fech_confirms_'+key)||'{}')||{};}catch(e){return{};}}
