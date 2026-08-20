@@ -13362,7 +13362,66 @@ function fechExcelArgb(hex){return 'FF'+String(hex||'').replace('#','').toUpperC
 function fechExcelFill(cell,color){cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:fechExcelArgb(color)}};}
 function fechExcelThinBorder(cell,color=FECH_EXCEL.border){cell.border={top:{style:'thin',color:{argb:fechExcelArgb(color)}},left:{style:'thin',color:{argb:fechExcelArgb(color)}},bottom:{style:'thin',color:{argb:fechExcelArgb(color)}},right:{style:'thin',color:{argb:fechExcelArgb(color)}}};}
 function fechExcelRangeFill(ws,r1,c1,r2,c2,color){for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)fechExcelFill(ws.getCell(r,c),color);}
-function fechExcelMergeText(ws,range,value,opt={}){ws.mergeCells(range);const cell=ws.getCell(range.split(':')[0]);cell.value=value;fechExcelFill(cell,opt.fill||FECH_EXCEL.panel);cell.font={name:'Aptos',size:opt.size||11,bold:!!opt.bold,color:{argb:fechExcelArgb(opt.color||FECH_EXCEL.text)}};cell.alignment={horizontal:opt.align||'left',vertical:opt.valign||'middle',wrapText:opt.wrap!==false};if(opt.border!==false)fechExcelThinBorder(cell,opt.borderColor||FECH_EXCEL.border);return cell;}
+function fechExcelSafeValue(value){
+  if(value===null||value===undefined)return '';
+  if(typeof value==='number')return Number.isFinite(value)?value:'';
+  if(value instanceof Date)return Number.isNaN(value.getTime())?'':value;
+  if(typeof value==='boolean')return value;
+  if(typeof value==='string')return value.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+  try{return JSON.stringify(value).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');}catch(e){return String(value||'');}
+}
+function fechExcelMergeText(ws,range,value,opt={}){
+  const parts=String(range).split(':');
+  if(parts.length===2 && parts[0]!==parts[1]) ws.mergeCells(range);
+  const cell=ws.getCell(parts[0]);
+  cell.value=fechExcelSafeValue(value);
+  fechExcelFill(cell,opt.fill||FECH_EXCEL.panel);
+  cell.font={name:'Aptos',size:opt.size||11,bold:!!opt.bold,color:{argb:fechExcelArgb(opt.color||FECH_EXCEL.text)}};
+  cell.alignment={horizontal:opt.align||'left',vertical:opt.valign||'middle',wrapText:opt.wrap!==false};
+  if(opt.border!==false)fechExcelThinBorder(cell,opt.borderColor||FECH_EXCEL.border);
+  return cell;
+}
+function fechExcelSanitizeWorkbook(workbook){
+  workbook.eachSheet(ws=>{
+    ws.eachRow({includeEmpty:false},row=>{
+      row.eachCell({includeEmpty:false},cell=>{
+        const v=cell.value;
+        if(typeof v==='number'&&!Number.isFinite(v)){cell.value='';return;}
+        if(typeof v==='string')cell.value=fechExcelSafeValue(v);
+        else if(v&&typeof v==='object'&&!(v instanceof Date)){
+          // Mantém fórmulas/rich text/hiperlinks do ExcelJS; sanitiza apenas textos internos conhecidos.
+          if(typeof v.text==='string')v.text=fechExcelSafeValue(v.text);
+          if(typeof v.hyperlink==='string')v.hyperlink=fechExcelSafeValue(v.hyperlink);
+        }
+      });
+    });
+  });
+}
+function fechExcelBuildFallback(workbook,x){
+  const checks=x.checks||[],required=checks.filter(c=>!c.optional),blockers=required.filter(c=>c.blocking&&c.state!=='ok'),warnings=checks.filter(c=>c.state==='attention'),done=required.filter(c=>c.state==='ok').length,progress=required.length?Math.round(done/required.length*100):100;
+  const status=blockers.length?'BLOQUEADO':warnings.length?'COM ATENÇÃO':'PRONTO';
+  const statusColor=blockers.length?FECH_EXCEL.red:warnings.length?FECH_EXCEL.yellow:FECH_EXCEL.green;
+  const ws=workbook.addWorksheet('Dashboard');
+  ws.views=[{showGridLines:false,state:'frozen',ySplit:6}];
+  ws.columns=[{width:28},{width:18},{width:15},{width:15},{width:44},{width:44}];
+  ws.mergeCells('A1:F2'); const t=ws.getCell('A1');t.value='IGNIS  •  FECHAMENTO INTELIGENTE';fechExcelFill(t,FECH_EXCEL.orange);t.font={name:'Aptos Display',size:24,bold:true,color:{argb:fechExcelArgb(FECH_EXCEL.white)}};t.alignment={vertical:'middle'};
+  ws.mergeCells('A3:F3'); const sub=ws.getCell('A3');sub.value=`${x.s.label}  •  ${x.rows.length.toLocaleString('pt-BR')} registros  •  gerado em ${new Date().toLocaleString('pt-BR')}`;fechExcelFill(sub,FECH_EXCEL.panel);sub.font={name:'Aptos',size:10,color:{argb:fechExcelArgb(FECH_EXCEL.muted)}};
+  const cards=[['A5','STATUS',status,statusColor],['B5','PROGRESSO',progress+'%',FECH_EXCEL.blue],['C5','BLOQUEADORES',blockers.length,blockers.length?FECH_EXCEL.red:FECH_EXCEL.green],['D5','ATENÇÕES',warnings.length,warnings.length?FECH_EXCEL.yellow:FECH_EXCEL.green],['E5','REGISTROS',x.rows.length,FECH_EXCEL.text],['F5','ETAPAS',checks.length,FECH_EXCEL.text]];
+  cards.forEach(([addr,label,val,color])=>{const c=ws.getCell(addr);c.value=`${label}\n${val}`;fechExcelFill(c,FECH_EXCEL.panel2);c.font={name:'Aptos',size:12,bold:true,color:{argb:fechExcelArgb(color)}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};fechExcelThinBorder(c);});ws.getRow(5).height=48;
+  ws.getRow(7).values=['ETAPA','STATUS','BLOQUEIA','TIPO','DETALHE','OBSERVAÇÃO'];fechExcelStyleHeaderRow(ws.getRow(7),1,6);
+  let row=8;checks.forEach((c,i)=>{const info=fechExcelStatusInfo(c),rr=ws.getRow(row++);rr.values=[c.title,info.label,c.blocking?'SIM':'NÃO',c.optional?'Opcional':'Obrigatória',c.detail||'',c.meta||''];fechExcelStyleDataRow(rr,6,i%2===1);rr.getCell(2).font={name:'Aptos',size:10,bold:true,color:{argb:fechExcelArgb(info.color)}};rr.height=30;});
+  row+=1;ws.mergeCells(`A${row}:F${row}`);const ex=ws.getCell(`A${row}`);ex.value='RESUMO EXECUTIVO';fechExcelFill(ex,FECH_EXCEL.orange);ex.font={name:'Aptos',size:11,bold:true,color:{argb:fechExcelArgb(FECH_EXCEL.white)}};row++;
+  ws.mergeCells(`A${row}:F${row+3}`);const et=ws.getCell(`A${row}`);et.value=fechExcelExecutiveText(x,blockers,warnings);fechExcelFill(et,FECH_EXCEL.panel);et.font={name:'Aptos',size:11,color:{argb:fechExcelArgb(FECH_EXCEL.text)}};et.alignment={vertical:'top',wrapText:true};
+  // Abas técnicas simples e robustas.
+  const pend=workbook.addWorksheet('Pendências');pend.views=[{showGridLines:false}];pend.columns=[{width:16},{width:30},{width:18},{width:70},{width:50}];pend.getRow(1).values=['PRIORIDADE','ETAPA','STATUS','DETALHE','OBSERVAÇÃO'];fechExcelStyleHeaderRow(pend.getRow(1),1,5);let pr=2;checks.filter(c=>c.state!=='ok').forEach((c,i)=>{const info=fechExcelStatusInfo(c),rr=pend.getRow(pr++);rr.values=[c.state==='blocked'?'CRÍTICA':c.state==='attention'?'ATENÇÃO':'OPCIONAL',c.title,info.label,c.detail||'',c.meta||''];fechExcelStyleDataRow(rr,5,i%2===1);rr.getCell(3).font={bold:true,color:{argb:fechExcelArgb(info.color)}};});
+  const an=workbook.addWorksheet('Anomalias');an.views=[{showGridLines:false}];an.columns=[{width:20},{width:14},{width:30},{width:16},{width:16},{width:16},{width:20},{width:16},{width:16}];an.getRow(1).values=['TIPO','DATA','OPERAÇÃO','PLACA','KM/HORAS','LITROS','REALIZADO/LEITURA','META','EFICIÊNCIA %'];fechExcelStyleHeaderRow(an.getRow(1),1,9);let ar=2;
+  (x.med||[]).forEach(r=>{const rr=an.getRow(ar++);rr.values=['Medidor regressivo',r.data||'',r.operacao||'',r.placa||'','','',(r.valorAnterior!=null&&r.valorAtual!=null)?`${r.valorAnterior} → ${r.valorAtual}`:(r.valor??''),'',''];fechExcelStyleDataRow(rr,9,ar%2===0);});
+  (x.eficAltas||[]).forEach(r=>{const rr=an.getRow(ar++);rr.values=['Eficiência alta',r.data||'',r.operacao||'',r.placa||'',fechExcelSafeValue(r.kmHoras),fechExcelSafeValue(r.litros),fechExcelSafeValue(r.media),fechExcelSafeValue(r.meta),fechExcelSafeValue(r.eficiencia)];fechExcelStyleDataRow(rr,9,ar%2===0);});
+  (x.eficBaixas||[]).forEach(r=>{const rr=an.getRow(ar++);rr.values=['Eficiência baixa',r.data||'',r.operacao||'',r.placa||'',fechExcelSafeValue(r.kmHoras),fechExcelSafeValue(r.litros),fechExcelSafeValue(r.media),fechExcelSafeValue(r.meta),fechExcelSafeValue(r.eficiencia)];fechExcelStyleDataRow(rr,9,ar%2===0);});
+  const bt=workbook.addWorksheet('Base Técnica');bt.views=[{showGridLines:false}];bt.columns=[{width:28},{width:18},{width:14},{width:70},{width:50}];bt.getRow(1).values=['ETAPA','STATUS','BLOQUEIA','DETALHE','OBSERVAÇÃO'];fechExcelStyleHeaderRow(bt.getRow(1),1,5);let br=2;checks.forEach((c,i)=>{const info=fechExcelStatusInfo(c),rr=bt.getRow(br++);rr.values=[c.title,info.label,c.blocking?'SIM':'NÃO',c.detail||'',c.meta||''];fechExcelStyleDataRow(rr,5,i%2===1);rr.getCell(2).font={bold:true,color:{argb:fechExcelArgb(info.color)}};});
+  return workbook;
+}
+
 function fechExcelStatusInfo(c){
   if(c.state==='ok')return{label:'CONCLUÍDO',color:FECH_EXCEL.green};
   if(c.state==='blocked')return{label:'BLOQUEADOR',color:FECH_EXCEL.red};
@@ -13460,11 +13519,34 @@ function fechExcelBaseTecnica(workbook,x){
 async function fechExportarExcel(){
   const x=fechBuild();
   if(typeof ensureExcelJSReady==='function' && !(await ensureExcelJSReady()))return;
+  const btn=[...document.querySelectorAll('button')].find(b=>String(b.textContent||'').includes('Exportar resumo em Excel'));
+  const original=btn?.innerHTML;
+  if(btn){btn.disabled=true;btn.textContent='Gerando Excel...';}
   try{
-    const workbook=new ExcelJS.Workbook();workbook.creator='IGNIS';workbook.lastModifiedBy='IGNIS';workbook.company='IGNIS';workbook.created=new Date();workbook.modified=new Date();workbook.subject=`Fechamento Inteligente — ${x.s.label}`;workbook.title=`IGNIS — Fechamento Inteligente — ${x.s.label}`;
-    fechExcelDashboard(workbook,x);fechExcelPendencias(workbook,x);fechExcelAnomalias(workbook,x);fechExcelBaseTecnica(workbook,x);
-    const buffer=await workbook.xlsx.writeBuffer();const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`IGNIS_Fechamento_Inteligente_${x.s.key}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);showToast('Fechamento exportado em Excel com Dashboard executivo IGNIS.','success');
-  }catch(e){console.error('IGNIS fechamento Excel',e);showToast('Não foi possível gerar o Excel executivo do fechamento.','error');}
+    let workbook=new ExcelJS.Workbook();
+    workbook.creator='IGNIS';workbook.lastModifiedBy='IGNIS';workbook.created=new Date();workbook.modified=new Date();
+    workbook.subject=`Fechamento Inteligente — ${x.s.label}`;workbook.title=`IGNIS — Fechamento Inteligente — ${x.s.label}`;
+    let modo='executivo';
+    try{
+      fechExcelDashboard(workbook,x);fechExcelPendencias(workbook,x);fechExcelAnomalias(workbook,x);fechExcelBaseTecnica(workbook,x);
+      fechExcelSanitizeWorkbook(workbook);
+      // Valida a serialização completa antes do download.
+      var buffer=await workbook.xlsx.writeBuffer();
+    }catch(fullErr){
+      console.warn('IGNIS Excel executivo: usando modo seguro após falha no layout avançado.',fullErr);
+      modo='seguro';
+      workbook=new ExcelJS.Workbook();workbook.creator='IGNIS';workbook.lastModifiedBy='IGNIS';workbook.created=new Date();workbook.modified=new Date();
+      fechExcelBuildFallback(workbook,x);fechExcelSanitizeWorkbook(workbook);
+      var buffer=await workbook.xlsx.writeBuffer();
+    }
+    const blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=`IGNIS_Fechamento_Inteligente_${x.s.key}.xlsx`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1800);
+    showToast(modo==='executivo'?'Excel executivo do fechamento gerado com sucesso.':'Excel do fechamento gerado em modo seguro.','success');
+  }catch(e){
+    console.error('IGNIS fechamento Excel — falha definitiva',e);
+    const msg=(e&&e.message)?String(e.message).slice(0,120):'erro desconhecido';
+    showToast('Falha ao gerar o Excel: '+msg,'error');
+  }finally{if(btn){btn.disabled=false;btn.innerHTML=original||'Exportar resumo em Excel';}}
 }
 
 </script>
