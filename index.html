@@ -3140,23 +3140,65 @@ async function _waitIgnisGlobal(name, rotulo, timeout=12000) {
 function ensureXLSXReady() { return _waitIgnisGlobal('XLSX', 'o módulo de Excel'); }
 function ensureExcelJSReady() { return _waitIgnisGlobal('ExcelJS', 'o gerador avançado de Excel'); }
 
-// Abre a composição do Outlook Web. Em PCs onde o Outlook foi instalado como
-// PWA e está configurado para capturar links de outlook.office.com, o próprio
-// navegador encaminha para o PWA. Caso contrário, abre o Outlook Web — sem
-// depender do protocolo mailto/cliente padrão do Windows.
+// Abre e-mail priorizando o aplicativo/PWA registrado no Windows.
+// O Outlook PWA/Novo Outlook pode se registrar como manipulador de "mailto:".
+// Como uma página web não consegue escolher diretamente um PWA específico,
+// o IGNIS tenta primeiro o manipulador de e-mail do Windows e só cai no
+// Outlook Web se nenhum aplicativo assumir a abertura em poucos segundos.
 function ignisDecodeUriSafe(v){ try { return decodeURIComponent(String(v||'')); } catch(e) { return String(v||''); } }
 function ignisAbrirOutlook(destinatarios='', assunto='', corpo='') {
-  const params = new URLSearchParams();
-  const to = String(destinatarios||'').split(/[;,]+/).map(x=>x.trim()).filter(Boolean).join(';');
-  if (to) params.set('to', to);
+  const lista = String(destinatarios||'').split(/[;,]+/).map(x=>x.trim()).filter(Boolean);
+  const toMail = lista.join(',');
+  const toWeb = lista.join(';');
   const subject = ignisDecodeUriSafe(assunto);
-  if (subject) params.set('subject', subject);
-  if (corpo) params.set('body', String(corpo));
-  params.set('popoutv2','1');
-  const url = 'https://outlook.office.com/mail/deeplink/compose?' + params.toString();
-  const w = window.open(url, '_blank', 'noopener,noreferrer');
-  if (!w) showToast('O navegador bloqueou a abertura do Outlook. Libere pop-ups para o IGNIS e tente novamente.', 'error');
-  return !!w;
+  const body = String(corpo||'');
+
+  // 1) PWA/Novo Outlook/cliente padrão via MAILTO
+  const mailParts = [];
+  if (subject) mailParts.push('subject=' + encodeURIComponent(subject));
+  if (body) mailParts.push('body=' + encodeURIComponent(body));
+  const mailto = 'mailto:' + toMail + (mailParts.length ? '?' + mailParts.join('&') : '');
+
+  // 2) Fallback web, preservando os mesmos destinatários/assunto/corpo
+  const webParams = new URLSearchParams();
+  if (toWeb) webParams.set('to', toWeb);
+  if (subject) webParams.set('subject', subject);
+  if (body) webParams.set('body', body);
+  webParams.set('popoutv2','1');
+  const webUrl = 'https://outlook.office.com/mail/deeplink/compose?' + webParams.toString();
+
+  let aplicativoAssumiu = false;
+  let fallbackExecutado = false;
+  const marcarAssumido = () => { aplicativoAssumiu = true; };
+  const onVisibility = () => { if (document.visibilityState === 'hidden') marcarAssumido(); };
+  window.addEventListener('blur', marcarAssumido, { once:true });
+  document.addEventListener('visibilitychange', onVisibility);
+
+  try {
+    showToast('Tentando abrir o Outlook instalado/PWA...', 'info');
+    const a = document.createElement('a');
+    a.href = mailto;
+    a.style.display = 'none';
+    a.setAttribute('aria-hidden','true');
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => a.remove(), 0);
+  } catch(e) {
+    console.warn('Falha ao tentar MAILTO:', e);
+  }
+
+  // Se o Windows/PWA não assumir o protocolo, abre o Outlook Web.
+  // O pequeno atraso permite detectar blur/visibilitychange quando o app abre.
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', onVisibility);
+    if (aplicativoAssumiu || fallbackExecutado) return;
+    fallbackExecutado = true;
+    showToast('Outlook instalado não respondeu. Abrindo Outlook Web...', 'info');
+    const w = window.open(webUrl, '_blank', 'noopener,noreferrer');
+    if (!w) showToast('O navegador bloqueou o Outlook Web. Libere pop-ups para o IGNIS e tente novamente.', 'error');
+  }, 2200);
+
+  return true;
 }
 
 async function loadState() {
