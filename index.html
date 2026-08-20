@@ -122,6 +122,7 @@ window.fbSave = async function(data) {
       medidorAnomalias,
       eficienciaAnomalias,
       arlaMeses,
+      anomaliaRevisoes,
       // Estrutura antiga de monitoramento por importação foi descontinuada.
       importacaoMonitorEventos,
       importacaoMonitorRegras,
@@ -266,6 +267,17 @@ window.fbLoad = async function() {
       });
     }
 
+    // Histórico de anomalias revisadas fica em documento próprio. Assim marcar
+    // uma ocorrência não exige regravar todos os chunks de abastecimentos.
+    try {
+      const revSnap = await withTimeout(getDoc(doc(db, 'fueltracker', 'anomalia_revisoes')), 10000);
+      if (revSnap.exists() && Array.isArray(revSnap.data()?.items)) dados.anomaliaRevisoes = revSnap.data().items;
+      else if (!Array.isArray(dados.anomaliaRevisoes)) dados.anomaliaRevisoes = [];
+    } catch (e) {
+      console.warn('IGNIS: histórico de anomalias revisadas indisponível no momento.', e);
+      if (!Array.isArray(dados.anomaliaRevisoes)) dados.anomaliaRevisoes = [];
+    }
+
     // Remove somente metadados internos do storage.
     [
       '_hasAbast','_storageVersion','_abastVersion','_abastChunks','_abastCount',
@@ -278,6 +290,21 @@ window.fbLoad = async function() {
     console.error('Firebase load error:', e);
     return null;
   }
+};
+
+// Histórico de revisão das anomalias — documento leve e independente dos chunks.
+window.fbSaveAnomReviews = async function(items) {
+  try {
+    const safe = Array.isArray(items) ? items.slice(-800) : [];
+    await withTimeout(setDoc(doc(db, 'fueltracker', 'anomalia_revisoes'), { items:safe, updatedAt:Date.now() }), 12000);
+    return true;
+  } catch(e) { console.error('Firebase save anomaly reviews:', e); return false; }
+};
+window.fbLoadAnomReviews = async function() {
+  try {
+    const s=await withTimeout(getDoc(doc(db,'fueltracker','anomalia_revisoes')),10000);
+    return s.exists()&&Array.isArray(s.data()?.items)?s.data().items:[];
+  } catch(e) { return null; }
 };
 
 // Funções exclusivas para usuários — documento separado e protegido
@@ -1139,7 +1166,8 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 .anom-header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}.anom-header-tools{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.anom-import-ops-btn{height:42px!important;border-radius:11px!important;padding:0 13px!important;white-space:nowrap}.anom-import-ops-btn .ui-icon{width:16px;height:16px;color:#f07a52}.anom-rules{display:flex;align-items:center;gap:8px;padding:7px;border:1px solid var(--border);background:var(--bg2);border-radius:13px}.anom-rules-title{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7d8da0;padding:0 6px}
 .anom-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.anom-kpi{appearance:none;text-align:left;background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:16px 18px;min-height:112px;color:var(--text);cursor:pointer;transition:.16s;position:relative;overflow:hidden}.anom-kpi:hover{border-color:rgba(255,255,255,.12);transform:translateY(-1px)}.anom-kpi.active{border-color:rgba(233,95,50,.52);box-shadow:inset 0 0 0 1px rgba(233,95,50,.13)}.anom-kpi span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#8292a5}.anom-kpi strong{display:block;font:750 29px 'DM Mono',monospace;margin-top:9px;color:#fff}.anom-kpi small{display:block;font-size:10.5px;color:#78889a;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.anom-kpi.medidor strong{color:#ff7676}.anom-kpi.alta strong{color:#f4b544}.anom-kpi.baixa strong{color:#ef6262}.anom-kpi.all strong{color:#f0f4f7}
 .anom-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden}.anom-toolbar{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:12px}.anom-type-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.anom-type-tab{height:34px;padding:0 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#8999aa;font:700 11.5px 'DM Sans',sans-serif;cursor:pointer}.anom-type-tab:hover{background:rgba(255,255,255,.035);color:#fff}.anom-type-tab.active{background:rgba(233,95,50,.1);border-color:rgba(233,95,50,.28);color:#f58a63}.anom-filter-row{display:grid;grid-template-columns:150px 105px minmax(220px,1fr) minmax(230px,1.15fr) auto;gap:9px;align-items:center}.anom-select,.anom-search{height:42px;border:1px solid var(--border);border-radius:11px;background:#101720;color:var(--text);font:600 12px 'DM Sans',sans-serif}.anom-select{padding:0 34px 0 12px;outline:none}.anom-select:focus,.anom-search:focus-within{border-color:rgba(233,95,50,.5);box-shadow:0 0 0 3px rgba(233,95,50,.07)}.anom-search{display:flex;align-items:center;gap:8px;padding:0 11px}.anom-search .ui-icon{width:16px;height:16px;color:#728295}.anom-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#fff;font:500 12px 'DM Sans',sans-serif}.anom-summary{padding:10px 16px;font-size:11.5px;color:#8191a3;border-bottom:1px solid rgba(255,255,255,.04)}.anom-summary strong{color:#dce5ed}
-.anom-table-wrap{overflow:auto;max-height:58vh;scrollbar-width:thin;scrollbar-color:#364351 #0d141b}.anom-table{width:100%;min-width:1180px;border-collapse:collapse;font-size:11.5px}.anom-table th{position:sticky;top:0;z-index:2;background:#151d26;color:#8192a5;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:9.5px;padding:11px 12px;border-bottom:1px solid var(--border)}.anom-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#b8c5d0;vertical-align:middle}.anom-table tr:hover td{background:rgba(255,255,255,.018)}.anom-table .bad{color:#ff6e6e}.anom-table .warn{color:#f5b942}.anom-plate{font-family:'DM Mono',monospace;color:#eef3f7}.anom-badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 8px;font-size:9.5px;font-weight:800;white-space:nowrap}.anom-badge.medidor{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-badge.alta{color:#f5bd56;background:rgba(245,185,66,.09);border:1px solid rgba(245,185,66,.14)}.anom-badge.baixa{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-detail-main{color:#c8d2dc;font-size:10.8px}.anom-detail-sub{font-size:9.8px;color:#647588;margin-top:2px}.anom-empty{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#8493a4}.anom-empty strong{color:#d8e0e7;font-size:14px}.anom-empty span{font-size:11.5px}
+.anom-table-wrap{overflow:auto;max-height:58vh;scrollbar-width:thin;scrollbar-color:#364351 #0d141b}.anom-table{width:100%;min-width:1180px;border-collapse:collapse;font-size:11.5px}.anom-table th{position:sticky;top:0;z-index:2;background:#151d26;color:#8192a5;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:9.5px;padding:11px 12px;border-bottom:1px solid var(--border)}.anom-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#b8c5d0;vertical-align:middle}.anom-table tr:hover td{background:rgba(255,255,255,.018)}.anom-table .bad{color:#ff6e6e}.anom-table .warn{color:#f5b942}.anom-plate{font-family:'DM Mono',monospace;color:#eef3f7}.anom-badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 8px;font-size:9.5px;font-weight:800;white-space:nowrap}.anom-badge.medidor{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-badge.alta{color:#f5bd56;background:rgba(245,185,66,.09);border:1px solid rgba(245,185,66,.14)}.anom-badge.baixa{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}
+.anom-reviewed-tab span{display:inline-flex;min-width:20px;height:18px;align-items:center;justify-content:center;margin-left:5px;padding:0 5px;border-radius:999px;background:rgba(57,203,145,.10);color:#55d9a4;font:800 9px 'DM Mono',monospace}.anom-action-cell{min-width:172px}.anom-action-wrap{display:flex;gap:6px;align-items:center}.anom-review-btn{height:29px;border-radius:8px;padding:0 9px;border:1px solid var(--border);background:#151d26;color:#aebbc7;font:700 10px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}.anom-review-btn:hover{border-color:rgba(233,95,50,.36);color:#fff}.anom-review-btn.done{background:rgba(57,203,145,.08);border-color:rgba(57,203,145,.18);color:#55d9a4}.anom-review-btn.fix{background:rgba(233,95,50,.08);border-color:rgba(233,95,50,.22);color:#f38a64}.anom-review-status{display:inline-flex;height:24px;align-items:center;padding:0 8px;border-radius:999px;font-size:9.5px;font-weight:800}.anom-review-status.corrigido{background:rgba(57,203,145,.10);color:#55d9a4;border:1px solid rgba(57,203,145,.16)}.anom-review-status.analisado{background:rgba(100,160,220,.10);color:#8ab8e8;border:1px solid rgba(100,160,220,.16)}.anom-history-meta{font-size:10px;color:#66788a;margin-top:3px}.anom-unreview{height:29px;border-radius:8px;border:1px solid rgba(239,98,98,.18);background:rgba(239,98,98,.06);color:#ff7777;padding:0 9px;font:700 10px 'DM Sans',sans-serif;cursor:pointer}.anom-unreview:hover{background:rgba(239,98,98,.11)}.anom-detail-main{color:#c8d2dc;font-size:10.8px}.anom-detail-sub{font-size:9.8px;color:#647588;margin-top:2px}.anom-empty{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#8493a4}.anom-empty strong{color:#d8e0e7;font-size:14px}.anom-empty span{font-size:11.5px}
 /* Importação: progresso por fase, sem congelar a percepção de "leitura" */
 .import-progress-card{margin-top:10px;padding:12px 13px;border:1px solid var(--border);background:#101720;border-radius:11px}.import-progress-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11.5px}.import-progress-top strong{color:#dbe4ec}.import-progress-top span{font:700 10.5px 'DM Mono',monospace;color:#f17b50}.import-progress-track{height:5px;margin-top:9px;border-radius:999px;background:#0a1016;overflow:hidden}.import-progress-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#f08a4b);transition:width .18s ease}.import-progress-sub{font-size:10.5px;color:#748497;margin-top:7px}
 @media(max-width:1100px){.anom-kpis{grid-template-columns:1fr 1fr}.anom-filter-row{grid-template-columns:1fr 1fr}.anom-search,.anom-op{grid-column:span 1}}
@@ -1332,7 +1360,12 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="page-sub">O que precisa da sua atenção agora</div>
       </div>
       <div class="pend-header-actions">
-        <button class="btn btn-secondary btn-sm" type="button" onclick="anomOpenPage('all')">
+        <div class="pend-period-picker" title="As análises de consumo e anomalias são calculadas somente dentro deste mês">
+          <span>Mês das análises</span>
+          <select id="pend-month" onchange="renderPendencias(true)"></select>
+          <select id="pend-year" onchange="renderPendencias(true)"></select>
+        </div>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="pendOpenAnomaliasDoPeriodo()">
           <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m4 6 4-3 4 4 5-5 3 3"/></svg>
           Anomalias
         </button>
@@ -1425,6 +1458,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <button type="button" class="anom-type-tab" data-anom-type="medidor" onclick="anomSetType('medidor')">Medidor regressivo</button>
           <button type="button" class="anom-type-tab" data-anom-type="alta" onclick="anomSetType('alta')">Eficiência alta</button>
           <button type="button" class="anom-type-tab" data-anom-type="baixa" onclick="anomSetType('baixa')">Eficiência baixa</button>
+          <button type="button" class="anom-type-tab anom-reviewed-tab" data-anom-type="corrigidas" onclick="anomSetType('corrigidas')">Corrigidas <span id="anom-reviewed-count">0</span></button>
         </div>
         <div class="anom-filter-row">
           <select id="anom-month" class="anom-select" onchange="renderAnomalias(true)"></select>
@@ -1437,7 +1471,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
       <div class="anom-summary" id="anom-summary">—</div>
       <div class="anom-table-wrap" id="anom-table-wrap">
         <table class="anom-table">
-          <thead><tr><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th></tr></thead>
+          <thead id="anom-table-head"><tr><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th><th>Ação</th></tr></thead>
           <tbody id="anom-table-body"></tbody>
         </table>
       </div>
@@ -3958,21 +3992,34 @@ function pendBusinessGap(latest, today=new Date()){
   let n=0; while(d<end){ const day=d.getDay(); if(day!==0&&day!==6)n++; d.setDate(d.getDate()+1); if(n>400)break; }
   return n;
 }
-function pendGetReincidentes(){
-  const periodos=Object.entries(state.semanas||{}).sort((a,b)=>(a[1].dataIni||a[1].label||a[0]).localeCompare(b[1].dataIni||b[1].label||b[0]));
-  if(periodos.length<2) return [];
+function pendPeriodBounds(y,m){return{start:new Date(y,m,1),end:new Date(y,m+1,0,23,59,59)}}
+window._pendUi=window._pendUi||{initialized:false};
+function pendInitPeriodSelectors(){
+  const me=document.getElementById('pend-month'),ye=document.getElementById('pend-year');if(!me||!ye)return;
+  const now=new Date(),oldM=me.value,oldY=ye.value,years=new Set([now.getFullYear()]);
+  Object.values(state.semanas||{}).forEach(p=>{const d=pendParseDate(p?.dataIni||p?.dataFim);if(d)years.add(d.getFullYear());});
+  me.innerHTML=ANOM_MONTHS.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
+  const ys=[...years].sort((a,b)=>b-a);ye.innerHTML=ys.map(y=>`<option value="${y}">${y}</option>`).join('');
+  if(!window._pendUi.initialized){me.value=String(now.getMonth());ye.value=String(now.getFullYear());window._pendUi.initialized=true;}
+  else {me.value=oldM!==''?oldM:String(now.getMonth());ye.value=ys.includes(Number(oldY))?oldY:String(now.getFullYear());}
+}
+function pendSelectedPeriod(){pendInitPeriodSelectors();const now=new Date();return{m:Number(document.getElementById('pend-month')?.value??now.getMonth()),y:Number(document.getElementById('pend-year')?.value||now.getFullYear())};}
+function pendOpenAnomaliasDoPeriodo(){const s=pendSelectedPeriod();anomOpenPage('all',s.y,s.m);}
+function pendGetReincidentes(y,m){
+  const now=new Date();y=Number.isFinite(Number(y))?Number(y):now.getFullYear();m=Number.isFinite(Number(m))?Number(m):now.getMonth();
+  const {start,end}=pendPeriodBounds(y,m);
+  const periodos=Object.entries(state.semanas||{}).filter(([,p])=>{const a=pendParseDate(p?.dataIni),b=pendParseDate(p?.dataFim||p?.dataIni);return a&&b&&a<=end&&b>=start;}).sort((a,b)=>(a[1].dataIni||a[1].label||a[0]).localeCompare(b[1].dataIni||b[1].label||b[0]));
+  if(periodos.length<2)return[];
   const hist={};
   periodos.forEach(([id,p])=>{
-    const by={}; (p.registros||[]).forEach(r=>{ const k=r.placa; if(!k)return; if(!by[k])by[k]={l:0,h:0,tipo:getTipoIgnis(r)}; by[k].l+=Number(r.litros)||0; by[k].h+=Number(r.horas)||0; });
+    const by={};(p.registros||[]).forEach(r=>{const k=r.placa;if(!k)return;if(!by[k])by[k]={l:0,h:0,tipo:getTipoIgnis(r)};by[k].l+=Number(r.litros)||0;by[k].h+=Number(r.horas)||0;});
     Object.entries(by).forEach(([placa,d])=>{
-      const maq=getMaquina(placa); const meta=Number(maq?.meta)||0; if(!meta)return;
-      const tipo=maq?.tipoIgnis||d.tipo||''; const kmL=tipo==='pesada'||tipo==='leve';
-      const media=kmL ? (d.l>0?d.h/d.l:0) : (d.h>0?d.l/d.h:0); if(!media)return;
-      const efic=kmL ? (media/meta*100) : (meta/media*100);
-      (hist[placa]||(hist[placa]=[])).push({id,label:p.label||id,efic,media,operacao:maq?.operacao||'',tipo});
+      const maq=getMaquina(placa),meta=Number(maq?.meta)||0;if(!meta)return;const tipo=maq?.tipoIgnis||d.tipo||'',kmL=tipo==='pesada'||tipo==='leve';
+      const media=kmL?(d.l>0?d.h/d.l:0):(d.h>0?d.l/d.h:0);if(!media)return;const efic=kmL?(media/meta*100):(meta/media*100);
+      (hist[placa]||(hist[placa]=[])).push({id,label:p.label||id,dataIni:p.dataIni||'',dataFim:p.dataFim||'',efic,media,operacao:maq?.operacao||'',tipo});
     });
   });
-  const out=[]; Object.entries(hist).forEach(([placa,h])=>{ const ult=h.slice(-3); const abaixo=ult.filter(x=>x.efic<98); if(abaixo.length>=2){out.push({placa,operacao:abaixo[abaixo.length-1].operacao,pior:Math.min(...abaixo.map(x=>x.efic)),periodos:abaixo.length});}});
+  const out=[];Object.entries(hist).forEach(([placa,h])=>{const abaixo=h.filter(x=>x.efic<98);if(abaixo.length>=2){out.push({placa,operacao:abaixo.at(-1)?.operacao||'',pior:Math.min(...abaixo.map(x=>x.efic)),periodos:abaixo.length,semanas:abaixo.map(x=>({id:x.id,label:x.label,dataIni:x.dataIni,dataFim:x.dataFim,efic:x.efic,media:x.media}))});}});
   return out.sort((a,b)=>a.pior-b.pior);
 }
 function pendGetExcluir(){
@@ -4097,31 +4144,31 @@ function ignisAnomReportRowVisible(row){
 }
 
 function pendCollect(){
+  const sel=pendSelectedPeriod(),py=sel.y,pm=sel.m,periodLabel=`${ANOM_MONTHS[pm]} de ${py}`;
   const issues=[], monitors=[]; const activeLabels={};
   const addIssue=(i)=>{issues.push(i);(i.keys||[i.id]).forEach(k=>activeLabels[k]=i.title);};
 
-  const reinc=pendGetReincidentes();
+  const reinc=pendGetReincidentes(py,pm);
   if(reinc.length){
     const worst=reinc[0]; const worstPct=worst?.pior??100;
     addIssue({
       id:'consumo',kind:'consumo',severity:worstPct<90?'critical':'attention',title:'Consumo reincidente',count:reinc.length,
-      keys:reinc.map(r=>'consumo:'+r.placa),page:'relatorio',
-      detail:`${reinc.length} ativo${reinc.length>1?'s':''} abaixo de 98% em 2 ou mais períodos.`,
+      keys:reinc.map(r=>`consumo:${py}-${String(pm+1).padStart(2,'0')}:`+r.placa),page:'relatorio',
+      detail:`${reinc.length} ativo${reinc.length>1?'s':''} abaixo de 98% em 2 ou mais semanas de ${periodLabel}.`,
       highlightLabel:'Menor eficiência',
       highlightValue:`${worst?.placa||'—'} · ${worstPct.toFixed(1)}%`,
       highlightSub:worst?.operacao||'Operação não informada',
-      rows:reinc.map(r=>({placa:r.placa,operacao:r.operacao||'—',eficiencia:r.pior,periodos:r.periodos})),
+      rows:reinc.map(r=>({placa:r.placa,operacao:r.operacao||'—',eficiencia:r.pior,periodos:r.periodos,semanas:r.semanas||[]})),
       meta:reinc.slice(0,5).map(r=>`${r.placa} ${r.pior.toFixed(1)}%`).join(' · ')
     });
     monitors.push({name:'Consumo e reincidência',status:worstPct<90?'critical':'attention',detail:`${reinc.length} reincidente${reinc.length>1?'s':''} · menor ${worstPct.toFixed(1)}%`});
   }
   else monitors.push({name:'Consumo e reincidência',status:'ok',detail:'Nenhuma reincidência detectada'});
 
-  const agoraEfic=new Date();
   const limiteEfic=typeof ignisGetLimiteEficiencia==='function'?ignisGetLimiteEficiencia():140;
   const limiteBaixo=typeof ignisGetLimiteEficienciaBaixa==='function'?ignisGetLimiteEficienciaBaixa():60;
-  const altas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(agoraEfic.getFullYear(),agoraEfic.getMonth(),limiteEfic):[];
-  const baixas=typeof ignisEficienciaBaixaRows==='function'?ignisEficienciaBaixaRows(agoraEfic.getFullYear(),agoraEfic.getMonth(),limiteBaixo):[];
+  const altas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(py,pm,limiteEfic):[];
+  const baixas=typeof ignisEficienciaBaixaRows==='function'?ignisEficienciaBaixaRows(py,pm,limiteBaixo):[];
   if(altas.length){
     const pior=altas[0];addIssue({id:'eficiencia-alta',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente alta',count:altas.length,keys:altas.map(r=>'eficiencia-alta:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'anomalias',detail:`${altas.length} abastecimento${altas.length>1?'s':''} acima de ${limiteEfic.toFixed(0)}%.`,highlightLabel:'Maior eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:altas,meta:`Limite: > ${limiteEfic.toFixed(0)}%`});
   }
@@ -4132,13 +4179,12 @@ function pendCollect(){
   monitors.push({name:'Eficiência entre abastecimentos',status:eficStatus,detail:altas.length||baixas.length?`${altas.length} alta(s) · ${baixas.length} baixa(s) · limites ${limiteBaixo.toFixed(0)}% / ${limiteEfic.toFixed(0)}%`:`Sem anomalias fora de ${limiteBaixo.toFixed(0)}%–${limiteEfic.toFixed(0)}%`});
   {const latest=pendLatestAbast();const gap=pendBusinessGap(latest);monitors.push({name:'Atualização dos abastecimentos',status:latest&&gap===0?'ok':'waiting',detail:latest?`Última data ${pendFmtDate(latest)}`:'Sem dados de abastecimento'});}
 
-  const agoraMed=new Date();
-  const meds=typeof fechMedidorRows==='function'?fechMedidorRows(agoraMed.getFullYear(),agoraMed.getMonth()):[];
+  const meds=typeof fechMedidorRows==='function'?fechMedidorRows(py,pm):[];
   if(meds.length){
     addIssue({
       id:'medidores',kind:'medidor',severity:'critical',title:'Odômetro / horímetro regressivo',
       count:meds.length,keys:meds.map(r=>'medidor:'+r.placa+'|'+r.data+'|'+r.valor),page:'anomalias',
-      detail:`${meds.length} ocorrência${meds.length>1?'s':''} com medidor menor que o anterior/correção negativa no mês atual.`,
+      detail:`${meds.length} ocorrência${meds.length>1?'s':''} com medidor menor que o anterior/correção negativa em ${periodLabel}.`,
       highlightLabel:'Primeira ocorrência',
       highlightValue:`${meds[0].placa} · ${meds[0].medidor}`,
       highlightSub:`${fechFmt(fechParse(meds[0].data))} · ${Number(meds[0].valor).toLocaleString('pt-BR',{maximumFractionDigits:2})}`,
@@ -4176,13 +4222,13 @@ function pendCollect(){
   if(rc){const div=(rc.soO2P||0)+(rc.soTicket||0);if(div){addIssue({id:'recon',kind:'recon',severity:'critical',title:'Divergências O2P × Ticket',count:div,keys:['recon-divergencias'],page:'recon',detail:`${div} divergência${div>1?'s':''}: ${rc.soO2P||0} só no O2P e ${rc.soTicket||0} só na Ticket.`,meta:`${rc.ambos||0} registros conciliados`});}monitors.push({name:'O2P × Ticket',status:div?'critical':'ok',detail:div?`${div} divergência(s)`:'Última conciliação sem divergências'});}
   else monitors.push({name:'O2P × Ticket',status:'waiting',detail:'Aguardando uma conciliação para monitorar'});
 
-  return {issues,monitors,activeLabels};
+  return {issues,monitors,activeLabels,periodKey:`${py}-${String(pm+1).padStart(2,'0')}`,periodLabel};
 }
-function pendSyncResolved(activeLabels){
-  const now=Date.now(); let prev=pendReadJSON('ignis_pendencias_snapshot')||{active:{}}; let hist=pendReadJSON('ignis_pendencias_resolvidas')||[];
+function pendSyncResolved(activeLabels,scope='current'){
+  const now=Date.now(),safeScope=String(scope||'current').replace(/[^0-9A-Za-z_-]/g,'_'); let prev=pendReadJSON('ignis_pendencias_snapshot_'+safeScope)||{active:{}}; let hist=pendReadJSON('ignis_pendencias_resolvidas_'+safeScope)||[];
   Object.entries(prev.active||{}).forEach(([key,label])=>{if(!(key in activeLabels)){hist.unshift({key,label,at:now});}});
   const seen=new Set(); hist=hist.filter(x=>x&&x.key&&x.at&&now-x.at<30*86400000).filter(x=>{const sig=x.key+'|'+new Date(x.at).toDateString();if(seen.has(sig))return false;seen.add(sig);return true;}).slice(0,80);
-  try{localStorage.setItem('ignis_pendencias_snapshot',JSON.stringify({active:activeLabels,at:now}));localStorage.setItem('ignis_pendencias_resolvidas',JSON.stringify(hist));}catch(e){}
+  try{localStorage.setItem('ignis_pendencias_snapshot_'+safeScope,JSON.stringify({active:activeLabels,at:now}));localStorage.setItem('ignis_pendencias_resolvidas_'+safeScope,JSON.stringify(hist));}catch(e){}
   return hist;
 }
 function pendGo(page){const el=document.getElementById('nav-'+page)||[...document.querySelectorAll('.nav-item')].find(n=>(n.getAttribute('onclick')||'').includes("'"+page+"'"));if(!document.getElementById('page-'+page)){showToast('Você não tem acesso a esta análise.','error');return;}showPage(page,el);}
@@ -4193,6 +4239,7 @@ function pendIssueHTML(i){
   const details=i.rows?.length?(isAnom?`<button class="pend-detail-btn" onclick="event.stopPropagation();anomOpenPage('${anomType}')">Abrir Anomalias <span>${Number(i.rows.length).toLocaleString('pt-BR')}</span></button>`:`<button class="pend-detail-btn" onclick="event.stopPropagation();pendOpenDetails('${i.id}')">Ver ${i.id==='consumo'?'placas reincidentes':'detalhes'} <span>${Number(i.rows.length).toLocaleString('pt-BR')}</span></button>`):'';
   return `<article class="pend-issue ${i.severity}" onclick="pendGo('${i.page}')"><div class="pend-issue-icon">${pendSvg(i.kind)}</div><div class="pend-issue-body"><div class="pend-issue-top"><div class="pend-issue-title">${pendEsc(i.title)}</div><span class="pend-severity ${i.severity}">${sev}</span></div><div class="pend-issue-detail">${pendEsc(i.detail)}</div>${highlight}${i.meta&&!i.highlightValue?`<div class="pend-preview">${pendEsc(i.meta)}</div>`:''}${details}<div class="pend-issue-meta"><span class="pend-issue-count">${Number(i.count||1).toLocaleString('pt-BR')} ocorrência${Number(i.count||1)===1?'':'s'}</span><span class="pend-issue-action">Abrir análise <svg class="ui-icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span></div></div></article>`;
 }
+function pendToggleReincWeeks(id){const el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'table-row':'none';}
 function pendOpenDetails(issueId){
   const issue=pendCollect().issues.find(x=>x.id===issueId); if(!issue||!issue.rows?.length)return;
   let overlay=document.getElementById('pend-detail-modal');
@@ -4206,8 +4253,8 @@ function pendOpenDetails(issueId){
   const th=document.getElementById('pend-detail-thead'), tb=document.getElementById('pend-detail-tbody');
   if(issueId==='consumo'){
     const rows=[...issue.rows].sort((a,b)=>a.eficiencia-b.eficiencia);
-    th.innerHTML='<tr><th>Placa</th><th>Operação</th><th>Menor eficiência</th><th>Períodos</th></tr>';
-    tb.innerHTML=rows.map((r,idx)=>`<tr class="${idx===0?'worst':''}"><td><strong>${pendEsc(r.placa)}</strong>${idx===0?'<span class="pend-worst-tag">Pior caso</span>':''}</td><td>${pendEsc(r.operacao)}</td><td><strong class="${r.eficiencia<90?'bad':r.eficiencia<98?'warn':'ok'}">${Number(r.eficiencia).toFixed(1)}%</strong></td><td>${Number(r.periodos)||0}</td></tr>`).join('');
+    th.innerHTML='<tr><th>Placa</th><th>Operação</th><th>Menor eficiência</th><th>Semanas abaixo de 98%</th></tr>';
+    tb.innerHTML=rows.map((r,idx)=>{const wid=`pend-weeks-${idx}`;const chips=(r.semanas||[]).map(s=>`<span class="pend-week-chip ${s.efic<90?'bad':'warn'}"><strong>${pendEsc(s.label)}</strong><span>${Number(s.efic).toFixed(1)}%</span></span>`).join('');return `<tr class="${idx===0?'worst':''}"><td><button class="pend-plate-link" type="button" onclick="pendToggleReincWeeks('${wid}')">${pendEsc(r.placa)}</button>${idx===0?'<span class="pend-worst-tag">Pior caso</span>':''}</td><td>${pendEsc(r.operacao)}</td><td><strong class="${r.eficiencia<90?'bad':r.eficiencia<98?'warn':'ok'}">${Number(r.eficiencia).toFixed(1)}%</strong></td><td>${Number(r.periodos)||0} <span style="color:var(--text3);font-size:10px">· clique na placa</span></td></tr><tr id="${wid}" class="pend-week-detail" style="display:none"><td colspan="4"><div class="pend-week-list">${chips||'<span class="pend-week-chip">Sem detalhe semanal</span>'}</div></td></tr>`;}).join('');
   } else if(issueId==='arla-critico'){
     th.innerHTML='<tr><th>Placa</th><th>Operação</th><th>Percentual</th><th>Segmento</th></tr>';
     tb.innerHTML=issue.rows.map(r=>`<tr><td><strong>${pendEsc(r.placa)}</strong></td><td>${pendEsc(r.operacao)}</td><td>${Number.isFinite(r.pct)?Number(r.pct).toFixed(1)+'%':'—'}</td><td>${pendEsc(r.segmento)}</td></tr>`).join('');
@@ -4234,12 +4281,13 @@ function pendOpenDetails(issueId){
 function renderPendencias(force=false){
   const page=document.getElementById('page-pendencias'); if(!page)return;
   try {
-  const {issues,monitors,activeLabels}=pendCollect(); const hist=pendSyncResolved(activeLabels); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
+  pendInitPeriodSelectors();
+  const {issues,monitors,activeLabels,periodKey,periodLabel}=pendCollect(); const hist=pendSyncResolved(activeLabels,periodKey); const now=Date.now(); const resolved7=hist.filter(x=>now-x.at<=7*86400000);
   const critical=issues.filter(i=>i.severity==='critical').length, attention=issues.filter(i=>i.severity==='attention').length, occ=issues.reduce((s,i)=>s+Math.max(1,Number(i.count)||1),0);
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=String(v)}; set('pend-kpi-critical',critical);set('pend-kpi-attention',attention);set('pend-kpi-occurrences',occ);set('pend-kpi-resolved',resolved7.length);
   const limEl=document.getElementById('pend-efic-limit');if(limEl&&document.activeElement!==limEl)limEl.value=String(Math.round(typeof ignisGetLimiteEficiencia==='function'?ignisGetLimiteEficiencia():140));const lowEl=document.getElementById('pend-efic-low-limit');if(lowEl&&document.activeElement!==lowEl)lowEl.value=String(Math.round(typeof ignisGetLimiteEficienciaBaixa==='function'?ignisGetLimiteEficienciaBaixa():60));
   const up=document.getElementById('pend-updated');if(up)up.textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  const sub=document.getElementById('pend-priority-sub');if(sub)sub.textContent=issues.length?`${issues.length} grupo${issues.length>1?'s':''} de pendência · ${occ} ocorrência${occ!==1?'s':''}`:'Nenhuma pendência ativa detectada';
+  const sub=document.getElementById('pend-priority-sub');if(sub)sub.textContent=issues.length?`${periodLabel} · ${issues.length} grupo${issues.length>1?'s':''} de pendência · ${occ} ocorrência${occ!==1?'s':''}`:`${periodLabel} · nenhuma pendência ativa detectada`;
   const list=document.getElementById('pend-issues');if(list)list.innerHTML=issues.length?issues.sort((a,b)=>(a.severity==='critical'?0:1)-(b.severity==='critical'?0:1)||b.count-a.count).map(pendIssueHTML).join(''):`<div class="pend-empty" style="grid-column:1/-1"><div class="pend-empty-icon">${pendSvg('ok')}</div><div class="pend-empty-title">Nenhuma pendência ativa</div><div class="pend-empty-sub">Os monitoramentos disponíveis não encontraram itens que exijam ação agora.</div></div>`;
   const mon=document.getElementById('pend-monitors');if(mon)mon.innerHTML=monitors.map(m=>`<div class="pend-monitor"><span class="pend-monitor-dot ${m.status}"></span><div class="pend-monitor-copy"><div class="pend-monitor-name">${pendEsc(m.name)}</div><div class="pend-monitor-detail">${pendEsc(m.detail)}</div></div><span class="pend-monitor-status">${m.status==='ok'?'OK':m.status==='critical'?'Crítico':m.status==='attention'?'Atenção':'Sem análise'}</span></div>`).join('');
   const sec=document.getElementById('pend-resolved-section'),rlist=document.getElementById('pend-resolved-list');if(sec&&rlist){sec.style.display=resolved7.length?'':'none';rlist.innerHTML=resolved7.slice(0,8).map(r=>`<div class="pend-resolved"><span class="pend-resolved-icon">${pendSvg('ok')}</span><span class="pend-resolved-label">${pendEsc(r.label||r.key)}</span><span class="pend-resolved-time">${new Date(r.at).toLocaleDateString('pt-BR')}</span></div>`).join('');}
@@ -12553,6 +12601,8 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
    ══════════════════════════════════════════════════════════════════════════════ */
 .pend-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
 .pend-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.pend-period-picker{height:40px;display:flex;align-items:center;gap:7px;padding:0 8px 0 11px;background:#101720;border:1px solid var(--border);border-radius:11px}.pend-period-picker>span{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#718296}.pend-period-picker select{height:30px;border:0;background:#151d26;color:#e6edf3;border-radius:8px;padding:0 24px 0 9px;font:700 11px 'DM Sans',sans-serif;outline:0}.pend-plate-link{border:0;background:transparent;color:#f0f5f8;font:800 11.5px 'DM Mono',monospace;cursor:pointer;padding:0;text-decoration:none}.pend-plate-link:hover{color:#f07a52}.pend-week-detail td{background:rgba(233,95,50,.035)!important;padding:10px 14px!important}.pend-week-list{display:flex;gap:7px;flex-wrap:wrap}.pend-week-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:#101720;border:1px solid rgba(255,255,255,.06);font-size:10.5px;color:#91a1b2}.pend-week-chip strong{color:#fff}.pend-week-chip.bad strong{color:#ff7070}.pend-week-chip.warn strong{color:#f5b942}
+
 .pend-anom-rules{display:flex;align-items:center;gap:8px;padding:6px 7px 6px 10px;border:1px solid rgba(151,164,178,.14);background:#101720;border-radius:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
 .pend-anom-rules-title{font-size:9.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:#738397;margin-right:2px}
 .pend-anom-setting{height:36px;display:flex;align-items:center;gap:8px;padding:0 7px 0 10px;border:1px solid rgba(151,164,178,.13);background:#141c26;border-radius:10px;white-space:nowrap;transition:.15s}
@@ -12942,6 +12992,39 @@ function fechOpenAnomalias(){
 }
 
 
+// ── HISTÓRICO PERSISTENTE DE ANOMALIAS REVISADAS ───────────────────────────
+function anomHash64(value){let h=0xcbf29ce484222325n,p=0x100000001b3n;for(const ch of String(value||'')){h^=BigInt(ch.codePointAt(0));h=BigInt.asUintN(64,h*p);}return h.toString(16).padStart(16,'0');}
+function anomNumKey(v){const n=Number(v);return Number.isFinite(n)?n.toFixed(4):'';}
+function anomFingerprint(r){
+  const raw=r?.raw||{},kind=String(r?.kind||''),plate=String(r?.placa||raw.placa||'').trim().toUpperCase(),date=String(r?.date||raw.data||'').slice(0,10),fuel=String(raw.combustivelChave||raw.combustivel||'').toUpperCase();
+  let sig='';
+  if(kind==='medidor')sig=[raw.medidor||r.medida||'',anomNumKey(raw.valorAnterior),anomNumKey(raw.valorAtual),anomNumKey(raw.valor)].join('|');
+  else sig=[anomNumKey(raw.kmHoras),anomNumKey(raw.litros),anomNumKey(raw.media),anomNumKey(raw.meta),anomNumKey(raw.eficiencia)].join('|');
+  return anomHash64([kind,plate,date,fuel,sig].join('§'));
+}
+function anomMergeReviewRecords(items){
+  const groups=new Map();(items||[]).filter(Boolean).forEach(r=>{const k=`${r.y}|${r.m}|${r.kind}|${String(r.placa||'').toUpperCase()}`,prev=groups.get(k);if(!prev){groups.set(k,{...r,fingerprints:[...new Set(r.fingerprints||[])]});return;}const newer=(r.updatedAt||0)>=(prev.updatedAt||0)?r:prev,older=newer===r?prev:r;groups.set(k,{...older,...newer,id:newer.id||older.id,fingerprints:[...new Set([...(prev.fingerprints||[]),...(r.fingerprints||[])])].slice(-300),occurrences:new Set([...(prev.fingerprints||[]),...(r.fingerprints||[])]).size});});return[...groups.values()].sort((a,b)=>(a.updatedAt||0)-(b.updatedAt||0)).slice(-800);
+}
+function anomEnsureReviews(){
+  let arr=Array.isArray(state.anomaliaRevisoes)?state.anomaliaRevisoes:[];try{const ls=JSON.parse(localStorage.getItem('ignis_anomalia_revisoes')||'[]');if(Array.isArray(ls))arr=anomMergeReviewRecords([...arr,...ls]);}catch(e){}state.anomaliaRevisoes=anomMergeReviewRecords(arr);return state.anomaliaRevisoes;
+}
+async function anomPersistReviews(deletedIds=[]){
+  let local=anomEnsureReviews(),cloud=[];if(typeof window.fbLoadAnomReviews==='function'){try{cloud=await window.fbLoadAnomReviews()||[];}catch(e){}}
+  const deleted=new Set(deletedIds||[]),arr=anomMergeReviewRecords([...(cloud||[]).filter(r=>!deleted.has(r.id)),...local.filter(r=>!deleted.has(r.id))]);state.anomaliaRevisoes=arr;try{localStorage.setItem('ignis_anomalia_revisoes',JSON.stringify(arr));}catch(e){}
+  if(typeof window.fbSaveAnomReviews==='function'){const ok=await window.fbSaveAnomReviews(arr);if(!ok)showToast('Histórico salvo neste computador, mas a nuvem não confirmou.','error');}
+}
+function anomReviewedFingerprints(){const set=new Set();anomEnsureReviews().forEach(r=>(r.fingerprints||[]).forEach(f=>set.add(f)));return set;}
+function anomReviewSample(rows,kind){let r=rows[0];if(kind==='alta')r=[...rows].sort((a,b)=>(b.eficiencia||0)-(a.eficiencia||0))[0];if(kind==='baixa')r=[...rows].sort((a,b)=>(a.eficiencia||0)-(b.eficiencia||0))[0];return r||{};}
+async function anomMarkPlate(kind,placa,status='analisado'){
+  const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear()),m=Number(document.getElementById('anom-month')?.value??new Date().getMonth()),plate=String(placa||'').trim().toUpperCase();
+  const rows=anomCollectRows(y,m).filter(ignisAnomReportRowVisible).filter(r=>r.kind===kind&&String(r.placa||'').trim().toUpperCase()===plate);if(!rows.length)return;
+  const fps=[...new Set(rows.map(anomFingerprint))],reviews=anomEnsureReviews(),existing=reviews.find(r=>r.y===y&&r.m===m&&r.kind===kind&&String(r.placa).toUpperCase()===plate),sample=anomReviewSample(rows,kind),user=window._authUser?.nome||window._authUser?.id||'Usuário';
+  const payload={id:existing?.id||`rev_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`,y,m,kind,placa:plate,operacao:sample.operacao||existing?.operacao||'—',status:status==='corrigido'?'corrigido':'analisado',fingerprints:[...new Set([...(existing?.fingerprints||[]),...fps])].slice(-300),occurrences:[...new Set([...(existing?.fingerprints||[]),...fps])].length,updatedAt:Date.now(),updatedBy:user,lastDate:sample.date||existing?.lastDate||'',sampleValue:sample.eficiencia!=null?Number(sample.eficiencia):sample.real||existing?.sampleValue||''};
+  if(existing)Object.assign(existing,payload);else reviews.push(payload);state.anomaliaRevisoes=reviews.slice(-800);await anomPersistReviews();renderAnomalias(true);showToast(`${plate}: ${rows.length} ocorrência${rows.length===1?'':'s'} marcada${rows.length===1?'':'s'} como ${payload.status}.`,'success');
+}
+async function anomUnreview(id){const arr=anomEnsureReviews(),idx=arr.findIndex(r=>r.id===id);if(idx<0)return;const plate=arr[idx].placa;arr.splice(idx,1);state.anomaliaRevisoes=arr;await anomPersistReviews([id]);renderAnomalias(true);showToast(`${plate}: revisão desmarcada.`,'success');}
+function anomReviewLabel(kind){return kind==='medidor'?'Medidor regressivo':kind==='alta'?'Eficiência alta':'Eficiência baixa';}
+
 // ── TELA DEDICADA DE ANOMALIAS ──────────────────────────────────────────────
 window._anomUi = window._anomUi || {type:'all',searchTimer:null,forcedYear:null,forcedMonth:null,initialized:false};
 const ANOM_MONTHS=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -12951,7 +13034,7 @@ function anomInitSelectors(){
   const now=new Date(),mEl=document.getElementById('anom-month'),yEl=document.getElementById('anom-year');if(!mEl||!yEl)return;
   const firstInit=!window._anomUi.initialized;if(!mEl.options.length)mEl.innerHTML=ANOM_MONTHS.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
   const years=new Set([now.getFullYear()]);
-  [...(state.medidorAnomalias||[]),...(state.eficienciaAnomalias||[])].forEach(r=>{const d=fechParse(r?.data);if(d)years.add(d.getFullYear());});
+  [...(state.medidorAnomalias||[]),...(state.eficienciaAnomalias||[]),...anomEnsureReviews().map(r=>({data:`${r.y}-${String(r.m+1).padStart(2,'0')}-01`}))].forEach(r=>{const d=fechParse(r?.data);if(d)years.add(d.getFullYear());});
   const ys=[...years].sort((a,b)=>b-a);const old=yEl.value;yEl.innerHTML=ys.map(y=>`<option value="${y}">${y}</option>`).join('');
   if(window._anomUi.forcedYear!=null){yEl.value=String(window._anomUi.forcedYear);mEl.value=String(window._anomUi.forcedMonth??now.getMonth());window._anomUi.forcedYear=null;window._anomUi.forcedMonth=null;}
   else {if(old&&ys.includes(Number(old)))yEl.value=old;else yEl.value=String(now.getFullYear());if(firstInit)mEl.value=String(now.getMonth());else if(mEl.value==='')mEl.value=String(now.getMonth());}window._anomUi.initialized=true;
@@ -12962,7 +13045,7 @@ function anomCollectRows(y,m){
   fechMedidorRows(y,m).forEach(r=>rows.push({kind:'medidor',kindLabel:'Medidor regressivo',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:r.medidor||'Medidor',kmHoras:null,litros:null,real:r.valorAnterior!=null&&r.valorAtual!=null?`${anomFmtNum(r.valorAnterior)} → ${anomFmtNum(r.valorAtual)}`:anomFmtNum(r.valor),meta:null,eficiencia:null,detail:r.motivo||'Leitura menor que a anterior',source:r.source||'Importação',raw:r}));
   ignisEficienciaAnomRows(y,m).forEach(r=>rows.push({kind:'alta',kindLabel:'Eficiência alta',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'KM':'Horas',kmHoras:Number(r.kmHoras)||0,litros:Number(r.litros)||0,real:`${anomFmtNum(r.media)} ${r.unidade||''}`,meta:`${anomFmtNum(r.meta)} ${r.unidade||''}`,eficiencia:Number(r.eficiencia)||0,detail:`Acima de ${Math.round(ignisGetLimiteEficiencia())}%`,source:r.source||'Importação',raw:r}));
   ignisEficienciaBaixaRows(y,m).forEach(r=>rows.push({kind:'baixa',kindLabel:'Eficiência baixa',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'KM':'Horas',kmHoras:Number(r.kmHoras)||0,litros:Number(r.litros)||0,real:`${anomFmtNum(r.media)} ${r.unidade||''}`,meta:`${anomFmtNum(r.meta)} ${r.unidade||''}`,eficiencia:Number(r.eficiencia)||0,detail:`Abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`,source:r.source||'Importação',raw:r}));
-  return rows;
+  const seen=new Set();return rows.filter(r=>{const fp=anomFingerprint(r);if(seen.has(fp))return false;seen.add(fp);r._fp=fp;return true;});
 }
 function anomSetType(type){window._anomUi.type=type||'all';document.querySelectorAll('[data-anom-type]').forEach(el=>el.classList.toggle('active',el.dataset.anomType===window._anomUi.type));renderAnomalias(true);}
 function anomOpenPage(type='all',year=null,month=null){window._anomUi.type=type||'all';if(year!=null){window._anomUi.forcedYear=Number(year);window._anomUi.forcedMonth=Number(month);}const el=document.getElementById('nav-anomalias');showPage('anomalias',el);requestAnimationFrame(()=>{anomInitSelectors();anomSetType(window._anomUi.type);});}
@@ -12971,17 +13054,26 @@ function anomClearFilters(){const op=document.getElementById('anom-op'),q=docume
 function renderAnomalias(force=false){
   const page=document.getElementById('page-anomalias');if(!page)return;anomInitSelectors();
   const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear()),m=Number(document.getElementById('anom-month')?.value??new Date().getMonth());
-  const allRaw=anomCollectRows(y,m),all=allRaw.filter(ignisAnomReportRowVisible),med=all.filter(r=>r.kind==='medidor'),altas=all.filter(r=>r.kind==='alta'),baixas=all.filter(r=>r.kind==='baixa');
+  const raw=anomCollectRows(y,m).filter(ignisAnomReportRowVisible),reviewedSet=anomReviewedFingerprints(),open=raw.filter(r=>!reviewedSet.has(r._fp||anomFingerprint(r))),med=open.filter(r=>r.kind==='medidor'),altas=open.filter(r=>r.kind==='alta'),baixas=open.filter(r=>r.kind==='baixa'),reviews=anomEnsureReviews().filter(r=>r.y===y&&r.m===m);
   ignisUpdateAnomOpsCount();
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('anom-kpi-total',all.length.toLocaleString('pt-BR'));set('anom-kpi-medidor',med.length.toLocaleString('pt-BR'));set('anom-kpi-alta',altas.length.toLocaleString('pt-BR'));set('anom-kpi-baixa',baixas.length.toLocaleString('pt-BR'));
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('anom-kpi-total',open.length.toLocaleString('pt-BR'));set('anom-kpi-medidor',med.length.toLocaleString('pt-BR'));set('anom-kpi-alta',altas.length.toLocaleString('pt-BR'));set('anom-kpi-baixa',baixas.length.toLocaleString('pt-BR'));set('anom-reviewed-count',reviews.length.toLocaleString('pt-BR'));
   const piorMed=med[0],maior=[...altas].sort((a,b)=>(b.eficiencia||0)-(a.eficiencia||0))[0],menor=[...baixas].sort((a,b)=>(a.eficiencia||0)-(b.eficiencia||0))[0];
-  set('anom-kpi-total-sub',`${ANOM_MONTHS[m]} de ${y}`);set('anom-kpi-medidor-sub',piorMed?`${piorMed.placa} · ${piorMed.medida}`:'nenhuma regressão');set('anom-kpi-alta-sub',maior?`${maior.placa} · ${maior.eficiencia.toFixed(1)}%`:`acima de ${Math.round(ignisGetLimiteEficiencia())}%`);set('anom-kpi-baixa-sub',menor?`${menor.placa} · ${menor.eficiencia.toFixed(1)}%`:`abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`);
-  const opEl=document.getElementById('anom-op');const selectedOp=opEl?.value||'';const ops=[...new Set(all.map(r=>r.operacao).filter(x=>x&&x!=='—'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));if(opEl){opEl.innerHTML='<option value="">Todas as operações</option>'+ops.map(o=>`<option value="${anomEsc(o)}">${anomEsc(String(o).replace(/_/g,' '))}</option>`).join('');if(ops.includes(selectedOp))opEl.value=selectedOp;}
-  const op=opEl?.value||'',q=String(document.getElementById('anom-search')?.value||'').trim().toUpperCase();let rows=all.filter(r=>(window._anomUi.type==='all'||r.kind===window._anomUi.type)&&(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q)));
+  set('anom-kpi-total-sub',`${ANOM_MONTHS[m]} de ${y} · ${reviews.length} placa${reviews.length===1?'':'s'} revisada${reviews.length===1?'':'s'}`);set('anom-kpi-medidor-sub',piorMed?`${piorMed.placa} · ${piorMed.medida}`:'nenhuma regressão');set('anom-kpi-alta-sub',maior?`${maior.placa} · ${maior.eficiencia.toFixed(1)}%`:`acima de ${Math.round(ignisGetLimiteEficiencia())}%`);set('anom-kpi-baixa-sub',menor?`${menor.placa} · ${menor.eficiencia.toFixed(1)}%`:`abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`);
+  const opEl=document.getElementById('anom-op'),selectedOp=opEl?.value||'',ops=[...new Set([...open.map(r=>r.operacao),...reviews.map(r=>r.operacao)].filter(x=>x&&x!=='—'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));if(opEl){opEl.innerHTML='<option value="">Todas as operações</option>'+ops.map(o=>`<option value="${anomEsc(o)}">${anomEsc(String(o).replace(/_/g,' '))}</option>`).join('');if(ops.includes(selectedOp))opEl.value=selectedOp;}
+  const op=opEl?.value||'',q=String(document.getElementById('anom-search')?.value||'').trim().toUpperCase(),body=document.getElementById('anom-table-body'),wrap=document.getElementById('anom-table-wrap'),empty=document.getElementById('anom-empty'),summary=document.getElementById('anom-summary'),head=document.getElementById('anom-table-head');
+  if(window._anomUi.type==='corrigidas'){
+    let rows=reviews.filter(r=>(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q))).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+    if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> placa${rows.length===1?'':'s'} com histórico de revisão · a mesma anomalia reimportada permanece aqui sem duplicar`;
+    if(head)head.innerHTML='<tr><th>Status</th><th>Anomalia</th><th>Placa</th><th>Operação</th><th>Ocorrências cobertas</th><th>Última revisão</th><th>Responsável</th><th>Ação</th></tr>';
+    if(!rows.length){if(wrap)wrap.style.display='none';if(empty){empty.style.display='flex';empty.innerHTML='<strong>Nenhuma anomalia revisada neste mês.</strong><span>Marque uma ocorrência como Analisado ou Corrigido para criar o histórico.</span>';}if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
+    if(body)body.innerHTML=rows.map(r=>`<tr><td><span class="anom-review-status ${r.status}">${r.status==='corrigido'?'Corrigido':'Analisado'}</span></td><td>${anomEsc(anomReviewLabel(r.kind))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(String(r.operacao||'—').replace(/_/g,' '))}</td><td><strong>${Number(r.occurrences||r.fingerprints?.length||0)}</strong><div class="anom-history-meta">reimportações iguais não criam nova ocorrência</div></td><td>${new Date(r.updatedAt||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</td><td>${anomEsc(r.updatedBy||'—')}</td><td><button class="anom-unreview" type="button" onclick="anomUnreview('${anomEsc(r.id)}')">Desmarcar</button></td></tr>`).join('');return;
+  }
+  let rows=open.filter(r=>(window._anomUi.type==='all'||r.kind===window._anomUi.type)&&(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q)));
   const priority={medidor:0,baixa:1,alta:2};rows.sort((a,b)=>(priority[a.kind]-priority[b.kind])||(a.kind==='baixa'?(a.eficiencia||0)-(b.eficiencia||0):a.kind==='alta'?(b.eficiencia||0)-(a.eficiencia||0):String(b.date||'').localeCompare(String(a.date||'')))||String(a.placa).localeCompare(String(b.placa)));
-  const body=document.getElementById('anom-table-body'),wrap=document.getElementById('anom-table-wrap'),empty=document.getElementById('anom-empty'),summary=document.getElementById('anom-summary');if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} exibida${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'}`;
-  if(!rows.length){if(wrap)wrap.style.display='none';if(empty)empty.style.display='flex';if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
-  if(body)body.innerHTML=rows.map(r=>{const badge=r.kind==='medidor'?'medidor':r.kind;const medida=r.kmHoras==null?'—':`${anomFmtNum(r.kmHoras)} ${r.medida==='KM'?'km':'h'}`;const litros=r.litros==null?'—':`${anomFmtNum(r.litros)} L`;const ef=r.eficiencia==null?'—':`${r.eficiencia.toFixed(1)}%`;const efClass=r.kind==='baixa'?'bad':r.kind==='alta'?'warn':'';return `<tr><td><span class="anom-badge ${badge}">${anomEsc(r.kindLabel)}</span></td><td>${anomEsc(fechFmt(fechParse(r.date)))}</td><td title="${anomEsc(r.operacao)}">${anomEsc(String(r.operacao).replace(/_/g,' '))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(medida)}</td><td>${anomEsc(litros)}</td><td><strong>${anomEsc(r.real)}</strong></td><td>${anomEsc(r.meta??'—')}</td><td><strong class="${efClass}">${anomEsc(ef)}</strong></td><td><div class="anom-detail-main">${anomEsc(r.detail)}</div><div class="anom-detail-sub">${anomEsc(r.source)}</div></td></tr>`;}).join('');
+  if(head)head.innerHTML='<tr><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th><th>Ação</th></tr>';
+  if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} aberta${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'} · ${reviews.length} revisada${reviews.length===1?'':'s'}`;
+  if(!rows.length){if(wrap)wrap.style.display='none';if(empty){empty.style.display='flex';empty.innerHTML='<strong>Nenhuma anomalia aberta encontrada.</strong><span>Ajuste os filtros ou consulte Corrigidas.</span>';}if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
+  if(body)body.innerHTML=rows.map(r=>{const badge=r.kind==='medidor'?'medidor':r.kind,medida=r.kmHoras==null?'—':`${anomFmtNum(r.kmHoras)} ${r.medida==='KM'?'km':'h'}`,litros=r.litros==null?'—':`${anomFmtNum(r.litros)} L`,ef=r.eficiencia==null?'—':`${r.eficiencia.toFixed(1)}%`,efClass=r.kind==='baixa'?'bad':r.kind==='alta'?'warn':'',plate=String(r.placa||'').replace(/'/g,"\\'");return `<tr><td><span class="anom-badge ${badge}">${anomEsc(r.kindLabel)}</span></td><td>${anomEsc(fechFmt(fechParse(r.date)))}</td><td title="${anomEsc(r.operacao)}">${anomEsc(String(r.operacao).replace(/_/g,' '))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(medida)}</td><td>${anomEsc(litros)}</td><td><strong>${anomEsc(r.real)}</strong></td><td>${anomEsc(r.meta??'—')}</td><td><strong class="${efClass}">${anomEsc(ef)}</strong></td><td><div class="anom-detail-main">${anomEsc(r.detail)}</div><div class="anom-detail-sub">${anomEsc(r.source)}</div></td><td class="anom-action-cell"><div class="anom-action-wrap"><button class="anom-review-btn done" type="button" title="Move todas as ocorrências deste tipo desta placa no mês para Corrigidas" onclick="anomMarkPlate('${r.kind}','${plate}','analisado')">Analisado</button><button class="anom-review-btn fix" type="button" title="Move todas as ocorrências deste tipo desta placa no mês para Corrigidas" onclick="anomMarkPlate('${r.kind}','${plate}','corrigido')">Corrigido</button></div></td></tr>`;}).join('');
 }
 
 function fechConfirms(key){if(state.fechConfirmacoes&&state.fechConfirmacoes[key])return state.fechConfirmacoes[key];try{return JSON.parse(localStorage.getItem('ignis_fech_confirms_'+key)||'{}')||{};}catch(e){return{};}}
