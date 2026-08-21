@@ -6732,19 +6732,27 @@ async function importarRelatorioDiario(input) {
         curInicio.setDate(curInicio.getDate() + 1); // segunda-feira
       }
 
-      // 3ª passada: distribui cada linha no bloco certo e consolida por placa
+      // 3ª passada: distribui cada linha no bloco certo e consolida de forma auditável.
+      // IMPORTANTE: a mesma placa pode trabalhar em mais de uma operação na mesma semana.
+      // Por isso o agrupamento é placa + operação + combustível + meta histórica, e NÃO só placa.
+      // Assim cada parte do consumo fica atribuída à operação correta e nenhum preço/meta é misturado.
       linhas.forEach(l => {
         const bloco = blocos.find(b => l.data >= b.inicio && l.data <= b.fim);
         if (!bloco) return;
-        if (!bloco.porPlaca[l.placa]) bloco.porPlaca[l.placa] = { litros:0, kmReal:0, operacao:l.operacao, modelo:l.modelo, tipoVeic:l.tipoVeic, mediaIdeal:l.mediaIdeal, _fuels:{}, _ops:{}, _custoComb:0, _litrosPreco:0 };
-        const p = bloco.porPlaca[l.placa];
+        const fuelKey = l.combustivelChave || ignisFuelKeyExec(l.combustivel) || '';
+        const metaKey = Number(l.mediaIdeal||0).toFixed(6);
+        const grupoKey = [l.placa, l.operacao||'', fuelKey, metaKey].join('¦');
+        if (!bloco.porPlaca[grupoKey]) bloco.porPlaca[grupoKey] = {
+          placa:l.placa, litros:0, kmReal:0, operacao:l.operacao, modelo:l.modelo,
+          tipoVeic:l.tipoVeic, mediaIdeal:l.mediaIdeal, combustivelChave:fuelKey,
+          _fuels:{}, _ops:{}, _custoComb:0, _litrosPreco:0
+        };
+        const p = bloco.porPlaca[grupoKey];
         p.litros += l.litros;
         p.kmReal += l.kmReal;
-        // operação/modelo/tipo: como as linhas estão ordenadas por data, o último valor sobrescreve = "mais recente vence"
-        p.operacao = l.operacao; p.modelo = l.modelo; p.tipoVeic = l.tipoVeic;
-        if (l.mediaIdeal > 0) p.mediaIdeal = l.mediaIdeal;
+        // Dentro do grupo operação/combustível/meta são estáveis; modelo/tipo mais recente vence.
+        p.modelo = l.modelo || p.modelo; p.tipoVeic = l.tipoVeic || p.tipoVeic;
         p._ops[l.operacao||''] = (p._ops[l.operacao||'']||0) + l.litros;
-        const fuelKey = l.combustivelChave || ignisFuelKeyExec(l.combustivel);
         if (fuelKey) p._fuels[fuelKey] = (p._fuels[fuelKey]||0) + l.litros;
         if (l.valorLitro > 0 && l.litros > 0 && ignisPrecoCombustivelValido(fuelKey, l.valorLitro)) {
           p._custoComb += l.valorLitro * l.litros;
@@ -6788,8 +6796,8 @@ async function importarRelatorioDiario(input) {
       });
 
       blocos.forEach(b => {
-        const placas = Object.keys(b.porPlaca);
-        if (!placas.length) return; // bloco sem nenhum dado (ex: mês incompleto na ponta)
+        const grupos = Object.keys(b.porPlaca);
+        if (!grupos.length) return; // bloco sem nenhum dado (ex: mês incompleto na ponta)
         const dIni = dataParaISO(b.inicio), dFim = dataParaISO(b.fim);
         const mesLabel = MESES_PT[b.inicio.getMonth()];
         const anoMesKey = dIni.substring(0,7);
@@ -6799,8 +6807,9 @@ async function importarRelatorioDiario(input) {
         const periodoId = nomePeriodo.toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').substring(0,40) + '_' + Date.now() + '_' + semanasNovas;
 
         const dadosSemana = [];
-        placas.forEach(placa => {
-          const p = b.porPlaca[placa];
+        grupos.forEach(grupoKey => {
+          const p = b.porPlaca[grupoKey];
+          const placa = p.placa || String(grupoKey).split('¦')[0];
           const opUp = p.operacao.toUpperCase(), modUp = p.modelo.toUpperCase(), tipUp = p.tipoVeic.toUpperCase();
 
           let tipoIgnis;
@@ -6827,9 +6836,9 @@ async function importarRelatorioDiario(input) {
             const opsSemana = Object.keys(p._ops||{}).filter(Boolean);
             const combustivelSemana = fuelsSemana.length===1 ? fuelsSemana[0] : (fuelsSemana.length>1 ? 'MISTO' : '');
             const precoPonderado = p._litrosPreco>0 ? (p._custoComb/p._litrosPreco) : 0;
-            const operacaoMista = opsSemana.length>1;
+            const operacaoMista = false; // importação nova já foi separada por operação acima
             const coberturaPrecoSemana = p.litros>0 ? p._litrosPreco/p.litros : 0;
-            const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId, metaIdeal:p.mediaIdeal||0, combustivel:combustivelSemana, precoLitro:(!operacaoMista&&combustivelSemana&&combustivelSemana!=='MISTO'&&coberturaPrecoSemana>=0.999&&ignisPrecoCombustivelValido(combustivelSemana,precoPonderado))?precoPonderado:0, precoCobertura:coberturaPrecoSemana, operacaoMista, operacoesPeriodo:opsSemana };
+            const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId, metaIdeal:p.mediaIdeal||0, combustivel:combustivelSemana, precoLitro:(combustivelSemana&&combustivelSemana!=='MISTO'&&coberturaPrecoSemana>=0.999&&ignisPrecoCombustivelValido(combustivelSemana,precoPonderado))?precoPonderado:0, precoCobertura:coberturaPrecoSemana, operacaoMista, operacoesPeriodo:opsSemana };
             dadosSemana.push(entry);
             state.abastecimentos.push(entry);
           }
@@ -9964,6 +9973,7 @@ function renderExecutivo() {
   const execTipo = document.querySelector('.exec-tipo-btn.active')?.dataset?.tipo || '';
 
   let registros = (state.abastecimentos||[]).filter(a => a.data >= ini && a.data <= fim);
+  // O filtro usa primeiro a operação histórica do próprio registro. Cadastro atual é apenas fallback visual.
   if (opFiltro) registros = registros.filter(a => (a.operacao || getMaquina(a.placa)?.operacao || '') === opFiltro);
   if (execTipo === '__maquinas__') registros = registros.filter(a => getTipoIgnis(a)==='maquina');
   else if (execTipo === '__tratores__') registros = registros.filter(a => getTipoIgnis(a)==='trator');
@@ -9977,17 +9987,22 @@ function renderExecutivo() {
     return;
   }
 
+  const LIMIAR_OK = 98; // somente status/tolerância operacional
   const byOp = {};
-  const audit = { usados:0, ignorados:0, litros:0, litrosComPreco:0, litrosPrecoHistorico:0, litrosComMeta:0, litrosMetaConfiavel:0, semPreco:new Map(), semMeta:new Map(), precoInvalido:new Map(), precoFallback:new Map(), metaFallback:new Map(), fuelDesconhecido:new Map(), operacaoMista:new Map() };
-  const LIMIAR_OK = 98; // tolerância operacional/status
-  const EF = LIMIAR_OK/100; // usado apenas para referência operacional; financeiro usa 100% da meta
+  const audit = {
+    usados:0, ignorados:0, litros:0, litrosAuditados:0,
+    litrosPrecoHistorico:0, litrosMetaConfiavel:0,
+    semPreco:new Map(), semMeta:new Map(), fuelDesconhecido:new Map(), operacaoMista:new Map(), semOperacao:new Map(),
+    pendencias:[]
+  };
 
-  const getOp = r => String(r.operacao || getMaquina(r.placa)?.operacao || '').trim();
+  const getOpHistorica = r => String(r?.operacao || '').trim();
+  const getOpVisual = r => getOpHistorica(r) || String(getMaquina(r.placa)?.operacao || '').trim();
   const getMetaInfo = r => {
     const v = Number(r.metaIdeal ?? r.metaPeriodo ?? 0);
     if (v > 0) return {meta:v,fonte:'registro',confiavel:true};
-    const op = getOp(r);
-    const opMeta = Number(opGetMeta(op)||0);
+    const op = getOpHistorica(r);
+    const opMeta = Number(op ? opGetMeta(op) : 0);
     if (opMeta > 0) return {meta:opMeta,fonte:'configuração da operação',confiavel:true};
     const atual = Number(getMaquina(r.placa)?.meta || 0);
     return {meta:atual,fonte:atual>0?'cadastro atual':'',confiavel:false};
@@ -9997,153 +10012,183 @@ function renderExecutivo() {
     const cur = map.get(k) || {count:0,litros:0,extra};
     cur.count++; cur.litros += litros||0; if(extra) cur.extra=extra; map.set(k,cur);
   };
+  const fmtR = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtL = v => Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:0})+' L';
+  const fmtPct=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
 
   registros.forEach(r => {
     const litros = Number(r.litros)||0;
-    const medida = Number(r.horas)||0; // km para frota; horas para máquina/trator
+    const medida = Number(r.horas)||0; // km para frota; horas para máquinas/tratores
     if (!(litros > 0) || !(medida > 0)) { audit.ignorados++; return; }
     const tipoIgnis = getTipoIgnis(r);
     if (tipoIgnis === 'empilhadeira') { audit.ignorados++; return; }
+
     const isKm = tipoIgnis === 'pesada' || tipoIgnis === 'leve';
     const unidade = isKm ? 'km/L' : 'L/h';
     const placa = String(r.placa||'').trim().toUpperCase();
-    const opRaw = getOp(r);
-    const opLabel = (opRaw||'Sem Operação').replace(/_/g,' ');
+    const opHistorica = getOpHistorica(r);
+    const opVisual = getOpVisual(r);
+    const opLabel = r.operacaoMista
+      ? 'REGISTRO LEGADO — OPERAÇÃO MISTA'
+      : (opHistorica || opVisual || 'Sem Operação').replace(/_/g,' ');
     const metaInfo = getMetaInfo(r);
     const meta = metaInfo.meta;
     const media = isKm ? medida/litros : litros/medida;
     const efic = meta>0 && media>0 ? (isKm ? media/meta*100 : meta/media*100) : null;
-    let pInfo = ignisPrecoRegistro(r, opRaw, tipoIgnis);
-    if (r.operacaoMista) pInfo = {preco:0,fuel:pInfo.fuel||'',fonte:'',motivo:'operação mudou dentro do mesmo período'};
+    const pInfo = ignisPrecoRegistro(r, opHistorica || opVisual, tipoIgnis);
+
+    // Financeiro só usa o que é comprovável no próprio período.
+    const precoHistoricoOk = pInfo.preco>0 && pInfo.fonte==='registro';
+    const metaConfiavelOk = meta>0 && metaInfo.confiavel;
+    const operacaoOk = !!opHistorica && !r.operacaoMista;
+    const financeiroOk = precoHistoricoOk && metaConfiavelOk && operacaoOk;
 
     audit.usados++; audit.litros += litros;
-    if (pInfo.preco>0) { audit.litrosComPreco += litros; if (pInfo.fonte==='registro') audit.litrosPrecoHistorico += litros; else addAudit(audit.precoFallback, opLabel, litros, pInfo.fonte||'fallback'); }
+    if (precoHistoricoOk) audit.litrosPrecoHistorico += litros;
     else {
-      addAudit(audit.semPreco, opLabel, litros, pInfo.motivo||'sem preço válido');
+      addAudit(audit.semPreco, opLabel, litros, pInfo.motivo||pInfo.fonte||'sem preço histórico');
       if (!pInfo.fuel) addAudit(audit.fuelDesconhecido, opLabel, litros, 'combustível não identificado');
-      const rawP = Number(r.precoLitro ?? r.valorLitro ?? 0);
-      if (rawP>0) addAudit(audit.precoInvalido, opLabel, litros, ignisPrecoMotivo(pInfo.fuel,rawP));
     }
-    if (meta>0) { audit.litrosComMeta += litros; if(metaInfo.confiavel) audit.litrosMetaConfiavel += litros; else addAudit(audit.metaFallback, placa, litros, metaInfo.fonte||'cadastro atual'); } else addAudit(audit.semMeta, placa, litros, opLabel);
+    if (metaConfiavelOk) audit.litrosMetaConfiavel += litros;
+    else addAudit(audit.semMeta, placa, litros, metaInfo.fonte||opLabel);
+    if (!opHistorica) addAudit(audit.semOperacao, placa, litros, 'operação histórica ausente');
     if (r.operacaoMista) addAudit(audit.operacaoMista, placa, litros, (r.operacoesPeriodo||[]).join(' / '));
 
-    let alvo100L = 0, alvo98L = 0, desperdicadoL = 0, economiaL = 0;
+    let alvo100L = 0, desperdicadoL = 0, economiaL = 0;
     if (meta > 0) {
-      if (isKm) {
-        alvo100L = medida / meta;
-        alvo98L = medida / (meta * EF);
-      } else {
-        alvo100L = meta * medida;
-        alvo98L = (meta / EF) * medida;
-      }
-      desperdicadoL = Math.max(0, litros - alvo100L); // financeiro: só há desperdício abaixo de 100% da meta
-      economiaL = Math.max(0, alvo100L - litros);   // financeiro: só há economia acima de 100% da meta
+      alvo100L = isKm ? medida/meta : meta*medida;
+      desperdicadoL = Math.max(0, litros-alvo100L);
+      economiaL = Math.max(0, alvo100L-litros);
     }
-    const gastoR = pInfo.preco>0 ? litros*pInfo.preco : 0;
-    const desperdicadoR = pInfo.preco>0 ? desperdicadoL*pInfo.preco : 0;
-    const economiaR = pInfo.preco>0 ? economiaL*pInfo.preco : 0;
 
-    if (!byOp[opLabel]) byOp[opLabel] = {opRaw,maquinasMap:{},totalL:0,totalMedida:0,gastoR:0,litrosComPreco:0,litrosPrecoFallback:0,litrosSemPreco:0,litrosSemMeta:0,litrosMetaFallback:0,desperdicadoL:0,desperdicadoR:0,economiaL:0,economiaR:0,fuels:new Set(),fontes:new Set()};
+    const precoFinanceiro = financeiroOk ? pInfo.preco : 0;
+    const gastoR = financeiroOk ? litros*precoFinanceiro : 0;
+    const desperdicadoR = financeiroOk ? desperdicadoL*precoFinanceiro : 0;
+    const economiaR = financeiroOk ? economiaL*precoFinanceiro : 0;
+    if (financeiroOk) audit.litrosAuditados += litros;
+
+    const problemas = [];
+    if (!precoHistoricoOk) problemas.push(pInfo.fonte && pInfo.preco>0 ? 'Preço apenas por fallback (não auditado)' : (pInfo.motivo||'Sem preço histórico'));
+    if (!metaConfiavelOk) problemas.push(meta>0 ? 'Meta apenas do cadastro atual' : 'Sem meta histórica/configurada');
+    if (!opHistorica) problemas.push('Sem operação histórica');
+    if (r.operacaoMista) problemas.push('Registro legado mistura operações — reimporte para separar');
+    if (!financeiroOk) audit.pendencias.push({
+      data:r.data||'', placa, operacao: r.operacaoMista ? ((r.operacoesPeriodo||[]).join(' / ')||opVisual||'—') : (opHistorica||opVisual||'—'),
+      litros, combustivel:pInfo.fuel||r.combustivel||'—', meta:meta||0, preco:precoHistoricoOk?pInfo.preco:0,
+      problemas
+    });
+
+    if (!byOp[opLabel]) byOp[opLabel] = {
+      opRaw:opHistorica, maquinasMap:{}, totalL:0,totalMedida:0,
+      auditL:0,gastoR:0,desperdicadoL:0,desperdicadoR:0,economiaL:0,economiaR:0,
+      pendenteL:0, fuels:new Set(), precos:[]
+    };
     const o = byOp[opLabel];
-    o.totalL += litros; o.totalMedida += medida; o.gastoR += gastoR;
-    if (pInfo.preco>0) { o.litrosComPreco += litros; if(pInfo.fonte!=='registro') o.litrosPrecoFallback += litros; } else o.litrosSemPreco += litros;
-    if (!(meta>0)) o.litrosSemMeta += litros; else if(!metaInfo.confiavel) o.litrosMetaFallback += litros;
-    o.desperdicadoL += desperdicadoL; o.desperdicadoR += desperdicadoR;
-    o.economiaL += economiaL; o.economiaR += economiaR;
-    if (pInfo.fuel) o.fuels.add(pInfo.fuel); if (pInfo.fonte) o.fontes.add(pInfo.fonte);
+    o.totalL += litros; o.totalMedida += medida;
+    if (pInfo.fuel) o.fuels.add(pInfo.fuel);
+    if (financeiroOk) {
+      o.auditL += litros; o.gastoR += gastoR; o.desperdicadoL += desperdicadoL; o.desperdicadoR += desperdicadoR; o.economiaL += economiaL; o.economiaR += economiaR;
+      o.precos.push({p:pInfo.preco,l:litros});
+    } else o.pendenteL += litros;
 
     const key = placa || 'SEM_PLACA';
-    if (!o.maquinasMap[key]) o.maquinasMap[key] = {placa:key,tipoIgnis,isKm,unidade,totalL:0,totalMedida:0,target100L:0,target98L:0,metaLitros:0,metaOkLitros:0,desperdicadoL:0,desperdicadoR:0,economiaL:0,economiaR:0,gastoR:0,litrosSemPreco:0,litrosPrecoFallback:0,litrosSemMeta:0,litrosMetaFallback:0,fuels:new Set(),precos:[]};
-    const m = o.maquinasMap[key];
-    m.totalL += litros; m.totalMedida += medida; m.target100L += alvo100L; m.target98L += alvo98L;
-    if (meta>0) { m.metaOkLitros += litros; if(!metaInfo.confiavel) m.litrosMetaFallback += litros; } else m.litrosSemMeta += litros;
-    m.desperdicadoL += desperdicadoL; m.desperdicadoR += desperdicadoR; m.economiaL += economiaL; m.economiaR += economiaR; m.gastoR += gastoR;
-    if (pInfo.preco>0) { m.precos.push({p:pInfo.preco,l:litros}); if(pInfo.fonte!=='registro') m.litrosPrecoFallback += litros; } else m.litrosSemPreco += litros;
-    if (pInfo.fuel) m.fuels.add(pInfo.fuel);
+    if (!o.maquinasMap[key]) o.maquinasMap[key] = {
+      placa:key,tipoIgnis,isKm,unidade,totalL:0,totalMedida:0,target100L:0,
+      auditL:0,auditTarget100L:0,gastoR:0,desperdicadoL:0,desperdicadoR:0,economiaL:0,economiaR:0,
+      pendenteL:0,fuels:new Set(),precos:[]
+    };
+    const m=o.maquinasMap[key];
+    m.totalL += litros; m.totalMedida += medida; if(meta>0)m.target100L += alvo100L;
+    if(pInfo.fuel)m.fuels.add(pInfo.fuel);
+    if(financeiroOk){
+      m.auditL += litros; m.auditTarget100L += alvo100L; m.gastoR += gastoR; m.desperdicadoL += desperdicadoL; m.desperdicadoR += desperdicadoR; m.economiaL += economiaL; m.economiaR += economiaR; m.precos.push({p:pInfo.preco,l:litros});
+    } else m.pendenteL += litros;
   });
 
-  Object.values(byOp).forEach(o => {
-    o.maquinas = Object.values(o.maquinasMap).map(m => {
-      const media = m.totalMedida>0 && m.totalL>0 ? (m.isKm ? m.totalMedida/m.totalL : m.totalL/m.totalMedida) : 0;
-      const metaEfetiva = m.target100L>0 && m.totalMedida>0 ? (m.isKm ? m.totalMedida/m.target100L : m.target100L/m.totalMedida) : 0;
-      const efic = metaEfetiva>0 && media>0 ? (m.isKm ? media/metaEfetiva*100 : metaEfetiva/media*100) : null;
-      const precoMedio = m.precos.length ? m.precos.reduce((s,x)=>s+x.p*x.l,0)/m.precos.reduce((s,x)=>s+x.l,0) : 0;
+  Object.values(byOp).forEach(o=>{
+    o.maquinas=Object.values(o.maquinasMap).map(m=>{
+      const media=m.totalMedida>0&&m.totalL>0?(m.isKm?m.totalMedida/m.totalL:m.totalL/m.totalMedida):0;
+      const metaEfetiva=m.target100L>0&&m.totalMedida>0?(m.isKm?m.totalMedida/m.target100L:m.target100L/m.totalMedida):0;
+      const efic=metaEfetiva>0&&media>0?(m.isKm?media/metaEfetiva*100:metaEfetiva/media*100):null;
+      const precoMedio=m.precos.length?m.precos.reduce((s,x)=>s+x.p*x.l,0)/m.precos.reduce((s,x)=>s+x.l,0):0;
       return {...m,media,meta:metaEfetiva,efic,precoMedio,metaBatida:efic!==null&&efic>=LIMIAR_OK,combustiveis:[...m.fuels]};
     });
-    o.precoMedio = o.litrosComPreco>0 ? o.gastoR/o.litrosComPreco : 0;
-    o.combustiveis=[...o.fuels]; o.precoFontes=[...o.fontes];
-    o.maqNaMeta=o.maquinas.filter(m=>m.metaBatida).length;
+    o.precoMedio=o.precos.length?o.precos.reduce((s,x)=>s+x.p*x.l,0)/o.precos.reduce((s,x)=>s+x.l,0):0;
+    o.combustiveis=[...o.fuels];
     delete o.maquinasMap;
   });
 
-  const opsOrdenadas = Object.entries(byOp).sort((a,b)=>b[1].desperdicadoL-a[1].desperdicadoL);
-  const totalL = Object.values(byOp).reduce((s,o)=>s+o.totalL,0);
-  const totalGasto = Object.values(byOp).reduce((s,o)=>s+o.gastoR,0);
-  const totalDesperdicadoL = Object.values(byOp).reduce((s,o)=>s+o.desperdicadoL,0);
-  const totalDesperdicadoR = Object.values(byOp).reduce((s,o)=>s+o.desperdicadoR,0);
-  const totalEconomiaL = Object.values(byOp).reduce((s,o)=>s+o.economiaL,0);
-  const totalEconomiaR = Object.values(byOp).reduce((s,o)=>s+o.economiaR,0);
-  const totalLiquidoR = totalDesperdicadoR-totalEconomiaR;
-  const pctDesperdicio = totalL>0 ? totalDesperdicadoL/totalL*100 : 0;
-  const coberturaPreco = totalL>0 ? audit.litrosPrecoHistorico/totalL*100 : 0;
-  const coberturaMeta = totalL>0 ? audit.litrosMetaConfiavel/totalL*100 : 0;
-  const precoCompleto = audit.litrosPrecoHistorico >= totalL-0.01;
-  const metaCompleta = audit.litrosMetaConfiavel >= totalL-0.01;
-  const financeiroValido = precoCompleto && metaCompleta && audit.operacaoMista.size===0;
-
-  const fmtR = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const fmtL = v => Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:0})+' L';
-  const fmtPct=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
-  const moneyOrDash = v => financeiroValido ? fmtR(v) : '—';
+  const opsOrdenadas=Object.entries(byOp).sort((a,b)=>b[1].desperdicadoR-a[1].desperdicadoR || b[1].auditL-a[1].auditL);
+  const totalL=Object.values(byOp).reduce((s,o)=>s+o.totalL,0);
+  const totalAuditL=Object.values(byOp).reduce((s,o)=>s+o.auditL,0);
+  const totalGasto=Object.values(byOp).reduce((s,o)=>s+o.gastoR,0);
+  const totalDesperdicadoL=Object.values(byOp).reduce((s,o)=>s+o.desperdicadoL,0);
+  const totalDesperdicadoR=Object.values(byOp).reduce((s,o)=>s+o.desperdicadoR,0);
+  const totalEconomiaL=Object.values(byOp).reduce((s,o)=>s+o.economiaL,0);
+  const totalEconomiaR=Object.values(byOp).reduce((s,o)=>s+o.economiaR,0);
+  const totalLiquidoR=totalDesperdicadoR-totalEconomiaR;
+  const pctDesperdicio=totalAuditL>0?totalDesperdicadoL/totalAuditL*100:0;
+  const coberturaPreco=totalL>0?audit.litrosPrecoHistorico/totalL*100:0;
+  const coberturaMeta=totalL>0?audit.litrosMetaConfiavel/totalL*100:0;
+  const coberturaFinanceira=totalL>0?totalAuditL/totalL*100:0;
+  const financeiroDisponivel=totalAuditL>0;
+  const financeiroCompleto=totalAuditL>=totalL-0.01;
+  const pendenteL=Math.max(0,totalL-totalAuditL);
 
   let html='';
-  const auditColor = financeiroValido ? 'var(--green)' : 'var(--red)';
-  const auditBg = financeiroValido ? 'rgba(57,203,145,.07)' : 'rgba(239,98,98,.07)';
-  const auditBorder = financeiroValido ? 'rgba(57,203,145,.28)' : 'rgba(239,98,98,.30)';
+  const auditColor=financeiroCompleto?'var(--green)':financeiroDisponivel?'var(--yellow)':'var(--red)';
+  const auditBg=financeiroCompleto?'rgba(57,203,145,.07)':financeiroDisponivel?'rgba(245,158,11,.07)':'rgba(239,98,98,.07)';
+  const auditBorder=financeiroCompleto?'rgba(57,203,145,.28)':financeiroDisponivel?'rgba(245,158,11,.30)':'rgba(239,98,98,.30)';
+  const statusTitle=financeiroCompleto?'✓ CÁLCULO FINANCEIRO 100% AUDITADO':financeiroDisponivel?'⚠ CÁLCULO FINANCEIRO PARCIAL — BASE AUDITADA '+fmtPct(coberturaFinanceira):'✕ SEM BASE FINANCEIRA AUDITÁVEL';
   html += `<div style="background:${auditBg};border:1px solid ${auditBorder};border-radius:14px;padding:16px 18px;margin-bottom:16px">`;
-  html += `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-size:13px;font-weight:800;color:${auditColor}">${financeiroValido?'✓ CÁLCULO FINANCEIRO VALIDADO':'✕ CÁLCULO FINANCEIRO BLOQUEADO'}</div><div style="font-size:12px;color:var(--text2);margin-top:4px">Médias ponderadas por volume/distância · status operacional: ${LIMIAR_OK}%+ = dentro da tolerância · financeiro: 100% da meta é o ponto zero · preço por combustível sem misturar Diesel/Gasolina/Etanol.</div></div><div style="display:flex;gap:18px;font-size:11px;color:var(--text2)"><span><b style="color:var(--text1)">${audit.usados}</b> registros</span><span>Preço histórico <b style="color:${coberturaPreco===100?'var(--green)':'var(--red)'}">${fmtPct(coberturaPreco)}</b></span><span>Meta confiável <b style="color:${coberturaMeta===100?'var(--green)':'var(--red)'}">${fmtPct(coberturaMeta)}</b></span></div></div>`;
-  if (!financeiroValido) {
-    html += '<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px">';
-    if (!precoCompleto) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--red)">${fmtL(totalL-audit.litrosPrecoHistorico)}</b> sem preço histórico no próprio registro. Fallback de operação não é aceito como valor auditado.</div>`;
-    if (!metaCompleta) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--red)">${fmtL(totalL-audit.litrosMetaConfiavel)}</b> sem meta histórica/configurada confiável. Meta atual da placa aparece só como diagnóstico, não valida o financeiro.</div>`;
-    if (audit.fuelDesconhecido.size) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--yellow)">${audit.fuelDesconhecido.size}</b> operação(ões) com combustível não identificado (principalmente histórico de frota leve).</div>`;
-    if (audit.operacaoMista.size) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--red)">${audit.operacaoMista.size}</b> ativo(s) mudou(aram) de operação dentro do período consolidado. O financeiro é bloqueado para não atribuir custo à operação errada.</div>`;
+  html += `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-size:13px;font-weight:800;color:${auditColor}">${statusTitle}</div><div style="font-size:12px;color:var(--text2);margin-top:4px">Somente registros com preço histórico + meta confiável + operação histórica entram nos R$. Registros pendentes ficam fora, sem contaminar o cálculo. Financeiro usa 100% da meta; 98% é apenas tolerância operacional.</div></div><div style="display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text2)"><span><b style="color:var(--text1)">${audit.usados}</b> registros</span><span>Base auditada <b style="color:${auditColor}">${fmtPct(coberturaFinanceira)}</b></span><span>Preço histórico <b>${fmtPct(coberturaPreco)}</b></span><span>Meta confiável <b>${fmtPct(coberturaMeta)}</b></span></div></div>`;
+  if(!financeiroCompleto){
+    html += '<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">';
+    if(totalL-audit.litrosPrecoHistorico>0.01)html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--yellow)">${fmtL(totalL-audit.litrosPrecoHistorico)}</b> sem preço histórico.</div>`;
+    if(totalL-audit.litrosMetaConfiavel>0.01)html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--yellow)">${fmtL(totalL-audit.litrosMetaConfiavel)}</b> sem meta histórica/configurada confiável.</div>`;
+    if(audit.operacaoMista.size)html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--yellow)">${audit.operacaoMista.size}</b> registro(s) legado(s) misturam operações. Eles foram excluídos dos R$. Reimporte o período para o IGNIS separar cada operação automaticamente.</div>`;
     html += '</div>';
+    html += `<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="execTogglePendencias()">Ver pendências (${audit.pendencias.length})</button><span style="font-size:11px;color:var(--text3)">${fmtL(pendenteL)} fora da base financeira · os valores exibidos abaixo usam apenas os ${fmtL(totalAuditL)} validados.</span></div>`;
   }
   html += '</div>';
 
+  if(audit.pendencias.length){
+    audit.pendencias.sort((a,b)=>b.litros-a.litros);
+    const rows=audit.pendencias.map((p,i)=>`<tr class="exec-pend-row" data-search="${String([p.placa,p.operacao,p.combustivel,p.problemas.join(' ')].join(' ')).toLowerCase().replace(/\"/g,'&quot;')}"><td>${p.data?fmtBr(p.data):'—'}</td><td><span class="placa-tag">${p.placa||'—'}</span></td><td>${String(p.operacao||'—').replace(/_/g,' ')}</td><td style="text-align:right;font-family:monospace">${fmtL(p.litros)}</td><td>${p.combustivel||'—'}</td><td style="color:var(--yellow);font-size:11px">${p.problemas.join(' · ')}</td></tr>`).join('');
+    html += `<div id="exec-pendencias" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:16px;overflow:hidden"><div style="padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><div style="font-weight:700">Pendências de auditoria</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Estes registros NÃO entram nos valores em reais até serem corrigidos/reimportados.</div></div><input id="exec-pend-search" oninput="execFiltrarPendencias(this.value)" placeholder="Buscar placa, operação ou problema..." style="min-width:280px;background:var(--bg3);border:1px solid var(--border);color:var(--text1);border-radius:8px;padding:8px 10px"></div><div style="overflow:auto;max-height:380px"><table style="width:100%;min-width:900px"><thead><tr><th>Data</th><th>Placa</th><th>Operação</th><th style="text-align:right">Litros</th><th>Combustível</th><th>Motivo</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  }
+
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:20px">';
-  html += kpiExec('Período', labelPeriodo, audit.usados+' registros válidos', '#8b90a7');
-  html += kpiExec('Gasto Total', precoCompleto?fmtR(totalGasto):'—', fmtL(totalL)+' · preço histórico '+fmtPct(coberturaPreco), precoCompleto?'var(--text1)':'var(--red)');
-  html += kpiExec('Desperdiçado', moneyOrDash(totalDesperdicadoR), fmtL(totalDesperdicadoL)+' · '+pctDesperdicio.toFixed(1)+'% dos litros', financeiroValido?'var(--red)':'var(--text3)');
-  html += kpiExec('Economizado', moneyOrDash(totalEconomiaR), fmtL(totalEconomiaL)+' poupados vs 100% da meta', financeiroValido?'var(--green)':'var(--text3)');
-  html += kpiExec(totalLiquidoR>=0?'Custo Líquido':'Saldo Líquido', moneyOrDash(Math.abs(totalLiquidoR)), financeiroValido?(totalLiquidoR>=0?'desperdício menos economia':'economia supera desperdício'):'aguardando validação', financeiroValido?(totalLiquidoR>0?'var(--red)':'var(--green)'):'var(--text3)');
-  html += kpiExec('Recuperação Potencial', moneyOrDash(totalDesperdicadoR), 'valor para levar os abaixo da meta até 100%', financeiroValido?'var(--accent)':'var(--text3)');
+  html += kpiExec('Período',labelPeriodo,audit.usados+' registros válidos','#8b90a7');
+  html += kpiExec('Base financeira',fmtL(totalAuditL),fmtPct(coberturaFinanceira)+' do volume validado',auditColor);
+  html += kpiExec('Gasto auditado',financeiroDisponivel?fmtR(totalGasto):'—','somente base 100% confiável',financeiroDisponivel?'var(--text1)':'var(--text3)');
+  html += kpiExec('Desperdiçado',financeiroDisponivel?fmtR(totalDesperdicadoR):'—',fmtL(totalDesperdicadoL)+' · '+fmtPct(pctDesperdicio)+' da base auditada',financeiroDisponivel?'var(--red)':'var(--text3)');
+  html += kpiExec('Economizado',financeiroDisponivel?fmtR(totalEconomiaR):'—',fmtL(totalEconomiaL)+' poupados vs 100% da meta',financeiroDisponivel?'var(--green)':'var(--text3)');
+  html += kpiExec(totalLiquidoR>=0?'Custo Líquido':'Saldo Líquido',financeiroDisponivel?fmtR(Math.abs(totalLiquidoR)):'—',financeiroDisponivel?(totalLiquidoR>=0?'desperdício menos economia':'economia supera desperdício'):'sem base auditável',financeiroDisponivel?(totalLiquidoR>0?'var(--red)':'var(--green)'):'var(--text3)');
+  html += kpiExec('Recuperação Potencial',financeiroDisponivel?fmtR(totalDesperdicadoR):'—','para levar a base auditada até 100%',financeiroDisponivel?'var(--accent)':'var(--text3)');
   html += '</div>';
 
   html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">';
-  html += '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><div style="font-size:15px;font-weight:700">Resultado por Operação</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Clique na operação para auditar placa, meta, média, combustível e preço usado</div></div><button class="btn btn-secondary btn-sm" '+(financeiroValido?'onclick="exportarExecutivoEmail()"':'disabled title="Corrija a auditoria antes de exportar"')+'>Copiar Relatório</button></div>';
+  html += '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><div style="font-size:15px;font-weight:700">Resultado por Operação</div><div style="font-size:11px;color:var(--text3);margin-top:3px">A mesma placa pode aparecer em operações diferentes: cada consumo é atribuído à operação histórica daquele registro.</div></div><button class="btn btn-secondary btn-sm" '+(financeiroDisponivel?'onclick="exportarExecutivoEmail()"':'disabled')+'>Copiar Relatório</button></div>';
 
   opsOrdenadas.forEach(([op,d],i)=>{
-    const opValida = d.litrosSemPreco<0.01 && d.litrosPrecoFallback<0.01 && d.litrosSemMeta<0.01 && d.litrosMetaFallback<0.01;
-    const pct=d.totalL>0?d.desperdicadoL/d.totalL*100:0;
+    const coberturaOp=d.totalL>0?d.auditL/d.totalL*100:0;
     const liq=d.desperdicadoR-d.economiaR;
     const placasUnicas=d.maquinas.length;
     const fuels=d.combustiveis.length?d.combustiveis.join(' / '):'combustível não identificado';
-    const pMed=d.precoMedio>0?`R$ ${d.precoMedio.toFixed(2).replace('.',',')}/L méd. ponderada`:'sem preço';
-    html += `<div><div id="exec-row-${i}" style="padding:14px 20px;border-bottom:1px solid rgba(42,47,69,.5);cursor:pointer"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div style="display:flex;gap:10px;align-items:center"><span id="exec-arrow-${i}" style="font-size:11px;color:var(--text3);width:14px">▶</span><span style="font:700 16px monospace;color:var(--text3);width:24px">${i+1}</span><div><div style="font-size:14px;font-weight:700">${op}${opValida?'':' <span style="font-size:9px;color:var(--red);border:1px solid rgba(239,98,98,.3);padding:2px 6px;border-radius:999px">NÃO VALIDADO</span>'}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${placasUnicas} ativo(s) · ${fmtL(d.totalL)} · ${fuels} · ${pMed}</div></div></div><div style="text-align:right">`;
-    if(opValida){
-      html += `<div style="font-size:13px;color:var(--red);font-weight:650">${fmtR(d.desperdicadoR)} desperdiçados <span style="font-size:11px;font-weight:400">(${fmtL(d.desperdicadoL)} · ${pct.toFixed(1)}%)</span></div>`;
+    const pMed=d.precoMedio>0?`R$ ${d.precoMedio.toFixed(2).replace('.',',')}/L méd. ponderada`:'sem preço auditado';
+    html += `<div><div id="exec-row-${i}" style="padding:14px 20px;border-bottom:1px solid rgba(42,47,69,.5);cursor:pointer"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div style="display:flex;gap:10px;align-items:center"><span id="exec-arrow-${i}" style="font-size:11px;color:var(--text3);width:14px">▶</span><span style="font:700 16px monospace;color:var(--text3);width:24px">${i+1}</span><div><div style="font-size:14px;font-weight:700">${op} <span style="font-size:9px;color:${coberturaOp>=99.99?'var(--green)':'var(--yellow)'};border:1px solid ${coberturaOp>=99.99?'rgba(57,203,145,.3)':'rgba(245,158,11,.3)'};padding:2px 6px;border-radius:999px">AUDITADO ${fmtPct(coberturaOp)}</span></div><div style="font-size:11px;color:var(--text2);margin-top:2px">${placasUnicas} ativo(s) · ${fmtL(d.totalL)} total · ${fmtL(d.auditL)} nos R$ · ${fuels} · ${pMed}</div></div></div><div style="text-align:right">`;
+    if(d.auditL>0){
+      html += `<div style="font-size:13px;color:var(--red);font-weight:650">${fmtR(d.desperdicadoR)} desperdiçados <span style="font-size:11px;font-weight:400">(${fmtL(d.desperdicadoL)})</span></div>`;
       html += `<div style="font-size:12px;color:${d.economiaR>0?'var(--green)':'var(--text3)'};margin-top:2px">${fmtR(d.economiaR)} economizados</div>`;
       html += `<div style="font-size:14px;font-weight:750;color:${liq>0?'var(--red)':liq<0?'var(--green)':'var(--text3)'};margin-top:5px;padding-top:5px;border-top:1px solid var(--border)">Líquido: ${fmtR(Math.abs(liq))}</div>`;
-    } else {
-      html += `<div style="font-size:12px;color:var(--red);font-weight:700">Financeiro bloqueado</div><div style="font-size:10px;color:var(--text3);margin-top:3px">${fmtL(d.litrosSemPreco+d.litrosPrecoFallback)} sem preço histórico · ${fmtL(d.litrosSemMeta+d.litrosMetaFallback)} sem meta confiável</div>`;
-    }
-    html += `</div></div></div><div id="exec-op-${i}" style="display:none;overflow-x:auto;border-bottom:1px solid var(--border)"><table style="width:100%;min-width:980px"><thead><tr style="background:var(--bg3)"><th>Ativo</th><th>Tipo</th><th>Combustível</th><th style="text-align:center">Meta ponderada</th><th style="text-align:center">Real</th><th style="text-align:center">Eficiência</th><th style="text-align:center">Preço méd.</th><th style="text-align:right">Desperdício</th><th style="text-align:right">Custo</th><th style="text-align:right">Economia</th></tr></thead><tbody>`;
-    d.maquinas.sort((a,b)=>b.desperdicadoL-a.desperdicadoL).forEach(m=>{
-      const mValida=m.litrosSemPreco<0.01&&m.litrosPrecoFallback<0.01&&m.litrosSemMeta<0.01&&m.litrosMetaFallback<0.01;
+    }else html += `<div style="font-size:12px;color:var(--yellow);font-weight:700">Sem registros auditáveis para R$</div>`;
+    if(d.pendenteL>0)html += `<div style="font-size:10px;color:var(--text3);margin-top:4px">${fmtL(d.pendenteL)} pendentes e fora do financeiro</div>`;
+    html += `</div></div></div><div id="exec-op-${i}" style="display:none;overflow-x:auto;border-bottom:1px solid var(--border)"><table style="width:100%;min-width:1020px"><thead><tr style="background:var(--bg3)"><th>Ativo</th><th>Tipo</th><th>Combustível</th><th style="text-align:center">Meta ponderada</th><th style="text-align:center">Real</th><th style="text-align:center">Eficiência</th><th style="text-align:center">Base R$</th><th style="text-align:center">Preço méd.</th><th style="text-align:right">Desperdício</th><th style="text-align:right">Custo</th><th style="text-align:right">Economia</th></tr></thead><tbody>`;
+    d.maquinas.sort((a,b)=>b.desperdicadoR-a.desperdicadoR || b.auditL-a.auditL).forEach(m=>{
       const cor=!m.efic?'var(--text3)':m.efic>=98?'var(--green)':m.efic>=90?'var(--yellow)':'var(--red)';
-      html += `<tr><td><span class="placa-tag">${m.placa}</span></td><td>${m.tipoIgnis}</td><td>${m.combustiveis.length?m.combustiveis.join(' / '):'—'}</td><td style="text-align:center;font-family:monospace;color:var(--accent)">${m.meta>0?m.meta.toFixed(2)+' '+m.unidade:'—'}</td><td style="text-align:center;font-family:monospace;font-weight:700">${m.media>0?m.media.toFixed(2)+' '+m.unidade:'—'}</td><td style="text-align:center;font-family:monospace;color:${cor};font-weight:700">${m.efic?m.efic.toFixed(1)+'%':'—'}</td><td style="text-align:center;font-family:monospace">${m.precoMedio>0?'R$ '+m.precoMedio.toFixed(2).replace('.',','):'—'}</td><td style="text-align:right;font-family:monospace;color:${m.desperdicadoL>0?'var(--red)':'var(--text3)'}">${m.desperdicadoL>0?fmtL(m.desperdicadoL):'—'}</td><td style="text-align:right;font-family:monospace;font-weight:700;color:${m.desperdicadoR>0&&mValida?'var(--red)':'var(--text3)'}">${mValida&&m.desperdicadoR>0?fmtR(m.desperdicadoR):'—'}</td><td style="text-align:right;font-family:monospace;color:${m.economiaR>0&&mValida?'var(--green)':'var(--text3)'}">${mValida&&m.economiaR>0?fmtR(m.economiaR):'—'}</td></tr>`;
+      const mcov=m.totalL>0?m.auditL/m.totalL*100:0;
+      html += `<tr><td><span class="placa-tag">${m.placa}</span></td><td>${m.tipoIgnis}</td><td>${m.combustiveis.length?m.combustiveis.join(' / '):'—'}</td><td style="text-align:center;font-family:monospace;color:var(--accent)">${m.meta>0?m.meta.toFixed(2)+' '+m.unidade:'—'}</td><td style="text-align:center;font-family:monospace;font-weight:700">${m.media>0?m.media.toFixed(2)+' '+m.unidade:'—'}</td><td style="text-align:center;font-family:monospace;color:${cor};font-weight:700">${m.efic?m.efic.toFixed(1)+'%':'—'}</td><td style="text-align:center"><span style="font-size:10px;color:${mcov>=99.99?'var(--green)':'var(--yellow)'}">${fmtPct(mcov)}</span></td><td style="text-align:center;font-family:monospace">${m.precoMedio>0?'R$ '+m.precoMedio.toFixed(2).replace('.',','):'—'}</td><td style="text-align:right;font-family:monospace;color:${m.desperdicadoL>0?'var(--red)':'var(--text3)'}">${m.desperdicadoL>0?fmtL(m.desperdicadoL):'—'}</td><td style="text-align:right;font-family:monospace;font-weight:700;color:${m.desperdicadoR>0?'var(--red)':'var(--text3)'}">${m.desperdicadoR>0?fmtR(m.desperdicadoR):'—'}</td><td style="text-align:right;font-family:monospace;color:${m.economiaR>0?'var(--green)':'var(--text3)'}">${m.economiaR>0?fmtR(m.economiaR):'—'}</td></tr>`;
     });
     html += '</tbody></table></div></div>';
   });
@@ -10151,8 +10196,19 @@ function renderExecutivo() {
 
   c.innerHTML=html;
   opsOrdenadas.forEach(([,],i)=>{const row=document.getElementById('exec-row-'+i),det=document.getElementById('exec-op-'+i);if(row&&det)row.addEventListener('click',()=>{const open=det.style.display!=='none';det.style.display=open?'none':'';const ar=document.getElementById('exec-arrow-'+i);if(ar)ar.textContent=open?'▶':'▼';});});
-  const todasMaq=opsOrdenadas.flatMap(([op,d])=>d.maquinas.map(m=>({...m,op}))).sort((a,b)=>b.desperdicadoL-a.desperdicadoL);
-  window._execDados={labelPeriodo,totalGasto,totalDesperdicadoR,totalDesperdicadoL,totalEconomiaR,totalEconomiaL,totalLiquidoR,pctDesperdicio,opsOrdenadas,todasMaq,fmtR,fmtL,financeiroValido,coberturaPreco,coberturaMeta,LIMIAR_OK,BASE_FINANCEIRA:100};
+  const todasMaq=opsOrdenadas.flatMap(([op,d])=>d.maquinas.map(m=>({...m,op}))).sort((a,b)=>b.desperdicadoR-a.desperdicadoR);
+  window._execDados={labelPeriodo,totalGasto,totalDesperdicadoR,totalDesperdicadoL,totalEconomiaR,totalEconomiaL,totalLiquidoR,pctDesperdicio,opsOrdenadas,todasMaq,fmtR,fmtL,financeiroValido:financeiroDisponivel,financeiroCompleto,coberturaFinanceira,coberturaPreco,coberturaMeta,totalAuditL,totalL,pendenteL,LIMIAR_OK,BASE_FINANCEIRA:100};
+}
+
+function execTogglePendencias(){
+  const el=document.getElementById('exec-pendencias');
+  if(!el)return;
+  el.style.display=el.style.display==='none'||!el.style.display?'block':'none';
+  if(el.style.display==='block')el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function execFiltrarPendencias(q){
+  const termo=String(q||'').trim().toLowerCase();
+  document.querySelectorAll('.exec-pend-row').forEach(tr=>{tr.style.display=!termo||String(tr.dataset.search||'').includes(termo)?'':'none';});
 }
 
 function kpiExec(label, value, sub, cor) {
@@ -10166,14 +10222,16 @@ function kpiExec(label, value, sub, cor) {
 function exportarExecutivoEmail() {
   if (!window._execDados) return;
   const d=window._execDados;
-  if (!d.financeiroValido) { showToast('Relatório financeiro bloqueado: corrija preços/metas indicados na auditoria.', 'error'); return; }
-  const {labelPeriodo,totalDesperdicadoR,totalDesperdicadoL,totalEconomiaR,totalLiquidoR,pctDesperdicio,opsOrdenadas,todasMaq,fmtR,fmtL,LIMIAR_OK}=d;
-  const linhasOps=opsOrdenadas.map(([op,o])=>`<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:10px 12px;font-weight:700">${op}</td><td style="padding:10px 12px;text-align:center">${o.maquinas.length}</td><td style="padding:10px 12px;text-align:right">${fmtL(o.totalL)}</td><td style="padding:10px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtL(o.desperdicadoL)}</td><td style="padding:10px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtR(o.desperdicadoR)}</td></tr>`).join('');
-  const top=todasMaq.filter(m=>m.desperdicadoL>0).slice(0,10);
-  const linhasMaq=top.map(m=>`<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:9px 12px;font-weight:700">${m.placa}</td><td style="padding:9px 12px">${m.op}</td><td style="padding:9px 12px;text-align:center">${m.meta.toFixed(2)} ${m.unidade}</td><td style="padding:9px 12px;text-align:center">${m.media.toFixed(2)} ${m.unidade}</td><td style="padding:9px 12px;text-align:center;font-weight:700;color:${m.efic>=98?'#16a34a':m.efic>=90?'#d97706':'#dc2626'}">${m.efic.toFixed(1)}%</td><td style="padding:9px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtR(m.desperdicadoR)}</td></tr>`).join('');
-  const html=`<!doctype html><html><body style="margin:0;background:#eef2f7;font-family:Arial,sans-serif;padding:20px"><table width="720" align="center" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #dbe2ea;border-radius:12px;overflow:hidden"><tr><td style="background:#111827;padding:24px 28px;color:#fff"><div style="font-size:22px;font-weight:800">IGNIS</div><div style="font-size:13px;color:#f28b62;margin-top:4px">Relatório Executivo Auditável · ${labelPeriodo}</div></td></tr><tr><td style="padding:22px 28px"><div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:9px;padding:12px 14px;color:#065f46;font-size:12px;font-weight:700">✓ Dados financeiros validados · preço e meta com 100% de cobertura · financeiro calculado contra 100% da meta · ${LIMIAR_OK}% é apenas tolerância operacional</div><table width="100%" style="margin-top:14px"><tr><td style="padding:10px;background:#fef2f2"><b>Desperdiçado</b><br><span style="font-size:19px;color:#dc2626">${fmtR(totalDesperdicadoR)}</span><br><small>${fmtL(totalDesperdicadoL)} · ${pctDesperdicio.toFixed(1)}%</small></td><td style="width:10px"></td><td style="padding:10px;background:#ecfdf5"><b>Economizado</b><br><span style="font-size:19px;color:#059669">${fmtR(totalEconomiaR)}</span></td><td style="width:10px"></td><td style="padding:10px;background:#f8fafc"><b>Líquido</b><br><span style="font-size:19px">${fmtR(Math.abs(totalLiquidoR))}</span></td></tr></table></td></tr><tr><td style="padding:0 28px 20px"><h3 style="font-size:14px">Resultado por Operação</h3><table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Operação</th><th>Ativos</th><th style="text-align:right">Litros</th><th style="text-align:right">Desperdício</th><th style="text-align:right">Custo</th></tr></thead><tbody>${linhasOps}</tbody></table></td></tr>${top.length?`<tr><td style="padding:0 28px 24px"><h3 style="font-size:14px">Top 10 ativos com maior desperdício</h3><table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Ativo</th><th>Operação</th><th>Meta</th><th>Real</th><th>Eficiência</th><th style="text-align:right">Custo</th></tr></thead><tbody>${linhasMaq}</tbody></table></td></tr>`:''}<tr><td style="padding:12px 28px;background:#f8fafc;color:#94a3b8;font-size:10px;text-align:center">IGNIS · médias ponderadas por registro · combustíveis não são misturados</td></tr></table></body></html>`;
-  navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'})})]).then(()=>showToast('Relatório validado copiado!', 'success')).catch(()=>showToast('Erro ao copiar', 'error'));
-  const assunto=encodeURIComponent('Ignis — Relatório Executivo Validado · '+labelPeriodo);
+  if (!d.financeiroValido) { showToast('Ainda não existe nenhum volume com preço + meta + operação auditados para exportar.', 'error'); return; }
+  const {labelPeriodo,totalDesperdicadoR,totalDesperdicadoL,totalEconomiaR,totalLiquidoR,pctDesperdicio,opsOrdenadas,todasMaq,fmtR,fmtL,LIMIAR_OK,coberturaFinanceira,totalAuditL,totalL,pendenteL,financeiroCompleto}=d;
+  const opsAudit=opsOrdenadas.filter(([,o])=>o.auditL>0);
+  const linhasOps=opsAudit.map(([op,o])=>`<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:10px 12px;font-weight:700">${op}</td><td style="padding:10px 12px;text-align:center">${o.maquinas.length}</td><td style="padding:10px 12px;text-align:right">${fmtL(o.auditL)}</td><td style="padding:10px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtL(o.desperdicadoL)}</td><td style="padding:10px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtR(o.desperdicadoR)}</td></tr>`).join('');
+  const top=todasMaq.filter(m=>m.auditL>0&&m.desperdicadoR>0).slice(0,10);
+  const linhasMaq=top.map(m=>`<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:9px 12px;font-weight:700">${m.placa}</td><td style="padding:9px 12px">${m.op}</td><td style="padding:9px 12px;text-align:center">${m.meta?m.meta.toFixed(2)+' '+m.unidade:'—'}</td><td style="padding:9px 12px;text-align:center">${m.media?m.media.toFixed(2)+' '+m.unidade:'—'}</td><td style="padding:9px 12px;text-align:center;font-weight:700;color:${m.efic>=98?'#16a34a':m.efic>=90?'#d97706':'#dc2626'}">${m.efic?m.efic.toFixed(1)+'%':'—'}</td><td style="padding:9px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtR(m.desperdicadoR)}</td></tr>`).join('');
+  const auditMsg=financeiroCompleto?'100% da base auditada':'relatório parcial auditado: '+Number(coberturaFinanceira||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'% do volume';
+  const html=`<!doctype html><html><body style="margin:0;background:#eef2f7;font-family:Arial,sans-serif;padding:20px"><table width="720" align="center" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #dbe2ea;border-radius:12px;overflow:hidden"><tr><td style="background:#111827;padding:24px 28px;color:#fff"><div style="font-size:22px;font-weight:800">IGNIS</div><div style="font-size:13px;color:#f28b62;margin-top:4px">Relatório Executivo Auditável · ${labelPeriodo}</div></td></tr><tr><td style="padding:22px 28px"><div style="background:${financeiroCompleto?'#ecfdf5':'#fffbeb'};border:1px solid ${financeiroCompleto?'#a7f3d0':'#fde68a'};border-radius:9px;padding:12px 14px;color:${financeiroCompleto?'#065f46':'#92400e'};font-size:12px;font-weight:700">${financeiroCompleto?'✓':'⚠'} ${auditMsg}. R$ calculados somente sobre ${fmtL(totalAuditL)} validados de ${fmtL(totalL)} totais. ${pendenteL>0?fmtL(pendenteL)+' ficaram fora do financeiro. ':''}Financeiro usa 100% da meta; ${LIMIAR_OK}% é apenas tolerância operacional.</div><table width="100%" style="margin-top:14px"><tr><td style="padding:10px;background:#fef2f2"><b>Desperdiçado</b><br><span style="font-size:19px;color:#dc2626">${fmtR(totalDesperdicadoR)}</span><br><small>${fmtL(totalDesperdicadoL)} · ${pctDesperdicio.toFixed(1)}% da base auditada</small></td><td style="width:10px"></td><td style="padding:10px;background:#ecfdf5"><b>Economizado</b><br><span style="font-size:19px;color:#059669">${fmtR(totalEconomiaR)}</span></td><td style="width:10px"></td><td style="padding:10px;background:#f8fafc"><b>Líquido</b><br><span style="font-size:19px">${fmtR(Math.abs(totalLiquidoR))}</span></td></tr></table></td></tr><tr><td style="padding:0 28px 20px"><h3 style="font-size:14px">Resultado por Operação — somente base auditada</h3><table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Operação</th><th>Ativos</th><th style="text-align:right">Litros auditados</th><th style="text-align:right">Desperdício</th><th style="text-align:right">Custo</th></tr></thead><tbody>${linhasOps}</tbody></table></td></tr>${top.length?`<tr><td style="padding:0 28px 24px"><h3 style="font-size:14px">Top 10 ativos com maior desperdício auditado</h3><table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Ativo</th><th>Operação</th><th>Meta</th><th>Real</th><th>Eficiência</th><th style="text-align:right">Custo</th></tr></thead><tbody>${linhasMaq}</tbody></table></td></tr>`:''}<tr><td style="padding:12px 28px;background:#f8fafc;color:#94a3b8;font-size:10px;text-align:center">IGNIS · operação histórica por registro · médias ponderadas · dados pendentes nunca entram nos R$</td></tr></table></body></html>`;
+  navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'})})]).then(()=>showToast('Relatório auditado copiado!', 'success')).catch(()=>showToast('Erro ao copiar', 'error'));
+  const assunto=encodeURIComponent('Ignis — Relatório Executivo Auditado · '+labelPeriodo);
   setTimeout(()=>ignisAbrirOutlook('',assunto),500);
 }
 
