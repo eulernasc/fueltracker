@@ -1883,7 +1883,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
       </div>
       <div class="sheets-config" style="margin-top:16px;border-color:rgba(245,158,11,.4)">
         <div class="sheets-config-title">Preço do Diesel por Operação</div>
-        <div class="sheets-hint" style="margin-bottom:14px">Configure o preço por litro de cada operação para calcular o custo de ineficiência no Relatório Executivo.</div>
+        <div class="sheets-hint" style="margin-bottom:14px">Preço de contingência para registros antigos sem valor por litro. O IGNIS rejeita Diesel abaixo de R$ 5,00/L e valores acima de R$ 15,00/L. Gasolina e Etanol importados são tratados separadamente pelo combustível do registro.</div>
         <div id="diesel-preco-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:300px;overflow-y:auto"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" onclick="dieselPopularOps()">Atualizar operações</button>
@@ -2021,7 +2021,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div id="rel-tab-executivo" style="display:none">
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px">
         <div style="font-size:14px;font-weight:700;margin-bottom:6px">Relatório Executivo de Economia</div>
-        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Selecione o período para calcular o custo de ineficiência. Configure os preços em ⚙️ Configurações.</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Cálculo auditado por registro: médias ponderadas (Σkm/ΣL ou ΣL/Σh), meta do período quando disponível e preço por combustível. Valores financeiros só são liberados quando a cobertura de preço e meta estiver completa.</div>
         <div class="form-row" style="margin-bottom:12px">
           <div class="form-group">
             <label class="form-label">Data Inicial</label>
@@ -6448,19 +6448,11 @@ async function importarRelatorio(input) {
         const tipo     = String(row[4]||'').trim();   // Coluna E
         const kmRealRaw = ignisNumeroSeguro(row[6]);      // Coluna G — Km Real; parser preserva negativos e formatos pt-BR
         const kmReal   = kmRealRaw;
-        const volReal  = parseFloat(row[9])||0;       // Coluna J — Vol. Real
-        const mediaIdeal = parseFloat(row[12])||0;    // Coluna M — Média Ideal
-        const precoMedio = parseFloat(row[18])||0;    // Coluna S — Preço Médio do Combustível
+        const volReal  = ignisNumeroSeguro(row[9]);       // Coluna J — Vol. Real (parser pt-BR)
+        const mediaIdeal = ignisNumeroSeguro(row[12]);    // Coluna M — Média Ideal (parser pt-BR)
+        const precoMedio = ignisNumeroSeguro(row[18]);    // Coluna S — Preço Médio do Combustível (parser pt-BR)
 
         if(!placa && !operacao) return; // só ignora linha completamente vazia
-
-        // Acumula preço médio por operação ANTES de qualquer exclusão
-        // Exclui empilhadeiras (EMP) pois usam GLP, não diesel
-        if (precoMedio > 0 && operacao && !(placa||'').startsWith('EMP')) {
-          if (!precosPorOp[operacao]) precosPorOp[operacao] = { soma: 0, count: 0 };
-          precosPorOp[operacao].soma += precoMedio;
-          precosPorOp[operacao].count++;
-        }
 
         if(!placa) return;
 
@@ -6488,6 +6480,15 @@ async function importarRelatorio(input) {
           tipoIgnis = 'trator';
         } else {
           tipoIgnis = 'pesada';
+        }
+
+        // Preço automático: somente quando o combustível pode ser tratado com segurança como Diesel.
+        // Frota leve pode ser Diesel/Gasolina/Etanol, então sem coluna de combustível não há inferência.
+        const combustivelInferido = ['maquina','trator','pesada'].includes(tipoIgnis) ? 'DIESEL' : '';
+        if (precoMedio > 0 && volReal > 0 && operacao && combustivelInferido === 'DIESEL' && ignisPrecoCombustivelValido('DIESEL', precoMedio)) {
+          if (!precosPorOp[operacao]) precosPorOp[operacao] = { custo: 0, litros: 0 };
+          precosPorOp[operacao].custo += precoMedio * volReal;
+          precosPorOp[operacao].litros += volReal;
         }
 
         if(kmRealRaw < 0 && typeof ignisRecordMedidorAnomaly === 'function'){
@@ -6526,7 +6527,7 @@ async function importarRelatorio(input) {
         }
         if(volReal>0 && kmReal>0){
           const dataRef = document.getElementById('import-data-ini')?.value || new Date().toISOString().split('T')[0];
-          const entry = {placa, data:dataRef, litros:volReal, horas:kmReal, operador:'', operacao, modelo, tipo, tipoIgnis, periodoId};
+          const entry = {placa, data:dataRef, litros:volReal, horas:kmReal, operador:'', operacao, modelo, tipo, tipoIgnis, periodoId, metaIdeal:mediaIdeal||0, combustivel:combustivelInferido, precoLitro:(combustivelInferido==='DIESEL'&&ignisPrecoCombustivelValido('DIESEL',precoMedio))?precoMedio:0};
           dadosSemana.push(entry);
           state.abastecimentos.push(entry);
         }
@@ -6535,10 +6536,10 @@ async function importarRelatorio(input) {
       // Salvar preços médios por operação (coluna S)
       if (!state.dieselPrecos) state.dieselPrecos = {};
       let precosAtualizados = 0;
-      Object.entries(precosPorOp).forEach(([op, {soma, count}]) => {
-        const media = soma / count;
-        if (media > 0) {
-          state.dieselPrecos[op] = parseFloat(media.toFixed(3));
+      Object.entries(precosPorOp).forEach(([op, {custo, litros}]) => {
+        const media = litros > 0 ? custo / litros : 0;
+        if (ignisPrecoCombustivelValido('DIESEL', media)) {
+          state.dieselPrecos[op] = Number(media.toFixed(3));
           precosAtualizados++;
         }
       });
@@ -6669,11 +6670,11 @@ async function importarRelatorioDiario(input) {
         const operacao = String(row['Operação']||'').trim();
         const modelo   = String(row['Modelo']||'').trim();
         const tipoVeic = String(row['Tipo de Veículo']||'').trim();
-        const litros   = parseFloat(row['Litros Abast.']) || 0;
+        const litros   = ignisNumeroSeguro(row['Litros Abast.']);
         const kmRealRaw = ignisNumeroSeguro(ignisValorRow(row,['km real','horas','hora real']));
         const kmReal   = Math.max(0, kmRealRaw); // negativo = correção/regressão do medidor, não soma km fictício
-        const mediaIdeal = parseFloat(row['Média Ideal']) || 0;
-        const valorLitro  = parseFloat(row['Valor Litro']) || 0;
+        const mediaIdeal = ignisNumeroSeguro(row['Média Ideal']);
+        const valorLitro  = ignisNumeroSeguro(row['Valor Litro']);
 
         const opUp = operacao.toUpperCase(), modUp = modelo.toUpperCase();
         if (modUp.startsWith('IEV')) { ignoradasExclusao++; return; }
@@ -6703,7 +6704,7 @@ async function importarRelatorioDiario(input) {
         }
         if (litros <= 0) return;
 
-        linhas.push({ data: dataObj, placa, operacao, modelo, tipoVeic, litros, kmReal, mediaIdeal, valorLitro });
+        linhas.push({ data: dataObj, placa, operacao, modelo, tipoVeic, litros, kmReal, mediaIdeal, valorLitro, combustivel, combustivelChave:ignisFuelKeyExec(combustivel) });
       });
       if(typeof ignisImportMonitorCommit==='function')ignisImportMonitorCommit(importMonitorBatch);
       linhas.sort((a,b) => a.data - b.data);
@@ -6745,14 +6746,20 @@ async function importarRelatorioDiario(input) {
       linhas.forEach(l => {
         const bloco = blocos.find(b => l.data >= b.inicio && l.data <= b.fim);
         if (!bloco) return;
-        if (!bloco.porPlaca[l.placa]) bloco.porPlaca[l.placa] = { litros:0, kmReal:0, operacao:l.operacao, modelo:l.modelo, tipoVeic:l.tipoVeic, mediaIdeal:l.mediaIdeal };
+        if (!bloco.porPlaca[l.placa]) bloco.porPlaca[l.placa] = { litros:0, kmReal:0, operacao:l.operacao, modelo:l.modelo, tipoVeic:l.tipoVeic, mediaIdeal:l.mediaIdeal, _fuels:{}, _ops:{}, _custoComb:0, _litrosPreco:0 };
         const p = bloco.porPlaca[l.placa];
         p.litros += l.litros;
         p.kmReal += l.kmReal;
         // operação/modelo/tipo: como as linhas estão ordenadas por data, o último valor sobrescreve = "mais recente vence"
         p.operacao = l.operacao; p.modelo = l.modelo; p.tipoVeic = l.tipoVeic;
         if (l.mediaIdeal > 0) p.mediaIdeal = l.mediaIdeal;
-        if (l.valorLitro > 0) { p._somaPreco = (p._somaPreco||0) + l.valorLitro; p._countPreco = (p._countPreco||0) + 1; }
+        p._ops[l.operacao||''] = (p._ops[l.operacao||'']||0) + l.litros;
+        const fuelKey = l.combustivelChave || ignisFuelKeyExec(l.combustivel);
+        if (fuelKey) p._fuels[fuelKey] = (p._fuels[fuelKey]||0) + l.litros;
+        if (l.valorLitro > 0 && l.litros > 0 && ignisPrecoCombustivelValido(fuelKey, l.valorLitro)) {
+          p._custoComb += l.valorLitro * l.litros;
+          p._litrosPreco += l.litros;
+        }
       });
 
 
@@ -6826,15 +6833,29 @@ async function importarRelatorioDiario(input) {
           }
 
           if (p.litros>0 && p.kmReal>0) {
-            const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId };
+            const fuelsSemana = Object.keys(p._fuels||{});
+            const opsSemana = Object.keys(p._ops||{}).filter(Boolean);
+            const combustivelSemana = fuelsSemana.length===1 ? fuelsSemana[0] : (fuelsSemana.length>1 ? 'MISTO' : '');
+            const precoPonderado = p._litrosPreco>0 ? (p._custoComb/p._litrosPreco) : 0;
+            const operacaoMista = opsSemana.length>1;
+            const coberturaPrecoSemana = p.litros>0 ? p._litrosPreco/p.litros : 0;
+            const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId, metaIdeal:p.mediaIdeal||0, combustivel:combustivelSemana, precoLitro:(!operacaoMista&&combustivelSemana&&combustivelSemana!=='MISTO'&&coberturaPrecoSemana>=0.999&&ignisPrecoCombustivelValido(combustivelSemana,precoPonderado))?precoPonderado:0, precoCobertura:coberturaPrecoSemana, operacaoMista, operacoesPeriodo:opsSemana };
             dadosSemana.push(entry);
             state.abastecimentos.push(entry);
           }
 
-          if (p._countPreco > 0 && p.operacao) {
-            if (!precosPorOp[p.operacao]) precosPorOp[p.operacao] = { soma:0, count:0 };
-            precosPorOp[p.operacao].soma += p._somaPreco;
-            precosPorOp[p.operacao].count += p._countPreco;
+          // Mantém preço por combustível separado. Nunca mistura Etanol/Gasolina com Diesel.
+          const fuelsCfg = Object.keys(p._fuels||{});
+          const opsCfg = Object.keys(p._ops||{}).filter(Boolean);
+          if (p.operacao && opsCfg.length===1 && fuelsCfg.length===1 && p._litrosPreco>0) {
+            const fuel = fuelsCfg[0];
+            const mediaFuel = p._custoComb / p._litrosPreco;
+            if (ignisPrecoCombustivelValido(fuel, mediaFuel)) {
+              if (!precosPorOp[p.operacao]) precosPorOp[p.operacao] = {};
+              if (!precosPorOp[p.operacao][fuel]) precosPorOp[p.operacao][fuel] = {custo:0,litros:0};
+              precosPorOp[p.operacao][fuel].custo += p._custoComb;
+              precosPorOp[p.operacao][fuel].litros += p._litrosPreco;
+            }
           }
         });
 
@@ -6843,12 +6864,19 @@ async function importarRelatorioDiario(input) {
         registrosTotais += dadosSemana.length;
       });
 
-      // Preços médios de diesel — mesma lógica do import semanal
+      // Preços por combustível ponderados por litros. Diesel também alimenta o fallback legado.
       if (!state.dieselPrecos) state.dieselPrecos = {};
+      if (!state.combustivelPrecos) state.combustivelPrecos = {};
       let precosAtualizados = 0;
-      Object.entries(precosPorOp).forEach(([op, {soma, count}]) => {
-        const media = soma / count;
-        if (media > 0) { state.dieselPrecos[op] = parseFloat(media.toFixed(3)); precosAtualizados++; }
+      Object.entries(precosPorOp).forEach(([op, fuels]) => {
+        if (!state.combustivelPrecos[op]) state.combustivelPrecos[op] = {};
+        Object.entries(fuels).forEach(([fuel, d]) => {
+          const media = d.litros>0 ? d.custo/d.litros : 0;
+          if (!ignisPrecoCombustivelValido(fuel, media)) return;
+          state.combustivelPrecos[op][fuel] = Number(media.toFixed(3));
+          if (fuel==='DIESEL') state.dieselPrecos[op] = Number(media.toFixed(3));
+          precosAtualizados++;
+        });
       });
       if (precosAtualizados > 0) {
         try {
@@ -9694,25 +9722,71 @@ function relChecarReincidencia() {
   }
 }
 
-// ── PREÇO DIESEL POR OPERAÇÃO ─────────────────────────────────────────────────
-// Preços ficam no Firebase (state) para serem compartilhados entre todos os usuários
-function dieselGetPrecos() {
-  return state.dieselPrecos || {};
+// ── PREÇOS DE COMBUSTÍVEL / AUDITORIA ───────────────────────────────────────
+// Regra operacional pedida: Diesel e Gasolina abaixo de R$ 5,00/L nunca entram
+// em cálculo financeiro. Etanol é separado e aceita faixa inferior.
+function ignisFuelKeyExec(v) {
+  const s = String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+  if (!s) return '';
+  if (s.includes('ETANOL') || s.includes('ALCOOL')) return 'ETANOL';
+  if (s.includes('GASOLINA')) return 'GASOLINA';
+  if (s.includes('DIESEL') || s.includes('S10') || s.includes('S-10') || s.includes('S500') || s.includes('S-500')) return 'DIESEL';
+  if (s.includes('GLP')) return 'GLP';
+  if (s.includes('ARLA')) return 'ARLA';
+  if (s === 'MISTO') return 'MISTO';
+  return '';
 }
+function ignisPrecoCombustivelValido(fuel, val) {
+  const p = Number(val);
+  if (!Number.isFinite(p) || p <= 0 || p > 15) return false;
+  const f = ignisFuelKeyExec(fuel);
+  if (f === 'ETANOL') return p >= 2.50;
+  if (f === 'DIESEL' || f === 'GASOLINA') return p >= 5.00;
+  return false;
+}
+function ignisPrecoMotivo(fuel, val) {
+  const p = Number(val), f = ignisFuelKeyExec(fuel);
+  if (!Number.isFinite(p) || p <= 0) return 'sem preço';
+  if (p > 15) return 'preço acima de R$ 15,00/L';
+  if ((f==='DIESEL'||f==='GASOLINA') && p < 5) return `${f.toLowerCase()} abaixo de R$ 5,00/L`;
+  if (f==='ETANOL' && p < 2.5) return 'etanol abaixo de R$ 2,50/L';
+  if (!f || ['GLP','ARLA','MISTO'].includes(f)) return 'combustível sem regra financeira segura';
+  return 'preço inválido';
+}
+function dieselGetPrecos() { return state.dieselPrecos || {}; }
 async function dieselSalvarPreco(op, val) {
   if (!state.dieselPrecos) state.dieselPrecos = {};
-  if (val > 0) state.dieselPrecos[op] = val; else delete state.dieselPrecos[op];
-  // Backup imune ao Firebase
+  const n = Number(val)||0;
+  if (n > 0 && !ignisPrecoCombustivelValido('DIESEL', n)) {
+    showToast(n < 5 ? 'Diesel abaixo de R$ 5,00/L foi rejeitado.' : 'Preço de Diesel fora da faixa de segurança.', 'error');
+    dieselPopularOps();
+    return;
+  }
+  if (n > 0) state.dieselPrecos[op] = n; else delete state.dieselPrecos[op];
   try {
     const backup = JSON.parse(localStorage.getItem('ignis_diesel_backup')||'{}');
-    if (val > 0) backup[op] = val; else delete backup[op];
+    if (n > 0) backup[op] = n; else delete backup[op];
     localStorage.setItem('ignis_diesel_backup', JSON.stringify(backup));
   } catch(e) {}
   saveState();
 }
 function dieselGetPreco(op) {
   const p = dieselGetPrecos();
-  return p[op] || p['__default__'] || 0;
+  const raw = Number(p[op] ?? p['__default__'] ?? 0);
+  return ignisPrecoCombustivelValido('DIESEL', raw) ? raw : 0;
+}
+function ignisPrecoRegistro(r, opRaw, tipoIgnis) {
+  const fuelExp = ignisFuelKeyExec(r?.combustivel || r?.fuel || '');
+  const fuel = fuelExp || (['pesada','maquina','trator'].includes(tipoIgnis) ? 'DIESEL' : '');
+  const direto = Number(r?.precoLitro ?? r?.valorLitro ?? 0);
+  if (fuel && ignisPrecoCombustivelValido(fuel, direto)) return {preco:direto,fuel,fonte:'registro'};
+  const porFuel = Number(state.combustivelPrecos?.[opRaw]?.[fuel] || 0);
+  if (fuel && ignisPrecoCombustivelValido(fuel, porFuel)) return {preco:porFuel,fuel,fonte:'combustível/operação'};
+  if (fuel === 'DIESEL') {
+    const p = dieselGetPreco(opRaw);
+    if (p) return {preco:p,fuel,fonte:'fallback diesel/operação'};
+  }
+  return {preco:0,fuel,fonte:'',motivo:ignisPrecoMotivo(fuel,direto)};
 }
 
 function opGetConfigs() {
@@ -9752,7 +9826,7 @@ function dieselPopularOps() {
     const backup = JSON.parse(localStorage.getItem('ignis_diesel_backup')||'{}');
     if (Object.keys(backup).length) {
       if (!state.dieselPrecos) state.dieselPrecos = {};
-      Object.assign(state.dieselPrecos, backup);
+      Object.entries(backup).forEach(([op,v])=>{ if(ignisPrecoCombustivelValido('DIESEL',Number(v))) state.dieselPrecos[op]=Number(v); });
     }
   } catch(e) {}
 
@@ -9834,7 +9908,7 @@ function dieselPopularOps() {
     const meta   = cfgs[op]?.meta   ?? '';
     const tunel  = cfgs[op]?.tunel  ?? '';
     const coef   = cfgs[op]?.coefRota ?? '';
-    const autoImport = preco > 0;
+    const autoImport = ignisPrecoCombustivelValido('DIESEL', Number(preco));
     const precoLabel = autoImport ? `<span style="font-size:9px;color:var(--green);margin-left:2px" title="Importado automaticamente da planilha">✓ auto</span>` : '';
     return `<div style="display:grid;grid-template-columns:1fr 150px 130px 100px 110px;gap:6px;align-items:center;background:var(--bg3);border-radius:8px;padding:8px 12px;margin-bottom:4px">
       <div style="font-size:13px;font-weight:500;word-break:break-word;white-space:normal">${op.replace(/_/g,' ')}</div>
@@ -9893,235 +9967,202 @@ function renderExecutivo() {
   const opFiltro = document.getElementById('exec-op-filter')?.value || '';
   const c = document.getElementById('executivo-resultado');
   if (!ini || !fim) { showToast('Selecione o período', 'error'); return; }
+  if (ini > fim) { showToast('A data inicial não pode ser maior que a final', 'error'); return; }
 
   const fmtBr = d => { const [y,m,dd] = d.split('-'); return dd+'/'+m+'/'+y; };
   const labelPeriodo = fmtBr(ini) + ' a ' + fmtBr(fim);
-
   const execTipo = document.querySelector('.exec-tipo-btn.active')?.dataset?.tipo || '';
-  const isKmL = execTipo === '__pesada__' || execTipo === '__leve__';
-  const unidadeMedia = isKmL ? 'km/L' : 'L/h';
 
-  let registros = state.abastecimentos.filter(a => a.data >= ini && a.data <= fim);
-  if (opFiltro) registros = registros.filter(a => (getMaquina(a.placa)?.operacao || a.operacao || '') === opFiltro);
-  if (execTipo === '__maquinas__')       registros = registros.filter(a => getTipoIgnis(a)==='maquina');
-  else if (execTipo === '__tratores__')  registros = registros.filter(a => getTipoIgnis(a)==='trator');
-  else if (execTipo === '__pesada__')    registros = registros.filter(a => getTipoIgnis(a)==='pesada');
-  else if (execTipo === '__leve__')      registros = registros.filter(a => getTipoIgnis(a)==='leve');
+  let registros = (state.abastecimentos||[]).filter(a => a.data >= ini && a.data <= fim);
+  if (opFiltro) registros = registros.filter(a => (a.operacao || getMaquina(a.placa)?.operacao || '') === opFiltro);
+  if (execTipo === '__maquinas__') registros = registros.filter(a => getTipoIgnis(a)==='maquina');
+  else if (execTipo === '__tratores__') registros = registros.filter(a => getTipoIgnis(a)==='trator');
+  else if (execTipo === '__pesada__') registros = registros.filter(a => getTipoIgnis(a)==='pesada');
+  else if (execTipo === '__leve__') registros = registros.filter(a => getTipoIgnis(a)==='leve');
   else if (execTipo === '__empilhadeiras__') registros = registros.filter(a => getTipoIgnis(a)==='empilhadeira');
-  else registros = registros.filter(a => getTipoIgnis(a) !== 'empilhadeira'); // padrão: exclui EMP (GLP)
+  else registros = registros.filter(a => getTipoIgnis(a) !== 'empilhadeira');
+
   if (!registros.length) {
     c.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum registro no período</div></div>';
     return;
   }
 
-  // Agrupa por máquina
-  const byMaq = {};
-  registros.forEach(r => {
-    if (!byMaq[r.placa]) byMaq[r.placa] = { l: 0, h: 0 };
-    byMaq[r.placa].l += r.litros || 0;
-    byMaq[r.placa].h += r.horas || 0;
-  });
-
-  // Calcula por operação
   const byOp = {};
-  const semPreco = new Set();
-  const semMeta = new Set();
+  const audit = { usados:0, ignorados:0, litros:0, litrosComPreco:0, litrosPrecoHistorico:0, litrosComMeta:0, litrosMetaConfiavel:0, semPreco:new Map(), semMeta:new Map(), precoInvalido:new Map(), precoFallback:new Map(), metaFallback:new Map(), fuelDesconhecido:new Map(), operacaoMista:new Map() };
+  const LIMIAR_OK = 98; // tolerância operacional/status
+  const EF = LIMIAR_OK/100; // usado apenas para referência operacional; financeiro usa 100% da meta
 
-  Object.entries(byMaq).forEach(([placa, d]) => {
-    const maq = getMaquina(placa);
-    const op = (maq?.operacao || '').replace(/_/g,' ') || 'Sem Operação';
-    const meta = maq?.meta || 0;
-    const media = isKmL ? (d.l > 0 ? d.h / d.l : 0) : (d.h > 0 ? d.l / d.h : 0);
-    const preco = dieselGetPreco(maq?.operacao || '');
-    if (!preco) semPreco.add(op);
-    if (!meta) semMeta.add(placa);
-    const metaCli = opGetMeta(maq?.operacao || '');
-    const metaFinal = metaCli > 0 ? metaCli : meta;
-    const limiteReal = opGetLimiteReal(maq?.operacao || '', metaFinal);
-    const efic = metaFinal > 0 && media > 0 ? (isKmL ? (media/metaFinal)*100 : (metaFinal/media)*100) : null;
-    let desperdicadoL = 0, economiaL = 0;
-    if (isKmL) {
-      if (metaFinal > 0 && d.h > 0) {
-        const litrosIdeais = d.h / metaFinal;
-        if (d.l > litrosIdeais) desperdicadoL = d.l - litrosIdeais;
-        else economiaL = litrosIdeais - d.l;
-      }
-    } else {
-      if (metaFinal > 0 && limiteReal > 0 && media > limiteReal) desperdicadoL = (media - limiteReal) * d.h;
-      if (metaFinal > 0 && media > 0 && media < metaFinal) economiaL = (metaFinal - media) * d.h;
+  const getOp = r => String(r.operacao || getMaquina(r.placa)?.operacao || '').trim();
+  const getMetaInfo = r => {
+    const v = Number(r.metaIdeal ?? r.metaPeriodo ?? 0);
+    if (v > 0) return {meta:v,fonte:'registro',confiavel:true};
+    const op = getOp(r);
+    const opMeta = Number(opGetMeta(op)||0);
+    if (opMeta > 0) return {meta:opMeta,fonte:'configuração da operação',confiavel:true};
+    const atual = Number(getMaquina(r.placa)?.meta || 0);
+    return {meta:atual,fonte:atual>0?'cadastro atual':'',confiavel:false};
+  };
+  const addAudit = (map,key,litros,extra='') => {
+    const k = key || 'Não identificado';
+    const cur = map.get(k) || {count:0,litros:0,extra};
+    cur.count++; cur.litros += litros||0; if(extra) cur.extra=extra; map.set(k,cur);
+  };
+
+  registros.forEach(r => {
+    const litros = Number(r.litros)||0;
+    const medida = Number(r.horas)||0; // km para frota; horas para máquina/trator
+    if (!(litros > 0) || !(medida > 0)) { audit.ignorados++; return; }
+    const tipoIgnis = getTipoIgnis(r);
+    if (tipoIgnis === 'empilhadeira') { audit.ignorados++; return; }
+    const isKm = tipoIgnis === 'pesada' || tipoIgnis === 'leve';
+    const unidade = isKm ? 'km/L' : 'L/h';
+    const placa = String(r.placa||'').trim().toUpperCase();
+    const opRaw = getOp(r);
+    const opLabel = (opRaw||'Sem Operação').replace(/_/g,' ');
+    const metaInfo = getMetaInfo(r);
+    const meta = metaInfo.meta;
+    const media = isKm ? medida/litros : litros/medida;
+    const efic = meta>0 && media>0 ? (isKm ? media/meta*100 : meta/media*100) : null;
+    let pInfo = ignisPrecoRegistro(r, opRaw, tipoIgnis);
+    if (r.operacaoMista) pInfo = {preco:0,fuel:pInfo.fuel||'',fonte:'',motivo:'operação mudou dentro do mesmo período'};
+
+    audit.usados++; audit.litros += litros;
+    if (pInfo.preco>0) { audit.litrosComPreco += litros; if (pInfo.fonte==='registro') audit.litrosPrecoHistorico += litros; else addAudit(audit.precoFallback, opLabel, litros, pInfo.fonte||'fallback'); }
+    else {
+      addAudit(audit.semPreco, opLabel, litros, pInfo.motivo||'sem preço válido');
+      if (!pInfo.fuel) addAudit(audit.fuelDesconhecido, opLabel, litros, 'combustível não identificado');
+      const rawP = Number(r.precoLitro ?? r.valorLitro ?? 0);
+      if (rawP>0) addAudit(audit.precoInvalido, opLabel, litros, ignisPrecoMotivo(pInfo.fuel,rawP));
     }
-    const desperdicadoR = desperdicadoL * preco;
-    const economiaR = economiaL * preco;
-    const metaBatida = isKmL ? (metaFinal > 0 && media >= metaFinal) : (metaFinal > 0 && media > 0 && media <= limiteReal);
+    if (meta>0) { audit.litrosComMeta += litros; if(metaInfo.confiavel) audit.litrosMetaConfiavel += litros; else addAudit(audit.metaFallback, placa, litros, metaInfo.fonte||'cadastro atual'); } else addAudit(audit.semMeta, placa, litros, opLabel);
+    if (r.operacaoMista) addAudit(audit.operacaoMista, placa, litros, (r.operacoesPeriodo||[]).join(' / '));
 
+    let alvo100L = 0, alvo98L = 0, desperdicadoL = 0, economiaL = 0;
+    if (meta > 0) {
+      if (isKm) {
+        alvo100L = medida / meta;
+        alvo98L = medida / (meta * EF);
+      } else {
+        alvo100L = meta * medida;
+        alvo98L = (meta / EF) * medida;
+      }
+      desperdicadoL = Math.max(0, litros - alvo100L); // financeiro: só há desperdício abaixo de 100% da meta
+      economiaL = Math.max(0, alvo100L - litros);   // financeiro: só há economia acima de 100% da meta
+    }
+    const gastoR = pInfo.preco>0 ? litros*pInfo.preco : 0;
+    const desperdicadoR = pInfo.preco>0 ? desperdicadoL*pInfo.preco : 0;
+    const economiaR = pInfo.preco>0 ? economiaL*pInfo.preco : 0;
 
+    if (!byOp[opLabel]) byOp[opLabel] = {opRaw,maquinasMap:{},totalL:0,totalMedida:0,gastoR:0,litrosComPreco:0,litrosPrecoFallback:0,litrosSemPreco:0,litrosSemMeta:0,litrosMetaFallback:0,desperdicadoL:0,desperdicadoR:0,economiaL:0,economiaR:0,fuels:new Set(),fontes:new Set()};
+    const o = byOp[opLabel];
+    o.totalL += litros; o.totalMedida += medida; o.gastoR += gastoR;
+    if (pInfo.preco>0) { o.litrosComPreco += litros; if(pInfo.fonte!=='registro') o.litrosPrecoFallback += litros; } else o.litrosSemPreco += litros;
+    if (!(meta>0)) o.litrosSemMeta += litros; else if(!metaInfo.confiavel) o.litrosMetaFallback += litros;
+    o.desperdicadoL += desperdicadoL; o.desperdicadoR += desperdicadoR;
+    o.economiaL += economiaL; o.economiaR += economiaR;
+    if (pInfo.fuel) o.fuels.add(pInfo.fuel); if (pInfo.fonte) o.fontes.add(pInfo.fonte);
 
-
-
-
-
-
-
-
-
-    if (!byOp[op]) byOp[op] = { maquinas: [], totalL: 0, totalH: 0, desperdicadoL: 0, desperdicadoR: 0, economiaL: 0, economiaR: 0, maqNaMeta: 0, preco, semPreco: !preco };
-    byOp[op].maquinas.push({ placa, meta, media, efic, desperdicadoL, desperdicadoR, economiaL, economiaR, metaBatida, litros: d.l, horas: d.h });
-    byOp[op].totalL += d.l;
-    byOp[op].totalH += d.h;
-    byOp[op].desperdicadoL += desperdicadoL;
-    byOp[op].desperdicadoR += desperdicadoR;
-    byOp[op].economiaL += economiaL;
-    byOp[op].economiaR += economiaR;
-    if (metaBatida) byOp[op].maqNaMeta++;
+    const key = placa || 'SEM_PLACA';
+    if (!o.maquinasMap[key]) o.maquinasMap[key] = {placa:key,tipoIgnis,isKm,unidade,totalL:0,totalMedida:0,target100L:0,target98L:0,metaLitros:0,metaOkLitros:0,desperdicadoL:0,desperdicadoR:0,economiaL:0,economiaR:0,gastoR:0,litrosSemPreco:0,litrosPrecoFallback:0,litrosSemMeta:0,litrosMetaFallback:0,fuels:new Set(),precos:[]};
+    const m = o.maquinasMap[key];
+    m.totalL += litros; m.totalMedida += medida; m.target100L += alvo100L; m.target98L += alvo98L;
+    if (meta>0) { m.metaOkLitros += litros; if(!metaInfo.confiavel) m.litrosMetaFallback += litros; } else m.litrosSemMeta += litros;
+    m.desperdicadoL += desperdicadoL; m.desperdicadoR += desperdicadoR; m.economiaL += economiaL; m.economiaR += economiaR; m.gastoR += gastoR;
+    if (pInfo.preco>0) { m.precos.push({p:pInfo.preco,l:litros}); if(pInfo.fonte!=='registro') m.litrosPrecoFallback += litros; } else m.litrosSemPreco += litros;
+    if (pInfo.fuel) m.fuels.add(pInfo.fuel);
   });
 
-  const totalDesperdicadoR = Object.values(byOp).reduce((s, o) => s + o.desperdicadoR, 0);
-  const totalDesperdicadoL = Object.values(byOp).reduce((s, o) => s + o.desperdicadoL, 0);
-  const totalEconomiaR = Object.values(byOp).reduce((s, o) => s + o.economiaR, 0);
-  const totalEconomiaL = Object.values(byOp).reduce((s, o) => s + o.economiaL, 0);
-  const totalL = Object.values(byOp).reduce((s, o) => s + o.totalL, 0);
-  const pctDesperdicio = totalL > 0 ? (totalDesperdicadoL / totalL * 100) : 0;
-
-  const fmtR = v => 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const fmtL = v => v.toFixed(0) + 'L';
-
-  // Ordena operações por desperdício R$ desc
-  const opsOrdenadas = Object.entries(byOp).sort((a, b) => b[1].desperdicadoR - a[1].desperdicadoR);
-
-  let html = '';
-
-  // Aviso se faltam preços
-  if (semPreco.size) {
-    html += '<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px">' +
-      '⚠️ <strong>Preço não configurado</strong> para: ' + [...semPreco].join(', ') + '. <a href="#" onclick="showPage(\'config\',null);return false" style="color:var(--accent)">Configurar em ⚙️</a>' +
-      '</div>';
-  }
-
-  // KPIs executivos
-  const totalLiquidoR = totalDesperdicadoR - totalEconomiaR;
-  // Calcula gasto total: litros × preço por operação
-  let totalGasto = 0;
-  Object.entries(byOp).forEach(([op, d]) => {
-    const preco = dieselGetPreco(op) || 0;
-    totalGasto += d.totalL * preco;
-  });
-  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:20px">';
-  html += kpiExec('📅 Período', labelPeriodo, '', '#8b90a7');
-  html += kpiExec('💸 Gasto Total', fmtR(totalGasto), fmtL(totalL) + ' consumidos', 'var(--text1)');
-  html += kpiExec('🔴 Desperdiçado', fmtR(totalDesperdicadoR), fmtL(totalDesperdicadoL) + ' · ' + pctDesperdicio.toFixed(1) + '% do total', 'var(--red)');
-  html += kpiExec('🟢 Economizado', fmtR(totalEconomiaR), fmtL(totalEconomiaL) + ' poupados vs meta', 'var(--green)');
-  html += kpiExec(totalLiquidoR >= 0 ? '📉 Custo Líquido' : '📈 Saldo Líquido', fmtR(Math.abs(totalLiquidoR)), totalLiquidoR >= 0 ? 'após descontar economias' : 'economia supera o desperdício!', totalLiquidoR > 0 ? 'var(--red)' : 'var(--green)');
-  html += kpiExec('🎯 Economia Potencial', fmtR(totalDesperdicadoR), 'se todas atingissem 98%', 'var(--accent)');
-  html += '</div>';
-
-  // Ranking por operação (expansível)
-  html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">';
-  html += '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">';
-  html += '<div style="font-size:15px;font-weight:700">📍 Resultado por Operação</div>';
-  html += '<div style="display:flex;gap:8px">';
-  html += '<span style="font-size:11px;color:var(--text3);align-self:center">Clique para ver as máquinas</span>';
-  html += '<button class="btn btn-secondary btn-sm" onclick="exportarExecutivoEmail()">📧 Copiar Relatório</button>';
-  html += '</div></div>';
-
-  opsOrdenadas.forEach(([op, d], i) => {
-    const pct = d.totalL > 0 ? (d.desperdicadoL / d.totalL * 100) : 0;
-    const mediaOp = d.totalH > 0 ? d.totalL / d.totalH : 0;
-    const barW = totalDesperdicadoR > 0 ? Math.max((d.desperdicadoR / totalDesperdicadoR) * 100, 2) : 0;
-    const naMeta = d.desperdicadoL === 0 && d.maqNaMeta > 0;
-    const semPrecoCfg = d.semPreco;
-    const cor = d.desperdicadoR > 0 ? 'var(--red)' : naMeta ? 'var(--green)' : 'var(--text3)';
-    html += '<div>';
-    html += '<div id="exec-row-' + i + '" style="padding:14px 20px;border-bottom:1px solid rgba(42,47,69,.5);cursor:pointer;transition:.15s">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">';
-    html += '<div style="display:flex;align-items:center;gap:10px">';
-    html += '<span id="exec-arrow-' + i + '" style="font-size:11px;color:var(--text3);width:14px">▶</span>';
-    html += '<span style="font-size:16px;font-weight:700;color:var(--text3);font-family:monospace;width:24px">' + (i+1) + '</span>';
-    html += '<div><div style="display:flex;align-items:center;gap:8px">';
-    html += '<span style="font-size:14px;font-weight:700">' + op + '</span>';
-    if (naMeta) html += '<span style="background:rgba(34,197,94,.15);color:var(--green);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">NA META</span>';
-    if (semPrecoCfg) html += '<span style="background:rgba(245,158,11,.15);color:var(--yellow);font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">⚠️ SEM PREÇO</span>';
-    html += '</div>';
-    html += '<div style="font-size:11px;color:var(--text2);margin-top:2px">' + d.maquinas.length + ' máquinas · ' + fmtL(d.totalL) + (d.preco ? ' · R$' + d.preco.toFixed(2) + '/L' : '') + '</div></div></div>';
-    html += '<div style="text-align:right">';
-    if (semPrecoCfg) {
-      html += '<div style="font-size:14px;color:var(--text3)">— sem preço configurado</div>';
-    } else {
-      const liquidoR = d.desperdicadoR - d.economiaR;
-      const liquidoCor = liquidoR > 0 ? 'var(--red)' : liquidoR < 0 ? 'var(--green)' : 'var(--text3)';
-      const liquidoSinal = liquidoR > 0 ? '📉 Líquido: ' : liquidoR < 0 ? '📈 Líquido: ' : '⚖️ Líquido: ';
-      // Linha principal: desperdício
-      if (d.desperdicadoR > 0) {
-        html += '<div style="font-size:13px;color:var(--red);font-weight:600">🔴 ' + fmtR(d.desperdicadoR) + ' desperdiçados <span style="font-weight:400;font-size:11px">(' + fmtL(d.desperdicadoL) + ' · ' + pct.toFixed(1) + '%)</span></div>';
-      } else {
-        html += '<div style="font-size:13px;color:var(--text3)">🔴 R$ 0,00 desperdiçados</div>';
-      }
-      // Linha economia
-      if (d.economiaR > 0) {
-        html += '<div style="font-size:13px;color:var(--green);font-weight:600;margin-top:3px">🟢 ' + fmtR(d.economiaR) + ' economizados <span style="font-weight:400;font-size:11px">(' + fmtL(d.economiaL) + ')</span></div>';
-      } else {
-        html += '<div style="font-size:13px;color:var(--text3);margin-top:3px">🟢 R$ 0,00 economizados</div>';
-      }
-      // Separador + líquido
-      html += '<div style="margin-top:6px;padding-top:5px;border-top:1px solid rgba(42,47,69,.6);font-size:15px;font-weight:700;color:' + liquidoCor + '">' + liquidoSinal + fmtR(Math.abs(liquidoR)) + '</div>';
-    }
-    html += '</div></div>';
-    if (d.desperdicadoR > 0 || d.economiaR > 0) {
-      const liquidoR = d.desperdicadoR - d.economiaR;
-      const barColor = liquidoR > 0 ? 'var(--red)' : 'var(--green)';
-      const barRef = liquidoR > 0 ? totalDesperdicadoR : totalEconomiaR;
-      const barVal = Math.abs(liquidoR);
-      const barWN = barRef > 0 ? Math.max((barVal / barRef) * 100, 2) : 0;
-      html += '<div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px">';
-      html += '<div style="height:100%;width:' + barWN + '%;background:' + barColor + ';border-radius:3px;transition:width .4s"></div></div>';
-    }
-    // Tabela expansível de máquinas desta operação
-    const opId = 'exec-op-' + i;
-    html += '<div id="' + opId + '" style="display:none;border-top:1px solid rgba(42,47,69,.4);overflow-x:auto">';
-    html += '<table style="width:100%"><thead><tr style="background:var(--bg3)">';
-    html += '<th>Máquina</th><th style="text-align:center">Meta Efetiva</th><th style="text-align:center">Real</th><th style="text-align:center">Eficiência</th><th style="text-align:right">Desperdício L</th><th style="text-align:right">Custo R$</th><th style="text-align:right">Economizado</th>';
-    html += '</tr></thead><tbody>';
-    d.maquinas.sort((a,b) => b.desperdicadoR - a.desperdicadoR).forEach(m => {
-      const metaCli = opGetMeta(getMaquina(m.placa)?.operacao || '');
-      const metaEfetiva = metaCli > 0 ? metaCli : m.meta;
-      const tunel = opGetTunel(getMaquina(m.placa)?.operacao || '');
-      const limiteLabel = tunel > 0 ? metaEfetiva.toFixed(2) + ' +' + tunel + '%' : (metaEfetiva > 0 ? metaEfetiva.toFixed(2) + ' ' + unidadeMedia : '—');
-      const eficCor = !m.efic ? 'var(--text3)' : m.efic >= 98 ? 'var(--green)' : m.efic >= 90 ? 'var(--yellow)' : 'var(--red)';
-      const eficBadge = !m.efic ? '' : m.efic >= 98 ? 'badge-green' : m.efic >= 90 ? 'badge-yellow' : 'badge-red';
-      html += '<tr>';
-      html += '<td><span class="placa-tag">' + m.placa + '</span></td>';
-      html += '<td style="text-align:center;font-family:monospace;color:var(--accent)">' + limiteLabel + '</td>';
-      html += '<td style="text-align:center;font-family:monospace;font-weight:700;color:' + eficCor + '">' + m.media.toFixed(2) + ' ' + unidadeMedia + '</td>';
-      html += '<td style="text-align:center"><span class="badge ' + eficBadge + '">' + (m.efic ? m.efic.toFixed(1) + '%' : '—') + '</span></td>';
-      html += '<td style="text-align:right;font-family:monospace;color:' + (m.desperdicadoL > 0 ? 'var(--red)' : 'var(--text3)') + '">' + (m.desperdicadoL > 0 ? fmtL(m.desperdicadoL) : '—') + '</td>';
-      html += '<td style="text-align:right;font-family:monospace;font-weight:700;color:' + (m.desperdicadoR > 0 ? 'var(--red)' : 'var(--text3)') + '">' + (m.desperdicadoR > 0 ? fmtR(m.desperdicadoR) : '—') + '</td>';
-      html += '<td style="text-align:right;font-family:monospace;color:' + (m.economiaR > 0 ? 'var(--green)' : 'var(--text3)') + '">' + (m.economiaR > 0 ? fmtR(m.economiaR) : '—') + '</td>';
-      html += '</tr>';
+  Object.values(byOp).forEach(o => {
+    o.maquinas = Object.values(o.maquinasMap).map(m => {
+      const media = m.totalMedida>0 && m.totalL>0 ? (m.isKm ? m.totalMedida/m.totalL : m.totalL/m.totalMedida) : 0;
+      const metaEfetiva = m.target100L>0 && m.totalMedida>0 ? (m.isKm ? m.totalMedida/m.target100L : m.target100L/m.totalMedida) : 0;
+      const efic = metaEfetiva>0 && media>0 ? (m.isKm ? media/metaEfetiva*100 : metaEfetiva/media*100) : null;
+      const precoMedio = m.precos.length ? m.precos.reduce((s,x)=>s+x.p*x.l,0)/m.precos.reduce((s,x)=>s+x.l,0) : 0;
+      return {...m,media,meta:metaEfetiva,efic,precoMedio,metaBatida:efic!==null&&efic>=LIMIAR_OK,combustiveis:[...m.fuels]};
     });
-    html += '</tbody></table></div>';
+    o.precoMedio = o.litrosComPreco>0 ? o.gastoR/o.litrosComPreco : 0;
+    o.combustiveis=[...o.fuels]; o.precoFontes=[...o.fontes];
+    o.maqNaMeta=o.maquinas.filter(m=>m.metaBatida).length;
+    delete o.maquinasMap;
+  });
+
+  const opsOrdenadas = Object.entries(byOp).sort((a,b)=>b[1].desperdicadoL-a[1].desperdicadoL);
+  const totalL = Object.values(byOp).reduce((s,o)=>s+o.totalL,0);
+  const totalGasto = Object.values(byOp).reduce((s,o)=>s+o.gastoR,0);
+  const totalDesperdicadoL = Object.values(byOp).reduce((s,o)=>s+o.desperdicadoL,0);
+  const totalDesperdicadoR = Object.values(byOp).reduce((s,o)=>s+o.desperdicadoR,0);
+  const totalEconomiaL = Object.values(byOp).reduce((s,o)=>s+o.economiaL,0);
+  const totalEconomiaR = Object.values(byOp).reduce((s,o)=>s+o.economiaR,0);
+  const totalLiquidoR = totalDesperdicadoR-totalEconomiaR;
+  const pctDesperdicio = totalL>0 ? totalDesperdicadoL/totalL*100 : 0;
+  const coberturaPreco = totalL>0 ? audit.litrosPrecoHistorico/totalL*100 : 0;
+  const coberturaMeta = totalL>0 ? audit.litrosMetaConfiavel/totalL*100 : 0;
+  const precoCompleto = audit.litrosPrecoHistorico >= totalL-0.01;
+  const metaCompleta = audit.litrosMetaConfiavel >= totalL-0.01;
+  const financeiroValido = precoCompleto && metaCompleta && audit.operacaoMista.size===0;
+
+  const fmtR = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmtL = v => Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:0})+' L';
+  const fmtPct=v=>Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';
+  const moneyOrDash = v => financeiroValido ? fmtR(v) : '—';
+
+  let html='';
+  const auditColor = financeiroValido ? 'var(--green)' : 'var(--red)';
+  const auditBg = financeiroValido ? 'rgba(57,203,145,.07)' : 'rgba(239,98,98,.07)';
+  const auditBorder = financeiroValido ? 'rgba(57,203,145,.28)' : 'rgba(239,98,98,.30)';
+  html += `<div style="background:${auditBg};border:1px solid ${auditBorder};border-radius:14px;padding:16px 18px;margin-bottom:16px">`;
+  html += `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><div style="font-size:13px;font-weight:800;color:${auditColor}">${financeiroValido?'✓ CÁLCULO FINANCEIRO VALIDADO':'✕ CÁLCULO FINANCEIRO BLOQUEADO'}</div><div style="font-size:12px;color:var(--text2);margin-top:4px">Médias ponderadas por volume/distância · status operacional: ${LIMIAR_OK}%+ = dentro da tolerância · financeiro: 100% da meta é o ponto zero · preço por combustível sem misturar Diesel/Gasolina/Etanol.</div></div><div style="display:flex;gap:18px;font-size:11px;color:var(--text2)"><span><b style="color:var(--text1)">${audit.usados}</b> registros</span><span>Preço histórico <b style="color:${coberturaPreco===100?'var(--green)':'var(--red)'}">${fmtPct(coberturaPreco)}</b></span><span>Meta confiável <b style="color:${coberturaMeta===100?'var(--green)':'var(--red)'}">${fmtPct(coberturaMeta)}</b></span></div></div>`;
+  if (!financeiroValido) {
+    html += '<div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px">';
+    if (!precoCompleto) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--red)">${fmtL(totalL-audit.litrosPrecoHistorico)}</b> sem preço histórico no próprio registro. Fallback de operação não é aceito como valor auditado.</div>`;
+    if (!metaCompleta) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--red)">${fmtL(totalL-audit.litrosMetaConfiavel)}</b> sem meta histórica/configurada confiável. Meta atual da placa aparece só como diagnóstico, não valida o financeiro.</div>`;
+    if (audit.fuelDesconhecido.size) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--yellow)">${audit.fuelDesconhecido.size}</b> operação(ões) com combustível não identificado (principalmente histórico de frota leve).</div>`;
+    if (audit.operacaoMista.size) html += `<div style="background:rgba(0,0,0,.12);border-radius:9px;padding:9px 11px;font-size:11px;color:var(--text2)"><b style="color:var(--red)">${audit.operacaoMista.size}</b> ativo(s) mudou(aram) de operação dentro do período consolidado. O financeiro é bloqueado para não atribuir custo à operação errada.</div>`;
     html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:20px">';
+  html += kpiExec('Período', labelPeriodo, audit.usados+' registros válidos', '#8b90a7');
+  html += kpiExec('Gasto Total', precoCompleto?fmtR(totalGasto):'—', fmtL(totalL)+' · preço histórico '+fmtPct(coberturaPreco), precoCompleto?'var(--text1)':'var(--red)');
+  html += kpiExec('Desperdiçado', moneyOrDash(totalDesperdicadoR), fmtL(totalDesperdicadoL)+' · '+pctDesperdicio.toFixed(1)+'% dos litros', financeiroValido?'var(--red)':'var(--text3)');
+  html += kpiExec('Economizado', moneyOrDash(totalEconomiaR), fmtL(totalEconomiaL)+' poupados vs 100% da meta', financeiroValido?'var(--green)':'var(--text3)');
+  html += kpiExec(totalLiquidoR>=0?'Custo Líquido':'Saldo Líquido', moneyOrDash(Math.abs(totalLiquidoR)), financeiroValido?(totalLiquidoR>=0?'desperdício menos economia':'economia supera desperdício'):'aguardando validação', financeiroValido?(totalLiquidoR>0?'var(--red)':'var(--green)'):'var(--text3)');
+  html += kpiExec('Recuperação Potencial', moneyOrDash(totalDesperdicadoR), 'valor para levar os abaixo da meta até 100%', financeiroValido?'var(--accent)':'var(--text3)');
+  html += '</div>';
+
+  html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px">';
+  html += '<div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><div style="font-size:15px;font-weight:700">Resultado por Operação</div><div style="font-size:11px;color:var(--text3);margin-top:3px">Clique na operação para auditar placa, meta, média, combustível e preço usado</div></div><button class="btn btn-secondary btn-sm" '+(financeiroValido?'onclick="exportarExecutivoEmail()"':'disabled title="Corrija a auditoria antes de exportar"')+'>Copiar Relatório</button></div>';
+
+  opsOrdenadas.forEach(([op,d],i)=>{
+    const opValida = d.litrosSemPreco<0.01 && d.litrosPrecoFallback<0.01 && d.litrosSemMeta<0.01 && d.litrosMetaFallback<0.01;
+    const pct=d.totalL>0?d.desperdicadoL/d.totalL*100:0;
+    const liq=d.desperdicadoR-d.economiaR;
+    const placasUnicas=d.maquinas.length;
+    const fuels=d.combustiveis.length?d.combustiveis.join(' / '):'combustível não identificado';
+    const pMed=d.precoMedio>0?`R$ ${d.precoMedio.toFixed(2).replace('.',',')}/L méd. ponderada`:'sem preço';
+    html += `<div><div id="exec-row-${i}" style="padding:14px 20px;border-bottom:1px solid rgba(42,47,69,.5);cursor:pointer"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div style="display:flex;gap:10px;align-items:center"><span id="exec-arrow-${i}" style="font-size:11px;color:var(--text3);width:14px">▶</span><span style="font:700 16px monospace;color:var(--text3);width:24px">${i+1}</span><div><div style="font-size:14px;font-weight:700">${op}${opValida?'':' <span style="font-size:9px;color:var(--red);border:1px solid rgba(239,98,98,.3);padding:2px 6px;border-radius:999px">NÃO VALIDADO</span>'}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${placasUnicas} ativo(s) · ${fmtL(d.totalL)} · ${fuels} · ${pMed}</div></div></div><div style="text-align:right">`;
+    if(opValida){
+      html += `<div style="font-size:13px;color:var(--red);font-weight:650">${fmtR(d.desperdicadoR)} desperdiçados <span style="font-size:11px;font-weight:400">(${fmtL(d.desperdicadoL)} · ${pct.toFixed(1)}%)</span></div>`;
+      html += `<div style="font-size:12px;color:${d.economiaR>0?'var(--green)':'var(--text3)'};margin-top:2px">${fmtR(d.economiaR)} economizados</div>`;
+      html += `<div style="font-size:14px;font-weight:750;color:${liq>0?'var(--red)':liq<0?'var(--green)':'var(--text3)'};margin-top:5px;padding-top:5px;border-top:1px solid var(--border)">Líquido: ${fmtR(Math.abs(liq))}</div>`;
+    } else {
+      html += `<div style="font-size:12px;color:var(--red);font-weight:700">Financeiro bloqueado</div><div style="font-size:10px;color:var(--text3);margin-top:3px">${fmtL(d.litrosSemPreco+d.litrosPrecoFallback)} sem preço histórico · ${fmtL(d.litrosSemMeta+d.litrosMetaFallback)} sem meta confiável</div>`;
+    }
+    html += `</div></div></div><div id="exec-op-${i}" style="display:none;overflow-x:auto;border-bottom:1px solid var(--border)"><table style="width:100%;min-width:980px"><thead><tr style="background:var(--bg3)"><th>Ativo</th><th>Tipo</th><th>Combustível</th><th style="text-align:center">Meta ponderada</th><th style="text-align:center">Real</th><th style="text-align:center">Eficiência</th><th style="text-align:center">Preço méd.</th><th style="text-align:right">Desperdício</th><th style="text-align:right">Custo</th><th style="text-align:right">Economia</th></tr></thead><tbody>`;
+    d.maquinas.sort((a,b)=>b.desperdicadoL-a.desperdicadoL).forEach(m=>{
+      const mValida=m.litrosSemPreco<0.01&&m.litrosPrecoFallback<0.01&&m.litrosSemMeta<0.01&&m.litrosMetaFallback<0.01;
+      const cor=!m.efic?'var(--text3)':m.efic>=98?'var(--green)':m.efic>=90?'var(--yellow)':'var(--red)';
+      html += `<tr><td><span class="placa-tag">${m.placa}</span></td><td>${m.tipoIgnis}</td><td>${m.combustiveis.length?m.combustiveis.join(' / '):'—'}</td><td style="text-align:center;font-family:monospace;color:var(--accent)">${m.meta>0?m.meta.toFixed(2)+' '+m.unidade:'—'}</td><td style="text-align:center;font-family:monospace;font-weight:700">${m.media>0?m.media.toFixed(2)+' '+m.unidade:'—'}</td><td style="text-align:center;font-family:monospace;color:${cor};font-weight:700">${m.efic?m.efic.toFixed(1)+'%':'—'}</td><td style="text-align:center;font-family:monospace">${m.precoMedio>0?'R$ '+m.precoMedio.toFixed(2).replace('.',','):'—'}</td><td style="text-align:right;font-family:monospace;color:${m.desperdicadoL>0?'var(--red)':'var(--text3)'}">${m.desperdicadoL>0?fmtL(m.desperdicadoL):'—'}</td><td style="text-align:right;font-family:monospace;font-weight:700;color:${m.desperdicadoR>0&&mValida?'var(--red)':'var(--text3)'}">${mValida&&m.desperdicadoR>0?fmtR(m.desperdicadoR):'—'}</td><td style="text-align:right;font-family:monospace;color:${m.economiaR>0&&mValida?'var(--green)':'var(--text3)'}">${mValida&&m.economiaR>0?fmtR(m.economiaR):'—'}</td></tr>`;
+    });
+    html += '</tbody></table></div></div>';
   });
   html += '</div>';
 
-  c.innerHTML = html;
-
-  // Adiciona eventos de expansão (depois de inserir no DOM)
-  opsOrdenadas.forEach(([op, d], i) => {
-    const opId = 'exec-op-' + i;
-    const rowId = 'exec-row-' + i;
-    const row = document.getElementById(rowId);
-    const details = document.getElementById(opId);
-    if (row && details) {
-      row.addEventListener('click', () => {
-        const open = details.style.display !== 'none';
-        details.style.display = open ? 'none' : '';
-        const arrow = document.getElementById('exec-arrow-' + i);
-        if (arrow) arrow.textContent = open ? '▶' : '▼';
-      });
-    }
-  });
-
-  // Salva dados para exportação
-  window._execDados = { labelPeriodo, totalDesperdicadoR, totalDesperdicadoL, totalEconomiaR, totalEconomiaL, totalLiquidoR, pctDesperdicio, opsOrdenadas, todasMaq: [], fmtR, fmtL, isKmL, unidadeMedia };
+  c.innerHTML=html;
+  opsOrdenadas.forEach(([,],i)=>{const row=document.getElementById('exec-row-'+i),det=document.getElementById('exec-op-'+i);if(row&&det)row.addEventListener('click',()=>{const open=det.style.display!=='none';det.style.display=open?'none':'';const ar=document.getElementById('exec-arrow-'+i);if(ar)ar.textContent=open?'▶':'▼';});});
+  const todasMaq=opsOrdenadas.flatMap(([op,d])=>d.maquinas.map(m=>({...m,op}))).sort((a,b)=>b.desperdicadoL-a.desperdicadoL);
+  window._execDados={labelPeriodo,totalGasto,totalDesperdicadoR,totalDesperdicadoL,totalEconomiaR,totalEconomiaL,totalLiquidoR,pctDesperdicio,opsOrdenadas,todasMaq,fmtR,fmtL,financeiroValido,coberturaPreco,coberturaMeta,LIMIAR_OK,BASE_FINANCEIRA:100};
 }
 
 function kpiExec(label, value, sub, cor) {
@@ -10134,67 +10175,16 @@ function kpiExec(label, value, sub, cor) {
 
 function exportarExecutivoEmail() {
   if (!window._execDados) return;
-  const { labelPeriodo, totalDesperdicadoR, totalDesperdicadoL, pctDesperdicio, opsOrdenadas, todasMaq, fmtR, fmtL } = window._execDados;
-
-  const linhasOps = opsOrdenadas.map(([op, d]) => {
-    const pct = d.totalL > 0 ? (d.desperdicadoL / d.totalL * 100) : 0;
-    return '<tr style="border-bottom:1px solid #e2e8f0">' +
-      '<td style="padding:10px 14px;font-weight:600;color:#1e293b">' + op + '</td>' +
-      '<td style="padding:10px 14px;text-align:center;color:#64748b;font-size:12px">' + d.maquinas.length + '</td>' +
-      '<td style="padding:10px 14px;text-align:center;font-family:monospace;color:#1e293b">' + fmtL(d.totalL) + '</td>' +
-      '<td style="padding:10px 14px;text-align:center;font-family:monospace;color:#64748b">' + fmtL(d.desperdicadoL) + ' (' + (d.totalL>0?(d.desperdicadoL/d.totalL*100).toFixed(1):0) + '%)</td>' +
-      '<td style="padding:10px 14px;text-align:right;font-weight:700;color:' + (d.desperdicadoR > 0 ? '#dc2626' : '#16a34a') + ';font-family:monospace">' + fmtR(d.desperdicadoR) + '</td>' +
-      '</tr>';
-  }).join('');
-
-  const linhasMaq = todasMaq.slice(0, 10).map((m, i) => {
-    const eficCor = !m.efic ? '#64748b' : m.efic >= 98 ? '#16a34a' : m.efic >= 90 ? '#d97706' : '#dc2626';
-    return '<tr style="background:' + (i%2===0?'#fff':'#f8fafc') + ';border-bottom:1px solid #e2e8f0">' +
-      '<td style="padding:9px 12px;font-weight:700;font-family:monospace;font-size:13px;color:#1e293b">' + m.placa + '</td>' +
-      '<td style="padding:9px 12px;font-size:12px;color:#64748b">' + m.op + '</td>' +
-      '<td style="padding:9px 12px;text-align:center;font-family:monospace;color:#2563eb">' + (m.meta>0?m.meta.toFixed(2)+' '+(window._execDados?.unidadeMedia||'L/h'):'—') + '</td>' +
-      '<td style="padding:9px 12px;text-align:center;font-weight:700;font-family:monospace;color:' + eficCor + '">' + m.media.toFixed(2) + ' ' + (window._execDados?.unidadeMedia||'L/h') + '</td>' +
-      '<td style="padding:9px 12px;text-align:center;color:' + eficCor + ';font-weight:700">' + (m.efic?m.efic.toFixed(1)+'%':'—') + '</td>' +
-      '<td style="padding:9px 12px;text-align:right;font-weight:700;color:#dc2626;font-family:monospace">' + fmtR(m.desperdicadoR) + '</td>' +
-      '</tr>';
-  }).join('');
-
-  const html = '<!DOCTYPE html><html><body style="margin:0;padding:20px 0;font-family:Arial,sans-serif;background:#e2e8f0">' +
-    '<table width="680" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #cbd5e1">' +
-    '<tr><td style="background:linear-gradient(135deg,#064e3b 0%,#065f46 100%);padding:24px 28px">' +
-    '<div style="font-size:20px;font-weight:700;color:#fff">Ignis</div>' +
-    '<div style="font-size:13px;color:#6ee7b7;margin-top:4px">Relatório Executivo de Economia — ' + labelPeriodo + '</div>' +
-    '</td></tr>' +
-    '<tr><td style="padding:20px 28px">' +
-    '<table width="100%" cellpadding="0" cellspacing="8"><tr>' +
-    '<td style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;text-align:center;width:33%">' +
-    '<div style="font-size:11px;color:#dc2626;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">💸 Custo de Ineficiência</div>' +
-    '<div style="font-size:22px;font-weight:700;color:#dc2626;font-family:monospace">' + fmtR(totalDesperdicadoR) + '</div>' +
-    '</td><td style="width:8px"></td>' +
-    '<td style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;text-align:center;width:33%">' +
-    '<div style="font-size:11px;color:#d97706;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Litros Desperdiçados</div>' +
-    '<div style="font-size:22px;font-weight:700;color:#d97706;font-family:monospace">' + fmtL(totalDesperdicadoL) + '</div>' +
-    '<div style="font-size:11px;color:#92400e;margin-top:3px">' + pctDesperdicio.toFixed(1) + '% do total consumido</div>' +
-    '</td><td style="width:8px"></td>' +
-    '<td style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;text-align:center;width:33%">' +
-    '<div style="font-size:11px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Economia Potencial</div>' +
-    '<div style="font-size:22px;font-weight:700;color:#16a34a;font-family:monospace">' + fmtR(totalDesperdicadoR) + '</div>' +
-    '<div style="font-size:11px;color:#166534;margin-top:3px">se todas atingissem 98%</div>' +
-    '</td></tr></table></td></tr>' +
-    '<tr><td style="padding:0 28px 20px">' +
-    '<div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:10px">📍 Custo por Operação</div>' +
-    '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden">' +
-    '<thead><tr style="background:#f1f5f9"><th style="padding:9px 14px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase">Operação</th><th style="padding:9px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Maq.</th><th style="padding:9px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Consumido</th><th style="padding:9px 14px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Desperdiçado</th><th style="padding:9px 14px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase">Custo</th></tr></thead>' +
-    '<tbody>' + linhasOps + '</tbody></table></td></tr>' +
-    (todasMaq.length ? '<tr><td style="padding:0 28px 20px"><div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:10px">🚨 Top ' + todasMaq.length + ' Máquinas</div><table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden"><thead><tr style="background:#f1f5f9"><th style="padding:9px 12px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase">Máquina</th><th style="padding:9px 12px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase">Operação</th><th style="padding:9px 12px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Meta</th><th style="padding:9px 12px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Real</th><th style="padding:9px 12px;text-align:center;font-size:11px;color:#64748b;text-transform:uppercase">Efic.</th><th style="padding:9px 12px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase">Custo</th></tr></thead><tbody>' + linhasMaq + '</tbody></table></td></tr>' : '') +
-    '<tr><td style="background:#f8fafc;padding:14px 28px;border-top:1px solid #e2e8f0;text-align:center;font-size:11px;color:#94a3b8">Gerado pelo Ignis · </td></tr>' +
-    '</table></body></html>';
-
-  navigator.clipboard.write([new ClipboardItem({'text/html': new Blob([html], {type:'text/html'})})]).then(() => {
-    showToast('Relatório copiado! Cole no e-mail (Ctrl+V)', 'success');
-  }).catch(() => showToast('Erro ao copiar', 'error'));
-  const assunto = encodeURIComponent('Ignis — Relatório Executivo · ' + labelPeriodo);
-  setTimeout(() => ignisAbrirOutlook('', assunto), 500);
+  const d=window._execDados;
+  if (!d.financeiroValido) { showToast('Relatório financeiro bloqueado: corrija preços/metas indicados na auditoria.', 'error'); return; }
+  const {labelPeriodo,totalDesperdicadoR,totalDesperdicadoL,totalEconomiaR,totalLiquidoR,pctDesperdicio,opsOrdenadas,todasMaq,fmtR,fmtL,LIMIAR_OK}=d;
+  const linhasOps=opsOrdenadas.map(([op,o])=>`<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:10px 12px;font-weight:700">${op}</td><td style="padding:10px 12px;text-align:center">${o.maquinas.length}</td><td style="padding:10px 12px;text-align:right">${fmtL(o.totalL)}</td><td style="padding:10px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtL(o.desperdicadoL)}</td><td style="padding:10px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtR(o.desperdicadoR)}</td></tr>`).join('');
+  const top=todasMaq.filter(m=>m.desperdicadoL>0).slice(0,10);
+  const linhasMaq=top.map(m=>`<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:9px 12px;font-weight:700">${m.placa}</td><td style="padding:9px 12px">${m.op}</td><td style="padding:9px 12px;text-align:center">${m.meta.toFixed(2)} ${m.unidade}</td><td style="padding:9px 12px;text-align:center">${m.media.toFixed(2)} ${m.unidade}</td><td style="padding:9px 12px;text-align:center;font-weight:700;color:${m.efic>=98?'#16a34a':m.efic>=90?'#d97706':'#dc2626'}">${m.efic.toFixed(1)}%</td><td style="padding:9px 12px;text-align:right;color:#dc2626;font-weight:700">${fmtR(m.desperdicadoR)}</td></tr>`).join('');
+  const html=`<!doctype html><html><body style="margin:0;background:#eef2f7;font-family:Arial,sans-serif;padding:20px"><table width="720" align="center" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #dbe2ea;border-radius:12px;overflow:hidden"><tr><td style="background:#111827;padding:24px 28px;color:#fff"><div style="font-size:22px;font-weight:800">IGNIS</div><div style="font-size:13px;color:#f28b62;margin-top:4px">Relatório Executivo Auditável · ${labelPeriodo}</div></td></tr><tr><td style="padding:22px 28px"><div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:9px;padding:12px 14px;color:#065f46;font-size:12px;font-weight:700">✓ Dados financeiros validados · preço e meta com 100% de cobertura · financeiro calculado contra 100% da meta · ${LIMIAR_OK}% é apenas tolerância operacional</div><table width="100%" style="margin-top:14px"><tr><td style="padding:10px;background:#fef2f2"><b>Desperdiçado</b><br><span style="font-size:19px;color:#dc2626">${fmtR(totalDesperdicadoR)}</span><br><small>${fmtL(totalDesperdicadoL)} · ${pctDesperdicio.toFixed(1)}%</small></td><td style="width:10px"></td><td style="padding:10px;background:#ecfdf5"><b>Economizado</b><br><span style="font-size:19px;color:#059669">${fmtR(totalEconomiaR)}</span></td><td style="width:10px"></td><td style="padding:10px;background:#f8fafc"><b>Líquido</b><br><span style="font-size:19px">${fmtR(Math.abs(totalLiquidoR))}</span></td></tr></table></td></tr><tr><td style="padding:0 28px 20px"><h3 style="font-size:14px">Resultado por Operação</h3><table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Operação</th><th>Ativos</th><th style="text-align:right">Litros</th><th style="text-align:right">Desperdício</th><th style="text-align:right">Custo</th></tr></thead><tbody>${linhasOps}</tbody></table></td></tr>${top.length?`<tr><td style="padding:0 28px 24px"><h3 style="font-size:14px">Top 10 ativos com maior desperdício</h3><table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Ativo</th><th>Operação</th><th>Meta</th><th>Real</th><th>Eficiência</th><th style="text-align:right">Custo</th></tr></thead><tbody>${linhasMaq}</tbody></table></td></tr>`:''}<tr><td style="padding:12px 28px;background:#f8fafc;color:#94a3b8;font-size:10px;text-align:center">IGNIS · médias ponderadas por registro · combustíveis não são misturados</td></tr></table></body></html>`;
+  navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'})})]).then(()=>showToast('Relatório validado copiado!', 'success')).catch(()=>showToast('Erro ao copiar', 'error'));
+  const assunto=encodeURIComponent('Ignis — Relatório Executivo Validado · '+labelPeriodo);
+  setTimeout(()=>ignisAbrirOutlook('',assunto),500);
 }
 
 // ── KM COMPARATIVO ───────────────────────────────────────────────────────────
