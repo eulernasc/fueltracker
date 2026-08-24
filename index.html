@@ -1690,8 +1690,18 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div class="chart-card dashboard-op-card" style="margin-bottom:16px;display:flex;flex-direction:column;min-height:0;overflow:hidden">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-bottom:0">
         <div class="chart-title" style="margin-bottom:0">Consumo por Operação — <span id="chart-period-label2">Semanal</span></div>
-        <div id="op-filter-indicator" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--accent);background:rgba(233,95,50,.12);border:1px solid rgba(233,95,50,.3);border-radius:8px;padding:4px 10px;cursor:pointer" onclick="opClearSelection()">
-          <svg class="ui-icon" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="op-filter-label">1 operação filtrada</span><span style="font-size:10px;color:var(--text2)">limpar</span>
+        <div class="op-chart-actions">
+          <div id="op-filter-indicator" style="display:none;align-items:center;gap:6px;font-size:11px;color:var(--accent);background:rgba(233,95,50,.12);border:1px solid rgba(233,95,50,.3);border-radius:8px;padding:4px 10px;cursor:pointer" onclick="opClearSelection()">
+            <svg class="ui-icon" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 6h16M7 12h10M10 18h4"/></svg><span id="op-filter-label">1 operação filtrada</span><span style="font-size:10px;color:var(--text2)">limpar</span>
+          </div>
+          <div class="op-chart-nav" aria-label="Navegar pelas operações">
+            <button type="button" class="op-chart-nav-btn" onclick="scrollOperationCards(-1)" title="Operações anteriores" aria-label="Operações anteriores">
+              <svg class="ui-icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="op-chart-nav-btn" onclick="scrollOperationCards(1)" title="Próximas operações" aria-label="Próximas operações">
+              <svg class="ui-icon" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
         </div>
       </div>
       <div id="op-chart-container" style="flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding-bottom:12px"><div class="empty"><div class="empty-text">Sem dados</div></div></div>
@@ -5208,6 +5218,14 @@ function renderDashboard() {
   if(window._selectedOps && window._selectedOps.size) _updateDashboardKpisForOperationSelection();
   _renderBarAndRanking();
   relChecarReincidencia();
+}
+
+function scrollOperationCards(direction=1) {
+  const c=document.getElementById('op-chart-container');
+  if(!c) return;
+  const card=c.querySelector('.operation-card');
+  const amount=card ? Math.max(260, card.getBoundingClientRect().width * 3.2) : 720;
+  c.scrollBy({left: amount * direction, behavior:'smooth'});
 }
 
 function renderOpChart(list, isKmL=false) {
@@ -12056,6 +12074,71 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 @media(max-width:900px){.kpi-icon{right:16px!important;top:18px!important}.operation-card{min-width:170px;flex-basis:170px}.dash-type-menu{width:100%!important}}
 </style>
 
+
+<style id="ignis-dashboard-operacoes-clean-v8">
+/* Dashboard — Consumo por Operação em carrossel horizontal, sem empilhar dezenas de cards. */
+.dashboard-op-card{
+  min-height:0!important;
+  padding:17px 18px 15px!important;
+  overflow:hidden!important;
+}
+.dashboard-op-card>.chart-title{min-width:0}
+.op-chart-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.op-chart-nav{display:flex;align-items:center;gap:6px}
+.op-chart-nav-btn{
+  width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid rgba(151,164,178,.16);border-radius:9px;background:#111820;color:#9aa8b6;
+  cursor:pointer;transition:border-color .15s,background .15s,color .15s,transform .15s;
+}
+.op-chart-nav-btn .ui-icon{width:15px;height:15px}
+.op-chart-nav-btn:hover{border-color:rgba(233,95,50,.38);background:rgba(233,95,50,.07);color:#eef3f8;transform:translateY(-1px)}
+
+#op-chart-container{
+  overflow-x:auto!important;overflow-y:hidden!important;
+  padding:11px 1px 7px!important;
+  scroll-behavior:smooth;scroll-snap-type:x proximity;
+  scrollbar-width:thin!important;scrollbar-color:#34414e #0d131a!important;
+}
+#op-chart-container::-webkit-scrollbar{display:block!important;height:6px!important}
+#op-chart-container::-webkit-scrollbar-track{background:#0d131a!important;border-radius:999px!important}
+#op-chart-container::-webkit-scrollbar-thumb{background:#34414e!important;border-radius:999px!important;border:1px solid #0d131a!important}
+#op-chart-container::-webkit-scrollbar-thumb:hover{background:#475563!important}
+.operation-card-strip{
+  display:flex!important;grid-template-columns:none!important;flex-wrap:nowrap!important;
+  align-items:stretch;gap:10px!important;width:max-content;min-width:100%;
+  overflow:visible!important;padding:0 1px!important;
+}
+.operation-card{
+  width:228px!important;min-width:228px!important;max-width:228px!important;flex:0 0 228px!important;
+  min-height:126px!important;padding:11px 12px!important;border-radius:11px!important;
+  scroll-snap-align:start;background:linear-gradient(180deg,#141c25,#111820)!important;
+  border-color:rgba(151,164,178,.13)!important;
+}
+.operation-card:hover{border-color:rgba(233,95,50,.34)!important;box-shadow:0 7px 18px rgba(0,0,0,.15)!important}
+.operation-card.selected{border-color:rgba(233,95,50,.62)!important;box-shadow:inset 0 0 0 1px rgba(233,95,50,.10),0 7px 18px rgba(0,0,0,.13)!important}
+.operation-card[style*="opacity: 0.35"],.operation-card[style*="opacity:.35"]{opacity:.5!important}
+.operation-card-head{gap:7px!important}
+.operation-name{font-size:10px!important;max-width:132px!important;letter-spacing:.01em}
+.status-pill{font-size:8px!important;padding:3px 6px!important}
+.operation-primary{margin-top:8px!important;display:flex;align-items:baseline;gap:4px!important}
+.operation-primary strong{font-size:21px!important;line-height:1!important}
+.operation-primary span{font-size:9px!important;color:#7f8d9b!important}
+.operation-analysis{margin-top:7px!important;padding:7px 0!important;gap:8px!important}
+.operation-analysis small{font-size:7.8px!important}.operation-analysis strong{font-size:10.5px!important}
+.operation-progress{height:5px!important;margin-top:8px!important}
+.operation-foot-single{font-size:8.8px!important;margin-top:6px!important}
+
+@media(max-width:800px){
+  .dashboard-op-card{padding:14px 13px 12px!important}
+  .dashboard-op-card>div:first-child{gap:10px!important;align-items:flex-start!important}
+  .op-chart-actions{gap:6px}
+  .op-chart-nav-btn{width:29px;height:29px}
+  #op-filter-indicator{max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .operation-card-strip{display:flex!important;grid-template-columns:none!important}
+  .operation-card{width:min(78vw,248px)!important;min-width:min(78vw,248px)!important;max-width:min(78vw,248px)!important;flex-basis:min(78vw,248px)!important}
+  #op-chart-container{padding-bottom:8px!important;scroll-snap-type:x mandatory}
+}
+</style>
 </head>
 <body>
 <table border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-family:Arial,sans-serif">
