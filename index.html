@@ -13332,12 +13332,19 @@ async function anomMarkPlate(kind,placa,status='resolvido'){
   const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear());
   const m=Number(document.getElementById('anom-month')?.value??new Date().getMonth());
   const plate=String(placa||'').trim().toUpperCase();
-  const allRows=anomCollectRows(y,m).filter(ignisAnomReportRowVisible);
+
+  // IMPORTANTE: a busca pode exibir uma placa de uma operação ocultada no relatório.
+  // Resolver precisa usar a mesma base completa da busca; não pode aplicar o filtro
+  // ignisAnomReportRowVisible aqui, senão o botão aparece mas não encontra a ocorrência.
+  const allRows=anomCollectRows(y,m);
   const alreadyReviewed=anomReviewedFingerprints();
-  // Resolve tudo que estiver ABERTO para a mesma placa no mês, independente do tipo.
-  // Se no futuro surgir uma ocorrência diferente (fingerprint novo), ela volta para análise.
+  // Resolve tudo que estiver ABERTO para a mesma placa no mês, independente do tipo
+  // e independente de a operação estar visível ou ocultada no relatório.
   const rows=allRows.filter(r=>String(r.placa||'').trim().toUpperCase()===plate && !alreadyReviewed.has(r._fp||anomFingerprint(r)));
-  if(!rows.length)return;
+  if(!rows.length){
+    showToast(`${plate}: nenhuma ocorrência aberta encontrada para resolver.`,'error');
+    return;
+  }
 
   const fps=[...new Set(rows.map(anomFingerprint))];
   const kinds=[...new Set(rows.map(r=>r.kind))];
@@ -13365,10 +13372,20 @@ async function anomMarkPlate(kind,placa,status='resolvido'){
     sampleValue:sample.eficiencia!=null?Number(sample.eficiencia):sample.real||''
   };
   state.anomaliaRevisoes=[...kept,payload].slice(-800);
-  // Remove também os IDs antigos do documento remoto antes de persistir o consolidado.
-  await anomPersistReviews([...oldIds].filter(id=>id!==payload.id));
+
+  // Atualização otimista: a ocorrência some da lista na hora. A sincronização com
+  // a nuvem acontece em seguida e não deixa o clique parecer travado por até 10–12 s.
+  try{localStorage.setItem('ignis_anomalia_revisoes',JSON.stringify(state.anomaliaRevisoes));}catch(e){}
   renderAnomalias(true);
   showToast(`${plate}: ${rows.length} ocorrência${rows.length===1?'':'s'} da placa movida${rows.length===1?'':'s'} para Resolvidas.`,'success');
+
+  // Remove também os IDs antigos do documento remoto antes de persistir o consolidado.
+  try{
+    await anomPersistReviews([...oldIds].filter(id=>id!==payload.id));
+  }catch(e){
+    console.error('Erro ao sincronizar revisão de anomalia:',e);
+    showToast('Resolvido neste computador; a sincronização com a nuvem falhou.','error');
+  }
 }
 async function anomUnreview(id){const arr=anomEnsureReviews(),idx=arr.findIndex(r=>r.id===id);if(idx<0)return;const plate=arr[idx].placa;arr.splice(idx,1);state.anomaliaRevisoes=arr;await anomPersistReviews([id]);renderAnomalias(true);showToast(`${plate}: revisão desmarcada.`,'success');}
 function anomReviewLabel(kind,kinds=[]){if(kind==='placa'){const labels=[...new Set(kinds||[])].map(k=>k==='medidor'?'Medidor regressivo':k==='alta'?'Eficiência alta':k==='baixa'?'Eficiência baixa':k).filter(Boolean);return labels.length?labels.join(' + '):'Anomalias da placa';}return kind==='medidor'?'Medidor regressivo':kind==='alta'?'Eficiência alta':'Eficiência baixa';}
