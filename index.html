@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS Sync Guard + Outlook PWA + Anomalias auditadas — 24/08/2026 -->
-<meta name="ignis-build" content="2026-08-24-anomalias-audit-v4">
+<!-- IGNIS Sync Guard + Outlook PWA + Anomalias sem lacunas + performance — 24/08/2026 -->
+<meta name="ignis-build" content="2026-08-24-anomalias-performance-v5">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1206,9 +1206,9 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 <style id="ignis-anomalias-page-css">
 /* Tela dedicada de Anomalias */
 .anom-header{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:18px}.anom-header-tools{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}.anom-import-ops-btn{height:42px!important;border-radius:11px!important;padding:0 13px!important;white-space:nowrap}.anom-import-ops-btn .ui-icon{width:16px;height:16px;color:#f07a52}.anom-rules{display:flex;align-items:center;gap:8px;padding:7px;border:1px solid var(--border);background:var(--bg2);border-radius:13px}.anom-rules-title{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7d8da0;padding:0 6px}
-.anom-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}.anom-kpi{appearance:none;text-align:left;background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:16px 18px;min-height:112px;color:var(--text);cursor:pointer;transition:.16s;position:relative;overflow:hidden}.anom-kpi:hover{border-color:rgba(255,255,255,.12);transform:translateY(-1px)}.anom-kpi.active{border-color:rgba(233,95,50,.52);box-shadow:inset 0 0 0 1px rgba(233,95,50,.13)}.anom-kpi span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#8292a5}.anom-kpi strong{display:block;font:750 29px 'DM Mono',monospace;margin-top:9px;color:#fff}.anom-kpi small{display:block;font-size:10.5px;color:#78889a;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.anom-kpi.medidor strong{color:#ff7676}.anom-kpi.alta strong{color:#f4b544}.anom-kpi.baixa strong{color:#ef6262}.anom-kpi.dados strong{color:#8fb8ff}.anom-kpi.all strong{color:#f0f4f7}
+.anom-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}.anom-kpi{appearance:none;text-align:left;background:var(--bg2);border:1px solid var(--border);border-radius:15px;padding:16px 18px;min-height:112px;color:var(--text);cursor:pointer;transition:.16s;position:relative;overflow:hidden}.anom-kpi:hover{border-color:rgba(255,255,255,.12);transform:translateY(-1px)}.anom-kpi.active{border-color:rgba(233,95,50,.52);box-shadow:inset 0 0 0 1px rgba(233,95,50,.13)}.anom-kpi span{display:block;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#8292a5}.anom-kpi strong{display:block;font:750 29px 'DM Mono',monospace;margin-top:9px;color:#fff}.anom-kpi small{display:block;font-size:10.5px;color:#78889a;margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.anom-kpi.medidor strong{color:#ff7676}.anom-kpi.alta strong{color:#f4b544}.anom-kpi.baixa strong{color:#ef6262}.anom-kpi.all strong{color:#f0f4f7}
 .anom-panel{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden}.anom-toolbar{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:12px}.anom-type-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.anom-type-tab{height:34px;padding:0 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#8999aa;font:700 11.5px 'DM Sans',sans-serif;cursor:pointer}.anom-type-tab:hover{background:rgba(255,255,255,.035);color:#fff}.anom-type-tab.active{background:rgba(233,95,50,.1);border-color:rgba(233,95,50,.28);color:#f58a63}.anom-filter-row{display:grid;grid-template-columns:150px 105px minmax(220px,1fr) minmax(230px,1.15fr) auto;gap:9px;align-items:center}.anom-select,.anom-search{height:42px;border:1px solid var(--border);border-radius:11px;background:#101720;color:var(--text);font:600 12px 'DM Sans',sans-serif}.anom-select{padding:0 34px 0 12px;outline:none}.anom-select:focus,.anom-search:focus-within{border-color:rgba(233,95,50,.5);box-shadow:0 0 0 3px rgba(233,95,50,.07)}.anom-search{display:flex;align-items:center;gap:8px;padding:0 11px}.anom-search .ui-icon{width:16px;height:16px;color:#728295}.anom-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#fff;font:500 12px 'DM Sans',sans-serif}.anom-summary{padding:10px 16px;font-size:11.5px;color:#8191a3;border-bottom:1px solid rgba(255,255,255,.04)}.anom-summary strong{color:#dce5ed}
-.anom-table-wrap{overflow:auto;max-height:58vh;scrollbar-width:thin;scrollbar-color:#364351 #0d141b}.anom-table{width:100%;min-width:1180px;border-collapse:collapse;font-size:11.5px}.anom-table th{position:sticky;top:0;z-index:2;background:#151d26;color:#8192a5;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:9.5px;padding:11px 12px;border-bottom:1px solid var(--border)}.anom-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#b8c5d0;vertical-align:middle}.anom-table tr:hover td{background:rgba(255,255,255,.018)}.anom-table .bad{color:#ff6e6e}.anom-table .warn{color:#f5b942}.anom-plate{font-family:'DM Mono',monospace;color:#eef3f7}.anom-badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 8px;font-size:9.5px;font-weight:800;white-space:nowrap}.anom-badge.medidor{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-badge.alta{color:#f5bd56;background:rgba(245,185,66,.09);border:1px solid rgba(245,185,66,.14)}.anom-badge.baixa{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-badge.dados{color:#9fc2ff;background:rgba(109,167,255,.09);border:1px solid rgba(109,167,255,.16)}
+.anom-table-wrap{overflow:auto;max-height:58vh;scrollbar-width:thin;scrollbar-color:#364351 #0d141b}.anom-table{width:100%;min-width:1180px;border-collapse:collapse;font-size:11.5px}.anom-table th{position:sticky;top:0;z-index:2;background:#151d26;color:#8192a5;text-align:left;text-transform:uppercase;letter-spacing:.055em;font-size:9.5px;padding:11px 12px;border-bottom:1px solid var(--border)}.anom-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:#b8c5d0;vertical-align:middle}.anom-table tr:hover td{background:rgba(255,255,255,.018)}.anom-table .bad{color:#ff6e6e}.anom-table .warn{color:#f5b942}.anom-plate{font-family:'DM Mono',monospace;color:#eef3f7}.anom-badge{display:inline-flex;align-items:center;height:24px;border-radius:999px;padding:0 8px;font-size:9.5px;font-weight:800;white-space:nowrap}.anom-badge.medidor{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}.anom-badge.alta{color:#f5bd56;background:rgba(245,185,66,.09);border:1px solid rgba(245,185,66,.14)}.anom-badge.baixa{color:#ff7777;background:rgba(239,98,98,.10);border:1px solid rgba(239,98,98,.15)}
 .anom-reviewed-tab span{display:inline-flex;min-width:20px;height:18px;align-items:center;justify-content:center;margin-left:5px;padding:0 5px;border-radius:999px;background:rgba(57,203,145,.10);color:#55d9a4;font:800 9px 'DM Mono',monospace}.anom-action-cell{min-width:104px}.anom-action-wrap{display:flex;gap:6px;align-items:center}.anom-review-btn{height:29px;border-radius:8px;padding:0 9px;border:1px solid var(--border);background:#151d26;color:#aebbc7;font:700 10px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}.anom-review-btn:hover{border-color:rgba(233,95,50,.36);color:#fff}.anom-review-btn.done{background:rgba(57,203,145,.08);border-color:rgba(57,203,145,.18);color:#55d9a4}.anom-review-btn.fix{background:rgba(233,95,50,.08);border-color:rgba(233,95,50,.22);color:#f38a64}.anom-review-status{display:inline-flex;height:24px;align-items:center;padding:0 8px;border-radius:999px;font-size:9.5px;font-weight:800}.anom-review-status.corrigido{background:rgba(57,203,145,.10);color:#55d9a4;border:1px solid rgba(57,203,145,.16)}.anom-review-status.analisado{background:rgba(100,160,220,.10);color:#8ab8e8;border:1px solid rgba(100,160,220,.16)}.anom-history-meta{font-size:10px;color:#66788a;margin-top:3px}.anom-unreview{height:29px;border-radius:8px;border:1px solid rgba(239,98,98,.18);background:rgba(239,98,98,.06);color:#ff7777;padding:0 9px;font:700 10px 'DM Sans',sans-serif;cursor:pointer}.anom-unreview:hover{background:rgba(239,98,98,.11)}.anom-detail-main{color:#c8d2dc;font-size:10.8px}.anom-detail-sub{font-size:9.8px;color:#647588;margin-top:2px}.anom-empty{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#8493a4}.anom-empty strong{color:#d8e0e7;font-size:14px}.anom-empty span{font-size:11.5px}
 /* Importação: progresso por fase, sem congelar a percepção de "leitura" */
 .import-progress-card{margin-top:10px;padding:12px 13px;border:1px solid var(--border);background:#101720;border-radius:11px}.import-progress-top{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11.5px}.import-progress-top strong{color:#dbe4ec}.import-progress-top span{font:700 10.5px 'DM Mono',monospace;color:#f17b50}.import-progress-track{height:5px;margin-top:9px;border-radius:999px;background:#0a1016;overflow:hidden}.import-progress-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#f08a4b);transition:width .18s ease}.import-progress-sub{font-size:10.5px;color:#748497;margin-top:7px}
@@ -1455,12 +1455,12 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div class="anom-header">
       <div>
         <div class="page-title">Análise de Anomalias</div>
-        <div class="page-sub">Medidores regressivos, eficiências fora dos limites e registros que não puderam ser auditados</div>
+        <div class="page-sub">Medidores regressivos e eficiências fora dos limites configurados</div>
       </div>
       <div class="anom-header-tools">
         <button class="btn btn-secondary btn-sm anom-import-ops-btn" type="button" onclick="ignisOpenAnomOpsConfig()" title="Escolher quais operações aparecem no relatório de anomalias">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16V8h10v8"/><path d="M9 8V5h6v3"/><path d="M12 12v4"/></svg>
-          Operações no relatório <span class="import-ops-count" id="anom-ops-count">6/6</span>
+          Operações no relatório <span class="import-ops-count" id="anom-ops-count">7/7</span>
         </button>
         <div class="anom-rules">
         <span class="anom-rules-title">Limites de eficiência</span>
@@ -1491,7 +1491,6 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
       <button type="button" class="anom-kpi medidor" data-anom-type="medidor" onclick="anomSetType('medidor')"><span>Medidor regressivo</span><strong id="anom-kpi-medidor">0</strong><small id="anom-kpi-medidor-sub">nenhuma regressão</small></button>
       <button type="button" class="anom-kpi alta" data-anom-type="alta" onclick="anomSetType('alta')"><span>Eficiência alta</span><strong id="anom-kpi-alta">0</strong><small id="anom-kpi-alta-sub">acima do limite</small></button>
       <button type="button" class="anom-kpi baixa" data-anom-type="baixa" onclick="anomSetType('baixa')"><span>Eficiência baixa</span><strong id="anom-kpi-baixa">0</strong><small id="anom-kpi-baixa-sub">abaixo do limite</small></button>
-      <button type="button" class="anom-kpi dados" data-anom-type="dados" onclick="anomSetType('dados')"><span>Integridade</span><strong id="anom-kpi-dados">0</strong><small id="anom-kpi-dados-sub">base auditável</small></button>
     </div>
 
     <section class="anom-panel">
@@ -1501,7 +1500,6 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <button type="button" class="anom-type-tab" data-anom-type="medidor" onclick="anomSetType('medidor')">Medidor regressivo</button>
           <button type="button" class="anom-type-tab" data-anom-type="alta" onclick="anomSetType('alta')">Eficiência alta</button>
           <button type="button" class="anom-type-tab" data-anom-type="baixa" onclick="anomSetType('baixa')">Eficiência baixa</button>
-          <button type="button" class="anom-type-tab" data-anom-type="dados" onclick="anomSetType('dados')">Integridade</button>
           <button type="button" class="anom-type-tab anom-reviewed-tab" data-anom-type="corrigidas" onclick="anomSetType('corrigidas')">Resolvidas <span id="anom-reviewed-count">0</span></button>
         </div>
         <div class="anom-filter-row">
@@ -3023,7 +3021,7 @@ let abastFiltrados = [];
 // trocar de aba podia executar milhões de comparações. Estes índices são
 // reconstruídos somente quando os dados mudam e transformam buscas por placa em O(1).
 const _IGNIS_EMPTY = Object.freeze([]);
-const _IGNIS_PAGES = ['dashboard','pendencias','fechamento','comparativo','abastecimentos','maquinas','relatorio','excluir','arla','kmcomp','metarota','recon','config'];
+const _IGNIS_PAGES = ['dashboard','pendencias','fechamento','anomalias','comparativo','abastecimentos','maquinas','relatorio','excluir','arla','kmcomp','metarota','recon','config'];
 const _ignisPerf = {
   dirty: true,
   version: 0,
@@ -3033,6 +3031,9 @@ const _ignisPerf = {
   abastecimentosLen: -1,
   maquinasByPlaca: new Map(),
   abastecimentosByPlaca: new Map(),
+  abastecimentosByMes: new Map(),
+  metaHistoricaByPlaca: new Map(),
+  years: [],
   abastIndex: new WeakMap(),
   maquinaIndex: new WeakMap(),
   tipoByAbast: new WeakMap(),
@@ -3076,6 +3077,9 @@ function ensureIgnisIndexes() {
   });
 
   const abastecimentosByPlaca = new Map();
+  const abastecimentosByMes = new Map();
+  const metaHistoricaByPlaca = new Map();
+  const years = new Set();
   const abastIndex = new WeakMap();
   abasts.forEach((a, idx) => {
     abastIndex.set(a, idx);
@@ -3084,9 +3088,34 @@ function ensureIgnisIndexes() {
       let arr = abastecimentosByPlaca.get(placa);
       if (!arr) abastecimentosByPlaca.set(placa, arr = []);
       arr.push(a);
+
+      // Índice mensal: evita varrer a base inteira ao abrir Anomalias/Pendências/Fechamento.
+      const ds = String(a?.data || '').trim();
+      let ym = '', yy = 0;
+      let mt = /^(\d{4})-(\d{2})/.exec(ds);
+      if (mt) { yy = Number(mt[1]); ym = `${mt[1]}-${mt[2]}`; }
+      else {
+        mt = /^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/.exec(ds);
+        if (mt) { yy = Number(mt[3]); ym = `${mt[3]}-${String(Number(mt[2])).padStart(2,'0')}`; }
+      }
+      if (ym) {
+        let monthArr = abastecimentosByMes.get(ym);
+        if (!monthArr) abastecimentosByMes.set(ym, monthArr = []);
+        monthArr.push(a);
+        if (yy) years.add(yy);
+      }
+
+      // Histórico de meta positivo. O cadastro atual continua tendo prioridade;
+      // isto é apenas fallback para placas antigas/legadas sem meta no cadastro.
+      const metaHist = Number(a?.metaIdeal ?? a?.meta ?? 0);
+      if (metaHist > 0) metaHistoricaByPlaca.set(String(placa).trim().toUpperCase(), metaHist);
     }
-    const op = maquinasByPlaca.get(placa)?.operacao || a?.operacao || '';
-    if (op) ops.add(op);
+    // Guarda tanto a operação atual da placa quanto a operação histórica do registro.
+    // Assim mudança de operação nunca faz uma operação antiga sumir dos filtros.
+    const opAtual = maquinasByPlaca.get(placa)?.operacao || '';
+    const opHistorica = a?.operacao || '';
+    if (opAtual) ops.add(opAtual);
+    if (opHistorica) ops.add(opHistorica);
   });
 
   _ignisPerf.maquinasRef = maquinas;
@@ -3095,6 +3124,9 @@ function ensureIgnisIndexes() {
   _ignisPerf.abastecimentosLen = abasts.length;
   _ignisPerf.maquinasByPlaca = maquinasByPlaca;
   _ignisPerf.abastecimentosByPlaca = abastecimentosByPlaca;
+  _ignisPerf.abastecimentosByMes = abastecimentosByMes;
+  _ignisPerf.metaHistoricaByPlaca = metaHistoricaByPlaca;
+  _ignisPerf.years = [...years].sort((a,b)=>b-a);
   _ignisPerf.maquinaIndex = maquinaIndex;
   _ignisPerf.abastIndex = abastIndex;
   _ignisPerf.tipoByAbast = new WeakMap();
@@ -4226,10 +4258,10 @@ function ignisImportMonitorSnapshot(today=new Date()){
   return rows;
 }
 function ignisImportOpsStatusText(row){if(!row.latest)return'Sem dados monitorados';if(row.gap>=2)return`${row.gap} dias úteis sem atualização`;if(row.gap===1)return'1 dia útil de defasagem';return`Atualizado até ${pendFmtDate(row.latest)}`;}
+const _ignisAnomOpsCache={version:-1,defs:[]};
 function ignisAnomReportDefaultOps(){
-  // Regras-base + descoberta automática. Antes a tela era limitada a 6 nomes
-  // fixos; qualquer operação nova (ex.: CENIBRA) podia ficar fora da configuração
-  // e criar um ponto cego. Agora toda operação real da base entra no relatório.
+  ensureIgnisIndexes();
+  if(_ignisAnomOpsCache.version===_ignisPerf.version&&_ignisAnomOpsCache.defs.length)return _ignisAnomOpsCache.defs;
   const base=[
     {nome:'RIBAS',combustiveis:['DIESEL']},
     {nome:'BRACELL',combustiveis:['DIESEL']},
@@ -4239,13 +4271,11 @@ function ignisAnomReportDefaultOps(){
     {nome:'CENIBRA',combustiveis:['DIESEL']},
     {nome:'RAIZEN',combustiveis:['DIESEL','GASOLINA','ETANOL']}
   ];
-  const discovered=[];
-  try{ensureIgnisIndexes();discovered.push(...(_ignisPerf.operacoes||[]));}catch(e){}
-  // Inclui também a operação gravada no próprio abastecimento. O índice geral
-  // prioriza a operação atual da máquina e, quando uma placa troca de operação,
-  // isso não pode apagar a operação histórica do escopo de anomalias.
-  (state.maquinas||[]).forEach(x=>x?.operacao&&discovered.push(x.operacao));
-  (state.abastecimentos||[]).forEach(x=>x?.operacao&&discovered.push(x.operacao));
+  const discovered=[...(_ignisPerf.operacoes||[])];
+  // Anomalias históricas também entram na descoberta, mesmo se a operação já não
+  // existir no cadastro atual. Executa uma vez por versão da base, não por linha.
+  (state.medidorAnomalias||[]).forEach(x=>x?.operacao&&discovered.push(x.operacao));
+  (state.eficienciaAnomalias||[]).forEach(x=>x?.operacao&&discovered.push(x.operacao));
   const out=[...base],keys=new Set(base.map(r=>ignisImportRuleKey(r.nome)));
   [...new Set(discovered.map(x=>String(x||'').trim()).filter(Boolean))].forEach(op=>{
     if(ignisOperacaoInvalidaAnomalia(op))return;
@@ -4255,21 +4285,18 @@ function ignisAnomReportDefaultOps(){
     const ck=ignisImportRuleKey(canonical);if(keys.has(ck))return;keys.add(ck);
     out.push({nome:canonical,combustiveis:ck.includes('RAIZEN')?['DIESEL','GASOLINA','ETANOL']:['DIESEL']});
   });
+  _ignisAnomOpsCache.version=_ignisPerf.version;
+  _ignisAnomOpsCache.defs=out;
   return out;
 }
 function ignisEnsureAnomReportOps(){
   const defs=ignisAnomReportDefaultOps();
   if(!state.anomaliaOperacoesVisiveis||typeof state.anomaliaOperacoesVisiveis!=='object'||Array.isArray(state.anomaliaOperacoesVisiveis))state.anomaliaOperacoesVisiveis={};
   defs.forEach(r=>{const k=ignisImportRuleKey(r.nome);if(typeof state.anomaliaOperacoesVisiveis[k]!=='boolean')state.anomaliaOperacoesVisiveis[k]=true;});
-  // Segurança: nunca permite que um estado antigo deixe 0/6 operações visíveis e
-  // faça anomalias críticas desaparecerem silenciosamente da tela.
-  const anyVisible=defs.some(r=>state.anomaliaOperacoesVisiveis[ignisImportRuleKey(r.nome)]!==false);
-  if(!anyVisible){
+  // Nunca deixa a tela em 0 operações. Recupera apenas em memória: abrir Anomalias
+  // não dispara um save completo no Firebase e não atrasa a sincronização.
+  if(!defs.some(r=>state.anomaliaOperacoesVisiveis[ignisImportRuleKey(r.nome)]!==false)){
     defs.forEach(r=>state.anomaliaOperacoesVisiveis[ignisImportRuleKey(r.nome)]=true);
-    if(!window._ignisAnomOpsRecoveryQueued){
-      window._ignisAnomOpsRecoveryQueued=true;
-      setTimeout(()=>{try{saveState({immediate:true})}catch(e){}},0);
-    }
   }
   return defs;
 }
@@ -4287,22 +4314,19 @@ function ignisRenderAnomOpsConfig(){
 }
 function ignisSaveAnomOps(){saveState({immediate:true});ignisUpdateAnomOpsCount();try{renderAnomalias(true)}catch(e){}}
 function ignisToggleAnomReportOp(i){const defs=ignisEnsureAnomReportOps(),r=defs[i];if(!r)return;const k=ignisImportRuleKey(r.nome),wasOn=state.anomaliaOperacoesVisiveis[k]!==false;if(wasOn&&ignisAnomReportVisibleCount()<=1){showToast('Mantenha pelo menos uma operação visível no relatório de anomalias.','error');return;}state.anomaliaOperacoesVisiveis[k]=!wasOn;ignisSaveAnomOps();ignisRenderAnomOpsConfig();}
-function ignisSetAllAnomOps(show){const defs=ignisEnsureAnomReportOps();if(!show){showToast('O relatório não pode ocultar todas as operações.','error');return;}defs.forEach(r=>state.anomaliaOperacoesVisiveis[ignisImportRuleKey(r.nome)]=true);ignisSaveAnomOps();ignisRenderAnomOpsConfig();}
-function ignisAnomReportRule(row){
-  const defs=ignisEnsureAnomReportOps();
+function ignisSetAllAnomOps(show){const defs=ignisEnsureAnomReportOps();if(!show)return;defs.forEach(r=>state.anomaliaOperacoesVisiveis[ignisImportRuleKey(r.nome)]=true);ignisSaveAnomOps();ignisRenderAnomOpsConfig();}
+function ignisAnomReportRuleFromDefs(row,defs){
   const op=ignisImportNorm(row?.operacao||row?.raw?.operacao||'');if(!op)return null;
-  return defs.find(r=>op.includes(ignisImportRuleKey(r.nome)))||null;
+  return (defs||ignisEnsureAnomReportOps()).find(r=>op.includes(ignisImportRuleKey(r.nome)))||null;
 }
-function ignisAnomReportScopeAllowed(row,respectVisibility=false){
-  const rule=ignisAnomReportRule(row);if(!rule)return false;
+function ignisAnomReportScopeAllowedWithDefs(row,respectVisibility,defs){
+  const rule=ignisAnomReportRuleFromDefs(row,defs);if(!rule)return false;
   const fuel=ignisImportFuelKey(row?.raw?.combustivel||row?.raw?.combustível||row?.raw?.fuel||row?.combustivel||'');
-  // Se o combustível está informado, ele precisa estar explicitamente autorizado
-  // para a operação. Isso corrige o vazamento antigo de Gasolina/Etanol em operações
-  // que deveriam analisar somente Diesel.
   if(fuel&&!rule.combustiveis.includes(fuel))return false;
   if(respectVisibility&&state.anomaliaOperacoesVisiveis[ignisImportRuleKey(rule.nome)]===false)return false;
   return true;
 }
+function ignisAnomReportScopeAllowed(row,respectVisibility=false){return ignisAnomReportScopeAllowedWithDefs(row,respectVisibility,ignisEnsureAnomReportOps());}
 function ignisAnomReportRowVisible(row){return ignisAnomReportScopeAllowed(row,true);}
 
 function pendCollect(){
@@ -4337,10 +4361,8 @@ function pendCollect(){
   if(baixas.length){
     const pior=baixas[0];addIssue({id:'eficiencia-baixa',kind:'eficiencia',severity:'attention',title:'Eficiência anormalmente baixa',count:baixas.length,keys:baixas.map(r=>'eficiencia-baixa:'+r.placa+'|'+r.data+'|'+(r.rowIndex??'')),page:'anomalias',detail:`${baixas.length} abastecimento${baixas.length>1?'s':''} abaixo de ${limiteBaixo.toFixed(0)}%.`,highlightLabel:'Menor eficiência',highlightValue:`${pior?.placa||'—'} · ${Number(pior?.eficiencia||0).toFixed(1)}%`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:baixas,meta:`Limite: < ${limiteBaixo.toFixed(0)}%`});
   }
-  const integridade=typeof ignisIntegridadeAnomRows==='function'?ignisIntegridadeAnomRows(py,pm):[];
-  if(integridade.length){const pior=integridade[0];addIssue({id:'integridade-anom',kind:'medidor',severity:'critical',title:'Dados sem auditoria de eficiência',count:integridade.length,keys:integridade.map(r=>'integridade:'+r.placa+'|'+r.data+'|'+(r.issueCode||'')),page:'anomalias',detail:`${integridade.length} registro${integridade.length>1?'s':''} não puderam ser validados por falta de meta, medida, litros ou combustível válido.`,highlightLabel:'Primeiro registro',highlightValue:`${pior?.placa||'—'} · ${pior?.issueCode||'Dados incompletos'}`,highlightSub:`${fechFmt(fechParse(pior?.data))} · ${pior?.operacao||'Operação não informada'}`,rows:integridade,meta:'Bloqueia a confiança da análise até correção'});}
-  const eficStatus=altas.length||baixas.length||integridade.length?'attention':'ok';
-  monitors.push({name:'Eficiência entre abastecimentos',status:integridade.length?'critical':eficStatus,detail:integridade.length?`${integridade.length} registro(s) sem auditoria · ${altas.length} alta(s) · ${baixas.length} baixa(s)`:altas.length||baixas.length?`${altas.length} alta(s) · ${baixas.length} baixa(s) · limites ${limiteBaixo.toFixed(0)}% / ${limiteEfic.toFixed(0)}%`:`Sem anomalias fora de ${limiteBaixo.toFixed(0)}%–${limiteEfic.toFixed(0)}%`});
+  const eficStatus=altas.length||baixas.length?'attention':'ok';
+  monitors.push({name:'Eficiência entre abastecimentos',status:eficStatus,detail:altas.length||baixas.length?`${altas.length} alta(s) · ${baixas.length} baixa(s) · limites ${limiteBaixo.toFixed(0)}% / ${limiteEfic.toFixed(0)}%`:`Sem anomalias fora de ${limiteBaixo.toFixed(0)}%–${limiteEfic.toFixed(0)}%`});
   {const latest=pendLatestAbast();const gap=pendBusinessGap(latest);monitors.push({name:'Atualização dos abastecimentos',status:latest&&gap===0?'ok':'waiting',detail:latest?`Última data ${pendFmtDate(latest)}`:'Sem dados de abastecimento'});}
 
   const meds=typeof fechMedidorRows==='function'?fechMedidorRows(py,pm):[];
@@ -13067,7 +13089,7 @@ function ignisRecordEficienciaAnomaly(a){
   const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,combustivel:String(a.combustivel||''),propulsaoOnly:a.propulsaoOnly===true||a.dieselOnly===true||ignisEhCombustivelAnomalia(a.combustivel),at:Number(a.at)||Date.now()};
   const sig=[item.placa,item.data,item.source,item.periodo,item.rowIndex??'',item.litros.toFixed(3),item.kmHoras.toFixed(3),item.eficiencia.toFixed(3)].join('|');
   const exists=state.eficienciaAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|')===sig);
-  if(!exists)state.eficienciaAnomalias.push(item);
+  if(!exists)state.eficienciaAnomalias.push(item);state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-1200);
   try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}
 }
 
@@ -13077,7 +13099,7 @@ function ignisRecordEficienciaAnomaliesBatch(items){
   const sigOf=x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.source||''),String(x.periodo||''),x.rowIndex??'',(Number(x.litros)||0).toFixed(3),(Number(x.kmHoras)||0).toFixed(3),(Number(x.eficiencia)||0).toFixed(3)].join('|');
   const seen=new Set(state.eficienciaAnomalias.map(sigOf));let added=0;
   for(const a of items){if(!a||!a.placa||!Number.isFinite(Number(a.eficiencia)))continue;const ef=Number(a.eficiencia),faixa=a.faixa||(ef>=100?'alta':'baixa');const item={...a,placa:String(a.placa||'').trim().toUpperCase(),faixa,eficiencia:ef,litros:Number(a.litros)||0,kmHoras:Number(a.kmHoras)||0,media:Number(a.media)||0,meta:Number(a.meta)||0,combustivel:String(a.combustivel||''),propulsaoOnly:a.propulsaoOnly===true||a.dieselOnly===true||ignisEhCombustivelAnomalia(a.combustivel),at:Number(a.at)||Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.eficienciaAnomalias.push(item);added++;}
-  try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}return added;
+  state.eficienciaAnomalias=state.eficienciaAnomalias.slice(-1200);try{localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(state.eficienciaAnomalias));}catch(e){}return added;
 }
 function ignisRemoveEficienciaAnomaliesRange(ini,fim){
   const a=fechParse(ini),b=fechParse(fim);if(!a||!b)return;const keep=x=>{const d=fechParse(x?.data);return !d||d<a||d>b;};
@@ -13089,56 +13111,78 @@ function ignisRemoveEficienciaAnomalyKey(placa,data,source='Cadastro manual'){
   state.eficienciaAnomalias=(Array.isArray(state.eficienciaAnomalias)?state.eficienciaAnomalias:[]).filter(keep);
   try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))localStorage.setItem('ignis_eficiencia_anomalias',JSON.stringify(ls.filter(keep)));}catch(e){}
 }
-const _ignisAnomAuditCache={key:'',anomalias:[],integridade:[]};
+const _ignisAnomAuditCache={version:-1,items:new Map()};
+function ignisUltimaMetaRegistrada(placa){
+  ensureIgnisIndexes();
+  const p=String(placa||'').trim().toUpperCase();
+  const metaCadastro=Number(getMaquina(p)?.meta)||0;
+  if(metaCadastro>0)return metaCadastro;
+  return Number(_ignisPerf.metaHistoricaByPlaca.get(p))||0;
+}
 function ignisAuditFuelForRecord(r,tipo){
   const raw=String(r?.combustivel||'').trim();
   if(raw)return raw;
   return ['maquina','trator','pesada'].includes(tipo)?'DIESEL':'';
 }
-function ignisAuditIntegrityItem(base,code,detail){
-  return {...base,kind:'dados',issueCode:code,detail,source:'Auditoria automática da base'};
-}
 function ignisAuditarBaseAtual(y,m){
   ensureIgnisIndexes();
+  if(_ignisAnomAuditCache.version!==_ignisPerf.version){_ignisAnomAuditCache.version=_ignisPerf.version;_ignisAnomAuditCache.items.clear();}
   const hi=ignisGetLimiteEficiencia(),lo=ignisGetLimiteEficienciaBaixa();
-  const key=[_ignisPerf.version,y,m,hi,lo,(state.abastecimentos||[]).length,(state.maquinas||[]).length].join('|');
-  if(_ignisAnomAuditCache.key===key)return _ignisAnomAuditCache;
-  const anomalias=[],integridade=[],seenIntegrity=new Set();
-  const periodos=state.semanas||{};
-  (state.abastecimentos||[]).forEach((r,idx)=>{
-    const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
+  const cacheKey=`${y}-${String(m+1).padStart(2,'0')}|${hi}|${lo}`;
+  if(_ignisAnomAuditCache.items.has(cacheKey))return _ignisAnomAuditCache.items.get(cacheKey);
+  const anomalias=[],defs=ignisEnsureAnomReportOps(),periodos=state.semanas||{};
+  const monthKey=`${y}-${String(m+1).padStart(2,'0')}`;
+  const monthRows=_ignisPerf.abastecimentosByMes.get(monthKey)||_IGNIS_EMPTY;
+  monthRows.forEach((r,localIdx)=>{
     const placa=String(r?.placa||'').trim().toUpperCase();if(!placa)return;
-    const operacao=String(r?.operacao||getMaquina(placa)?.operacao||'').trim();
-    if(ignisOperacaoInvalidaAnomalia(operacao))return;
+    const operacao=String(r?.operacao||getMaquina(placa)?.operacao||'').trim();if(!operacao||ignisOperacaoInvalidaAnomalia(operacao))return;
     const tipo=r?.tipoIgnis||ignisInferTipoMedidor(placa,r?.modelo,r?.tipo,r?.operacao);
     const combustivel=ignisAuditFuelForRecord(r,tipo);
-    const scope={operacao,combustivel,raw:{operacao,combustivel}};
-    if(!ignisAnomReportScopeAllowed(scope,false))return;
+    if(!ignisAnomReportScopeAllowedWithDefs({operacao,combustivel,raw:{operacao,combustivel}},false,defs))return;
     const litros=Number(r?.litros)||0,kmHoras=Number(r?.horas??r?.kmHoras)||0;
-    const metaRegistro=Number(r?.metaIdeal)||0,metaCadastro=Number(getMaquina(placa)?.meta)||0,meta=metaRegistro>0?metaRegistro:metaCadastro;
+    if(!(litros>0&&kmHoras>0))return;
+    // Regra original restaurada: usa a meta do registro quando existe; se estiver
+    // vazia, usa a última meta registrada para a placa. Não cria uma fila paralela
+    // de "Integridade" por causa de meta vazia.
+    const metaRegistro=Number(r?.metaIdeal??r?.meta)||0;
+    const maqAtual=_ignisPerf.maquinasByPlaca.get(placa);
+    const metaUltima=Number(maqAtual?.meta)||Number(_ignisPerf.metaHistoricaByPlaca.get(placa))||0;
+    const meta=metaRegistro>0?metaRegistro:metaUltima;
+    if(!(meta>0))return;
     const periodo=periodos[r?.periodoId]?.label||String(r?.periodo||'');
-    const base={placa,data:String(r?.data||''),operacao,modelo:String(r?.modelo||''),tipoVeic:String(r?.tipo||r?.tipoVeic||''),tipoIgnis:tipo,litros,kmHoras,meta,combustivel,periodo,rowIndex:Number.isInteger(r?._rowIndex)?r._rowIndex:idx,raw:r};
-    const addIntegrity=(code,detail)=>{const sig=[placa,base.data,code,litros.toFixed(3),kmHoras.toFixed(3),meta.toFixed(3),combustivel].join('|');if(seenIntegrity.has(sig))return;seenIntegrity.add(sig);integridade.push(ignisAuditIntegrityItem(base,code,detail));};
-    if(litros<=0&&kmHoras<=0)return;
-    if(litros<=0){addIntegrity('LITROS_INVALIDOS','Litros zerados ou inválidos: o registro não pode ter a eficiência validada.');return;}
-    if(kmHoras<=0){addIntegrity('MEDIDA_INVALIDA',`${ignisMedidorNome(tipo)} / variação zerada ou inválida com ${litros.toLocaleString('pt-BR',{maximumFractionDigits:2})} L abastecidos.`);return;}
-    if(!(meta>0)){addIntegrity('META_AUSENTE','Meta ausente: a eficiência deste registro não pode ser calculada.');return;}
-    if(String(r?.combustivel||'').trim() && !ignisEhCombustivelAnomalia(r.combustivel)){addIntegrity('COMBUSTIVEL_NAO_AUDITAVEL',`Combustível "${String(r.combustivel)}" não pôde ser validado pelas regras de anomalia.`);return;}
-    const an=ignisAvaliarEficienciaAnomalia({placa,data:base.data,operacao,modelo:base.modelo,tipoVeic:base.tipoVeic,tipoIgnis:tipo,litros,kmHoras,meta,source:'Auditoria automática da base',periodo,combustivel,propulsaoOnly:!!combustivel});
+    const an=ignisAvaliarEficienciaAnomalia({placa,data:String(r?.data||''),operacao,modelo:String(r?.modelo||''),tipoVeic:String(r?.tipo||r?.tipoVeic||''),tipoIgnis:tipo,litros,kmHoras,meta,source:'Auditoria da base',periodo,combustivel,propulsaoOnly:!!combustivel,rowIndex:Number.isInteger(r?._rowIndex)?r._rowIndex:localIdx});
     if(an)anomalias.push(an);
   });
-  _ignisAnomAuditCache.key=key;_ignisAnomAuditCache.anomalias=anomalias;_ignisAnomAuditCache.integridade=integridade;
-  return _ignisAnomAuditCache;
+  _ignisAnomAuditCache.items.set(cacheKey,anomalias);
+  if(_ignisAnomAuditCache.items.size>24)_ignisAnomAuditCache.items.delete(_ignisAnomAuditCache.items.keys().next().value);
+  return anomalias;
 }
-function ignisIntegridadeAnomRows(y,m){return ignisAuditarBaseAtual(y,m).integridade.slice().sort((a,b)=>String(b.data||'').localeCompare(String(a.data||''))||String(a.placa||'').localeCompare(String(b.placa||'')));}
+const _ignisEficBaseCache={version:-1,items:new Map()};
 function ignisEficienciaAnomBaseRows(y,m){
-  let arr=[];if(Array.isArray(state.eficienciaAnomalias))arr=arr.concat(state.eficienciaAnomalias);
+  ensureIgnisIndexes();
+  if(_ignisEficBaseCache.version!==_ignisPerf.version){_ignisEficBaseCache.version=_ignisPerf.version;_ignisEficBaseCache.items.clear();}
+  const cacheKey=`${y}-${String(m+1).padStart(2,'0')}|${ignisGetLimiteEficiencia()}|${ignisGetLimiteEficienciaBaixa()}`;
+  if(_ignisEficBaseCache.items.has(cacheKey))return _ignisEficBaseCache.items.get(cacheKey);
+  // A auditoria da base entra primeiro para que o cálculo atual (incluindo fallback
+  // da última meta) prevaleça sobre um evento antigo gravado na importação.
+  let arr=[...ignisAuditarBaseAtual(y,m)];
+  if(Array.isArray(state.eficienciaAnomalias))arr=arr.concat(state.eficienciaAnomalias);
   try{const ls=JSON.parse(localStorage.getItem('ignis_eficiencia_anomalias')||'[]');if(Array.isArray(ls))arr=arr.concat(ls);}catch(e){}
-  // Segunda camada independente: recalcula a partir da base atual. Assim uma anomalia
-  // que não foi gravada no momento da importação, uma mudança de limite/meta ou um
-  // cache antigo não conseguem criar um ponto cego permanente.
-  arr=arr.concat(ignisAuditarBaseAtual(y,m).anomalias||[]);
-  const seen=new Set(),out=[];arr.forEach(r=>{if(!ignisAnomaliaRegistroValido(r)||!ignisAnomReportScopeAllowed(r,false))return;const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;const efic=Number(r?.eficiencia);if(!Number.isFinite(efic))return;const tipo=r.tipoIgnis||ignisInferTipoMedidor(r.placa,r.modelo,r.tipoVeic,r.operacao),fuelNorm=ignisImportFuelKey(r.combustivel||'')||(['maquina','trator','pesada'].includes(tipo)?'DIESEL':'');const sig=[String(r.placa||'').toUpperCase(),String(r.data||''),fuelNorm,(Number(r.litros)||0).toFixed(3),(Number(r.kmHoras)||0).toFixed(3),(Number(r.meta)||0).toFixed(3),efic.toFixed(3)].join('|');if(seen.has(sig))return;seen.add(sig);out.push({...r,tipoIgnis:tipo,combustivel:r.combustivel||fuelNorm,eficiencia:efic,faixa:r.faixa||(efic>=100?'alta':'baixa')});});return out;
+  const defs=ignisEnsureAnomReportOps(),seen=new Set(),out=[];
+  arr.forEach(r=>{
+    if(!ignisAnomaliaRegistroValido(r)||!ignisAnomReportScopeAllowedWithDefs(r,false,defs))return;
+    const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
+    const efic=Number(r?.eficiencia);if(!Number.isFinite(efic))return;
+    const tipo=r.tipoIgnis||ignisInferTipoMedidor(r.placa,r.modelo,r.tipoVeic,r.operacao);
+    const fuelNorm=ignisImportFuelKey(r.combustivel||'')||(['maquina','trator','pesada'].includes(tipo)?'DIESEL':'');
+    // Uma mesma ocorrência não duplica só porque veio da importação e da auditoria.
+    const sig=[String(r.placa||'').toUpperCase(),String(r.data||''),ignisImportNorm(r.operacao||''),fuelNorm,(Number(r.litros)||0).toFixed(3),(Number(r.kmHoras)||0).toFixed(3)].join('|');
+    if(seen.has(sig))return;seen.add(sig);
+    out.push({...r,tipoIgnis:tipo,combustivel:r.combustivel||fuelNorm,eficiencia:efic,faixa:r.faixa||(efic>=100?'alta':'baixa')});
+  });
+  _ignisEficBaseCache.items.set(cacheKey,out);
+  if(_ignisEficBaseCache.items.size>24)_ignisEficBaseCache.items.delete(_ignisEficBaseCache.items.keys().next().value);
+  return out;
 }
 function ignisEficienciaAnomRows(y,m,limite=ignisGetLimiteEficiencia()){return ignisEficienciaAnomBaseRows(y,m).filter(r=>r.eficiencia>limite).sort((a,b)=>b.eficiencia-a.eficiencia||String(b.data||'').localeCompare(String(a.data||'')));}
 function ignisEficienciaBaixaRows(y,m,limite=ignisGetLimiteEficienciaBaixa()){return ignisEficienciaAnomBaseRows(y,m).filter(r=>r.eficiencia<limite).sort((a,b)=>a.eficiencia-b.eficiencia||String(b.data||'').localeCompare(String(a.data||'')));}
@@ -13168,7 +13212,7 @@ function ignisRecordMedidorAnomaly(a){
   const sig=[item.placa,item.data,item.medidor,item.valor.toFixed(3),item.valorAnterior??'',item.valorAtual??'',item.source].join('|');
   const exists=state.medidorAnomalias.some(x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.medidor||''),(Number(x.valor)||0).toFixed(3),x.valorAnterior??'',x.valorAtual??'',String(x.source||'Importação')].join('|')===sig);
   if(!exists)state.medidorAnomalias.push(item);
-
+  state.medidorAnomalias=state.medidorAnomalias.slice(-1500);
   try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}
 }
 
@@ -13178,7 +13222,7 @@ function ignisRecordMedidorAnomaliesBatch(items){
   const sigOf=x=>[String(x.placa||'').toUpperCase(),String(x.data||''),String(x.medidor||''),(Number(x.valor)||0).toFixed(3),x.valorAnterior??'',x.valorAtual??'',String(x.source||'Importação')].join('|');
   const seen=new Set(state.medidorAnomalias.map(sigOf)); let added=0;
   for(const a of items){if(!a||!a.placa)continue;const tipo=a.tipoIgnis||ignisInferTipoMedidor(a.placa,a.modelo,a.tipoVeic,a.operacao);const item={placa:String(a.placa||'').trim().toUpperCase(),data:String(a.data||''),operacao:String(a.operacao||''),tipoIgnis:tipo,medidor:String(a.medidor||ignisMedidorNome(tipo)),valor:Number(a.valor)||0,valorAnterior:Number.isFinite(Number(a.valorAnterior))?Number(a.valorAnterior):null,valorAtual:Number.isFinite(Number(a.valorAtual))?Number(a.valorAtual):null,motivo:String(a.motivo||'Variação negativa'),campo:String(a.campo||''),source:String(a.source||'Importação'),periodo:String(a.periodo||''),combustivel:String(a.combustivel||''),propulsaoOnly:a.propulsaoOnly===true||a.dieselOnly===true||ignisEhCombustivelAnomalia(a.combustivel),rowIndex:Number.isInteger(a.rowIndex)?a.rowIndex:null,at:Date.now()};const sig=sigOf(item);if(seen.has(sig))continue;seen.add(sig);state.medidorAnomalias.push(item);added++;}
-  try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}return added;
+  state.medidorAnomalias=state.medidorAnomalias.slice(-1500);try{localStorage.setItem('ignis_medidor_anomalias',JSON.stringify(state.medidorAnomalias));}catch(e){}return added;
 }
 function ignisRemoveMedidorAnomaliesRange(ini,fim){
   const a=fechParse(ini),b=fechParse(fim); if(!a||!b)return;
@@ -13197,7 +13241,9 @@ function fechMedidorRows(y,m){
     if(Array.isArray(ls))arr=arr.concat(ls);
   }catch(e){}
   // Compatibilidade com registros antigos que eventualmente tenham preservado valor negativo.
-  (state.abastecimentos||[]).forEach(r=>{
+  ensureIgnisIndexes();
+  const monthKey=`${y}-${String(m+1).padStart(2,'0')}`;
+  (_ignisPerf.abastecimentosByMes.get(monthKey)||_IGNIS_EMPTY).forEach(r=>{
     if(Number(r.horas)<0 && ignisEhCombustivelAnomalia(r.combustivel))arr.push({placa:r.placa,data:r.data,operacao:r.operacao,tipoIgnis:getTipoIgnis(r),medidor:ignisMedidorNome(getTipoIgnis(r)),valor:Number(r.horas),source:'Base histórica',combustivel:r.combustivel,propulsaoOnly:true});
   });
   const seen=new Set(),out=[];
@@ -13250,7 +13296,6 @@ function anomFingerprint(r){
   const raw=r?.raw||{},kind=String(r?.kind||''),plate=String(r?.placa||raw.placa||'').trim().toUpperCase(),date=String(r?.date||raw.data||'').slice(0,10),fuel=String(raw.combustivelChave||raw.combustivel||'').toUpperCase();
   let sig='';
   if(kind==='medidor')sig=[raw.medidor||r.medida||'',anomNumKey(raw.valorAnterior),anomNumKey(raw.valorAtual),anomNumKey(raw.valor)].join('|');
-  else if(kind==='dados')sig=[raw.issueCode||r.issueCode||'',anomNumKey(raw.kmHoras),anomNumKey(raw.litros),anomNumKey(raw.meta),String(r.detail||raw.detail||'')].join('|');
   else sig=[anomNumKey(raw.kmHoras),anomNumKey(raw.litros),anomNumKey(raw.media),anomNumKey(raw.meta),anomNumKey(raw.eficiencia)].join('|');
   return anomHash64([kind,plate,date,fuel,sig].join('§'));
 }
@@ -13310,7 +13355,7 @@ async function anomMarkPlate(kind,placa,status='resolvido'){
   showToast(`${plate}: ${rows.length} ocorrência${rows.length===1?'':'s'} da placa movida${rows.length===1?'':'s'} para Resolvidas.`,'success');
 }
 async function anomUnreview(id){const arr=anomEnsureReviews(),idx=arr.findIndex(r=>r.id===id);if(idx<0)return;const plate=arr[idx].placa;arr.splice(idx,1);state.anomaliaRevisoes=arr;await anomPersistReviews([id]);renderAnomalias(true);showToast(`${plate}: revisão desmarcada.`,'success');}
-function anomReviewLabel(kind,kinds=[]){if(kind==='placa'){const labels=[...new Set(kinds||[])].map(k=>k==='medidor'?'Medidor regressivo':k==='alta'?'Eficiência alta':k==='baixa'?'Eficiência baixa':k==='dados'?'Integridade dos dados':k).filter(Boolean);return labels.length?labels.join(' + '):'Anomalias da placa';}return kind==='medidor'?'Medidor regressivo':kind==='alta'?'Eficiência alta':kind==='baixa'?'Eficiência baixa':'Integridade dos dados';}
+function anomReviewLabel(kind,kinds=[]){if(kind==='placa'){const labels=[...new Set(kinds||[])].map(k=>k==='medidor'?'Medidor regressivo':k==='alta'?'Eficiência alta':k==='baixa'?'Eficiência baixa':k).filter(Boolean);return labels.length?labels.join(' + '):'Anomalias da placa';}return kind==='medidor'?'Medidor regressivo':kind==='alta'?'Eficiência alta':'Eficiência baixa';}
 
 // ── TELA DEDICADA DE ANOMALIAS ──────────────────────────────────────────────
 window._anomUi = window._anomUi || {type:'all',searchTimer:null,forcedYear:null,forcedMonth:null,initialized:false};
@@ -13320,8 +13365,9 @@ function anomFmtNum(v,max=2){const n=Number(v);return Number.isFinite(n)?n.toLoc
 function anomInitSelectors(){
   const now=new Date(),mEl=document.getElementById('anom-month'),yEl=document.getElementById('anom-year');if(!mEl||!yEl)return;
   const firstInit=!window._anomUi.initialized;if(!mEl.options.length)mEl.innerHTML=ANOM_MONTHS.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
-  const years=new Set([now.getFullYear()]);
-  [...(state.medidorAnomalias||[]),...(state.eficienciaAnomalias||[]),...(state.abastecimentos||[]),...Object.values(state.semanas||{}).map(r=>({data:r?.dataIni||r?.dataFim||''})),...anomEnsureReviews().map(r=>({data:`${r.y}-${String(r.m+1).padStart(2,'0')}-01`}))].forEach(r=>{const d=fechParse(r?.data);if(d)years.add(d.getFullYear());});
+  ensureIgnisIndexes();
+  const years=new Set([now.getFullYear(),...(_ignisPerf.years||[])]);
+  [...(state.medidorAnomalias||[]),...(state.eficienciaAnomalias||[]),...anomEnsureReviews().map(r=>({data:`${r.y}-${String(r.m+1).padStart(2,'0')}-01`}))].forEach(r=>{const d=fechParse(r?.data);if(d)years.add(d.getFullYear());});
   const ys=[...years].sort((a,b)=>b-a);const old=yEl.value;yEl.innerHTML=ys.map(y=>`<option value="${y}">${y}</option>`).join('');
   if(window._anomUi.forcedYear!=null){yEl.value=String(window._anomUi.forcedYear);mEl.value=String(window._anomUi.forcedMonth??now.getMonth());window._anomUi.forcedYear=null;window._anomUi.forcedMonth=null;}
   else {if(old&&ys.includes(Number(old)))yEl.value=old;else yEl.value=String(now.getFullYear());if(firstInit)mEl.value=String(now.getMonth());else if(mEl.value==='')mEl.value=String(now.getMonth());}window._anomUi.initialized=true;
@@ -13332,7 +13378,6 @@ function anomCollectRows(y,m){
   fechMedidorRows(y,m).forEach(r=>rows.push({kind:'medidor',kindLabel:'Medidor regressivo',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:r.medidor||'Medidor',kmHoras:null,litros:null,real:r.valorAnterior!=null&&r.valorAtual!=null?`${anomFmtNum(r.valorAnterior)} → ${anomFmtNum(r.valorAtual)}`:anomFmtNum(r.valor),meta:null,eficiencia:null,detail:r.motivo||'Leitura menor que a anterior',source:r.source||'Importação',raw:r}));
   ignisEficienciaAnomRows(y,m).forEach(r=>rows.push({kind:'alta',kindLabel:'Eficiência alta',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'KM':'Horas',kmHoras:Number(r.kmHoras)||0,litros:Number(r.litros)||0,real:`${anomFmtNum(r.media)} ${r.unidade||''}`,meta:`${anomFmtNum(r.meta)} ${r.unidade||''}`,eficiencia:Number(r.eficiencia)||0,detail:`Acima de ${Math.round(ignisGetLimiteEficiencia())}%`,source:r.source||'Importação',raw:r}));
   ignisEficienciaBaixaRows(y,m).forEach(r=>rows.push({kind:'baixa',kindLabel:'Eficiência baixa',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'KM':'Horas',kmHoras:Number(r.kmHoras)||0,litros:Number(r.litros)||0,real:`${anomFmtNum(r.media)} ${r.unidade||''}`,meta:`${anomFmtNum(r.meta)} ${r.unidade||''}`,eficiencia:Number(r.eficiencia)||0,detail:`Abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`,source:r.source||'Importação',raw:r}));
-  ignisIntegridadeAnomRows(y,m).forEach(r=>rows.push({kind:'dados',kindLabel:'Integridade',date:r.data,placa:r.placa,operacao:r.operacao||'—',medida:(r.tipoIgnis==='pesada'||r.tipoIgnis==='leve')?'KM':'Horas',kmHoras:Number(r.kmHoras)||0,litros:Number(r.litros)||0,real:r.kmHoras>0?anomFmtNum(r.kmHoras):'—',meta:r.meta>0?anomFmtNum(r.meta):'—',eficiencia:null,detail:r.detail||'Registro não auditável',source:r.source||'Auditoria automática da base',raw:r}));
   const seen=new Set();return rows.filter(r=>{const fp=anomFingerprint(r);if(seen.has(fp))return false;seen.add(fp);r._fp=fp;return true;});
 }
 function anomSetType(type){window._anomUi.type=type||'all';document.querySelectorAll('[data-anom-type]').forEach(el=>el.classList.toggle('active',el.dataset.anomType===window._anomUi.type));renderAnomalias(true);}
@@ -13342,11 +13387,11 @@ function anomClearFilters(){const op=document.getElementById('anom-op'),q=docume
 function renderAnomalias(force=false){
   const page=document.getElementById('page-anomalias');if(!page)return;anomInitSelectors();
   const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear()),m=Number(document.getElementById('anom-month')?.value??new Date().getMonth());
-  const raw=anomCollectRows(y,m).filter(ignisAnomReportRowVisible),reviewedSet=anomReviewedFingerprints(),open=raw.filter(r=>!reviewedSet.has(r._fp||anomFingerprint(r))),med=open.filter(r=>r.kind==='medidor'),altas=open.filter(r=>r.kind==='alta'),baixas=open.filter(r=>r.kind==='baixa'),dados=open.filter(r=>r.kind==='dados'),reviews=anomEnsureReviews().filter(r=>r.y===y&&r.m===m);
+  const raw=anomCollectRows(y,m).filter(ignisAnomReportRowVisible),reviewedSet=anomReviewedFingerprints(),open=raw.filter(r=>!reviewedSet.has(r._fp||anomFingerprint(r))),med=open.filter(r=>r.kind==='medidor'),altas=open.filter(r=>r.kind==='alta'),baixas=open.filter(r=>r.kind==='baixa'),reviews=anomEnsureReviews().filter(r=>r.y===y&&r.m===m);
   ignisUpdateAnomOpsCount();
-  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('anom-kpi-total',open.length.toLocaleString('pt-BR'));set('anom-kpi-medidor',med.length.toLocaleString('pt-BR'));set('anom-kpi-alta',altas.length.toLocaleString('pt-BR'));set('anom-kpi-baixa',baixas.length.toLocaleString('pt-BR'));set('anom-kpi-dados',dados.length.toLocaleString('pt-BR'));set('anom-reviewed-count',reviews.length.toLocaleString('pt-BR'));
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('anom-kpi-total',open.length.toLocaleString('pt-BR'));set('anom-kpi-medidor',med.length.toLocaleString('pt-BR'));set('anom-kpi-alta',altas.length.toLocaleString('pt-BR'));set('anom-kpi-baixa',baixas.length.toLocaleString('pt-BR'));set('anom-reviewed-count',reviews.length.toLocaleString('pt-BR'));
   const piorMed=med[0],maior=[...altas].sort((a,b)=>(b.eficiencia||0)-(a.eficiencia||0))[0],menor=[...baixas].sort((a,b)=>(a.eficiencia||0)-(b.eficiencia||0))[0];
-  set('anom-kpi-total-sub',`${ANOM_MONTHS[m]} de ${y} · ${reviews.length} placa${reviews.length===1?'':'s'} revisada${reviews.length===1?'':'s'}`);set('anom-kpi-medidor-sub',piorMed?`${piorMed.placa} · ${piorMed.medida}`:'nenhuma regressão');set('anom-kpi-alta-sub',maior?`${maior.placa} · ${maior.eficiencia.toFixed(1)}%`:`acima de ${Math.round(ignisGetLimiteEficiencia())}%`);set('anom-kpi-baixa-sub',menor?`${menor.placa} · ${menor.eficiencia.toFixed(1)}%`:`abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`);set('anom-kpi-dados-sub',dados[0]?`${dados[0].placa} · ${dados[0].detail}`:'todos os registros auditáveis');
+  set('anom-kpi-total-sub',`${ANOM_MONTHS[m]} de ${y} · ${reviews.length} placa${reviews.length===1?'':'s'} revisada${reviews.length===1?'':'s'}`);set('anom-kpi-medidor-sub',piorMed?`${piorMed.placa} · ${piorMed.medida}`:'nenhuma regressão');set('anom-kpi-alta-sub',maior?`${maior.placa} · ${maior.eficiencia.toFixed(1)}%`:`acima de ${Math.round(ignisGetLimiteEficiencia())}%`);set('anom-kpi-baixa-sub',menor?`${menor.placa} · ${menor.eficiencia.toFixed(1)}%`:`abaixo de ${Math.round(ignisGetLimiteEficienciaBaixa())}%`);
   const opEl=document.getElementById('anom-op'),selectedOp=opEl?.value||'',ops=[...new Set([...open.map(r=>r.operacao),...reviews.map(r=>r.operacao)].filter(x=>x&&x!=='—'))].sort((a,b)=>a.localeCompare(b,'pt-BR'));if(opEl){opEl.innerHTML='<option value="">Todas as operações</option>'+ops.map(o=>`<option value="${anomEsc(o)}">${anomEsc(String(o).replace(/_/g,' '))}</option>`).join('');if(ops.includes(selectedOp))opEl.value=selectedOp;}
   const op=opEl?.value||'',q=String(document.getElementById('anom-search')?.value||'').trim().toUpperCase(),body=document.getElementById('anom-table-body'),wrap=document.getElementById('anom-table-wrap'),empty=document.getElementById('anom-empty'),summary=document.getElementById('anom-summary'),head=document.getElementById('anom-table-head');
   if(window._anomUi.type==='corrigidas'){
@@ -13357,9 +13402,9 @@ function renderAnomalias(force=false){
     if(body)body.innerHTML=rows.map(r=>`<tr><td><span class="anom-review-status corrigido">Resolvida</span></td><td>${anomEsc(anomReviewLabel(r.kind,r.kinds))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(String(r.operacao||'—').replace(/_/g,' '))}</td><td><strong>${Number(r.occurrences||r.fingerprints?.length||0)}</strong><div class="anom-history-meta">reimportações iguais permanecem resolvidas sem duplicar</div></td><td>${new Date(r.updatedAt||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</td><td>${anomEsc(r.updatedBy||'—')}</td><td><button class="anom-unreview" type="button" onclick="anomUnreview('${anomEsc(r.id)}')">Desmarcar</button></td></tr>`).join('');return;
   }
   let rows=open.filter(r=>(window._anomUi.type==='all'||r.kind===window._anomUi.type)&&(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q)));
-  const priority={dados:0,medidor:1,baixa:2,alta:3};rows.sort((a,b)=>(priority[a.kind]-priority[b.kind])||(a.kind==='baixa'?(a.eficiencia||0)-(b.eficiencia||0):a.kind==='alta'?(b.eficiencia||0)-(a.eficiencia||0):String(b.date||'').localeCompare(String(a.date||'')))||String(a.placa).localeCompare(String(b.placa)));
+  const priority={medidor:0,baixa:1,alta:2};rows.sort((a,b)=>(priority[a.kind]-priority[b.kind])||(a.kind==='baixa'?(a.eficiencia||0)-(b.eficiencia||0):a.kind==='alta'?(b.eficiencia||0)-(a.eficiencia||0):String(b.date||'').localeCompare(String(a.date||'')))||String(a.placa).localeCompare(String(b.placa)));
   if(head)head.innerHTML='<tr><th>Ação</th><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th></tr>';
-  if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} aberta${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'} · ${dados.length} integridade · ${reviews.length} revisada${reviews.length===1?'':'s'}`;
+  if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} aberta${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'} · ${reviews.length} revisada${reviews.length===1?'':'s'}`;
   if(!rows.length){if(wrap)wrap.style.display='none';if(empty){empty.style.display='flex';empty.innerHTML='<strong>Nenhuma anomalia aberta encontrada.</strong><span>Ajuste os filtros ou consulte Resolvidas.</span>';}if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
   if(body)body.innerHTML=rows.map(r=>{const badge=r.kind==='medidor'?'medidor':r.kind,medida=r.kmHoras==null?'—':`${anomFmtNum(r.kmHoras)} ${r.medida==='KM'?'km':'h'}`,litros=r.litros==null?'—':`${anomFmtNum(r.litros)} L`,ef=r.eficiencia==null?'—':`${r.eficiencia.toFixed(1)}%`,efClass=r.kind==='baixa'?'bad':r.kind==='alta'?'warn':'',plate=String(r.placa||'').replace(/'/g,"\\'");return `<tr><td class="anom-action-cell"><div class="anom-action-wrap"><button class="anom-review-btn fix" type="button" title="Resolve todas as anomalias abertas desta placa no mês e mantém o histórico" onclick="anomMarkPlate('${r.kind}','${plate}','resolvido')">Resolver</button></div></td><td><span class="anom-badge ${badge}">${anomEsc(r.kindLabel)}</span></td><td>${anomEsc(fechFmt(fechParse(r.date)))}</td><td title="${anomEsc(r.operacao)}">${anomEsc(String(r.operacao).replace(/_/g,' '))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(medida)}</td><td>${anomEsc(litros)}</td><td><strong>${anomEsc(r.real)}</strong></td><td>${anomEsc(r.meta??'—')}</td><td><strong class="${efClass}">${anomEsc(ef)}</strong></td><td><div class="anom-detail-main">${anomEsc(r.detail)}</div><div class="anom-detail-sub">${anomEsc(r.source)}</div></td></tr>`;}).join('');
 }
@@ -13380,7 +13425,6 @@ function fechBuild(){
   const med=fechMedidorRows(s.y,s.m);
   const eficAltas=typeof ignisEficienciaAnomRows==='function'?ignisEficienciaAnomRows(s.y,s.m):[];
   const eficBaixas=typeof ignisEficienciaBaixaRows==='function'?ignisEficienciaBaixaRows(s.y,s.m):[];
-  const integridade=typeof ignisIntegridadeAnomRows==='function'?ignisIntegridadeAnomRows(s.y,s.m):[];
   const reinc=fechReincMonth(s.y,s.m);
   const excl=(typeof pendGetExcluir==='function'?pendGetExcluir():[]).filter(r=>{
     const d=fechParse(r.data);
@@ -13418,10 +13462,10 @@ function fechBuild(){
     page:'abastecimentos'
   });
 
-  const anomCount=med.length+eficAltas.length+eficBaixas.length+integridade.length;
-  const anomState=(med.length||integridade.length)?'blocked':(eficAltas.length||eficBaixas.length?'attention':'ok');
-  const anomDetail=anomCount?`${anomCount} ocorrência(s): ${med.length} medidor(es) regressivo(s) · ${eficAltas.length} eficiência(s) > ${ignisGetLimiteEficiencia().toFixed(0)}% · ${eficBaixas.length} eficiência(s) < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}% · ${integridade.length} registro(s) não auditável(is).`:'Nenhuma anomalia detectada nos dados monitorados.';
-  add({id:'anom',title:'Análise de anomalias',state:anomState,blocking:!!(med.length||integridade.length),detail:anomDetail,meta:`Limites de eficiência: < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}% ou > ${ignisGetLimiteEficiencia().toFixed(0)}% · medidor regressivo ou dado não auditável bloqueia`,page:'anomalias',rows:[...med,...eficAltas,...eficBaixas,...integridade],anom:{med,altas:eficAltas,baixas:eficBaixas,integridade}});
+  const anomCount=med.length+eficAltas.length+eficBaixas.length;
+  const anomState=med.length?'blocked':(eficAltas.length||eficBaixas.length?'attention':'ok');
+  const anomDetail=anomCount?`${anomCount} ocorrência(s): ${med.length} medidor(es) regressivo(s) · ${eficAltas.length} eficiência(s) > ${ignisGetLimiteEficiencia().toFixed(0)}% · ${eficBaixas.length} eficiência(s) < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}%.`:'Nenhuma anomalia detectada nos dados monitorados.';
+  add({id:'anom',title:'Análise de anomalias',state:anomState,blocking:!!med.length,detail:anomDetail,meta:`Limites de eficiência: < ${ignisGetLimiteEficienciaBaixa().toFixed(0)}% ou > ${ignisGetLimiteEficiencia().toFixed(0)}% · medidor regressivo bloqueia`,page:'anomalias',rows:[...med,...eficAltas,...eficBaixas],anom:{med,altas:eficAltas,baixas:eficBaixas}});
 
   const worst=reinc[0];
   add({
@@ -13470,7 +13514,7 @@ function fechBuild(){
     meta:'Disponível na aba Relatório',page:'relatorio'
   });
 
-  return{s,rows,checks,dups,med,eficAltas,eficBaixas,integridade,reinc,excl,coverage};
+  return{s,rows,checks,dups,med,eficAltas,eficBaixas,reinc,excl,coverage};
 }
 function fechCheckHTML(c){
   const label=c.state==='ok'?'Concluído':c.state==='blocked'?'Bloqueador':c.state==='attention'?'Atenção':c.state==='optional'?'Opcional':'Pendente';
@@ -13630,10 +13674,10 @@ function fechExcelPendencias(workbook,x){
 function fechExcelAnomalias(workbook,x){
   const ws=workbook.addWorksheet('Anomalias',{views:[{showGridLines:false}]});ws.properties.tabColor={argb:fechExcelArgb(FECH_EXCEL.red)};fechExcelSetupSheet(ws,11,180);ws.columns=[{width:18},{width:13},{width:30},{width:15},{width:15},{width:14},{width:18},{width:16},{width:14},{width:15},{width:28}];fechExcelAddLogo(workbook,ws);
   fechExcelMergeText(ws,'A5:K6',`ANÁLISE DE ANOMALIAS  •  ${x.s.label}`,{fill:FECH_EXCEL.bg,size:18,bold:true,border:false});
-  const med=x.med||[],altas=x.eficAltas||[],baixas=x.eficBaixas||[],integridade=x.integridade||[],reinc=x.reinc||[];
+  const med=x.med||[],altas=x.eficAltas||[],baixas=x.eficBaixas||[],reinc=x.reinc||[];
   [['A8:B10','MEDIDOR REGRESSIVO',med.length,med.length?FECH_EXCEL.red:FECH_EXCEL.green],['C8:E10','EFICIÊNCIA ALTA',altas.length,altas.length?FECH_EXCEL.yellow:FECH_EXCEL.green],['F8:H10','EFICIÊNCIA BAIXA',baixas.length,baixas.length?FECH_EXCEL.red:FECH_EXCEL.green],['I8:K10','REINCIDENTES',reinc.length,reinc.length?FECH_EXCEL.yellow:FECH_EXCEL.green]].forEach(([rng,l,v,cor])=>fechExcelMergeText(ws,rng,`${l}\n${Number(v).toLocaleString('pt-BR')}`,{fill:FECH_EXCEL.panel,size:12,bold:true,color:cor,align:'center'}));
-  let rows=[];med.forEach(r=>rows.push({tipo:'Medidor regressivo',date:r.data,op:r.operacao||'',placa:r.placa,km:'—',litros:'—',real:(r.valorAnterior!=null&&r.valorAtual!=null)?`${r.valorAnterior} → ${r.valorAtual}`:(r.valor??''),meta:'—',ef:'—',status:'CRÍTICO',origem:r.source||''}));integridade.forEach(r=>rows.push({tipo:'Integridade dos dados',date:r.data,op:r.operacao||'',placa:r.placa,km:r.kmHoras||'—',litros:r.litros||'—',real:r.detail||r.issueCode||'Registro não auditável',meta:r.meta||'—',ef:'—',status:'CRÍTICO',origem:r.source||'Auditoria automática da base'}));altas.forEach(r=>rows.push({tipo:'Eficiência alta',date:r.data,op:r.operacao||'',placa:r.placa,km:r.kmHoras,litros:r.litros,real:r.media,meta:r.meta,ef:r.eficiencia,status:'ATENÇÃO',origem:r.source||''}));baixas.forEach(r=>rows.push({tipo:'Eficiência baixa',date:r.data,op:r.operacao||'',placa:r.placa,km:r.kmHoras,litros:r.litros,real:r.media,meta:r.meta,ef:r.eficiencia,status:'ATENÇÃO',origem:r.source||''}));
-  rows.sort((a,b)=>{const pa=a.tipo==='Integridade dos dados'?0:a.tipo==='Medidor regressivo'?1:a.tipo==='Eficiência baixa'?2:3,pb=b.tipo==='Integridade dos dados'?0:b.tipo==='Medidor regressivo'?1:b.tipo==='Eficiência baixa'?2:3;if(pa!==pb)return pa-pb;const ea=Number(a.ef),eb=Number(b.ef);if(Number.isFinite(ea)&&Number.isFinite(eb))return a.tipo==='Eficiência alta'?eb-ea:ea-eb;return String(a.placa).localeCompare(String(b.placa));});
+  let rows=[];med.forEach(r=>rows.push({tipo:'Medidor regressivo',date:r.data,op:r.operacao||'',placa:r.placa,km:'—',litros:'—',real:(r.valorAnterior!=null&&r.valorAtual!=null)?`${r.valorAnterior} → ${r.valorAtual}`:(r.valor??''),meta:'—',ef:'—',status:'CRÍTICO',origem:r.source||''}));altas.forEach(r=>rows.push({tipo:'Eficiência alta',date:r.data,op:r.operacao||'',placa:r.placa,km:r.kmHoras,litros:r.litros,real:r.media,meta:r.meta,ef:r.eficiencia,status:'ATENÇÃO',origem:r.source||''}));baixas.forEach(r=>rows.push({tipo:'Eficiência baixa',date:r.data,op:r.operacao||'',placa:r.placa,km:r.kmHoras,litros:r.litros,real:r.media,meta:r.meta,ef:r.eficiencia,status:'ATENÇÃO',origem:r.source||''}));
+  rows.sort((a,b)=>{const pa=a.tipo==='Medidor regressivo'?0:a.tipo==='Eficiência baixa'?1:2,pb=b.tipo==='Medidor regressivo'?0:b.tipo==='Eficiência baixa'?1:2;if(pa!==pb)return pa-pb;const ea=Number(a.ef),eb=Number(b.ef);if(Number.isFinite(ea)&&Number.isFinite(eb))return a.tipo==='Eficiência alta'?eb-ea:ea-eb;return String(a.placa).localeCompare(String(b.placa));});
   let row=13;ws.getRow(row).values=['TIPO','DATA','OPERAÇÃO','PLACA','KM / HORAS','LITROS','REALIZADO / LEITURA','META','EFICIÊNCIA %','STATUS','ORIGEM'];fechExcelStyleHeaderRow(ws.getRow(row),1,11);row++;
   if(!rows.length){fechExcelMergeText(ws,`A${row}:K${row+3}`,'Nenhuma anomalia identificada neste mês.',{fill:FECH_EXCEL.panel,size:12,bold:true,color:FECH_EXCEL.green,align:'center'});}else rows.forEach((r,i)=>{const rr=ws.getRow(row);rr.values=[r.tipo,r.date,r.op,r.placa,r.km,r.litros,r.real,r.meta,r.ef,r.status,r.origem];fechExcelStyleDataRow(rr,11,i%2===1);const cor=r.tipo==='Medidor regressivo'||r.tipo==='Eficiência baixa'?FECH_EXCEL.red:FECH_EXCEL.yellow;rr.getCell(1).font={bold:true,color:{argb:fechExcelArgb(cor)}};rr.getCell(4).font={bold:true,color:{argb:fechExcelArgb(FECH_EXCEL.text)}};if(typeof r.ef==='number'){rr.getCell(9).numFmt='0.0"%"';rr.getCell(9).font={bold:true,color:{argb:fechExcelArgb(cor)}};}rr.getCell(10).font={bold:true,color:{argb:fechExcelArgb(cor)}};rr.height=28;row++;});
   const anomTableEnd=Math.max(13,row-1);ws.autoFilter={from:{row:13,column:1},to:{row:anomTableEnd,column:11}};
@@ -13645,7 +13689,7 @@ function fechExcelBaseTecnica(workbook,x){
   fechExcelMergeText(ws,'A5:H6',`BASE TÉCNICA DO FECHAMENTO  •  ${x.s.label}`,{fill:FECH_EXCEL.bg,size:18,bold:true,border:false});
   let row=9;ws.getRow(row).values=['ETAPA','STATUS','BLOQUEIA','DETALHE','OBSERVAÇÃO','ID','OPCIONAL','REGISTROS'];fechExcelStyleHeaderRow(ws.getRow(row),1,8);row++;x.checks.forEach((c,i)=>{const info=fechExcelStatusInfo(c),rr=ws.getRow(row);rr.values=[c.title,info.label,c.blocking?'Sim':'Não',c.detail,c.meta||'',c.id,c.optional?'Sim':'Não',Array.isArray(c.rows)?c.rows.length:''];fechExcelStyleDataRow(rr,8,i%2===1);rr.getCell(2).font={bold:true,color:{argb:fechExcelArgb(info.color)}};rr.height=30;row++;});
   row+=2;fechExcelMergeText(ws,`A${row}:H${row}`,'DADOS DE CONTROLE',{fill:FECH_EXCEL.orange,size:10,bold:true,color:FECH_EXCEL.white});row++;
-  const tech=[['Mês analisado',x.s.label],['Chave do período',x.s.key],['Registros analisados',x.rows.length],['Cobertura',x.coverage?.end?new Date(x.coverage.end).toLocaleDateString('pt-BR'):'—'],['Duplicidades',x.dups?.length||0],['Medidores regressivos',x.med?.length||0],['Eficiências altas',x.eficAltas?.length||0],['Eficiências baixas',x.eficBaixas?.length||0],['Registros não auditáveis',x.integridade?.length||0],['Reincidências',x.reinc?.length||0]];tech.forEach((t,i)=>{const rr=ws.getRow(row++);rr.values=[t[0],t[1]];fechExcelStyleDataRow(rr,2,i%2===1);rr.getCell(1).font={bold:true,color:{argb:fechExcelArgb(FECH_EXCEL.muted)}};});ws.views=[{state:'frozen',ySplit:9,showGridLines:false}];return ws;
+  const tech=[['Mês analisado',x.s.label],['Chave do período',x.s.key],['Registros analisados',x.rows.length],['Cobertura',x.coverage?.end?new Date(x.coverage.end).toLocaleDateString('pt-BR'):'—'],['Duplicidades',x.dups?.length||0],['Medidores regressivos',x.med?.length||0],['Eficiências altas',x.eficAltas?.length||0],['Eficiências baixas',x.eficBaixas?.length||0],['Reincidências',x.reinc?.length||0]];tech.forEach((t,i)=>{const rr=ws.getRow(row++);rr.values=[t[0],t[1]];fechExcelStyleDataRow(rr,2,i%2===1);rr.getCell(1).font={bold:true,color:{argb:fechExcelArgb(FECH_EXCEL.muted)}};});ws.views=[{state:'frozen',ySplit:9,showGridLines:false}];return ws;
 }
 async function fechExportarExcel(){
   const x=fechBuild();
