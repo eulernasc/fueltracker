@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- IGNIS Sync Guard + Outlook PWA + Anomalias sem lacunas + performance — 24/08/2026 -->
-<meta name="ignis-build" content="2026-08-24-anomalias-performance-v5">
+<meta name="ignis-build" content="2026-08-24-anomalias-busca-auditoria-v6">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13132,7 +13132,23 @@ function ignisAuditarBaseAtual(y,m){
   if(_ignisAnomAuditCache.items.has(cacheKey))return _ignisAnomAuditCache.items.get(cacheKey);
   const anomalias=[],defs=ignisEnsureAnomReportOps(),periodos=state.semanas||{};
   const monthKey=`${y}-${String(m+1).padStart(2,'0')}`;
-  const monthRows=_ignisPerf.abastecimentosByMes.get(monthKey)||_IGNIS_EMPTY;
+  // Fonte primária é o índice mensal de abastecimentos. Como proteção contra versões
+  // antigas/inconsistências de sincronização, também considera os registros das semanas
+  // que pertencem ao mês. A deduplicação impede analisar duas vezes o mesmo registro.
+  const monthRows=[];
+  const monthSeen=new Set();
+  const pushMonthRow=(r)=>{
+    if(!r)return;
+    const d=fechParse(r?.data);if(!d||d.getFullYear()!==y||d.getMonth()!==m)return;
+    const sig=[String(r?.placa||'').trim().toUpperCase(),String(r?.data||''),ignisImportNorm(r?.operacao||''),(Number(r?.litros)||0).toFixed(3),(Number(r?.horas??r?.kmHoras)||0).toFixed(3),String(r?.periodoId||'')].join('|');
+    if(monthSeen.has(sig))return;monthSeen.add(sig);monthRows.push(r);
+  };
+  (_ignisPerf.abastecimentosByMes.get(monthKey)||_IGNIS_EMPTY).forEach(pushMonthRow);
+  Object.values(periodos).forEach(p=>{
+    const a=fechParse(p?.dataIni),b=fechParse(p?.dataFim||p?.dataIni);
+    const iniMes=new Date(y,m,1),fimMes=new Date(y,m+1,0,23,59,59);
+    if(a&&b&&a<=fimMes&&b>=iniMes)(p?.registros||[]).forEach(pushMonthRow);
+  });
   monthRows.forEach((r,localIdx)=>{
     const placa=String(r?.placa||'').trim().toUpperCase();if(!placa)return;
     const operacao=String(r?.operacao||getMaquina(placa)?.operacao||'').trim();if(!operacao||ignisOperacaoInvalidaAnomalia(operacao))return;
@@ -13387,7 +13403,10 @@ function anomClearFilters(){const op=document.getElementById('anom-op'),q=docume
 function renderAnomalias(force=false){
   const page=document.getElementById('page-anomalias');if(!page)return;anomInitSelectors();
   const y=Number(document.getElementById('anom-year')?.value||new Date().getFullYear()),m=Number(document.getElementById('anom-month')?.value??new Date().getMonth());
-  const raw=anomCollectRows(y,m).filter(ignisAnomReportRowVisible),reviewedSet=anomReviewedFingerprints(),open=raw.filter(r=>!reviewedSet.has(r._fp||anomFingerprint(r))),med=open.filter(r=>r.kind==='medidor'),altas=open.filter(r=>r.kind==='alta'),baixas=open.filter(r=>r.kind==='baixa'),reviews=anomEnsureReviews().filter(r=>r.y===y&&r.m===m);
+  // Mantém o relatório normal respeitando as operações configuradas, mas guarda a
+  // coleção completa para a busca. Assim pesquisar uma placa nunca falha só porque
+  // a operação dela está oculta no relatório.
+  const allRaw=anomCollectRows(y,m),reviewedSet=anomReviewedFingerprints(),allOpen=allRaw.filter(r=>!reviewedSet.has(r._fp||anomFingerprint(r))),open=allOpen.filter(ignisAnomReportRowVisible),med=open.filter(r=>r.kind==='medidor'),altas=open.filter(r=>r.kind==='alta'),baixas=open.filter(r=>r.kind==='baixa'),reviews=anomEnsureReviews().filter(r=>r.y===y&&r.m===m);
   ignisUpdateAnomOpsCount();
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};set('anom-kpi-total',open.length.toLocaleString('pt-BR'));set('anom-kpi-medidor',med.length.toLocaleString('pt-BR'));set('anom-kpi-alta',altas.length.toLocaleString('pt-BR'));set('anom-kpi-baixa',baixas.length.toLocaleString('pt-BR'));set('anom-reviewed-count',reviews.length.toLocaleString('pt-BR'));
   const piorMed=med[0],maior=[...altas].sort((a,b)=>(b.eficiencia||0)-(a.eficiencia||0))[0],menor=[...baixas].sort((a,b)=>(a.eficiencia||0)-(b.eficiencia||0))[0];
@@ -13401,11 +13420,29 @@ function renderAnomalias(force=false){
     if(!rows.length){if(wrap)wrap.style.display='none';if(empty){empty.style.display='flex';empty.innerHTML='<strong>Nenhuma anomalia revisada neste mês.</strong><span>Marque uma ocorrência como resolvida para criar o histórico.</span>';}if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
     if(body)body.innerHTML=rows.map(r=>`<tr><td><span class="anom-review-status corrigido">Resolvida</span></td><td>${anomEsc(anomReviewLabel(r.kind,r.kinds))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(String(r.operacao||'—').replace(/_/g,' '))}</td><td><strong>${Number(r.occurrences||r.fingerprints?.length||0)}</strong><div class="anom-history-meta">reimportações iguais permanecem resolvidas sem duplicar</div></td><td>${new Date(r.updatedAt||Date.now()).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</td><td>${anomEsc(r.updatedBy||'—')}</td><td><button class="anom-unreview" type="button" onclick="anomUnreview('${anomEsc(r.id)}')">Desmarcar</button></td></tr>`).join('');return;
   }
-  let rows=open.filter(r=>(window._anomUi.type==='all'||r.kind===window._anomUi.type)&&(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q)));
+  // Com busca preenchida, consulta todas as anomalias abertas do mês, inclusive
+  // operações ocultas em "Operações no relatório". Sem busca, preserva o filtro normal.
+  const searchBase=q?allOpen:open;
+  let rows=searchBase.filter(r=>(window._anomUi.type==='all'||r.kind===window._anomUi.type)&&(!op||r.operacao===op)&&(!q||String(r.placa).toUpperCase().includes(q)||String(r.operacao).toUpperCase().includes(q)));
   const priority={medidor:0,baixa:1,alta:2};rows.sort((a,b)=>(priority[a.kind]-priority[b.kind])||(a.kind==='baixa'?(a.eficiencia||0)-(b.eficiencia||0):a.kind==='alta'?(b.eficiencia||0)-(a.eficiencia||0):String(b.date||'').localeCompare(String(a.date||'')))||String(a.placa).localeCompare(String(b.placa)));
   if(head)head.innerHTML='<tr><th>Ação</th><th>Tipo</th><th>Data</th><th>Operação</th><th>Placa</th><th>KM / Horas</th><th>Litros</th><th>Realizado / Leitura</th><th>Meta</th><th>Eficiência</th><th>Detalhe</th></tr>';
-  if(summary)summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} aberta${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'} · ${reviews.length} revisada${reviews.length===1?'':'s'}`;
-  if(!rows.length){if(wrap)wrap.style.display='none';if(empty){empty.style.display='flex';empty.innerHTML='<strong>Nenhuma anomalia aberta encontrada.</strong><span>Ajuste os filtros ou consulte Resolvidas.</span>';}if(body)body.innerHTML='';return;}if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
+  if(summary){
+    if(q){
+      const hiddenMatches=rows.filter(r=>!ignisAnomReportRowVisible(r)).length;
+      summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> resultado${rows.length===1?'':'s'} para a busca${hiddenMatches?` · ${hiddenMatches} em operação oculta no relatório`:''} · a busca verifica todas as operações`;
+    }else summary.innerHTML=`<strong>${rows.length.toLocaleString('pt-BR')}</strong> ocorrência${rows.length===1?'':'s'} aberta${rows.length===1?'':'s'} · ${med.length} medidor${med.length===1?'':'es'} · ${altas.length} alta${altas.length===1?'':'s'} · ${baixas.length} baixa${baixas.length===1?'':'s'} · ${reviews.length} revisada${reviews.length===1?'':'s'}`;
+  }
+  if(!rows.length){
+    if(wrap)wrap.style.display='none';
+    if(empty){
+      empty.style.display='flex';
+      const revMatch=q?reviews.filter(r=>String(r.placa||'').toUpperCase().includes(q)||String(r.operacao||'').toUpperCase().includes(q)):[];
+      if(revMatch.length)empty.innerHTML=`<strong>${anomEsc(revMatch[0].placa||q)} está em Resolvidas.</strong><span>Esta placa já foi marcada como resolvida neste mês. Abra a aba Resolvidas para consultar o histórico.</span>`;
+      else empty.innerHTML=q?'<strong>Nenhuma anomalia encontrada para esta busca.</strong><span>A busca já verificou inclusive operações ocultas no relatório.</span>':'<strong>Nenhuma anomalia aberta encontrada.</strong><span>Ajuste os filtros ou consulte Resolvidas.</span>';
+    }
+    if(body)body.innerHTML='';return;
+  }
+  if(wrap)wrap.style.display='';if(empty)empty.style.display='none';
   if(body)body.innerHTML=rows.map(r=>{const badge=r.kind==='medidor'?'medidor':r.kind,medida=r.kmHoras==null?'—':`${anomFmtNum(r.kmHoras)} ${r.medida==='KM'?'km':'h'}`,litros=r.litros==null?'—':`${anomFmtNum(r.litros)} L`,ef=r.eficiencia==null?'—':`${r.eficiencia.toFixed(1)}%`,efClass=r.kind==='baixa'?'bad':r.kind==='alta'?'warn':'',plate=String(r.placa||'').replace(/'/g,"\\'");return `<tr><td class="anom-action-cell"><div class="anom-action-wrap"><button class="anom-review-btn fix" type="button" title="Resolve todas as anomalias abertas desta placa no mês e mantém o histórico" onclick="anomMarkPlate('${r.kind}','${plate}','resolvido')">Resolver</button></div></td><td><span class="anom-badge ${badge}">${anomEsc(r.kindLabel)}</span></td><td>${anomEsc(fechFmt(fechParse(r.date)))}</td><td title="${anomEsc(r.operacao)}">${anomEsc(String(r.operacao).replace(/_/g,' '))}</td><td><strong class="anom-plate">${anomEsc(r.placa)}</strong></td><td>${anomEsc(medida)}</td><td>${anomEsc(litros)}</td><td><strong>${anomEsc(r.real)}</strong></td><td>${anomEsc(r.meta??'—')}</td><td><strong class="${efClass}">${anomEsc(ef)}</strong></td><td><div class="anom-detail-main">${anomEsc(r.detail)}</div><div class="anom-detail-sub">${anomEsc(r.source)}</div></td></tr>`;}).join('');
 }
 
