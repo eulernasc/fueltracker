@@ -6550,7 +6550,18 @@ const IGNIS_MOTORISTAS_INICIAIS = [
   'RODRIGO AUGUSTO TEIXEIRA','SAND LUC SOARES DA COSTA','WELLINGTON CARDOSO GOMES','WELLINGTON SEBASTIAO DA SILVA',
   'WINGLISSON SOUZA AQUINO SURIANI'
 ];
-function ignisMotoristaNorm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();}
+function ignisMotoristaNorm(v){
+  // Chave única de comparação dos motoristas: ignora caixa, acentos, pontuação e espaços extras.
+  // Ex.: "ADELTON BATISTA CÂNDIDO FERREIRA" = "adelton batista candido ferreira".
+  return String(v??'')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toUpperCase()
+    .replace(/[’'`´]/g,'')
+    .replace(/[^A-Z0-9]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
 function ignisParseMotorista(raw){
   let txt=String(raw||'').replace(/\s+/g,' ').trim();
   if(!txt||txt==='-')return{nome:'',matricula:'',key:''};
