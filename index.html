@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v20 · IDT acumulativo por motorista + período/financeiro v19 + Sync Guard v17 — 25/08/2026 -->
-<meta name="ignis-build" content="2026-08-25-sync-seletivo-v17">
+<!-- IGNIS v22 · IDT acumulativo por motorista + período/financeiro v19 + Sync Guard v17 — 25/08/2026 -->
+<meta name="ignis-build" content="2026-08-25-motoristas-permissoes-idt-v22">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1905,8 +1905,8 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
             <th><button class="mot-sort" data-key="periodo" onclick="motoristasSetSort('periodo')">Período consolidado <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort num" data-key="km" onclick="motoristasSetSort('km')">KM <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort num" data-key="litros" onclick="motoristasSetSort('litros')">Litros <span class="mot-sort-arrow">↕</span></button></th>
-            <th><button class="mot-sort num" data-key="media" onclick="motoristasSetSort('media')">Média <span class="mot-sort-arrow">↕</span></button></th>
-            <th><button class="mot-sort num" data-key="meta" onclick="motoristasSetSort('meta')">Meta ponderada <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="meta" onclick="motoristasSetSort('meta')">Média ideal <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="media" onclick="motoristasSetSort('media')">Média real <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort num" data-key="efic" onclick="motoristasSetSort('efic')">Eficiência <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort num" data-key="registros" onclick="motoristasSetSort('registros')">Abastecimentos <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort num" data-key="placas" onclick="motoristasSetSort('placas')">Placas <span class="mot-sort-arrow">↕</span></button></th>
@@ -1916,7 +1916,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <tbody id="mot-table-body"></tbody>
         </table>
       </div>
-      <div class="mot-page-note">A média é calculada por <strong>Σ KM ÷ Σ litros</strong> no período exibido. O impacto financeiro compara os litros reais com os litros necessários para cumprir a meta e usa o <strong>Valor Litro de cada abastecimento</strong>. Para motorista PX, <strong>2 meses sem nenhum registro</strong> encerram o período anterior; se ele voltar depois disso, o IGNIS cria um novo período e não mistura os dados antigos com os novos. Máquinas, tratores e empilhadeiras não entram nesta análise.</div>
+      <div class="mot-page-note">A <strong>Média real</strong> é calculada por <strong>Σ KM ÷ Σ litros</strong> no período exibido; a <strong>Média ideal</strong> é a meta ponderada do mesmo período. O impacto financeiro compara os litros reais com os litros necessários para cumprir a meta e usa o <strong>Valor Litro de cada abastecimento</strong>. Para motorista PX, <strong>2 meses sem nenhum registro</strong> encerram o período anterior; se ele voltar depois disso, o IGNIS cria um novo período e não mistura os dados antigos com os novos. Máquinas, tratores e empilhadeiras não entram nesta análise.</div>
     </div>
 
     <div id="mot-panel-idt" style="display:none">
@@ -1925,7 +1925,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="mot-field"><label>Situação</label><select class="filter-select" id="idt-status-filter" onchange="renderIDT()"><option value="identificados">Identificados</option><option value="meta">Dentro/abaixo da meta</option><option value="acima">Acima da meta</option><option value="todos">Todos</option></select></div>
         <div class="mot-field mot-search"><label>Buscar</label><input class="filter-input" id="idt-busca" placeholder="Buscar motorista..." oninput="idtDebouncedRender()"></div>
         <div class="mot-field"><label>Meta configurável</label><div class="idt-meta-box"><span class="idt-meta-label">Meta IDT</span><input class="idt-meta-input" id="idt-meta" type="number" min="0" step="0.1" value="1.5" onchange="idtSalvarMeta()"></div></div>
-        <button class="btn btn-primary" onclick="idtAbrirImportacao()">Importar desvios</button>
+        <button class="btn btn-primary" id="btn-idt-importar" onclick="idtAbrirImportacao()">Importar desvios</button>
       </div>
       <div class="idt-kpis">
         <div class="mot-kpi"><div class="mot-kpi-label">Motoristas avaliados</div><div class="mot-kpi-value" id="idt-kpi-avaliados">0</div><div class="mot-kpi-sub">com desvios informados e KM</div></div>
@@ -2947,6 +2947,7 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
         <label class="perm-item"><input type="checkbox" data-perm="comparativo"> Comparativo</label>
         <label class="perm-item"><input type="checkbox" data-perm="abastecimentos"> Abastecimentos</label>
         <label class="perm-item"><input type="checkbox" data-perm="maquinas">Frota e Equipamentos</label>
+        <label class="perm-item"><input type="checkbox" data-perm="motoristas">Motoristas PX</label>
         <label class="perm-item"><input type="checkbox" data-perm="relatorio"> 📧 Relatório</label>
         <label class="perm-item"><input type="checkbox" data-perm="excluir"> 🗑️ A Excluir</label>
         <label class="perm-item"><input type="checkbox" data-perm="arla"> Arla</label>
@@ -2954,11 +2955,19 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
         <label class="perm-item"><input type="checkbox" data-perm="metarota"> 🎯 Meta por Rota</label>
         <label class="perm-item"><input type="checkbox" data-perm="config"> ⚙️ Configurações</label>
       </div>
+      <div style="margin-top:12px;padding:12px;background:rgba(59,130,246,.06);border:1px solid rgba(96,165,250,.24);border-radius:9px">
+        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#93b7df;margin-bottom:9px">Ações específicas · Motoristas PX</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_idt_importar"> Importar IDT</label>
+          <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_idt_excluir"> Excluir importações IDT</label>
+        </div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-top:8px">Essas permissões valem <strong>somente</strong> para o IDT em Motoristas PX. Não liberam importação ou exclusão em Abastecimentos, Arla ou qualquer outra aba.</div>
+      </div>
       <div style="margin-top:10px;padding:10px;background:rgba(232,148,26,.08);border:1px solid rgba(232,148,26,.3);border-radius:8px">
         <label class="perm-item" style="background:none;border:none;padding:0;gap:8px">
           <input type="checkbox" id="user-field-admin">
           ⭐ Tag <strong>Admin</strong>
-          <span style="font-size:11px;color:var(--text3)">(pode importar, excluir, editar e gerenciar usuários)</span>
+          <span style="font-size:11px;color:var(--text3)">(acesso amplo: pode importar/excluir em todas as áreas e gerenciar usuários)</span>
         </label>
       </div>
     </div>
@@ -3743,6 +3752,24 @@ window.addEventListener('beforeunload', e => {
 
 window._authUser = null; // usuário logado atualmente
 
+// Permissões granulares de ações. ADM Master/Admin continuam com acesso amplo;
+// usuários comuns recebem apenas as ações explicitamente marcadas no cadastro.
+function authTemPermissao(perm){
+  const u=window._authUser;
+  if(!u)return false;
+  if(u.role==='adm'||u.role==='admin')return true;
+  return Array.isArray(u.perms)&&u.perms.includes(perm);
+}
+function authExigirPermissao(perm,mensagem){
+  if(authTemPermissao(perm))return true;
+  showToast(mensagem||'Sem permissão para realizar esta ação.','error');
+  return false;
+}
+function authAplicarPermissoesMotoristas(){
+  const btn=document.getElementById('btn-idt-importar');
+  if(btn)btn.style.display=authTemPermissao('motoristas_idt_importar')?'':'none';
+}
+
 // Todas as abas disponíveis
 function navIconSvg(name) {
   const icons = {
@@ -4030,6 +4057,7 @@ function loginEntrarApp() {
   document.getElementById('sidebar-avatar').textContent = (u.nome || u.id).charAt(0).toUpperCase();
   // Renderiza nav com permissões
   authRenderNav();
+  authAplicarPermissoesMotoristas();
   // Mostra/oculta seções restritas no Config
   const canManage = u?.role === 'adm' || u?.role === 'admin';
   const usersSection = document.getElementById('config-users-section');
@@ -4116,6 +4144,18 @@ async function authCarregarUsuarios() {
   } catch(e) { return {}; }
 }
 
+function authResumoPermissoesUsuario(usr){
+  const perms=Array.isArray(usr?.perms)?usr.perms:[];
+  const pageIds=new Set(AUTH_PAGES.map(p=>p.id));
+  const abas=perms.filter(p=>pageIds.has(p)).length;
+  const acoes=[];
+  if(perms.includes('motoristas_idt_importar'))acoes.push('importar IDT');
+  if(perms.includes('motoristas_idt_excluir'))acoes.push('excluir IDT');
+  const acaoTxt=acoes.length?` · <span style="color:#93b7df">${acoes.join(' + ')}</span>`:'';
+  const manage=perms.includes('manage_users')?'<span style="color:var(--yellow)"> · gerencia usuários</span>':'';
+  return `${abas} aba(s)${acaoTxt}${manage}`;
+}
+
 async function authRenderUsuarios(usersOverride) {
   const users = usersOverride || await authCarregarUsuarios();
   const lista = document.getElementById('users-lista');
@@ -4129,7 +4169,7 @@ async function authRenderUsuarios(usersOverride) {
       <div class="user-avatar" style="flex-shrink:0">${(usr.nome||id).charAt(0).toUpperCase()}</div>
       <div style="flex:1">
         <div class="user-name">${usr.nome||id} <span style="font-size:11px;color:var(--text3);font-family:monospace">(${id})</span></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px">${(usr.perms||[]).filter(p=>p!=='manage_users').length} aba(s) · ${(usr.perms||[]).includes('manage_users')?'<span style="color:var(--yellow)">pode gerenciar usuários</span>':''}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${authResumoPermissoesUsuario(usr)}</div>
       </div>
       <span class="user-role-badge ${usr.role==='adm'?'adm':usr.role==='admin'?'adm':''}">${usr.role==='adm'?'ADM Master':usr.role==='admin'?'Admin':'Usuário'}</span>
       ${u?.id !== id && (isAdm || usr.role !== 'adm') ? `<button class="btn btn-secondary btn-sm icon-action-btn" onclick="abrirModalEditarUsuario('${id}')" title="Editar usuário"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button>
@@ -4181,6 +4221,7 @@ async function salvarUsuario() {
   const pass   = document.getElementById('user-field-senha').value;
   const pass2  = document.getElementById('user-field-senha2').value;
   const perms  = [...document.querySelectorAll('[data-perm]:checked')].map(cb=>cb.dataset.perm);
+  if (perms.some(p=>p==='motoristas_idt_importar'||p==='motoristas_idt_excluir') && !perms.includes('motoristas')) perms.push('motoristas');
   const isAdmin = document.getElementById('user-field-admin').checked;
   const errEl  = document.getElementById('user-modal-error');
   errEl.style.display = 'none';
@@ -6875,7 +6916,7 @@ function renderMotoristas(force=false){
   tb.innerHTML=rows.map(r=>{
     const st=motoristasStatus(r),has=r.litros>0&&r.km>0,click=has&&r.ciclo>0?` onclick="motoristasAbrirDetalhe('${r.key.replace(/'/g,"\\'")}',${r.ciclo})"`:'';
     const fin=!r.financeiroOk?'<span class="mot-money none">—</span>':(Math.abs(Number(r.impactoR)||0)<0.005?'<span class="mot-money none">R$ 0,00</span>':Number(r.impactoR)>0?`<span class="mot-money ok"><small>Economia</small>${Number(r.impactoR).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad"><small>Desperdício</small>${Math.abs(Number(r.impactoR)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);
-    return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td class="mot-number">${fin}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
+    return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td class="mot-number">${fin}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
   }).join('');
   _markPageClean('motoristas');
   if(_motSubtab==='idt')renderIDT();
@@ -6894,12 +6935,12 @@ function motoristasAbrirDetalhe(key,ciclo){
   const d=motoristasRowsPeriodo(motoristasColetarCiclos()).find(x=>x.key===key&&x.ciclo===Number(ciclo))||motoristasColetarCiclos().find(x=>x.key===key&&x.ciclo===Number(ciclo));if(!d)return;
   let ov=document.getElementById('mot-detalhe-modal');if(!ov){ov=document.createElement('div');ov.id='mot-detalhe-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:980px"><div id="mot-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('mot-detail-content'),st=motoristasStatus(d),det=[...d.detalhes].sort((a,b)=>String(b.inicio||b.fim).localeCompare(String(a.inicio||a.fim)));
-  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média consolidada</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Meta ponderada</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta</th><th>Economia / desperdício</th></tr></thead><tbody>${det.length?det.map(x=>{const f=x.litrosComPreco>0?(Number(x.impactoR)>=0?`<span class="mot-money ok">${Number(x.impactoR).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(Number(x.impactoR)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`):'—';return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${f}</td></tr>`}).join(''):'<tr><td colspan="8" class="mot-empty">Sem dados nesse período.</td></tr>'}</tbody></table></div>`;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média ideal</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Média real</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média ideal</th><th>Média real</th><th>Economia / desperdício</th></tr></thead><tbody>${det.length?det.map(x=>{const f=x.litrosComPreco>0?(Number(x.impactoR)>=0?`<span class="mot-money ok">${Number(x.impactoR).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(Number(x.impactoR)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`):'—';return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${f}</td></tr>`}).join(''):'<tr><td colspan="8" class="mot-empty">Sem dados nesse período.</td></tr>'}</tbody></table></div>`;
   ov.classList.add('open');
 }
 
 
-// ── MOTORISTAS PX · IDT (ÍNDICE DE DESVIO DE TELEMETRIA) ───────────────────
+// ── MOTORISTAS PX · IDT (ÍNDICE DE DESVIO DE TELEMETRIA) · permissões granulares v22 ──
 let _motSubtab='media', _idtRenderTimer=null;
 function ignisEnsureIdtState(){
   if(!Number.isFinite(Number(state.idtMeta))||Number(state.idtMeta)<0)state.idtMeta=1.5;
@@ -6917,7 +6958,7 @@ function motoristasSetSubtab(tab,el){
   if(media)media.style.display=_motSubtab==='media'?'':'none';
   if(idt)idt.style.display=_motSubtab==='idt'?'':'none';
   if(periodbar)periodbar.style.display=_motSubtab==='media'?'grid':'none';
-  if(_motSubtab==='idt'){idtAtualizarSeletor();renderIDT();}else renderMotoristas(false);
+  if(_motSubtab==='idt'){authAplicarPermissoesMotoristas();idtAtualizarSeletor();renderIDT();}else renderMotoristas(false);
 }
 function idtDebouncedRender(){clearTimeout(_idtRenderTimer);_idtRenderTimer=setTimeout(renderIDT,100);}
 function idtFmtNumero(v,casas=0){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:casas,maximumFractionDigits:casas});}
@@ -6992,6 +7033,7 @@ function idtStatus(row,meta){
   return{cls:'bad',label:'Acima da meta'};
 }
 function renderIDT(){
+  authAplicarPermissoesMotoristas();
   ignisEnsureIdtState();idtAtualizarSeletor();
   const sel=document.getElementById('idt-periodo'),content=document.getElementById('idt-content');if(!content)return;
   const imp=state.idtImportacoes.find(x=>x.id===sel?.value)||idtOrdenadas()[0]||null;
@@ -7035,10 +7077,11 @@ function renderIDT(){
     <th><button class="mot-sort num" data-key="meta" onclick="idtSetSort('meta')">Meta <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort" data-key="status" onclick="idtSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
   </tr></thead>`;
-  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Planilha: <strong style="color:var(--text2)">${pendEsc(imp.arquivo||'Desvios')}</strong> · importada ${pendEsc(imp.importedAt||'')}</div><button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button></div><div class="mot-page-note" style="margin:0 0 10px"><strong>IDT acumulado:</strong> os desvios desta importação são somados aos desvios anteriores do mesmo motorista dentro do mesmo período PX. A data, o KM e o ciclo usados no cálculo são os desta importação selecionada.</div><div class="mot-table-wrap"><table class="mot-table idt-table">${head}<tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>'}</tbody></table></div>`;
+  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Planilha: <strong style="color:var(--text2)">${pendEsc(imp.arquivo||'Desvios')}</strong> · importada ${pendEsc(imp.importedAt||'')}</div>${authTemPermissao('motoristas_idt_excluir')?`<button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button>`:''}</div><div class="mot-page-note" style="margin:0 0 10px"><strong>IDT acumulado:</strong> os desvios desta importação são somados aos desvios anteriores do mesmo motorista dentro do mesmo período PX. A data, o KM e o ciclo usados no cálculo são os desta importação selecionada.</div><div class="mot-table-wrap"><table class="mot-table idt-table">${head}<tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>'}</tbody></table></div>`;
   ignisMotorSortHeaderUpdate('idt-table-head',_idtSort);
 }
 function idtAbrirImportacao(){
+  if(!authExigirPermissao('motoristas_idt_importar','Sem permissão para importar IDT em Motoristas PX.'))return;
   ignisEnsureIdtState();
   const pcfg=motoristasPeriodoConfig();if(pcfg.mode==='todos'){showToast('Para importar IDT, escolha “Período mais recente” ou “Selecionar período” na Média por Motorista. O IGNIS não mistura retornos separados por 2 meses.','error');return;}
   if(pcfg.mode==='personalizado'&&(!pcfg.ini||!pcfg.fim)){showToast('Selecione a data inicial e final antes de importar o IDT.','error');return;}
@@ -7053,6 +7096,7 @@ function idtAbrirImportacao(){
 }
 function idtHeaderNorm(v){return ignisMotoristaNorm(v).replace(/[^A-Z0-9]/g,'');}
 async function idtImportarArquivo(input){
+  if(!authExigirPermissao('motoristas_idt_importar','Sem permissão para importar IDT em Motoristas PX.')){if(input)input.value='';return;}
   if(!await ensureXLSXReady())return;const file=input.files?.[0];if(!file)return;
   try{
     const buf=await file.arrayBuffer();
@@ -7097,6 +7141,7 @@ async function idtImportarArquivo(input){
   finally{input.value='';}
 }
 function idtExcluirImportacao(id){
+  if(!authExigirPermissao('motoristas_idt_excluir','Sem permissão para excluir importações IDT em Motoristas PX.'))return;
   const imp=ignisEnsureIdtState().find(x=>x.id===id);if(!imp)return;if(!confirm(`Excluir esta importação IDT${imp.arquivo?' ('+imp.arquivo+')':''}?`))return;
   state.idtImportacoes=state.idtImportacoes.filter(x=>x.id!==id);saveState({immediate:true,mode:'light'});idtAtualizarSeletor();renderIDT();showToast('Importação IDT excluída.','success');
 }
