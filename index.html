@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS Sync Guard v17 + save seletivo + IDT leve + performance — 25/08/2026 -->
+<!-- IGNIS v18 · filtros e ordenação em Motoristas PX/IDT + Sync Guard v17 — 25/08/2026 -->
 <meta name="ignis-build" content="2026-08-25-sync-seletivo-v17">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -1849,18 +1849,18 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   <style>
     .mot-subtabs{display:flex;background:#10151c;border:1px solid var(--border);padding:5px;border-radius:13px;gap:4px;margin-bottom:18px;width:max-content;max-width:100%}
     .mot-subtab{border:0;border-radius:9px;padding:10px 18px;background:transparent;color:var(--text2);font:600 13px 'DM Sans',sans-serif;cursor:pointer;transition:.16s;white-space:nowrap}.mot-subtab:hover{color:#fff;background:rgba(255,255,255,.035)}.mot-subtab.active{background:var(--accent);color:#fff}
-    .mot-toolbar{display:grid;grid-template-columns:minmax(230px,300px) minmax(260px,1fr) auto;gap:10px;align-items:end;margin-bottom:18px}
+    .mot-toolbar{display:grid;grid-template-columns:minmax(210px,270px) minmax(180px,230px) minmax(260px,1fr) auto;gap:10px;align-items:end;margin-bottom:18px}
     .mot-field{display:flex;flex-direction:column;gap:6px}.mot-field label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
     .mot-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}.mot-kpi{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98));border:1px solid var(--border);border-radius:14px;padding:16px 18px}.mot-kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:800}.mot-kpi-value{font-size:25px;font-weight:760;margin-top:6px;letter-spacing:-.7px}.mot-kpi-sub{font-size:10px;color:var(--text3);margin-top:3px}
-    .mot-table-wrap{border:1px solid var(--border);border-radius:15px;overflow:hidden;background:var(--bg2)}.mot-table{width:100%;border-collapse:collapse}.mot-table th{padding:11px 12px}.mot-table td{padding:12px;border-top:1px solid rgba(255,255,255,.045);font-size:12px}.mot-name{font-weight:720;color:var(--text)}.mot-matricula{font-size:10px;color:var(--text3);margin-top:2px}.mot-number{font-variant-numeric:tabular-nums}.mot-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:800;white-space:nowrap}.mot-status.ok{color:var(--green);background:rgba(52,201,139,.09);border:1px solid rgba(52,201,139,.2)}.mot-status.warn{color:var(--yellow);background:rgba(242,184,75,.09);border:1px solid rgba(242,184,75,.2)}.mot-status.bad{color:var(--red);background:rgba(240,95,87,.09);border:1px solid rgba(240,95,87,.2)}.mot-status.none{color:var(--text3);background:rgba(255,255,255,.025);border:1px solid var(--border)}
+    .mot-table-wrap{border:1px solid var(--border);border-radius:15px;overflow:hidden;background:var(--bg2)}.mot-table{width:100%;border-collapse:collapse}.mot-table th{padding:0}.mot-table td{padding:12px;border-top:1px solid rgba(255,255,255,.045);font-size:12px}.mot-sort{width:100%;min-height:43px;display:flex;align-items:center;justify-content:flex-start;gap:6px;padding:11px 12px;border:0;background:transparent;color:var(--text3);font:800 9px/1.2 'DM Sans',sans-serif;letter-spacing:.08em;text-transform:uppercase;text-align:left;cursor:pointer;white-space:nowrap;transition:.15s}.mot-sort:hover{color:var(--text);background:rgba(255,255,255,.025)}.mot-sort-arrow{font-size:10px;line-height:1;color:var(--text3);opacity:.55;transition:.15s}.mot-sort.active{color:var(--text)}.mot-sort.active .mot-sort-arrow{color:var(--orange);opacity:1}.mot-sort.num{justify-content:flex-start}.mot-name{font-weight:720;color:var(--text)}.mot-matricula{font-size:10px;color:var(--text3);margin-top:2px}.mot-number{font-variant-numeric:tabular-nums}.mot-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:800;white-space:nowrap}.mot-status.ok{color:var(--green);background:rgba(52,201,139,.09);border:1px solid rgba(52,201,139,.2)}.mot-status.warn{color:var(--yellow);background:rgba(242,184,75,.09);border:1px solid rgba(242,184,75,.2)}.mot-status.bad{color:var(--red);background:rgba(240,95,87,.09);border:1px solid rgba(240,95,87,.2)}.mot-status.none{color:var(--text3);background:rgba(255,255,255,.025);border:1px solid var(--border)}
     .mot-driver-row{cursor:pointer;transition:background .14s}.mot-driver-row:hover{background:rgba(255,255,255,.02)}.mot-empty{padding:36px;text-align:center;color:var(--text3);font-size:12px}.mot-page-note{font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5}
     .mot-manage-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;margin-top:12px}.mot-manage-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-manage-copy{min-width:0;flex:1}.mot-manage-name{font-size:12px;font-weight:700}.mot-manage-meta{font-size:9px;color:var(--text3);margin-top:2px}.mot-remove{width:28px;height:28px;border:1px solid rgba(240,95,87,.23);background:rgba(240,95,87,.06);color:#ff8d86;border-radius:8px;cursor:pointer}.mot-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.mot-suggestions{display:flex;flex-direction:column;gap:5px;max-height:190px;overflow:auto;margin-top:8px}.mot-suggestion{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:#111820;color:var(--text);cursor:pointer;font-family:inherit}.mot-suggestion:hover{border-color:rgba(233,95,50,.35)}.mot-suggestion small{color:var(--text3)}
     .mot-detail-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.mot-detail-card{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-detail-card span{display:block;font-size:9px;color:var(--text3);text-transform:uppercase}.mot-detail-card strong{display:block;font-size:16px;margin-top:3px}.mot-detail-table{width:100%;border-collapse:collapse}.mot-detail-table th,.mot-detail-table td{padding:9px;border-bottom:1px solid rgba(255,255,255,.05);font-size:10px;text-align:left}.mot-detail-scroll{max-height:330px;overflow:auto;border:1px solid var(--border);border-radius:10px}
-    .idt-toolbar{display:grid;grid-template-columns:minmax(250px,340px) minmax(220px,1fr) auto auto;gap:10px;align-items:end;margin-bottom:18px}.idt-meta-box{display:flex;align-items:center;height:42px;border:1px solid var(--border);border-radius:10px;background:#121820;overflow:hidden}.idt-meta-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:0 10px;white-space:nowrap}.idt-meta-input{width:72px;height:100%;border:0;border-left:1px solid var(--border);background:transparent;color:#fff;text-align:center;font:700 12px 'DM Mono',monospace;outline:none}.idt-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.idt-idt-value{font-family:'DM Mono',monospace}.idt-idt-value.ok{color:var(--green)}.idt-idt-value.bad{color:var(--red)}
+    .idt-toolbar{display:grid;grid-template-columns:minmax(230px,310px) minmax(180px,220px) minmax(220px,1fr) auto auto;gap:10px;align-items:end;margin-bottom:18px}.idt-meta-box{display:flex;align-items:center;height:42px;border:1px solid var(--border);border-radius:10px;background:#121820;overflow:hidden}.idt-meta-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:0 10px;white-space:nowrap}.idt-meta-input{width:72px;height:100%;border:0;border-left:1px solid var(--border);background:transparent;color:#fff;text-align:center;font:700 12px 'DM Mono',monospace;outline:none}.idt-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.idt-idt-value{font-family:'DM Mono',monospace}.idt-idt-value.ok{color:var(--green)}.idt-idt-value.bad{color:var(--red)}
     .idt-period-empty{padding:48px 20px;border:1px dashed var(--border);border-radius:14px;text-align:center;background:rgba(255,255,255,.012)}.idt-period-empty strong{display:block;font-size:14px;margin-bottom:6px}.idt-period-empty span{font-size:11px;color:var(--text3)}
     .idt-import-box{border:1px dashed rgba(233,95,50,.35);border-radius:12px;padding:16px;background:rgba(233,95,50,.025);margin-top:14px;cursor:pointer;transition:.15s}.idt-import-box:hover{border-color:rgba(233,95,50,.65);background:rgba(233,95,50,.045)}.idt-import-title{font-size:12px;font-weight:720}.idt-import-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.45}.idt-modal-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}.idt-import-history{margin-top:14px;font-size:10px;color:var(--text3)}
-    @media(max-width:1100px){.idt-toolbar{grid-template-columns:1fr 1fr}.idt-toolbar>.btn{width:100%}.idt-kpis{grid-template-columns:1fr 1fr}}
-    @media(max-width:900px){.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1020px}.mot-detail-summary{grid-template-columns:1fr 1fr}.idt-toolbar{grid-template-columns:1fr}.idt-kpis{grid-template-columns:1fr 1fr}.idt-table{min-width:760px}}
+    @media(max-width:1180px){.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{width:100%}.idt-toolbar{grid-template-columns:1fr 1fr}.idt-toolbar .mot-search{grid-column:1/-1}.idt-toolbar>.btn{width:100%}.idt-kpis{grid-template-columns:1fr 1fr}}
+    @media(max-width:900px){.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1020px}.mot-detail-summary{grid-template-columns:1fr 1fr}.idt-toolbar{grid-template-columns:1fr}.idt-kpis{grid-template-columns:1fr 1fr}.idt-table{min-width:760px}}
     @media(max-width:520px){.mot-subtabs{width:100%}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
   </style>
   <div id="page-motoristas" class="page">
@@ -1877,6 +1877,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div id="mot-panel-media">
       <div class="mot-toolbar">
         <div class="mot-field"><label>Exibir</label><select class="filter-select" id="mot-visao" onchange="renderMotoristas(false)"><option value="ultimo">Período mais recente de cada motorista</option><option value="todos">Todos os períodos</option></select></div>
+        <div class="mot-field"><label>Situação</label><select class="filter-select" id="mot-status-filter" onchange="renderMotoristas(false)"><option value="identificados">Identificados</option><option value="meta">Meta atingida</option><option value="abaixo">Abaixo da meta</option><option value="todos">Todos</option></select></div>
         <div class="mot-field mot-search"><label>Buscar</label><input class="filter-input" id="mot-busca" placeholder="Buscar motorista..." oninput="motoristasDebouncedRender()"></div>
         <button class="btn btn-secondary" onclick="motoristasAbrirGestao()">+ Incluir / retirar</button>
       </div>
@@ -1887,7 +1888,18 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
       </div>
       <div class="mot-table-wrap">
         <table class="mot-table">
-          <thead><tr><th>Motorista</th><th>Período consolidado</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta ponderada</th><th>Eficiência</th><th>Abastecimentos</th><th>Placas</th><th>Status</th></tr></thead>
+          <thead id="mot-table-head"><tr>
+            <th><button class="mot-sort" data-key="nome" onclick="motoristasSetSort('nome')">Motorista <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort" data-key="periodo" onclick="motoristasSetSort('periodo')">Período consolidado <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="km" onclick="motoristasSetSort('km')">KM <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="litros" onclick="motoristasSetSort('litros')">Litros <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="media" onclick="motoristasSetSort('media')">Média <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="meta" onclick="motoristasSetSort('meta')">Meta ponderada <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="efic" onclick="motoristasSetSort('efic')">Eficiência <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="registros" onclick="motoristasSetSort('registros')">Abastecimentos <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort num" data-key="placas" onclick="motoristasSetSort('placas')">Placas <span class="mot-sort-arrow">↕</span></button></th>
+            <th><button class="mot-sort" data-key="status" onclick="motoristasSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
+          </tr></thead>
           <tbody id="mot-table-body"></tbody>
         </table>
       </div>
@@ -1897,7 +1909,8 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div id="mot-panel-idt" style="display:none">
       <div class="idt-toolbar">
         <div class="mot-field"><label>Importação de desvios</label><select class="filter-select" id="idt-periodo" onchange="renderIDT()"></select></div>
-        <div class="mot-field"><label>Buscar</label><input class="filter-input" id="idt-busca" placeholder="Buscar motorista..." oninput="idtDebouncedRender()"></div>
+        <div class="mot-field"><label>Situação</label><select class="filter-select" id="idt-status-filter" onchange="renderIDT()"><option value="identificados">Identificados</option><option value="meta">Dentro/abaixo da meta</option><option value="acima">Acima da meta</option><option value="todos">Todos</option></select></div>
+        <div class="mot-field mot-search"><label>Buscar</label><input class="filter-input" id="idt-busca" placeholder="Buscar motorista..." oninput="idtDebouncedRender()"></div>
         <div class="mot-field"><label>Meta configurável</label><div class="idt-meta-box"><span class="idt-meta-label">Meta IDT</span><input class="idt-meta-input" id="idt-meta" type="number" min="0" step="0.1" value="1.5" onchange="idtSalvarMeta()"></div></div>
         <button class="btn btn-primary" onclick="idtAbrirImportacao()">Importar desvios</button>
       </div>
@@ -6728,21 +6741,50 @@ function motoristasColetarCiclos(){
 function motoristasColetar(){return motoristasColetarCiclos();}
 let _motRenderTimer=null;function motoristasDebouncedRender(){clearTimeout(_motRenderTimer);_motRenderTimer=setTimeout(()=>renderMotoristas(false),100);}
 function motoristasStatus(d){if(!(d.litros>0&&d.km>0))return{cls:'none',label:'Sem dados'};if(!(d.meta>0))return{cls:'none',label:'Sem meta'};if(d.efic>=98)return{cls:'ok',label:'Dentro da meta'};if(d.efic>=90)return{cls:'warn',label:'Atenção'};return{cls:'bad',label:'Abaixo da meta'};}
+let _motSort={key:'nome',dir:'asc'}, _idtSort={key:'nome',dir:'asc'};
+function ignisMotorSortToggle(sort,key){return sort.key===key?{key,dir:sort.dir==='asc'?'desc':'asc'}:{key,dir:'asc'};}
+function ignisMotorSortText(v){return ignisMotoristaNorm(v||'');}
+function ignisMotorSortCompare(a,b,sort,getValue){
+  const av=getValue(a,sort.key),bv=getValue(b,sort.key);
+  let cmp=0;
+  if(typeof av==='number'||typeof bv==='number'){
+    const an=Number(av),bn=Number(bv),aa=Number.isFinite(an)?an:-Infinity,bb=Number.isFinite(bn)?bn:-Infinity;cmp=aa-bb;
+  }else cmp=String(av??'').localeCompare(String(bv??''),'pt-BR',{numeric:true,sensitivity:'base'});
+  if(cmp===0)cmp=ignisMotorSortText(a.nome).localeCompare(ignisMotorSortText(b.nome),'pt-BR');
+  return sort.dir==='desc'?-cmp:cmp;
+}
+function ignisMotorSortHeaderUpdate(headId,sort){
+  document.querySelectorAll(`#${headId} .mot-sort`).forEach(btn=>{
+    const active=btn.dataset.key===sort.key;btn.classList.toggle('active',active);
+    const ar=btn.querySelector('.mot-sort-arrow');if(ar)ar.textContent=active?(sort.dir==='asc'?'↑':'↓'):'↕';
+    btn.title=active?(sort.dir==='asc'?'Ordenado do menor para o maior. Clique para inverter.':'Ordenado do maior para o menor. Clique para inverter.'):'Clique para ordenar esta coluna.';
+  });
+}
+function motoristasSetSort(key){_motSort=ignisMotorSortToggle(_motSort,key);renderMotoristas(false);}
+function idtSetSort(key){_idtSort=ignisMotorSortToggle(_idtSort,key);renderIDT();}
 function renderMotoristas(force=false){
   ignisEnsureMotoristasState();
-  const all=motoristasColetarCiclos(),visao=document.getElementById('mot-visao')?.value||'ultimo',q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||'');
+  const all=motoristasColetarCiclos(),visao=document.getElementById('mot-visao')?.value||'ultimo',q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),filtro=document.getElementById('mot-status-filter')?.value||'identificados';
   let rows=all;
   if(visao==='ultimo'){
     const ultimo=new Map();all.forEach(r=>{const prev=ultimo.get(r.key);if(!prev||r.ciclo>prev.ciclo)ultimo.set(r.key,r);});rows=[...ultimo.values()].sort((a,b)=>a.ord-b.ord);
   }
   if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
+  const identificado=r=>r.ciclo>0&&r.litros>0&&r.km>0;
+  if(filtro==='identificados')rows=rows.filter(identificado);
+  else if(filtro==='meta')rows=rows.filter(r=>identificado(r)&&r.meta>0&&r.efic>=98);
+  else if(filtro==='abaixo')rows=rows.filter(r=>identificado(r)&&r.meta>0&&r.efic<98);
+  const statusRank=r=>{const st=motoristasStatus(r);return st.cls==='bad'?0:st.cls==='warn'?1:st.cls==='ok'?2:3;};
+  rows=[...rows].sort((a,b)=>ignisMotorSortCompare(a,b,_motSort,(r,key)=>({nome:ignisMotorSortText(r.nome),periodo:r.inicio||r.fim||'',km:Number(r.km)||0,litros:Number(r.litros)||0,media:Number(r.media)||0,meta:Number(r.meta)||0,efic:Number(r.efic)||0,registros:Number(r.registros)||0,placas:Number(r.placas?.size)||0,status:statusRank(r)}[key])));
+  ignisMotorSortHeaderUpdate('mot-table-head',_motSort);
   const comDadosMotoristas=new Set(all.filter(r=>r.ciclo>0&&r.litros>0&&r.km>0).map(r=>r.key));
-  const abaixo=rows.filter(r=>r.ciclo>0&&r.meta>0&&r.efic<98).length;
+  const ultimos=new Map();all.forEach(r=>{const prev=ultimos.get(r.key);if(!prev||r.ciclo>prev.ciclo)ultimos.set(r.key,r);});
+  const abaixo=[...ultimos.values()].filter(r=>identificado(r)&&r.meta>0&&r.efic<98).length;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   set('mot-kpi-acomp',ignisEnsureMotoristasState().length);set('mot-kpi-dados',comDadosMotoristas.size);set('mot-kpi-abaixo',abaixo);
   const sub=document.getElementById('mot-kpi-dados-sub');if(sub)sub.textContent='motoristas com movimentação';
   const tb=document.getElementById('mot-table-body');if(!tb)return;
-  if(!rows.length){tb.innerHTML='<tr><td colspan="10"><div class="mot-empty">Nenhum motorista acompanhado corresponde à busca.</div></td></tr>';_markPageClean('motoristas');return;}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="10"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>';_markPageClean('motoristas');return;}
   tb.innerHTML=rows.map(r=>{
     const st=motoristasStatus(r),has=r.litros>0&&r.km>0,click=has&&r.ciclo>0?` onclick="motoristasAbrirDetalhe('${r.key.replace(/'/g,"\\'")}',${r.ciclo})"`:'';
     return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
@@ -6844,23 +6886,37 @@ function renderIDT(){
   }
   const ciclosAtuais=idtCiclosAtuaisMap(),regMap=new Map((imp.registros||[]).map(r=>[ignisMotoristaNorm(r.key||r.nome),r]));
   const periodosSnapshot=imp.periodos&&typeof imp.periodos==='object'?imp.periodos:{};
-  const q=ignisMotoristaNorm(document.getElementById('idt-busca')?.value||'');
-  let rows=ignisEnsureMotoristasState().map(m=>{
+  const q=ignisMotoristaNorm(document.getElementById('idt-busca')?.value||''),filtro=document.getElementById('idt-status-filter')?.value||'identificados';
+  let baseRows=ignisEnsureMotoristasState().map(m=>{
     const r=regMap.get(m.key);
-    // Importações v16 congelam o mesmo período/KM que existia em Média por Motorista
-    // no momento em que a planilha de desvios foi importada. Assim, se depois entrar
-    // KM novo, o numerador de desvios antigo não é misturado com um denominador maior.
     const snap=periodosSnapshot[m.key]||null,c=snap||ciclosAtuais.get(m.key)||null;
     const desv=r&&r.desvios!==null&&r.desvios!==undefined?Number(r.desvios):null;
     const km=Number(c?.km)||0;
     const idt=desv!==null&&km>0?(desv/km*1000):null;
     return{...m,desvios:Number.isFinite(desv)?desv:null,km,idt,inicio:c?.inicio||'',fim:c?.fim||'',ciclo:c?.ciclo||0};
   });
-  if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
-  const valid=rows.filter(r=>r.desvios!==null&&r.km>0&&r.idt!==null),totalKm=valid.reduce((s,r)=>s+r.km,0),totalDesv=valid.reduce((s,r)=>s+r.desvios,0),idtGeral=totalKm>0?totalDesv/totalKm*1000:null;
-  set('idt-kpi-avaliados',valid.length);set('idt-kpi-km',idtFmtNumero(totalKm,0));set('idt-kpi-desvios',idtFmtNumero(totalDesv,0));set('idt-kpi-geral',idtGeral!==null?idtGeral.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—');
+  const validAll=baseRows.filter(r=>r.desvios!==null&&r.km>0&&r.idt!==null),totalKm=validAll.reduce((s,r)=>s+r.km,0),totalDesv=validAll.reduce((s,r)=>s+r.desvios,0),idtGeral=totalKm>0?totalDesv/totalKm*1000:null;
+  set('idt-kpi-avaliados',validAll.length);set('idt-kpi-km',idtFmtNumero(totalKm,0));set('idt-kpi-desvios',idtFmtNumero(totalDesv,0));set('idt-kpi-geral',idtGeral!==null?idtGeral.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—');
   const geralEl=document.getElementById('idt-kpi-geral');if(geralEl){geralEl.classList.remove('ok','bad');if(idtGeral!==null)geralEl.classList.add(idtGeral<=meta?'ok':'bad');}
-  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Planilha: <strong style="color:var(--text2)">${pendEsc(imp.arquivo||'Desvios')}</strong> · importada ${pendEsc(imp.importedAt||'')}</div><button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button></div><div class="mot-page-note" style="margin:0 0 10px"><strong>Período sincronizado:</strong> cada linha usa a mesma data inicial, data final e KM que estavam em Média por Motorista quando esta planilha de desvios foi importada.</div><div class="mot-table-wrap"><table class="mot-table idt-table"><thead><tr><th>Motorista</th><th>Período consolidado</th><th>KM</th><th>Desvios</th><th>IDT</th><th>Meta</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde à busca.</div></td></tr>'}</tbody></table></div>`;
+  let rows=baseRows;
+  if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
+  const identificado=r=>r.desvios!==null&&r.km>0&&r.idt!==null;
+  if(filtro==='identificados')rows=rows.filter(identificado);
+  else if(filtro==='meta')rows=rows.filter(r=>identificado(r)&&r.idt<=meta);
+  else if(filtro==='acima')rows=rows.filter(r=>identificado(r)&&r.idt>meta);
+  const statusRank=r=>{const st=idtStatus(r,meta);return st.cls==='bad'?0:st.cls==='ok'?1:2;};
+  rows=[...rows].sort((a,b)=>ignisMotorSortCompare(a,b,_idtSort,(r,key)=>({nome:ignisMotorSortText(r.nome),periodo:r.inicio||r.fim||'',km:Number(r.km)||0,desvios:r.desvios===null?-Infinity:Number(r.desvios)||0,idt:r.idt===null?-Infinity:Number(r.idt)||0,meta,status:statusRank(r)}[key])));
+  const head=`<thead id="idt-table-head"><tr>
+    <th><button class="mot-sort" data-key="nome" onclick="idtSetSort('nome')">Motorista <span class="mot-sort-arrow">↕</span></button></th>
+    <th><button class="mot-sort" data-key="periodo" onclick="idtSetSort('periodo')">Período consolidado <span class="mot-sort-arrow">↕</span></button></th>
+    <th><button class="mot-sort num" data-key="km" onclick="idtSetSort('km')">KM <span class="mot-sort-arrow">↕</span></button></th>
+    <th><button class="mot-sort num" data-key="desvios" onclick="idtSetSort('desvios')">Desvios <span class="mot-sort-arrow">↕</span></button></th>
+    <th><button class="mot-sort num" data-key="idt" onclick="idtSetSort('idt')">IDT <span class="mot-sort-arrow">↕</span></button></th>
+    <th><button class="mot-sort num" data-key="meta" onclick="idtSetSort('meta')">Meta <span class="mot-sort-arrow">↕</span></button></th>
+    <th><button class="mot-sort" data-key="status" onclick="idtSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
+  </tr></thead>`;
+  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Planilha: <strong style="color:var(--text2)">${pendEsc(imp.arquivo||'Desvios')}</strong> · importada ${pendEsc(imp.importedAt||'')}</div><button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button></div><div class="mot-page-note" style="margin:0 0 10px"><strong>Período sincronizado:</strong> cada linha usa a mesma data inicial, data final e KM que estavam em Média por Motorista quando esta planilha de desvios foi importada.</div><div class="mot-table-wrap"><table class="mot-table idt-table">${head}<tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>'}</tbody></table></div>`;
+  ignisMotorSortHeaderUpdate('idt-table-head',_idtSort);
 }
 function idtAbrirImportacao(){
   ignisEnsureIdtState();let ov=document.getElementById('idt-import-modal');
