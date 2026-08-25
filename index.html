@@ -1858,7 +1858,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 
     <div id="mot-panel-idt" style="display:none">
       <div class="idt-toolbar">
-        <div class="mot-field"><label>Período IDT importado</label><select class="filter-select" id="idt-periodo" onchange="renderIDT()"></select></div>
+        <div class="mot-field"><label>Importação de desvios</label><select class="filter-select" id="idt-periodo" onchange="renderIDT()"></select></div>
         <div class="mot-field"><label>Buscar</label><input class="filter-input" id="idt-busca" placeholder="Buscar motorista..." oninput="idtDebouncedRender()"></div>
         <div class="mot-field"><label>Meta configurável</label><div class="idt-meta-box"><span class="idt-meta-label">Meta IDT</span><input class="idt-meta-input" id="idt-meta" type="number" min="0" step="0.1" value="1.5" onchange="idtSalvarMeta()"></div></div>
         <button class="btn btn-primary" onclick="idtAbrirImportacao()">Importar desvios</button>
@@ -1870,7 +1870,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="mot-kpi"><div class="mot-kpi-label">IDT geral</div><div class="mot-kpi-value idt-idt-value" id="idt-kpi-geral">—</div><div class="mot-kpi-sub" id="idt-kpi-geral-sub">meta ≤ 1,50</div></div>
       </div>
       <div id="idt-content"></div>
-      <div class="mot-page-note"><strong>IDT = Total de desvios ÷ KM realizado pelo motorista × 1.000.</strong> Quanto menor, melhor. A meta inicial é <strong>1,50</strong> e pode ser alterada acima. Valores vazios na planilha são tratados como <strong>não informados</strong>; zero informado é considerado 0 desvio.</div>
+      <div class="mot-page-note"><strong>IDT = Total de desvios ÷ KM realizado pelo motorista × 1.000.</strong> Ao importar a planilha de desvios, o IGNIS usa exatamente o mesmo <strong>período consolidado e KM</strong> que estiverem em Média por Motorista naquele momento. A meta inicial é <strong>1,50</strong>. Valores vazios na planilha permanecem como <strong>não informados</strong>; zero informado é considerado 0 desvio.</div>
     </div>
   </div>
 
@@ -6708,11 +6708,13 @@ function motoristasAbrirDetalhe(key,ciclo){
 
 
 // ── MOTORISTAS PX · IDT (ÍNDICE DE DESVIO DE TELEMETRIA) ───────────────────
-let _motSubtab='media', _idtRenderTimer=null, _idtKmCache={key:'',map:null};
+let _motSubtab='media', _idtRenderTimer=null;
 function ignisEnsureIdtState(){
   if(!Number.isFinite(Number(state.idtMeta))||Number(state.idtMeta)<0)state.idtMeta=1.5;
   if(!Array.isArray(state.idtImportacoes))state.idtImportacoes=[];
-  state.idtImportacoes=state.idtImportacoes.filter(x=>x&&x.dataIni&&x.dataFim&&Array.isArray(x.registros));
+  // v16: cada importação é um snapshot da planilha de desvios. As datas não são
+  // digitadas no IDT: cada motorista herda exatamente o período consolidado da tela Média.
+  state.idtImportacoes=state.idtImportacoes.filter(x=>x&&Array.isArray(x.registros));
   return state.idtImportacoes;
 }
 function motoristasSetSubtab(tab,el){
@@ -6726,12 +6728,21 @@ function motoristasSetSubtab(tab,el){
 }
 function idtDebouncedRender(){clearTimeout(_idtRenderTimer);_idtRenderTimer=setTimeout(renderIDT,100);}
 function idtFmtNumero(v,casas=0){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:casas,maximumFractionDigits:casas});}
-function idtPeriodoLabel(imp){return imp?`${ignisMotoristaFormatData(imp.dataIni)} → ${ignisMotoristaFormatData(imp.dataFim)}`:'—';}
-function idtOrdenadas(){return [...ignisEnsureIdtState()].sort((a,b)=>String(b.dataFim).localeCompare(String(a.dataFim))||String(b.dataIni).localeCompare(String(a.dataIni))||Number(b.importedAtMs||0)-Number(a.importedAtMs||0));}
+function idtImportLabel(imp){
+  if(!imp)return '—';
+  const data=imp.importedAt||'';
+  const arq=String(imp.arquivo||'').trim();
+  if(imp.dataIni&&imp.dataFim){
+    // Compatibilidade com importações feitas na v14/v15.
+    return `${ignisMotoristaFormatData(imp.dataIni)} → ${ignisMotoristaFormatData(imp.dataFim)}${arq?' · '+arq:''}`;
+  }
+  return `${data||'Importação'}${arq?' · '+arq:''}`;
+}
+function idtOrdenadas(){return [...ignisEnsureIdtState()].sort((a,b)=>Number(b.importedAtMs||0)-Number(a.importedAtMs||0)||String(b.importedAt||'').localeCompare(String(a.importedAt||'')));}
 function idtAtualizarSeletor(preferId=''){
   const sel=document.getElementById('idt-periodo');if(!sel)return;
   const atuais=idtOrdenadas(),old=preferId||sel.value;
-  sel.innerHTML=atuais.length?atuais.map(x=>`<option value="${pendEsc(x.id)}">${pendEsc(idtPeriodoLabel(x))}</option>`).join(''):'<option value="">Nenhum período importado</option>';
+  sel.innerHTML=atuais.length?atuais.map(x=>`<option value="${pendEsc(x.id)}">${pendEsc(idtImportLabel(x))}</option>`).join(''):'<option value="">Nenhuma importação</option>';
   if(atuais.some(x=>x.id===old))sel.value=old;else if(atuais.length)sel.value=atuais[0].id;
   const meta=document.getElementById('idt-meta');if(meta)meta.value=Number(state.idtMeta||1.5).toFixed(1);
 }
@@ -6740,26 +6751,18 @@ function idtSalvarMeta(){
   if(!Number.isFinite(v)||v<0){showToast('Informe uma meta IDT válida.','error');if(inp)inp.value=Number(state.idtMeta||1.5).toFixed(1);return;}
   state.idtMeta=Number(v.toFixed(3));saveState();renderIDT();showToast(`Meta IDT atualizada para ${state.idtMeta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3})}.`,'success');
 }
-function idtKmPorPeriodo(dataIni,dataFim){
-  const cacheKey=`${_ignisPerf?.version||0}|${dataIni}|${dataFim}|${(state.abastecimentos||[]).length}`;
-  if(_idtKmCache.key===cacheKey&&_idtKmCache.map)return _idtKmCache.map;
+function idtCiclosAtuaisMap(){
+  // Mesma fonte e mesma regra da tela "Média por Motorista". Assim KM, início e fim
+  // do IDT nunca divergem do período consolidado exibido na outra subárea.
   const map=new Map();
-  (state.abastecimentos||[]).forEach(a=>{
-    const tipo=getTipoIgnis(a);if(tipo!=='pesada'&&tipo!=='leve')return;
-    (Array.isArray(a.motoristas)?a.motoristas:[]).forEach(m=>{
-      const key=ignisMotoristaNorm(m.key||m.nome);if(!key)return;
-      const datas=ignisMotoristaDatasOcorrencia(a,m);if(!datas.inicio||!datas.fim)return;
-      if(datas.fim<dataIni||datas.inicio>dataFim)return;
-      let d=map.get(key);if(!d){d={km:0,parcial:false,ocorrencias:0};map.set(key,d);}
-      if(datas.inicio>=dataIni&&datas.fim<=dataFim){d.km+=Number(m.km)||0;d.ocorrencias++;}
-      else d.parcial=true;
-    });
+  motoristasColetarCiclos().forEach(r=>{
+    const prev=map.get(r.key);
+    if(!prev||Number(r.ciclo||0)>Number(prev.ciclo||0))map.set(r.key,r);
   });
-  _idtKmCache={key:cacheKey,map};return map;
+  return map;
 }
 function idtStatus(row,meta){
   if(row.desvios===null)return{cls:'none',label:'Não informado'};
-  if(row.parcial)return{cls:'warn',label:'KM parcial'};
   if(!(row.km>0))return{cls:'none',label:'Sem KM'};
   if(row.idt<=meta)return{cls:'ok',label:'Dentro da meta'};
   return{cls:'bad',label:'Acima da meta'};
@@ -6771,48 +6774,79 @@ function renderIDT(){
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   const meta=Number(state.idtMeta)||1.5,metaSub=document.getElementById('idt-kpi-geral-sub');if(metaSub)metaSub.textContent=`meta ≤ ${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3})}`;
   const metaInp=document.getElementById('idt-meta');if(metaInp&&document.activeElement!==metaInp)metaInp.value=meta.toFixed(1);
-  if(!imp){set('idt-kpi-avaliados','0');set('idt-kpi-km','0');set('idt-kpi-desvios','0');set('idt-kpi-geral','—');document.getElementById('idt-kpi-geral')?.classList.remove('ok','bad');content.innerHTML='<div class="idt-period-empty"><strong>Nenhum período de desvios importado.</strong><span>Clique em “Importar desvios”, informe as datas do relatório de telemetria e selecione a planilha.</span></div>';return;}
-  const kmMap=idtKmPorPeriodo(imp.dataIni,imp.dataFim),regMap=new Map((imp.registros||[]).map(r=>[ignisMotoristaNorm(r.key||r.nome),r]));
+  if(!imp){
+    set('idt-kpi-avaliados','0');set('idt-kpi-km','0');set('idt-kpi-desvios','0');set('idt-kpi-geral','—');
+    document.getElementById('idt-kpi-geral')?.classList.remove('ok','bad');
+    content.innerHTML='<div class="idt-period-empty"><strong>Nenhuma planilha de desvios importada.</strong><span>Clique em “Importar desvios” e selecione a planilha. O IGNIS usará automaticamente, para cada motorista, o mesmo período consolidado e o mesmo KM da tela Média por Motorista.</span></div>';
+    return;
+  }
+  const ciclosAtuais=idtCiclosAtuaisMap(),regMap=new Map((imp.registros||[]).map(r=>[ignisMotoristaNorm(r.key||r.nome),r]));
+  const periodosSnapshot=imp.periodos&&typeof imp.periodos==='object'?imp.periodos:{};
   const q=ignisMotoristaNorm(document.getElementById('idt-busca')?.value||'');
   let rows=ignisEnsureMotoristasState().map(m=>{
-    const r=regMap.get(m.key),k=kmMap.get(m.key)||{km:0,parcial:false};const desv=r&&r.desvios!==null&&r.desvios!==undefined?Number(r.desvios):null;
-    const idt=desv!==null&&k.km>0&&!k.parcial?(desv/k.km*1000):null;
-    return{...m,desvios:Number.isFinite(desv)?desv:null,km:Number(k.km)||0,parcial:!!k.parcial,idt};
+    const r=regMap.get(m.key);
+    // Importações v16 congelam o mesmo período/KM que existia em Média por Motorista
+    // no momento em que a planilha de desvios foi importada. Assim, se depois entrar
+    // KM novo, o numerador de desvios antigo não é misturado com um denominador maior.
+    const snap=periodosSnapshot[m.key]||null,c=snap||ciclosAtuais.get(m.key)||null;
+    const desv=r&&r.desvios!==null&&r.desvios!==undefined?Number(r.desvios):null;
+    const km=Number(c?.km)||0;
+    const idt=desv!==null&&km>0?(desv/km*1000):null;
+    return{...m,desvios:Number.isFinite(desv)?desv:null,km,idt,inicio:c?.inicio||'',fim:c?.fim||'',ciclo:c?.ciclo||0};
   });
   if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
-  const valid=rows.filter(r=>r.desvios!==null&&r.km>0&&!r.parcial&&r.idt!==null),totalKm=valid.reduce((s,r)=>s+r.km,0),totalDesv=valid.reduce((s,r)=>s+r.desvios,0),idtGeral=totalKm>0?totalDesv/totalKm*1000:null;
+  const valid=rows.filter(r=>r.desvios!==null&&r.km>0&&r.idt!==null),totalKm=valid.reduce((s,r)=>s+r.km,0),totalDesv=valid.reduce((s,r)=>s+r.desvios,0),idtGeral=totalKm>0?totalDesv/totalKm*1000:null;
   set('idt-kpi-avaliados',valid.length);set('idt-kpi-km',idtFmtNumero(totalKm,0));set('idt-kpi-desvios',idtFmtNumero(totalDesv,0));set('idt-kpi-geral',idtGeral!==null?idtGeral.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—');
   const geralEl=document.getElementById('idt-kpi-geral');if(geralEl){geralEl.classList.remove('ok','bad');if(idtGeral!==null)geralEl.classList.add(idtGeral<=meta?'ok':'bad');}
-  const parciais=rows.filter(r=>r.parcial&&r.desvios!==null).length;
-  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Período: <strong style="color:var(--text2)">${pendEsc(idtPeriodoLabel(imp))}</strong> · importado ${pendEsc(imp.importedAt||'')}</div><button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button></div>${parciais?`<div class="alert alert-warning" style="margin-bottom:10px">${parciais} motorista(s) possuem um bloco de KM que cruza parcialmente as datas selecionadas. O IDT deles não é calculado para evitar resultado estimado.</div>`:''}<div class="mot-table-wrap"><table class="mot-table idt-table"><thead><tr><th>Motorista</th><th>KM no período</th><th>Desvios</th><th>IDT</th><th>Meta</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="6"><div class="mot-empty">Nenhum motorista corresponde à busca.</div></td></tr>'}</tbody></table></div>`;
+  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Planilha: <strong style="color:var(--text2)">${pendEsc(imp.arquivo||'Desvios')}</strong> · importada ${pendEsc(imp.importedAt||'')}</div><button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button></div><div class="mot-page-note" style="margin:0 0 10px"><strong>Período sincronizado:</strong> cada linha usa a mesma data inicial, data final e KM que estavam em Média por Motorista quando esta planilha de desvios foi importada.</div><div class="mot-table-wrap"><table class="mot-table idt-table"><thead><tr><th>Motorista</th><th>Período consolidado</th><th>KM</th><th>Desvios</th><th>IDT</th><th>Meta</th><th>Status</th></tr></thead><tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:3})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde à busca.</div></td></tr>'}</tbody></table></div>`;
 }
 function idtAbrirImportacao(){
-  ignisEnsureIdtState();let ov=document.getElementById('idt-import-modal');if(!ov){ov=document.createElement('div');ov.id='idt-import-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:620px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Importar desvios de telemetria</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Informe exatamente o período coberto pela planilha. O KM é buscado automaticamente nos dados dos motoristas PX.</div></div><button class="pend-close" onclick="closeModal('idt-import-modal')">×</button></div><div class="idt-modal-dates" style="margin-top:18px"><div class="form-group"><label class="form-label">Data inicial</label><input id="idt-import-ini" class="form-input" type="date"></div><div class="form-group"><label class="form-label">Data final</label><input id="idt-import-fim" class="form-input" type="date"></div></div><input id="idt-file-input" type="file" accept=".xlsx,.xls" style="display:none" onchange="idtImportarArquivo(this)"><div class="idt-import-box" onclick="document.getElementById('idt-file-input').click()"><div class="idt-import-title">Selecionar planilha de desvios</div><div class="idt-import-sub">Padrão aceito: coluna <strong>MOTORISTA</strong> e coluna <strong>DESVIOS</strong>. Célula vazia permanece como “não informado”; valor 0 é considerado zero desvio.</div></div><div class="idt-import-history" id="idt-import-history"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
-  const arr=idtOrdenadas(),hist=document.getElementById('idt-import-history');if(hist)hist.textContent=arr.length?`${arr.length} período(s) IDT já importado(s).`:'Nenhum período IDT importado ainda.';
+  ignisEnsureIdtState();let ov=document.getElementById('idt-import-modal');
+  if(!ov){
+    ov=document.createElement('div');ov.id='idt-import-modal';ov.className='modal-overlay';
+    ov.innerHTML=`<div class="modal" style="max-width:620px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Importar desvios de telemetria</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Não é necessário informar datas. Ao importar, o IGNIS captura automaticamente para cada motorista a mesma data inicial, data final e KM do período consolidado em Média por Motorista.</div></div><button class="pend-close" onclick="closeModal('idt-import-modal')">×</button></div><input id="idt-file-input" type="file" accept=".xlsx,.xls" style="display:none" onchange="idtImportarArquivo(this)"><div class="idt-import-box" style="margin-top:18px" onclick="document.getElementById('idt-file-input').click()"><div class="idt-import-title">Selecionar planilha de desvios</div><div class="idt-import-sub">Padrão aceito: coluna <strong>MOTORISTA</strong> e coluna <strong>DESVIOS</strong>. Célula vazia permanece como “não informado”; valor 0 é considerado zero desvio.</div></div><div class="idt-import-history" id="idt-import-history"></div></div>`;
+    document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});
+  }
+  const arr=idtOrdenadas(),hist=document.getElementById('idt-import-history');if(hist)hist.textContent=arr.length?`${arr.length} importação(ões) IDT salva(s).`:'Nenhuma importação IDT ainda.';
   ov.classList.add('open');
 }
 function idtHeaderNorm(v){return ignisMotoristaNorm(v).replace(/[^A-Z0-9]/g,'');}
 async function idtImportarArquivo(input){
   if(!await ensureXLSXReady())return;const file=input.files?.[0];if(!file)return;
-  const ini=document.getElementById('idt-import-ini')?.value||'',fim=document.getElementById('idt-import-fim')?.value||'';
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(ini)||!/^\d{4}-\d{2}-\d{2}$/.test(fim)){showToast('Informe a data inicial e a data final antes de selecionar a planilha.','error');input.value='';return;}
-  if(fim<ini){showToast('A data final não pode ser anterior à data inicial.','error');input.value='';return;}
   try{
     const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array',cellDates:false});let achado=null;
-    for(const nome of wb.SheetNames){const matriz=XLSX.utils.sheet_to_json(wb.Sheets[nome],{header:1,defval:null,raw:true});for(let ri=0;ri<Math.min(12,matriz.length);ri++){const row=matriz[ri]||[];let cMot=-1,cDes=-1;row.forEach((v,ci)=>{const h=idtHeaderNorm(v);if(cMot<0&&(h==='MOTORISTA'||h==='MOTORISTAS'||h==='NOMEMOTORISTA'))cMot=ci;if(cDes<0&&(h==='DESVIOS'||h==='DESVIO'||h==='TOTALDESVIOS'||h==='TOTALDEDESVIOS'||h==='QTDESVIOS'||h==='QUANTIDADEDESVIOS'))cDes=ci;});if(cMot>=0&&cDes>=0){achado={matriz,ri,cMot,cDes};break;}}if(achado)break;}
+    for(const nome of wb.SheetNames){
+      const matriz=XLSX.utils.sheet_to_json(wb.Sheets[nome],{header:1,defval:null,raw:true});
+      for(let ri=0;ri<Math.min(12,matriz.length);ri++){
+        const row=matriz[ri]||[];let cMot=-1,cDes=-1;
+        row.forEach((v,ci)=>{const h=idtHeaderNorm(v);if(cMot<0&&(h==='MOTORISTA'||h==='MOTORISTAS'||h==='NOMEMOTORISTA'))cMot=ci;if(cDes<0&&(h==='DESVIOS'||h==='DESVIO'||h==='TOTALDESVIOS'||h==='TOTALDEDESVIOS'||h==='QTDESVIOS'||h==='QUANTIDADEDESVIOS'))cDes=ci;});
+        if(cMot>=0&&cDes>=0){achado={matriz,ri,cMot,cDes};break;}
+      }
+      if(achado)break;
+    }
     if(!achado)throw new Error('Não encontrei as colunas MOTORISTA e DESVIOS.');
-    const registros=[];for(let r=achado.ri+1;r<achado.matriz.length;r++){const row=achado.matriz[r]||[],nome=String(row[achado.cMot]??'').replace(/\s+/g,' ').trim();if(!nome)continue;const raw=row[achado.cDes];let desvios=null;if(raw!==null&&raw!==undefined&&String(raw).trim()!==''){const n=typeof raw==='number'?raw:Number(String(raw).replace(/\./g,'').replace(',','.').replace(/[^0-9.-]/g,''));if(Number.isFinite(n)&&n>=0)desvios=n;}registros.push({nome,key:ignisMotoristaNorm(nome),desvios});}
+    const registros=[];
+    for(let r=achado.ri+1;r<achado.matriz.length;r++){
+      const row=achado.matriz[r]||[],nome=String(row[achado.cMot]??'').replace(/\s+/g,' ').trim();if(!nome)continue;
+      const raw=row[achado.cDes];let desvios=null;
+      if(raw!==null&&raw!==undefined&&String(raw).trim()!==''){
+        const n=typeof raw==='number'?raw:Number(String(raw).replace(/\./g,'').replace(',','.').replace(/[^0-9.-]/g,''));if(Number.isFinite(n)&&n>=0)desvios=n;
+      }
+      registros.push({nome,key:ignisMotoristaNorm(nome),desvios});
+    }
     if(!registros.length)throw new Error('A planilha não possui motoristas para importar.');
-    ignisEnsureIdtState();const existente=state.idtImportacoes.find(x=>x.dataIni===ini&&x.dataFim===fim);
-    if(existente&&!confirm(`Já existe uma importação IDT de ${ignisMotoristaFormatData(ini)} a ${ignisMotoristaFormatData(fim)}.\n\nSubstituir pelos dados desta planilha?`)){input.value='';return;}
-    if(existente)state.idtImportacoes=state.idtImportacoes.filter(x=>x.id!==existente.id);
-    const agora=new Date(),id=`idt_${ini}_${fim}_${Date.now()}`,imp={id,dataIni:ini,dataFim:fim,arquivo:file.name,importedAt:agora.toLocaleDateString('pt-BR'),importedAtMs:Date.now(),registros};state.idtImportacoes.push(imp);
-    saveState();closeModal('idt-import-modal');idtAtualizarSeletor(id);renderIDT();showToast(`IDT importado: ${registros.length} motorista(s) · ${ignisMotoristaFormatData(ini)} a ${ignisMotoristaFormatData(fim)}.`,'success');
+    ignisEnsureIdtState();
+    const ciclos=idtCiclosAtuaisMap(),periodos={};
+    ignisEnsureMotoristasState().forEach(m=>{const c=ciclos.get(m.key);if(c&&c.inicio){periodos[m.key]={inicio:c.inicio,fim:c.fim,km:Number(c.km)||0,ciclo:Number(c.ciclo)||0};}});
+    const agora=new Date(),id=`idt_${Date.now()}`,imp={id,arquivo:file.name,importedAt:agora.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}),importedAtMs:Date.now(),registros,periodos};
+    state.idtImportacoes.push(imp);
+    saveState();closeModal('idt-import-modal');idtAtualizarSeletor(id);renderIDT();
+    showToast(`IDT importado: ${registros.length} motorista(s). Datas e KM sincronizados com Média por Motorista.`,'success');
   }catch(e){console.error('IDT import error',e);showToast(e?.message||'Não foi possível ler a planilha de desvios.','error');}
   finally{input.value='';}
 }
 function idtExcluirImportacao(id){
-  const imp=ignisEnsureIdtState().find(x=>x.id===id);if(!imp)return;if(!confirm(`Excluir a importação IDT de ${idtPeriodoLabel(imp)}?`))return;
+  const imp=ignisEnsureIdtState().find(x=>x.id===id);if(!imp)return;if(!confirm(`Excluir esta importação IDT${imp.arquivo?' ('+imp.arquivo+')':''}?`))return;
   state.idtImportacoes=state.idtImportacoes.filter(x=>x.id!==id);saveState();idtAtualizarSeletor();renderIDT();showToast('Importação IDT excluída.','success');
 }
 
