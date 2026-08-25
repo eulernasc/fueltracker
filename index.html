@@ -1811,37 +1811,36 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   <style>
     .mot-toolbar{display:grid;grid-template-columns:minmax(230px,300px) minmax(260px,1fr) auto;gap:10px;align-items:end;margin-bottom:18px}
     .mot-field{display:flex;flex-direction:column;gap:6px}.mot-field label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
-    .mot-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.mot-kpi{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98));border:1px solid var(--border);border-radius:14px;padding:16px 18px}.mot-kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:800}.mot-kpi-value{font-size:25px;font-weight:760;margin-top:6px;letter-spacing:-.7px}.mot-kpi-sub{font-size:10px;color:var(--text3);margin-top:3px}
+    .mot-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}.mot-kpi{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98));border:1px solid var(--border);border-radius:14px;padding:16px 18px}.mot-kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:800}.mot-kpi-value{font-size:25px;font-weight:760;margin-top:6px;letter-spacing:-.7px}.mot-kpi-sub{font-size:10px;color:var(--text3);margin-top:3px}
     .mot-table-wrap{border:1px solid var(--border);border-radius:15px;overflow:hidden;background:var(--bg2)}.mot-table{width:100%;border-collapse:collapse}.mot-table th{padding:11px 12px}.mot-table td{padding:12px;border-top:1px solid rgba(255,255,255,.045);font-size:12px}.mot-name{font-weight:720;color:var(--text)}.mot-matricula{font-size:10px;color:var(--text3);margin-top:2px}.mot-number{font-variant-numeric:tabular-nums}.mot-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:800;white-space:nowrap}.mot-status.ok{color:var(--green);background:rgba(52,201,139,.09);border:1px solid rgba(52,201,139,.2)}.mot-status.warn{color:var(--yellow);background:rgba(242,184,75,.09);border:1px solid rgba(242,184,75,.2)}.mot-status.bad{color:var(--red);background:rgba(240,95,87,.09);border:1px solid rgba(240,95,87,.2)}.mot-status.none{color:var(--text3);background:rgba(255,255,255,.025);border:1px solid var(--border)}
     .mot-driver-row{cursor:pointer;transition:background .14s}.mot-driver-row:hover{background:rgba(255,255,255,.02)}.mot-empty{padding:36px;text-align:center;color:var(--text3);font-size:12px}.mot-page-note{font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5}
     .mot-manage-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;margin-top:12px}.mot-manage-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-manage-copy{min-width:0;flex:1}.mot-manage-name{font-size:12px;font-weight:700}.mot-manage-meta{font-size:9px;color:var(--text3);margin-top:2px}.mot-remove{width:28px;height:28px;border:1px solid rgba(240,95,87,.23);background:rgba(240,95,87,.06);color:#ff8d86;border-radius:8px;cursor:pointer}.mot-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.mot-suggestions{display:flex;flex-direction:column;gap:5px;max-height:190px;overflow:auto;margin-top:8px}.mot-suggestion{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:#111820;color:var(--text);cursor:pointer;font-family:inherit}.mot-suggestion:hover{border-color:rgba(233,95,50,.35)}.mot-suggestion small{color:var(--text3)}
     .mot-detail-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.mot-detail-card{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-detail-card span{display:block;font-size:9px;color:var(--text3);text-transform:uppercase}.mot-detail-card strong{display:block;font-size:16px;margin-top:3px}.mot-detail-table{width:100%;border-collapse:collapse}.mot-detail-table th,.mot-detail-table td{padding:9px;border-bottom:1px solid rgba(255,255,255,.05);font-size:10px;text-align:left}.mot-detail-scroll{max-height:330px;overflow:auto;border:1px solid var(--border);border-radius:10px}
-    @media(max-width:900px){.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1120px}.mot-detail-summary{grid-template-columns:1fr 1fr}}
+    @media(max-width:900px){.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1020px}.mot-detail-summary{grid-template-columns:1fr 1fr}}
     @media(max-width:520px){.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}}
   </style>
   <div id="page-motoristas" class="page">
     <div class="page-header">
-      <div><div class="page-title">Média por Motorista</div><div class="page-sub">Consolidado por ciclo de atuação dos motoristas PX · um novo ciclo começa após 2 meses sem registros</div></div>
+      <div><div class="page-title">Média por Motorista</div><div class="page-sub">Consolidado por período de atuação dos motoristas PX · um novo período começa após 2 meses sem registros</div></div>
       <div class="header-actions"><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
     </div>
     <div class="mot-toolbar">
-      <div class="mot-field"><label>Exibir</label><select class="filter-select" id="mot-visao" onchange="renderMotoristas(false)"><option value="ultimo">Último ciclo de cada motorista</option><option value="todos">Todos os ciclos</option></select></div>
+      <div class="mot-field"><label>Exibir</label><select class="filter-select" id="mot-visao" onchange="renderMotoristas(false)"><option value="ultimo">Período mais recente de cada motorista</option><option value="todos">Todos os períodos</option></select></div>
       <div class="mot-field mot-search"><label>Buscar</label><input class="filter-input" id="mot-busca" placeholder="Buscar motorista..." oninput="motoristasDebouncedRender()"></div>
       <button class="btn btn-secondary" onclick="motoristasAbrirGestao()">+ Incluir / retirar</button>
     </div>
     <div class="mot-kpis">
       <div class="mot-kpi"><div class="mot-kpi-label">Acompanhados</div><div class="mot-kpi-value" id="mot-kpi-acomp">0</div><div class="mot-kpi-sub">motoristas selecionados</div></div>
       <div class="mot-kpi"><div class="mot-kpi-label">Com dados</div><div class="mot-kpi-value" id="mot-kpi-dados">0</div><div class="mot-kpi-sub" id="mot-kpi-dados-sub">motoristas com movimentação</div></div>
-      <div class="mot-kpi"><div class="mot-kpi-label">Ciclos identificados</div><div class="mot-kpi-value" id="mot-kpi-ciclos">0</div><div class="mot-kpi-sub">separados por 2 meses sem registros</div></div>
-      <div class="mot-kpi"><div class="mot-kpi-label">Abaixo da meta</div><div class="mot-kpi-value" id="mot-kpi-abaixo">0</div><div class="mot-kpi-sub">ciclos abaixo de 98%</div></div>
+      <div class="mot-kpi"><div class="mot-kpi-label">Abaixo da meta</div><div class="mot-kpi-value" id="mot-kpi-abaixo">0</div><div class="mot-kpi-sub">períodos abaixo de 98%</div></div>
     </div>
     <div class="mot-table-wrap">
       <table class="mot-table">
-        <thead><tr><th>Motorista</th><th>Ciclo</th><th>Período consolidado</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta ponderada</th><th>Eficiência</th><th>Abastecimentos</th><th>Placas</th><th>Status</th></tr></thead>
+        <thead><tr><th>Motorista</th><th>Período consolidado</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta ponderada</th><th>Eficiência</th><th>Abastecimentos</th><th>Placas</th><th>Status</th></tr></thead>
         <tbody id="mot-table-body"></tbody>
       </table>
     </div>
-    <div class="mot-page-note">A média é calculada por <strong>Σ KM ÷ Σ litros</strong> em cada ciclo. Para motorista PX, <strong>2 meses sem nenhum registro</strong> encerram o ciclo anterior; se ele voltar depois disso, o IGNIS cria outro ciclo e não mistura os dados antigos com os novos. Máquinas, tratores e empilhadeiras não entram nesta análise.</div>
+    <div class="mot-page-note">A média é calculada por <strong>Σ KM ÷ Σ litros</strong> em cada período de atuação. Para motorista PX, <strong>2 meses sem nenhum registro</strong> encerram o período anterior; se ele voltar depois disso, o IGNIS cria um novo período e não mistura os dados antigos com os novos. Máquinas, tratores e empilhadeiras não entram nesta análise.</div>
   </div>
 
   <!-- ABASTECIMENTOS -->
@@ -6632,20 +6631,20 @@ function renderMotoristas(force=false){
   }
   if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
   const comDadosMotoristas=new Set(all.filter(r=>r.ciclo>0&&r.litros>0&&r.km>0).map(r=>r.key));
-  const ciclos=all.filter(r=>r.ciclo>0),abaixo=rows.filter(r=>r.ciclo>0&&r.meta>0&&r.efic<98).length;
+  const abaixo=rows.filter(r=>r.ciclo>0&&r.meta>0&&r.efic<98).length;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-  set('mot-kpi-acomp',ignisEnsureMotoristasState().length);set('mot-kpi-dados',comDadosMotoristas.size);set('mot-kpi-ciclos',ciclos.length);set('mot-kpi-abaixo',abaixo);
+  set('mot-kpi-acomp',ignisEnsureMotoristasState().length);set('mot-kpi-dados',comDadosMotoristas.size);set('mot-kpi-abaixo',abaixo);
   const sub=document.getElementById('mot-kpi-dados-sub');if(sub)sub.textContent='motoristas com movimentação';
   const tb=document.getElementById('mot-table-body');if(!tb)return;
-  if(!rows.length){tb.innerHTML='<tr><td colspan="11"><div class="mot-empty">Nenhum motorista acompanhado corresponde à busca.</div></td></tr>';_markPageClean('motoristas');return;}
+  if(!rows.length){tb.innerHTML='<tr><td colspan="10"><div class="mot-empty">Nenhum motorista acompanhado corresponde à busca.</div></td></tr>';_markPageClean('motoristas');return;}
   tb.innerHTML=rows.map(r=>{
     const st=motoristasStatus(r),has=r.litros>0&&r.km>0,click=has&&r.ciclo>0?` onclick="motoristasAbrirDetalhe('${r.key.replace(/'/g,"\\'")}',${r.ciclo})"`:'';
-    return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.ciclo>0?`<strong>Ciclo ${r.ciclo}</strong>${r.totalCiclos>1?`<div class="mot-matricula">de ${r.totalCiclos}</div>`:''}`:'—'}</td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
+    return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
   }).join('');
   _markPageClean('motoristas');
 }
 function motoristasAbrirGestao(){
-  ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Ciclos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="form-group" style="margin-top:18px"><label class="form-label">Adicionar motorista</label><div class="mot-add-row"><input id="mot-add-input" class="form-input" placeholder="Digite o nome ou busque nos motoristas encontrados" oninput="motoristasRenderSugestoes()" onkeydown="if(event.key==='Enter')motoristasAdicionarDigitado()"><button class="btn btn-primary" onclick="motoristasAdicionarDigitado()">Adicionar</button></div><div id="mot-sugestoes" class="mot-suggestions"></div></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-top:16px">Selecionados</div><div id="mot-manage-list" class="mot-manage-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Períodos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="form-group" style="margin-top:18px"><label class="form-label">Adicionar motorista</label><div class="mot-add-row"><input id="mot-add-input" class="form-input" placeholder="Digite o nome ou busque nos motoristas encontrados" oninput="motoristasRenderSugestoes()" onkeydown="if(event.key==='Enter')motoristasAdicionarDigitado()"><button class="btn btn-primary" onclick="motoristasAdicionarDigitado()">Adicionar</button></div><div id="mot-sugestoes" class="mot-suggestions"></div></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-top:16px">Selecionados</div><div id="mot-manage-list" class="mot-manage-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   motoristasRenderGestao();motoristasRenderSugestoes();ov.classList.add('open');setTimeout(()=>document.getElementById('mot-add-input')?.focus(),50);
 }
 function motoristasRenderGestao(){const el=document.getElementById('mot-manage-list');if(!el)return;const arr=ignisEnsureMotoristasState();el.innerHTML=arr.length?arr.map(m=>`<div class="mot-manage-row"><div class="mot-manage-copy"><div class="mot-manage-name">${pendEsc(m.nome)}</div><div class="mot-manage-meta">${pendEsc(m.matricula||'Nome acompanhado')}</div></div><button class="mot-remove" title="Retirar do acompanhamento" onclick="motoristasRemover('${m.key.replace(/'/g,"\\'")}')">×</button></div>`).join(''):'<div class="mot-empty">Nenhum motorista selecionado.</div>';}
@@ -6658,7 +6657,7 @@ function motoristasAbrirDetalhe(key,ciclo){
   const d=motoristasColetarCiclos().find(x=>x.key===key&&x.ciclo===Number(ciclo));if(!d)return;
   let ov=document.getElementById('mot-detalhe-modal');if(!ov){ov=document.createElement('div');ov.id='mot-detalhe-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:980px"><div id="mot-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('mot-detail-content'),st=motoristasStatus(d),det=[...d.detalhes].sort((a,b)=>String(b.inicio||b.fim).localeCompare(String(a.inicio||a.fim)));
-  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)} · Ciclo ${d.ciclo}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo ciclo após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média consolidada</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Meta ponderada</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta</th></tr></thead><tbody>${det.length?det.map(x=>`<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td></tr>`).join(''):'<tr><td colspan="7" class="mot-empty">Sem dados nesse ciclo.</td></tr>'}</tbody></table></div>`;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média consolidada</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Meta ponderada</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta</th></tr></thead><tbody>${det.length?det.map(x=>`<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td></tr>`).join(''):'<tr><td colspan="7" class="mot-empty">Sem dados nesse período.</td></tr>'}</tbody></table></div>`;
   ov.classList.add('open');
 }
 
@@ -6990,31 +6989,38 @@ async function importarRelatorioDiario(input) {
         input.value=''; return;
       }
 
-      // 2ª passada: separa em semanas Seg→Dom (ISO week: segunda = início, domingo = fim)
-      // Se o arquivo começa numa quarta, a primeira semana vai de quarta até domingo.
-      // Dias sobrando no final (< 7 dias) são absorvidos pela última semana completa.
+      // 2ª passada: separa em semanas Seg→Dom, MAS nunca deixa uma semana atravessar o mês.
+      // Ex.: 27/07–31/07 = Semana 5 de Jul.; 01/08–02/08 = Semana 1 de Ago.
+      // Isso evita que abastecimentos de agosto fiquem registrados dentro de uma semana de julho.
       const minData = new Date(linhas[0].data.getFullYear(), linhas[0].data.getMonth(), linhas[0].data.getDate());
       const maxData = new Date(linhas[linhas.length-1].data.getFullYear(), linhas[linhas.length-1].data.getMonth(), linhas[linhas.length-1].data.getDate());
 
-      // Achar o domingo que fecha a semana do primeiro dia
-      function proximoDomingo(d) {
-        const r = new Date(d);
+      function proximoDomingoLimitadoAoMes(d) {
+        const r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
         const dow = r.getDay(); // 0=dom, 1=seg... 6=sab
-        const diasAteDom = dow === 0 ? 0 : 7 - dow; // 0 se já é domingo
+        const diasAteDom = dow === 0 ? 0 : 7 - dow;
         r.setDate(r.getDate() + diasAteDom);
-        return r;
+        const fimMes = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+        return r > fimMes ? fimMes : r;
+      }
+
+      // Numeração estável pela posição da semana dentro do mês; não depende da ordem de importação.
+      function numeroSemanaNoMes(d) {
+        const primeiroDia = new Date(d.getFullYear(), d.getMonth(), 1);
+        const deslocamento = (primeiroDia.getDay() + 6) % 7; // segunda=0 ... domingo=6
+        return Math.floor((d.getDate() - 1 + deslocamento) / 7) + 1;
       }
 
       const blocos = [];
       let curInicio = new Date(minData);
       while (curInicio <= maxData) {
-        const curFim = proximoDomingo(curInicio);
-        const fimBloco = new Date(curFim <= maxData ? curFim : maxData);
+        const limiteSemanaMes = proximoDomingoLimitadoAoMes(curInicio);
+        const fimReal = limiteSemanaMes <= maxData ? limiteSemanaMes : maxData;
+        const fimBloco = new Date(fimReal);
         fimBloco.setHours(23,59,59,999);
         blocos.push({ inicio: new Date(curInicio), fim: fimBloco, porPlaca: {} });
-        // Próxima semana começa na segunda seguinte
-        curInicio = new Date(curFim);
-        curInicio.setDate(curInicio.getDate() + 1); // segunda-feira
+        curInicio = new Date(fimReal.getFullYear(), fimReal.getMonth(), fimReal.getDate());
+        curInicio.setDate(curInicio.getDate() + 1);
       }
 
       // 3ª passada: distribui cada linha no bloco certo e consolida de forma auditável.
@@ -7054,21 +7060,44 @@ async function importarRelatorioDiario(input) {
 
 
       ignisImportProgress(previewEl,70,'Validando semanas','Conferindo períodos já existentes');await ignisNextFrame();
-      const conflitos = [];
-      blocos.forEach(b => {
-        const dIni = dataParaISO(b.inicio), dFim = dataParaISO(b.fim);
-        const existente = Object.entries(state.semanas).find(([,p]) => p.dataIni === dIni && p.dataFim === dFim);
-        if (existente) conflitos.push({ bloco: b, idAntigo: existente[0], labelAntigo: existente[1].label });
+      const conflitosMap = new Map();
+      const conflitosParciais = [];
+      const inicioArquivo = new Date(minData); inicioArquivo.setHours(0,0,0,0);
+      const fimArquivo = new Date(maxData); fimArquivo.setHours(23,59,59,999);
+
+      Object.entries(state.semanas||{}).forEach(([id,p]) => {
+        if (!p?.dataIni || !p?.dataFim) return;
+        const iniExist = new Date(p.dataIni+'T00:00:00');
+        const fimExist = new Date(p.dataFim+'T23:59:59');
+        if (Number.isNaN(iniExist.getTime()) || Number.isNaN(fimExist.getTime())) return;
+        const sobrepoe = iniExist <= fimArquivo && fimExist >= inicioArquivo;
+        if (!sobrepoe) return;
+        const totalmenteCoberto = iniExist >= inicioArquivo && fimExist <= fimArquivo;
+        if (totalmenteCoberto) {
+          conflitosMap.set(id,{idAntigo:id,labelAntigo:p.label||id,dataIni:p.dataIni,dataFim:p.dataFim});
+        } else {
+          conflitosParciais.push({id,label:p.label||id,dataIni:p.dataIni,dataFim:p.dataFim});
+        }
       });
+
+      // Um período antigo que cruza a borda do arquivo não pode ser repartido com segurança,
+      // porque os dados históricos já estão consolidados. Bloqueia a importação em vez de duplicar ou perder dados.
+      if (conflitosParciais.length) {
+        const lista = conflitosParciais.map(c => `• ${c.label} (${c.dataIni.split('-').reverse().join('/')} a ${c.dataFim.split('-').reverse().join('/')})`).join('\n');
+        alert(`Existe período já importado que cruza apenas parte do intervalo deste arquivo:\n\n${lista}\n\nPara corrigir sem duplicar nem perder dados, reimporte um relatório que cubra o período completo acima.`);
+        input.value=''; return;
+      }
+
+      const conflitos = [...conflitosMap.values()];
       if (conflitos.length) {
         const lista = conflitos.map(c => '• ' + c.labelAntigo).join('\n');
-        if (!confirm(`${conflitos.length} semana(s) desse arquivo já existem no sistema:\n\n${lista}\n\nSubstituir os dados antigos pelos desse arquivo?`)) {
+        if (!confirm(`${conflitos.length} período(s) coberto(s) por este arquivo já existem no sistema:\n\n${lista}\n\nSubstituir os dados antigos pelos dados recalculados deste arquivo?`)) {
           input.value=''; return;
         }
         conflitos.forEach(c => {
           state.abastecimentos = state.abastecimentos.filter(a => a.periodoId !== c.idAntigo);
-          if(typeof ignisRemoveMedidorAnomaliesRange==='function') ignisRemoveMedidorAnomaliesRange(dataParaISO(c.bloco.inicio),dataParaISO(c.bloco.fim));
-          if(typeof ignisRemoveEficienciaAnomaliesRange==='function') ignisRemoveEficienciaAnomaliesRange(dataParaISO(c.bloco.inicio),dataParaISO(c.bloco.fim));
+          if(typeof ignisRemoveMedidorAnomaliesRange==='function') ignisRemoveMedidorAnomaliesRange(c.dataIni,c.dataFim);
+          if(typeof ignisRemoveEficienciaAnomaliesRange==='function') ignisRemoveEficienciaAnomaliesRange(c.dataIni,c.dataFim);
           delete state.semanas[c.idAntigo];
         });
       }
@@ -7078,23 +7107,12 @@ async function importarRelatorioDiario(input) {
       const precosPorOp = {};
       const maquinasImportMap = new Map(state.maquinas.map(m => [m.placa, m]));
 
-      // Conta quantas semanas já existem no sistema por mês/ano, pra continuar a numeração
-      // corretamente em vez de sempre reiniciar do "Semana 1" a cada importação
-      const semanasExistentesPorMes = {};
-      Object.values(state.semanas).forEach(s => {
-        if (!s.dataIni) return;
-        const key = s.dataIni.substring(0,7); // "YYYY-MM"
-        semanasExistentesPorMes[key] = (semanasExistentesPorMes[key]||0) + 1;
-      });
-
       blocos.forEach(b => {
         const grupos = Object.keys(b.porPlaca);
-        if (!grupos.length) return; // bloco sem nenhum dado (ex: mês incompleto na ponta)
+        if (!grupos.length) return; // bloco sem nenhum dado (ex: período incompleto na ponta)
         const dIni = dataParaISO(b.inicio), dFim = dataParaISO(b.fim);
         const mesLabel = MESES_PT[b.inicio.getMonth()];
-        const anoMesKey = dIni.substring(0,7);
-        semanasExistentesPorMes[anoMesKey] = (semanasExistentesPorMes[anoMesKey]||0) + 1;
-        const numSemana = semanasExistentesPorMes[anoMesKey];
+        const numSemana = numeroSemanaNoMes(b.inicio);
         const nomePeriodo = `Semana ${numSemana} · ${mesLabel}. de ${b.inicio.getFullYear()}`;
         const periodoId = nomePeriodo.toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/_+/g,'_').substring(0,40) + '_' + Date.now() + '_' + semanasNovas;
 
