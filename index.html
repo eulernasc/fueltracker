@@ -1314,6 +1314,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div class="nav-section-label">Operação</div>
     <div class="nav-item" onclick="showPage('abastecimentos',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg></span><span class="nav-label">Abastecimentos</span></div>
     <div class="nav-item" onclick="showPage('maquinas',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="6" rx="1.5"/><rect x="14" y="5" width="7" height="6" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg></span><span class="nav-label">Frota e Equipamentos</span></div>
+    <div class="nav-item" onclick="showPage('motoristas',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/><path d="M8 14h8"/></svg></span><span class="nav-label">Motoristas</span></div>
 
     <div class="nav-section-label">Inteligência</div>
         <div class="nav-item" id="nav-fechamento" onclick="showPage('fechamento',this)"><span class="icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h5"/><path d="m8 16 2 2 5-5"/></svg></span><span class="nav-label">Fechamento</span></div>
@@ -1366,6 +1367,9 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     </div>
     <div class="mob-nav-item" id="mob-nav-maquinas" onclick="showPage('maquinas',this);updateMobNav('maquinas')">
       <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="17" cy="18" r="4"/><path d="M3 18H2v-5h8l2 5"/><path d="M10 13V7h5l3 6"/><path d="M14 7V4h4"/></svg></span>Equipamentos
+    </div>
+    <div class="mob-nav-item" id="mob-nav-motoristas" onclick="showPage('motoristas',this);updateMobNav('motoristas')">
+      <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg></span>Motoristas
     </div>
     <div class="mob-nav-item" id="mob-nav-relatorio" onclick="showPage('relatorio',this);updateMobNav('relatorio')">
       <span class="mob-icon"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h8"/><path d="M8 16h5"/></svg></span>Relatório
@@ -1800,6 +1804,45 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="empty" style="padding:48px"><div class="empty-icon">💰</div><div class="empty-text">Acesse a aba Comparativo primeiro para carregar os dados</div></div>
       </div>
     </div>
+  </div>
+
+
+  <!-- MOTORISTAS -->
+  <style>
+    .mot-toolbar{display:grid;grid-template-columns:minmax(150px,190px) minmax(120px,150px) minmax(220px,1fr) auto;gap:10px;align-items:end;margin-bottom:18px}
+    .mot-field{display:flex;flex-direction:column;gap:6px}.mot-field label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+    .mot-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.mot-kpi{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98));border:1px solid var(--border);border-radius:14px;padding:16px 18px}.mot-kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:800}.mot-kpi-value{font-size:25px;font-weight:760;margin-top:6px;letter-spacing:-.7px}.mot-kpi-sub{font-size:10px;color:var(--text3);margin-top:3px}
+    .mot-table-wrap{border:1px solid var(--border);border-radius:15px;overflow:hidden;background:var(--bg2)}.mot-table{width:100%;border-collapse:collapse}.mot-table th{padding:11px 12px}.mot-table td{padding:12px;border-top:1px solid rgba(255,255,255,.045);font-size:12px}.mot-name{font-weight:720;color:var(--text)}.mot-matricula{font-size:10px;color:var(--text3);margin-top:2px}.mot-number{font-variant-numeric:tabular-nums}.mot-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:800;white-space:nowrap}.mot-status.ok{color:var(--green);background:rgba(52,201,139,.09);border:1px solid rgba(52,201,139,.2)}.mot-status.warn{color:var(--yellow);background:rgba(242,184,75,.09);border:1px solid rgba(242,184,75,.2)}.mot-status.bad{color:var(--red);background:rgba(240,95,87,.09);border:1px solid rgba(240,95,87,.2)}.mot-status.none{color:var(--text3);background:rgba(255,255,255,.025);border:1px solid var(--border)}
+    .mot-driver-row{cursor:pointer;transition:background .14s}.mot-driver-row:hover{background:rgba(255,255,255,.02)}.mot-empty{padding:36px;text-align:center;color:var(--text3);font-size:12px}.mot-page-note{font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5}
+    .mot-manage-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;margin-top:12px}.mot-manage-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-manage-copy{min-width:0;flex:1}.mot-manage-name{font-size:12px;font-weight:700}.mot-manage-meta{font-size:9px;color:var(--text3);margin-top:2px}.mot-remove{width:28px;height:28px;border:1px solid rgba(240,95,87,.23);background:rgba(240,95,87,.06);color:#ff8d86;border-radius:8px;cursor:pointer}.mot-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.mot-suggestions{display:flex;flex-direction:column;gap:5px;max-height:190px;overflow:auto;margin-top:8px}.mot-suggestion{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:#111820;color:var(--text);cursor:pointer;font-family:inherit}.mot-suggestion:hover{border-color:rgba(233,95,50,.35)}.mot-suggestion small{color:var(--text3)}
+    .mot-detail-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.mot-detail-card{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-detail-card span{display:block;font-size:9px;color:var(--text3);text-transform:uppercase}.mot-detail-card strong{display:block;font-size:16px;margin-top:3px}.mot-detail-table{width:100%;border-collapse:collapse}.mot-detail-table th,.mot-detail-table td{padding:9px;border-bottom:1px solid rgba(255,255,255,.05);font-size:10px;text-align:left}.mot-detail-scroll{max-height:330px;overflow:auto;border:1px solid var(--border);border-radius:10px}
+    @media(max-width:900px){.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:820px}.mot-detail-summary{grid-template-columns:1fr 1fr}}
+    @media(max-width:520px){.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}}
+  </style>
+  <div id="page-motoristas" class="page">
+    <div class="page-header">
+      <div><div class="page-title">Média por Motorista</div><div class="page-sub">Acompanhe somente os motoristas selecionados, usando o motorista informado no relatório de abastecimentos</div></div>
+      <div class="header-actions"><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
+    </div>
+    <div class="mot-toolbar">
+      <div class="mot-field"><label>Mês</label><select class="filter-select" id="mot-mes" onchange="renderMotoristas(false)"></select></div>
+      <div class="mot-field"><label>Ano</label><select class="filter-select" id="mot-ano" onchange="motoristasAtualizarMesesAno();renderMotoristas(false)"></select></div>
+      <div class="mot-field mot-search"><label>Buscar</label><input class="filter-input" id="mot-busca" placeholder="Buscar motorista..." oninput="motoristasDebouncedRender()"></div>
+      <button class="btn btn-secondary" onclick="motoristasAbrirGestao()">+ Incluir / retirar</button>
+    </div>
+    <div class="mot-kpis">
+      <div class="mot-kpi"><div class="mot-kpi-label">Acompanhados</div><div class="mot-kpi-value" id="mot-kpi-acomp">0</div><div class="mot-kpi-sub">motoristas selecionados</div></div>
+      <div class="mot-kpi"><div class="mot-kpi-label">Com dados</div><div class="mot-kpi-value" id="mot-kpi-dados">0</div><div class="mot-kpi-sub" id="mot-kpi-dados-sub">no período</div></div>
+      <div class="mot-kpi"><div class="mot-kpi-label">Média geral</div><div class="mot-kpi-value" id="mot-kpi-media">—</div><div class="mot-kpi-sub">km/L ponderado por litros</div></div>
+      <div class="mot-kpi"><div class="mot-kpi-label">Abaixo da meta</div><div class="mot-kpi-value" id="mot-kpi-abaixo">0</div><div class="mot-kpi-sub">eficiência abaixo de 98%</div></div>
+    </div>
+    <div class="mot-table-wrap">
+      <table class="mot-table">
+        <thead><tr><th>Motorista</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta ponderada</th><th>Eficiência</th><th>Abastecimentos</th><th>Placas</th><th>Status</th></tr></thead>
+        <tbody id="mot-table-body"></tbody>
+      </table>
+    </div>
+    <div class="mot-page-note">A média é calculada por <strong>Σ KM ÷ Σ litros</strong>. A meta acompanha as metas dos veículos utilizados no período, ponderadas pelos litros. Máquinas, tratores e empilhadeiras não entram nesta análise de motorista.</div>
   </div>
 
   <!-- ABASTECIMENTOS -->
@@ -3022,7 +3065,7 @@ async function idbLoad() {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60 };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -3031,7 +3074,7 @@ let abastFiltrados = [];
 // trocar de aba podia executar milhões de comparações. Estes índices são
 // reconstruídos somente quando os dados mudam e transformam buscas por placa em O(1).
 const _IGNIS_EMPTY = Object.freeze([]);
-const _IGNIS_PAGES = ['dashboard','pendencias','fechamento','anomalias','comparativo','abastecimentos','maquinas','relatorio','excluir','arla','kmcomp','metarota','recon','config'];
+const _IGNIS_PAGES = ['dashboard','pendencias','fechamento','anomalias','comparativo','abastecimentos','maquinas','motoristas','relatorio','excluir','arla','kmcomp','metarota','recon','config'];
 const _ignisPerf = {
   dirty: true,
   version: 0,
@@ -3252,6 +3295,7 @@ async function loadState() {
   if(!Array.isArray(state.eficienciaAnomalias))state.eficienciaAnomalias=[];
   if(!Number.isFinite(Number(state.eficienciaAnomaliaLimite)))state.eficienciaAnomaliaLimite=140;
   if(!Number.isFinite(Number(state.eficienciaAnomaliaLimiteBaixa)))state.eficienciaAnomaliaLimiteBaixa=60;
+  ignisEnsureMotoristasState();
   // Remove cache de monitoramento de importação descontinuado (não faz parte do relatório de Anomalias).
   delete state.importacaoMonitorEventos; delete state.importacaoMonitorRegras; delete state.importacaoMonitorInicializado;
   window._ultimoSaveAt = Math.max(Number(window._ultimoSaveAt||0), Number(state._savedAt||0));
@@ -3357,6 +3401,7 @@ async function syncFromFirebase() {
       if(!Array.isArray(state.eficienciaAnomalias)) state.eficienciaAnomalias=[];
       if(!Number.isFinite(Number(state.eficienciaAnomaliaLimite))) state.eficienciaAnomaliaLimite=140;
       if(!Number.isFinite(Number(state.eficienciaAnomaliaLimiteBaixa))) state.eficienciaAnomaliaLimiteBaixa=60;
+      ignisEnsureMotoristasState();
       if (!state.metaRotaModelos) state.metaRotaModelos = {};
       markIgnisDataDirty('firebase-sync');
 
@@ -3381,6 +3426,7 @@ async function syncFromFirebase() {
           else if (activeId === 'comparativo') renderComparativo();
           else if (activeId === 'abastecimentos') renderAbastecimentos();
           else if (activeId === 'maquinas') renderMaquinas();
+          else if (activeId === 'motoristas' && typeof renderMotoristas==='function') renderMotoristas(true);
           else if (activeId === 'pendencias' && typeof renderPendencias==='function') renderPendencias(true);
           else if (activeId === 'anomalias' && typeof renderAnomalias==='function') renderAnomalias(true);
           else if (activeId === 'fechamento' && typeof renderFechamento==='function') renderFechamento(true);
@@ -3588,6 +3634,7 @@ function navIconSvg(name) {
     comparativo:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>',
     abastecimentos:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M3 9h12"/><path d="M15 7h2l3 3v8a2 2 0 0 1-4 0v-3"/><path d="M6 5h6"/></svg>',
     maquinas:'<svg class="ui-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="7" height="6" rx="1.5"/><rect x="14" y="5" width="7" height="6" rx="1.5"/><rect x="7" y="15" width="10" height="5" rx="1.5"/></svg>',
+    motoristas:'<svg class="ui-icon" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/><path d="M8 14h8"/></svg>',
     relatorio:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M5 3h14v18H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
     excluir:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 14h8l1-14"/><path d="M10 11v6M14 11v6"/></svg>',
     arla:'<svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6"/><path d="M10 3v5l-5 9a3 3 0 0 0 2.6 4.5h8.8A3 3 0 0 0 19 17l-5-9V3"/><path d="M7.5 16h9"/></svg>',
@@ -3606,6 +3653,7 @@ const AUTH_PAGES = [
   { id:'comparativo',   label:'Comparativo',           group:'Visão geral' },
   { id:'abastecimentos',label:'Abastecimentos',        group:'Operação' },
   { id:'maquinas',      label:'Frota e Equipamentos',  group:'Operação' },
+  { id:'motoristas',    label:'Motoristas',             group:'Operação' },
   { id:'relatorio',     label:'Relatório',             group:'Inteligência' },
   { id:'excluir',       label:'A Excluir',             group:'Inteligência' },
   { id:'arla',          label:'Controle Arla',         group:'Inteligência' },
@@ -4515,7 +4563,7 @@ function showPage(page,el) {
   // Se o estado e os filtros não mudaram desde a última visita, mantém o DOM já
   // pronto. Antes cada clique reconstruía tabelas/cards inteiros do zero.
   const precisaAtualizar = _isPageDirty(page);
-  const renders = {dashboard:renderDashboard,pendencias:renderPendencias,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
+  const renders = {dashboard:renderDashboard,pendencias:renderPendencias,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas,motoristas:renderMotoristas};
   if(renders[page] && precisaAtualizar) renders[page]();
 
   if(page==='fechamento') { renderFechamento(); _markPageClean(page); }
@@ -6462,6 +6510,117 @@ function salvarMaquina() {
   saveState(); closeModal('modal-maquina'); renderMaquinas(); updateFilters();
 }
 
+
+// ── MOTORISTAS ────────────────────────────────────────────────────────────────
+const IGNIS_MOTORISTAS_INICIAIS = [
+  'ADELTON BATISTA CÂNDIDO FERREIRA','BRUNO MARQUES DAS NEVES','CARLOS ABERTO SILVA','CARLOS EDUARDO DA SILVA',
+  'ELIAS DE SOUZA CASTRO','Fleudmem Maylon Matheus Melchisedeck Costa','IVANILDO ROGERIO CANDIDO','JOSE CARLOS DA SILVA',
+  'LUCIANO HENRIQUE DOS SANTOS','RAFAEL SOARES PEREIRA','REINALDO CLEMENTE DO NASCIMENTO','ROBSON ARANTES DANTAS',
+  'RODRIGO AUGUSTO TEIXEIRA','SAND LUC SOARES DA COSTA','WELLINGTON CARDOSO GOMES','WELLINGTON SEBASTIAO DA SILVA',
+  'WINGLISSON SOUZA AQUINO SURIANI'
+];
+function ignisMotoristaNorm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' ').trim();}
+function ignisParseMotorista(raw){
+  let txt=String(raw||'').replace(/\s+/g,' ').trim();
+  if(!txt||txt==='-')return{nome:'',matricula:'',key:''};
+  let matricula='',nome=txt;
+  const m=txt.match(/^([A-Z0-9_./]+)\s*-\s*(.+)$/i);
+  if(m){matricula=m[1].trim();nome=m[2].trim();}
+  return{nome,matricula,key:ignisMotoristaNorm(nome)};
+}
+function ignisEnsureMotoristasState(){
+  if(!Array.isArray(state.motoristasMonitorados))state.motoristasMonitorados=[];
+  if(!state.motoristasMonitoradosInicializados){
+    state.motoristasMonitorados=IGNIS_MOTORISTAS_INICIAIS.map(nome=>({nome,key:ignisMotoristaNorm(nome),matricula:''}));
+    state.motoristasMonitoradosInicializados=true;
+  }
+  const by=new Map();
+  state.motoristasMonitorados.forEach(item=>{
+    const obj=typeof item==='string'?{nome:item}:item||{};const nome=String(obj.nome||'').trim();if(!nome)return;
+    const key=ignisMotoristaNorm(obj.key||nome);if(!key)return;
+    const prev=by.get(key);if(!prev)by.set(key,{nome,matricula:String(obj.matricula||''),key});
+    else if(!prev.matricula&&obj.matricula)prev.matricula=String(obj.matricula);
+  });
+  state.motoristasMonitorados=[...by.values()];
+  return state.motoristasMonitorados;
+}
+function ignisMotoristaCatalogo(){
+  const out=new Map();
+  (state.abastecimentos||[]).forEach(a=>(Array.isArray(a.motoristas)?a.motoristas:[]).forEach(m=>{const nome=String(m.nome||'').trim();const key=ignisMotoristaNorm(m.key||nome);if(!key||!nome)return;const prev=out.get(key);if(!prev||(!prev.matricula&&m.matricula))out.set(key,{nome,matricula:String(m.matricula||''),key});}));
+  ignisEnsureMotoristasState().forEach(m=>{if(!out.has(m.key))out.set(m.key,{...m});});
+  return [...out.values()].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+}
+function motoristasPeriodosDisponiveis(){
+  const datas=(state.abastecimentos||[]).filter(a=>Array.isArray(a.motoristas)&&a.motoristas.length).map(a=>String(a.data||'')).filter(d=>/^\d{4}-\d{2}/.test(d));
+  return [...new Set(datas.map(d=>d.slice(0,7)))].sort().reverse();
+}
+function motoristasAtualizarMesesAno(preservarMes=true){
+  const mesEl=document.getElementById('mot-mes'),anoEl=document.getElementById('mot-ano');if(!mesEl||!anoEl)return;
+  const pares=motoristasPeriodosDisponiveis(),ano=anoEl.value||String(new Date().getFullYear()),mesAnterior=Number(mesEl.value||0);
+  let meses=[...new Set(pares.filter(x=>x.startsWith(ano+'-')).map(x=>Number(x.slice(5,7))))].sort((a,b)=>b-a);
+  if(!meses.length)meses=[new Date().getMonth()+1];
+  mesEl.innerHTML=meses.map(m=>`<option value="${m}">${MESES_PT[m-1]}</option>`).join('');
+  mesEl.value=String(preservarMes&&meses.includes(mesAnterior)?mesAnterior:meses[0]);
+}
+function motoristasPopularPeriodos(preservar=true){
+  const mesEl=document.getElementById('mot-mes'),anoEl=document.getElementById('mot-ano');if(!mesEl||!anoEl)return;
+  const pares=motoristasPeriodosDisponiveis(),agora=new Date(),fallback=`${agora.getFullYear()}-${String(agora.getMonth()+1).padStart(2,'0')}`;
+  const oldY=anoEl.value,oldM=Number(mesEl.value||0),base=pares.length?pares:[fallback],anos=[...new Set(base.map(x=>x.slice(0,4)))].sort().reverse();
+  const alvoY=preservar&&anos.includes(oldY)?oldY:base[0].slice(0,4);
+  anoEl.innerHTML=anos.map(y=>`<option value="${y}">${y}</option>`).join('');anoEl.value=alvoY;
+  motoristasAtualizarMesesAno(false);
+  const mesesAtuais=[...mesEl.options].map(o=>Number(o.value));
+  if(preservar&&mesesAtuais.includes(oldM))mesEl.value=String(oldM);
+}
+function motoristasPeriodoKey(){const y=document.getElementById('mot-ano')?.value||'';const m=Number(document.getElementById('mot-mes')?.value||0);return y&&m?`${y}-${String(m).padStart(2,'0')}`:'';}
+function motoristasColetar(){
+  const monitorados=ignisEnsureMotoristasState(),map=new Map(monitorados.map((m,i)=>[m.key,{...m,ord:i,km:0,litros:0,metaNum:0,metaLitros:0,registros:0,placas:new Set(),ops:new Set(),detalhes:[]}])) ;
+  const periodo=motoristasPeriodoKey();
+  (state.abastecimentos||[]).forEach(a=>{
+    if(periodo&&String(a.data||'').slice(0,7)!==periodo)return;
+    const tipo=getTipoIgnis(a);if(tipo!=='pesada'&&tipo!=='leve')return;
+    (Array.isArray(a.motoristas)?a.motoristas:[]).forEach(m=>{
+      const key=ignisMotoristaNorm(m.key||m.nome);const d=map.get(key);if(!d)return;
+      const litros=Number(m.litros)||0,km=Number(m.km)||0,metaNum=Number(m.metaNum)||0,metaLitros=Number(m.metaLitros)||0;
+      d.km+=km;d.litros+=litros;d.metaNum+=metaNum;d.metaLitros+=metaLitros;d.registros+=Number(m.registros)||0;
+      if(m.matricula&&!d.matricula)d.matricula=String(m.matricula);
+      if(a.placa)d.placas.add(a.placa);if(a.operacao)d.ops.add(a.operacao);
+      const meta=metaLitros>0?metaNum/metaLitros:0;const media=litros>0?km/litros:0;
+      d.detalhes.push({periodo:state.semanas?.[a.periodoId]?.label||a.data||'—',data:a.data||'',placa:a.placa||'—',operacao:a.operacao||'—',km,litros,media,meta,registros:Number(m.registros)||0});
+    });
+  });
+  return [...map.values()].map(d=>{d.media=d.litros>0?d.km/d.litros:0;d.meta=d.metaLitros>0?d.metaNum/d.metaLitros:0;d.efic=d.media>0&&d.meta>0?d.media/d.meta*100:0;return d;}).sort((a,b)=>a.ord-b.ord);
+}
+let _motRenderTimer=null;function motoristasDebouncedRender(){clearTimeout(_motRenderTimer);_motRenderTimer=setTimeout(()=>renderMotoristas(false),100);}
+function motoristasStatus(d){if(!(d.litros>0&&d.km>0))return{cls:'none',label:'Sem dados'};if(!(d.meta>0))return{cls:'none',label:'Sem meta'};if(d.efic>=98)return{cls:'ok',label:'Dentro da meta'};if(d.efic>=90)return{cls:'warn',label:'Atenção'};return{cls:'bad',label:'Abaixo da meta'};}
+function renderMotoristas(force=false){
+  ignisEnsureMotoristasState();const motAno=document.getElementById('mot-ano');if(force||!motAno||!motAno.options.length)motoristasPopularPeriodos(true);
+  const rows=motoristasColetar(),q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),vis=q?rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q)):rows;
+  const comDados=rows.filter(r=>r.litros>0&&r.km>0),totL=comDados.reduce((s,r)=>s+r.litros,0),totKm=comDados.reduce((s,r)=>s+r.km,0),media=totL>0?totKm/totL:0,abaixo=comDados.filter(r=>r.meta>0&&r.efic<98).length;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('mot-kpi-acomp',rows.length);set('mot-kpi-dados',comDados.length);set('mot-kpi-media',media>0?media.toFixed(2):'—');set('mot-kpi-abaixo',abaixo);
+  const sub=document.getElementById('mot-kpi-dados-sub');if(sub)sub.textContent=motoristasPeriodoKey()?`${MESES_PT[Number(document.getElementById('mot-mes')?.value||1)-1]} de ${document.getElementById('mot-ano')?.value||''}`:'no período';
+  const tb=document.getElementById('mot-table-body');if(!tb)return;
+  if(!vis.length){tb.innerHTML='<tr><td colspan="9"><div class="mot-empty">Nenhum motorista acompanhado corresponde à busca.</div></td></tr>';_markPageClean('motoristas');return;}
+  tb.innerHTML=vis.map(r=>{const st=motoristasStatus(r),has=r.litros>0&&r.km>0;return `<tr class="mot-driver-row" onclick="motoristasAbrirDetalhe('${r.key.replace(/'/g,"\\'")}')"><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;}).join('');
+  _markPageClean('motoristas');
+}
+function motoristasAbrirGestao(){
+  ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="form-group" style="margin-top:18px"><label class="form-label">Adicionar motorista</label><div class="mot-add-row"><input id="mot-add-input" class="form-input" placeholder="Digite o nome ou busque nos motoristas encontrados" oninput="motoristasRenderSugestoes()" onkeydown="if(event.key==='Enter')motoristasAdicionarDigitado()"><button class="btn btn-primary" onclick="motoristasAdicionarDigitado()">Adicionar</button></div><div id="mot-sugestoes" class="mot-suggestions"></div></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-top:16px">Selecionados</div><div id="mot-manage-list" class="mot-manage-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  motoristasRenderGestao();motoristasRenderSugestoes();ov.classList.add('open');setTimeout(()=>document.getElementById('mot-add-input')?.focus(),50);
+}
+function motoristasRenderGestao(){const el=document.getElementById('mot-manage-list');if(!el)return;const arr=ignisEnsureMotoristasState();el.innerHTML=arr.length?arr.map(m=>`<div class="mot-manage-row"><div class="mot-manage-copy"><div class="mot-manage-name">${pendEsc(m.nome)}</div><div class="mot-manage-meta">${pendEsc(m.matricula||'Nome acompanhado')}</div></div><button class="mot-remove" title="Retirar do acompanhamento" onclick="motoristasRemover('${m.key.replace(/'/g,"\\'")}')">×</button></div>`).join(''):'<div class="mot-empty">Nenhum motorista selecionado.</div>';}
+function motoristasRenderSugestoes(){const el=document.getElementById('mot-sugestoes');if(!el)return;const q=ignisMotoristaNorm(document.getElementById('mot-add-input')?.value||''),sel=new Set(ignisEnsureMotoristasState().map(m=>m.key));let cat=ignisMotoristaCatalogo().filter(m=>!sel.has(m.key));if(q)cat=cat.filter(m=>ignisMotoristaNorm(m.nome).includes(q)||ignisMotoristaNorm(m.matricula).includes(q));else cat=cat.slice(0,8);el.innerHTML=cat.slice(0,12).map(m=>`<button class="mot-suggestion" onclick="motoristasAdicionarCatalogo('${m.key.replace(/'/g,"\\'")}')"><span>${pendEsc(m.nome)}</span><small>${pendEsc(m.matricula||'detectado no relatório')}</small></button>`).join('');}
+function motoristasAdicionar(nome,matricula=''){nome=String(nome||'').trim();if(!nome)return false;const key=ignisMotoristaNorm(nome);if(!key)return false;const arr=ignisEnsureMotoristasState();if(arr.some(m=>m.key===key)){showToast('Esse motorista já está sendo acompanhado.','info');return false;}arr.push({nome,matricula:String(matricula||''),key});saveState();motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);return true;}
+function motoristasAdicionarDigitado(){const inp=document.getElementById('mot-add-input'),v=inp?.value||'';if(motoristasAdicionar(v)){inp.value='';motoristasRenderSugestoes();}}
+function motoristasAdicionarCatalogo(key){const m=ignisMotoristaCatalogo().find(x=>x.key===key);if(m&&motoristasAdicionar(m.nome,m.matricula)){const inp=document.getElementById('mot-add-input');if(inp)inp.value='';}}
+function motoristasRemover(key){state.motoristasMonitorados=ignisEnsureMotoristasState().filter(m=>m.key!==key);saveState();motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);}
+function motoristasAbrirDetalhe(key){
+  const d=motoristasColetar().find(x=>x.key===key);if(!d)return;let ov=document.getElementById('mot-detalhe-modal');if(!ov){ov=document.createElement('div');ov.id='mot-detalhe-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:900px"><div id="mot-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  const c=document.getElementById('mot-detail-content'),st=motoristasStatus(d),det=[...d.detalhes].sort((a,b)=>String(b.data).localeCompare(String(a.data)));
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${MESES_PT[Number(document.getElementById('mot-mes')?.value||1)-1]} de ${document.getElementById('mot-ano')?.value||''}</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Meta ponderada</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média</th><th>Meta</th></tr></thead><tbody>${det.length?det.map(x=>`<tr><td>${pendEsc(x.periodo)}</td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td></tr>`).join(''):'<tr><td colspan="7" class="mot-empty">Sem dados nesse período.</td></tr>'}</tbody></table></div>`;
+  ov.classList.add('open');
+}
+
 // ── IMPORTAR ──────────────────────────────────────────────────────────────────
 async function importarRelatorio(input) {
   if (!await ensureXLSXReady()) return;
@@ -6749,6 +6908,7 @@ async function importarRelatorioDiario(input) {
         const kmReal   = Math.max(0, kmRealRaw); // negativo = correção/regressão do medidor, não soma km fictício
         const mediaIdeal = ignisNumeroSeguro(row['Média Ideal']);
         const valorLitro  = ignisNumeroSeguro(row['Valor Litro']);
+        const motoristaInfo = ignisParseMotorista(row['Motorista']);
 
         const opUp = operacao.toUpperCase(), modUp = modelo.toUpperCase();
         if (modUp.startsWith('IEV')) { ignoradasExclusao++; return; }
@@ -6778,7 +6938,7 @@ async function importarRelatorioDiario(input) {
         }
         if (litros <= 0) return;
 
-        linhas.push({ data: dataObj, placa, operacao, modelo, tipoVeic, litros, kmReal, mediaIdeal, valorLitro, combustivel, combustivelChave:ignisFuelKeyExec(combustivel) });
+        linhas.push({ data: dataObj, placa, operacao, modelo, tipoVeic, tipoIgnis:tipoIgnisRaw, litros, kmReal, mediaIdeal, metaEvento, valorLitro, combustivel, combustivelChave:ignisFuelKeyExec(combustivel), motoristaNome:motoristaInfo.nome, motoristaMatricula:motoristaInfo.matricula, motoristaKey:motoristaInfo.key });
       });
       if(typeof ignisImportMonitorCommit==='function')ignisImportMonitorCommit(importMonitorBatch);
       linhas.sort((a,b) => a.data - b.data);
@@ -6829,7 +6989,7 @@ async function importarRelatorioDiario(input) {
         if (!bloco.porPlaca[grupoKey]) bloco.porPlaca[grupoKey] = {
           placa:l.placa, litros:0, kmReal:0, operacao:l.operacao, modelo:l.modelo,
           tipoVeic:l.tipoVeic, mediaIdeal:l.mediaIdeal, combustivelChave:fuelKey,
-          _fuels:{}, _ops:{}, _custoComb:0, _litrosPreco:0
+          _fuels:{}, _ops:{}, _motoristas:{}, _custoComb:0, _litrosPreco:0
         };
         const p = bloco.porPlaca[grupoKey];
         p.litros += l.litros;
@@ -6841,6 +7001,12 @@ async function importarRelatorioDiario(input) {
         if (l.valorLitro > 0 && l.litros > 0 && ignisPrecoCombustivelValido(fuelKey, l.valorLitro)) {
           p._custoComb += l.valorLitro * l.litros;
           p._litrosPreco += l.litros;
+        }
+        if (l.motoristaKey) {
+          if (!p._motoristas[l.motoristaKey]) p._motoristas[l.motoristaKey] = { nome:l.motoristaNome, matricula:l.motoristaMatricula||'', key:l.motoristaKey, litros:0, km:0, metaNum:0, metaLitros:0, registros:0 };
+          const md=p._motoristas[l.motoristaKey]; md.litros+=l.litros; md.km+=l.kmReal; md.registros++;
+          if (!md.matricula && l.motoristaMatricula) md.matricula=l.motoristaMatricula;
+          if (Number(l.metaEvento)>0) { md.metaNum+=Number(l.metaEvento)*l.litros; md.metaLitros+=l.litros; }
         }
       });
 
@@ -6922,7 +7088,8 @@ async function importarRelatorioDiario(input) {
             const precoPonderado = p._litrosPreco>0 ? (p._custoComb/p._litrosPreco) : 0;
             const operacaoMista = false; // importação nova já foi separada por operação acima
             const coberturaPrecoSemana = p.litros>0 ? p._litrosPreco/p.litros : 0;
-            const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId, metaIdeal:p.mediaIdeal||0, combustivel:combustivelSemana, precoLitro:(combustivelSemana&&combustivelSemana!=='MISTO'&&coberturaPrecoSemana>=0.999&&ignisPrecoCombustivelValido(combustivelSemana,precoPonderado))?precoPonderado:0, precoCobertura:coberturaPrecoSemana, operacaoMista, operacoesPeriodo:opsSemana };
+            const motoristasPeriodo=Object.values(p._motoristas||{}).map(m=>({nome:m.nome,matricula:m.matricula||'',key:m.key,litros:Number(m.litros)||0,km:Number(m.km)||0,metaNum:Number(m.metaNum)||0,metaLitros:Number(m.metaLitros)||0,registros:Number(m.registros)||0}));
+            const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId, metaIdeal:p.mediaIdeal||0, combustivel:combustivelSemana, precoLitro:(combustivelSemana&&combustivelSemana!=='MISTO'&&coberturaPrecoSemana>=0.999&&ignisPrecoCombustivelValido(combustivelSemana,precoPonderado))?precoPonderado:0, precoCobertura:coberturaPrecoSemana, operacaoMista, operacoesPeriodo:opsSemana, motoristas:motoristasPeriodo };
             dadosSemana.push(entry);
             state.abastecimentos.push(entry);
           }
@@ -6996,6 +7163,7 @@ async function importarRelatorioDiario(input) {
       previewEl.innerHTML = `
         <div style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:10px;padding:16px;margin-top:12px">
           <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">${semanasNovas} semana(s) detectada(s) e importada(s)!</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Motoristas da coluna Motorista foram vinculados aos respectivos abastecimentos para o acompanhamento de médias.</div>
           <div style="font-size:13px;color:var(--text2)">${novaMaq} novo(s) veículo(s) · ${registrosTotais} registro(s) consolidado(s)</div>
           ${precosAtualizados>0?`<div style="font-size:13px;color:var(--yellow);margin-top:4px">${precosAtualizados} preço(s) de diesel atualizado(s)</div>`:''}
           ${ignoradasExclusao>0?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${ignoradasExclusao} linha(s) ignorada(s) (IEV, manutenção, locação, etc.)</div>`:''}
@@ -7104,7 +7272,7 @@ function limparTodosDados() {
 
   // Reseta estado em memória
   state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:state.sheetsUrl,
-            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60 };
+            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false };
   _periodosSelec = new Set();
   window._selectedOps = new Set();
   window._dashList = []; window._dashIsKmL = false;
