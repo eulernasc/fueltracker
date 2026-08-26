@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v23 · IDT acumulativo por motorista + período/financeiro v19 + Sync Guard v17 — 25/08/2026 -->
-<meta name="ignis-build" content="2026-08-25-motoristas-permissoes-idt-v22">
+<!-- IGNIS v24 · sincronização robusta pós-importação + chunks adaptativos — 26/08/2026 -->
+<meta name="ignis-build" content="2026-08-26-sync-import-v24">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +29,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window._firebaseRevision = null; // revisão compartilhada da base para impedir que um computador desatualizado sobrescreva a nuvem
+window._firebaseFuelSignature = ''; // identifica a versão das séries de abastecimentos/máquinas/anomalias
+window._firebaseArlaSignature = '';
+window._lastFirebaseSaveError = '';
 
 // Wrapper com timeout para evitar hang infinito
 const withTimeout = (promise, ms) => Promise.race([
@@ -72,24 +75,43 @@ async function fbRetry(task, attempts=3, baseDelay=450) {
   throw lastErr;
 }
 
-async function fbWriteChunkSeries(prefix, version, items, chunkSize) {
+function fbApproxBytes(value) {
+  try {
+    const txt = JSON.stringify(value ?? null);
+    return typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(txt).length : txt.length * 2;
+  } catch(e) { return 0; }
+}
+function fbBuildAdaptiveChunks(items, maxItems, maxBytes=620000) {
   const arr = Array.isArray(items) ? items : [];
-  const total = Math.ceil(arr.length / chunkSize);
+  const chunks = [];
+  let atual = [], bytes = 80;
+  for (const item of arr) {
+    const itemBytes = Math.max(16, fbApproxBytes(item) + 20);
+    if (itemBytes > 850000) throw new Error('Um registro ficou grande demais para o Firebase. Reduza o período desse registro ou revise os dados do motorista.');
+    if (atual.length && (atual.length >= maxItems || bytes + itemBytes > maxBytes)) {
+      chunks.push(atual); atual = []; bytes = 80;
+    }
+    atual.push(item); bytes += itemBytes;
+  }
+  if (atual.length) chunks.push(atual);
+  return chunks;
+}
+async function fbWriteChunkSeries(prefix, version, items, chunkSize) {
+  const chunks = fbBuildAdaptiveChunks(items, Math.max(1, Number(chunkSize)||200));
+  const total = chunks.length;
   if (!total) return 0;
   if (total > FB_MAX_CHUNKS) throw new Error(`${prefix}: quantidade de chunks muito alta (${total})`);
 
-  // Antes eram até 18 gravações simultâneas sem retry. Em conexões corporativas isso
-  // podia saturar o navegador e deixar uma importação inteira sem confirmação.
-  // Agora usa lotes menores + até 3 tentativas por chunk.
-  const jobs = Array.from({length: total}, (_, i) => async () => {
-    const chunk = arr.slice(i * chunkSize, (i + 1) * chunkSize);
+  // O tamanho agora é limitado por quantidade E por bytes. Depois que Motoristas PX
+  // passou a guardar detalhamento diário, 260 registros podiam ultrapassar 1 MiB e o
+  // Firestore recusava a importação para sempre, mesmo clicando em "tentar novamente".
+  const jobs = chunks.map((chunk, i) => async () => {
     await fbRetry(() => withTimeout(setDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`), {
       registros: chunk, chunk: i, total, version
-    }), 22000), 3, 550);
+    }), 24000), 3, 650);
   });
-  for (let i = 0; i < jobs.length; i += 8) {
-    await Promise.all(jobs.slice(i, i + 8).map(fn => fn()));
-    // devolve o controle ao navegador entre lotes para a navegação continuar responsiva
+  for (let i = 0; i < jobs.length; i += 4) {
+    await Promise.all(jobs.slice(i, i + 4).map(fn => fn()));
     await fbSleep(0);
   }
   return total;
@@ -148,6 +170,8 @@ window.fbSave = async function(data) {
       arlaMeses,
       anomaliaRevisoes,
       _baseRevision,
+      _baseFuelSignature,
+      _baseArlaSignature,
       _saveMode,
       importacaoMonitorEventos,
       importacaoMonitorRegras,
@@ -183,14 +207,29 @@ window.fbSave = async function(data) {
       return out;
     })() : (antigo.semanas || {});
 
-    // Proteção multiusuário.
+    // Proteção multiusuário com rebase seguro por série.
+    // Se só uma configuração leve/IDT mudou na nuvem, uma importação de combustível
+    // não precisa falhar: ela pode usar a revisão nova desde que os chunks de combustível
+    // continuem exatamente os mesmos de quando a importação começou.
     const currentRevision = String(antigo._revision || '');
-    const expectedRevision = String(_baseRevision || '');
+    const expectedRevisionOriginal = String(_baseRevision || '');
+    const currentFuelSignature = [antigo._abastVersion||'',antigo._maqVersion||'',antigo._medVersion||'',antigo._eficVersion||''].join('|');
+    const currentArlaSignature = String(antigo._arlaVersion || '');
+    const baseFuelSignature = String(_baseFuelSignature || '');
+    const baseArlaSignature = String(_baseArlaSignature || '');
+    let expectedRevision = expectedRevisionOriginal;
     if ((currentRevision || expectedRevision) && currentRevision !== expectedRevision) {
-      const conflict = new Error('A base foi atualizada por outro usuário. Atualize o IGNIS antes de salvar novamente.');
-      conflict.code = 'IGNIS_REVISION_CONFLICT';
-      conflict.currentRevision = currentRevision;
-      throw conflict;
+      const safeFuelRebase = saveMode==='fuel' && baseFuelSignature && baseFuelSignature===currentFuelSignature;
+      const safeArlaRebase = saveMode==='arla' && baseArlaSignature && baseArlaSignature===currentArlaSignature;
+      if (safeFuelRebase || safeArlaRebase) {
+        expectedRevision = currentRevision;
+        console.info('IGNIS: save rebaseado com segurança sobre revisão mais nova; a série pesada não mudou.');
+      } else {
+        const conflict = new Error('A base de dados foi atualizada por outro usuário. O IGNIS preservou sua importação local para evitar sobrescrever dados novos.');
+        conflict.code = 'IGNIS_REVISION_CONFLICT';
+        conflict.currentRevision = currentRevision;
+        throw conflict;
+      }
     }
 
     const version = fbVersion();
@@ -219,9 +258,19 @@ window.fbSave = async function(data) {
       arlaChunks = await fbWriteChunkSeries(FB_SERIES_PREFIX+'arla', version, arla, 1); arlaVersion=version; arlaCount=arla.length;
     }
 
+    // Saves pesados não reescrevem configurações leves que outro usuário possa ter
+    // alterado enquanto os chunks eram enviados. Na importação de combustível, somente
+    // os preços derivados do próprio relatório também pertencem a este save.
+    const scopedRest = (saveMode==='full' || saveMode==='light') ? restData
+      : saveMode==='fuel' ? {
+          _savedAt: restData._savedAt,
+          dieselPrecos: restData.dieselPrecos ?? antigo.dieselPrecos,
+          combustivelPrecos: restData.combustivelPrecos ?? antigo.combustivelPrecos
+        }
+      : { _savedAt: restData._savedAt };
     const manifest = {
       ...antigo,
-      ...restData,
+      ...scopedRest,
       semanas: semanasSemRegistros,
       _revision: version,
       _storageVersion: FB_STORAGE_VERSION,
@@ -253,10 +302,16 @@ window.fbSave = async function(data) {
     }
     if (writeArla) fbDeleteChunkSeries(FB_SERIES_PREFIX+'arla', antigo._arlaVersion, antigo._arlaChunks);
 
-    return { ok:true, revision:version, mode:saveMode };
+    window._lastFirebaseSaveError = '';
+    return {
+      ok:true, revision:version, mode:saveMode,
+      fuelSignature:[abastVersion||'',maqVersion||'',medVersion||'',eficVersion||''].join('|'),
+      arlaSignature:String(arlaVersion||'')
+    };
   } catch(e) {
+    window._lastFirebaseSaveError = e?.message || String(e);
     console.error('Firebase save error:', e);
-    return { ok:false, conflict:e?.code==='IGNIS_REVISION_CONFLICT', message:e?.message||String(e) };
+    return { ok:false, conflict:e?.code==='IGNIS_REVISION_CONFLICT', message:window._lastFirebaseSaveError };
   }
 };
 
@@ -357,6 +412,8 @@ window.fbLoad = async function() {
     // sobrescrita por cache antigo em outro computador/usuário.
     dados._cloudRevision = usingV4 ? String(dados._revision || '') : '';
     dados._cloudNamespace = usingV4 ? 'v4' : 'legacy';
+    dados._cloudFuelSignature = usingV4 ? [dados._abastVersion||'',dados._maqVersion||'',dados._medVersion||'',dados._eficVersion||''].join('|') : '';
+    dados._cloudArlaSignature = usingV4 ? String(dados._arlaVersion || '') : '';
 
     // Remove somente metadados internos do storage.
     [
@@ -3456,8 +3513,12 @@ async function syncFromFirebase() {
     const { _users, ...rest } = data;
     const cloudRevision = String(rest._cloudRevision || '');
     const cloudNamespace = String(rest._cloudNamespace || 'legacy');
+    const cloudFuelSignature = String(rest._cloudFuelSignature || '');
+    const cloudArlaSignature = String(rest._cloudArlaSignature || '');
     delete rest._cloudRevision;
     delete rest._cloudNamespace;
+    delete rest._cloudFuelSignature;
+    delete rest._cloudArlaSignature;
     const tsFirebase = Number(rest._savedAt || 0);
     const tsLocal = Number(window._ultimoSaveAt || state._savedAt || 0);
     const temDadosLocal = (state.abastecimentos?.length||0) > 0
@@ -3476,16 +3537,24 @@ async function syncFromFirebase() {
     try { pending = JSON.parse(localStorage.getItem('ignis_pending_cloud_save') || 'null'); } catch(e) {}
     if (cloudNamespace==='v4' && pending && temDadosLocal && Number(pending.savedAt||0) <= tsLocal && tsLocal > tsFirebase) {
       const pendingBase = String(pending.baseRevision || '');
-      if (pendingBase === cloudRevision) {
+      const pendingMode = String(pending.mode||'full');
+      const pendingFuelSignature = String(pending.fuelSignature || '');
+      const pendingArlaSignature = String(pending.arlaSignature || '');
+      const mesmaRevisao = pendingBase === cloudRevision;
+      const fuelNaoMudou = pendingMode==='fuel' && pendingFuelSignature && pendingFuelSignature===cloudFuelSignature;
+      const arlaNaoMudou = pendingMode==='arla' && pendingArlaSignature && pendingArlaSignature===cloudArlaSignature;
+      if (mesmaRevisao || fuelNaoMudou || arlaNaoMudou) {
         window._firebaseRevision = cloudRevision || null;
-        const recovered = await saveState({ immediate:true, recovery:true, mode:String(pending.mode||'full') });
+        window._firebaseFuelSignature = cloudFuelSignature;
+        window._firebaseArlaSignature = cloudArlaSignature;
+        const recovered = await saveState({ immediate:true, recovery:true, mode:pendingMode });
         if (recovered) {
           updateSyncStatus('connected');
-          showToast('Alterações locais pendentes foram recuperadas e confirmadas no Firebase.', 'success');
+          showToast('Importação pendente recuperada e confirmada no Firebase.', 'success');
           return;
         }
       } else {
-        console.warn('IGNIS: recuperação local não aplicada porque a nuvem já avançou de revisão.');
+        console.warn('IGNIS: recuperação local não aplicada porque a série correspondente mudou na nuvem.');
       }
     }
 
@@ -3497,6 +3566,8 @@ async function syncFromFirebase() {
       delete dados._savedAt;
       state = { ...state, ...dados, _savedAt:tsFirebase };
       window._firebaseRevision = cloudRevision || null;
+      window._firebaseFuelSignature = cloudFuelSignature;
+      window._firebaseArlaSignature = cloudArlaSignature;
       window._ultimoSaveAt = tsFirebase;
       try { localStorage.removeItem('ignis_pending_cloud_save'); } catch(e) {}
 
@@ -3560,6 +3631,8 @@ async function syncFromFirebase() {
     // Firebase vazio/indisponível: mantém o backup local apenas como contingência,
     // mas NUNCA o publica automaticamente sem uma ação real do usuário.
     window._firebaseRevision = cloudRevision || null;
+    window._firebaseFuelSignature = cloudFuelSignature;
+    window._firebaseArlaSignature = cloudArlaSignature;
     updateSyncStatus('connected');
   } catch(e) {
     console.error('syncFromFirebase erro:', e);
@@ -3659,6 +3732,9 @@ async function _flushFirebaseSaveQueue() {
     if (ok) {
       const novaRevision = String(result?.revision || '');
       if (novaRevision) window._firebaseRevision = novaRevision;
+      if (result?.fuelSignature !== undefined) window._firebaseFuelSignature = String(result.fuelSignature||'');
+      if (result?.arlaSignature !== undefined) window._firebaseArlaSignature = String(result.arlaSignature||'');
+      window._lastFirebaseSaveError = '';
       window._ultimoSaveAt = agora;
       state._savedAt = agora;
       try { localStorage.removeItem('ignis_pending_cloud_save'); } catch(e) {}
@@ -3675,11 +3751,13 @@ async function _flushFirebaseSaveQueue() {
       if (result?.conflict) {
         showToast('Outro usuário atualizou a base. Seus dados locais foram preservados; atualize a página antes de tentar salvar novamente.', 'error');
       } else if(result?.message) {
+        window._lastFirebaseSaveError = String(result.message||'');
         console.warn('Firebase não confirmou:', result.message);
       }
     }
   } catch (e) {
     console.error('Fila de save Firebase:', e);
+    window._lastFirebaseSaveError = e?.message || String(e);
     updateSyncStatus('error');
     ok = false;
   } finally {
@@ -3705,9 +3783,14 @@ function saveState(options = {}) {
   const snapshot = cloneStateForSave(state, mode);
   snapshot._savedAt = localSaveAt;
   snapshot._baseRevision = String(window._firebaseRevision || '');
+  snapshot._baseFuelSignature = String(window._firebaseFuelSignature || '');
+  snapshot._baseArlaSignature = String(window._firebaseArlaSignature || '');
   delete snapshot.importacaoMonitorEventos; delete snapshot.importacaoMonitorRegras; delete snapshot.importacaoMonitorInicializado;
   try {
-    localStorage.setItem('ignis_pending_cloud_save', JSON.stringify({ savedAt:localSaveAt, baseRevision:snapshot._baseRevision, mode }));
+    localStorage.setItem('ignis_pending_cloud_save', JSON.stringify({
+      savedAt:localSaveAt, baseRevision:snapshot._baseRevision, mode,
+      fuelSignature:snapshot._baseFuelSignature, arlaSignature:snapshot._baseArlaSignature
+    }));
   } catch(e) {}
 
   // Backup completo local só quando alguma série pesada mudou. IDT/meta/listas leves
@@ -7163,6 +7246,20 @@ function idtExcluirImportacao(id){
   state.idtImportacoes=state.idtImportacoes.filter(x=>x.id!==id);saveState({immediate:true,mode:'light'});idtAtualizarSeletor();renderIDT();showToast('Importação IDT excluída.','success');
 }
 
+async function ignisRetryImportacaoPendente(){
+  updateSyncStatus('syncing');
+  showToast('Tentando confirmar a importação no Firebase…','info');
+  const ok=await saveState({immediate:true,mode:'fuel'});
+  if(ok){
+    document.querySelectorAll('[data-ignis-import-pending]').forEach(el=>el.remove());
+    showToast('Importação confirmada no Firebase!','success');
+    return true;
+  }
+  const motivo=String(window._lastFirebaseSaveError||'').trim();
+  showToast(motivo?`Firebase: ${motivo}`:'O Firebase ainda não confirmou. Os dados locais continuam preservados.','error');
+  return false;
+}
+
 // ── IMPORTAR ──────────────────────────────────────────────────────────────────
 async function importarRelatorio(input) {
   if (!await ensureXLSXReady()) return;
@@ -7725,7 +7822,7 @@ async function importarRelatorioDiario(input) {
       const salvoFirebase = await savePromise;
       if (!salvoFirebase) {
         ignisImportProgress(previewEl,100,'Sincronização não confirmada','Os dados continuam neste navegador, mas ainda não estão seguros para outros usuários');
-        previewEl.innerHTML = `<div style="background:rgba(239,98,98,.08);border:1px solid rgba(239,98,98,.28);border-radius:10px;padding:16px;margin-top:12px"><div style="font-size:15px;font-weight:700;color:#ff7777;margin-bottom:6px">Importação processada, mas não confirmada no Firebase</div><div style="font-size:12px;color:var(--text2);line-height:1.6">Não feche nem recarregue esta página. Se outro usuário atualizou a base, atualize o IGNIS e reimporte este período; se foi apenas conexão, tente salvar novamente.</div><button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="saveState({immediate:true,mode:'fuel'}).then(ok=>showToast(ok?'Dados confirmados no Firebase!':'Firebase ainda não confirmou o salvamento.',ok?'success':'error'))">Tentar salvar novamente</button></div>`;
+        previewEl.innerHTML = `<div data-ignis-import-pending style="background:rgba(239,98,98,.08);border:1px solid rgba(239,98,98,.28);border-radius:10px;padding:16px;margin-top:12px"><div style="font-size:15px;font-weight:700;color:#ff7777;margin-bottom:6px">Importação processada, mas não confirmada no Firebase</div><div style="font-size:12px;color:var(--text2);line-height:1.6">Os dados estão preservados neste computador. O IGNIS agora tenta reenviar em blocos menores; não é necessário reimportar o Excel para tentar novamente.</div>${window._lastFirebaseSaveError?`<div style="font-size:10px;color:var(--text3);margin-top:8px;word-break:break-word">Motivo: ${pendEsc(window._lastFirebaseSaveError)}</div>`:''}<button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="ignisRetryImportacaoPendente()">Tentar salvar novamente</button></div>`;
         showToast('O Firebase não confirmou a importação. Ela ainda não está disponível para os outros usuários.', 'error');
         return;
       }
