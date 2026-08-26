@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v29 · auditoria financeira Motoristas PX: média ideal coerente + R$ sem contradição — 26/08/2026 | base v28 -->
-<meta name="ignis-build" content="2026-08-26-motoristas-finance-v29">
+<!-- IGNIS v30 · financeiro Motoristas PX linha a linha + fallback de última meta — 26/08/2026 | base v29 -->
+<meta name="ignis-build" content="2026-08-26-motoristas-finance-v30">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2051,7 +2051,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <tbody id="mot-table-body"></tbody>
         </table>
       </div>
-      <div class="mot-page-note">Auditoria financeira: a <strong>Média real = ΣKM ÷ Σlitros reais</strong> e a <strong>Média ideal = ΣKM ÷ Σlitros ideais</strong>, onde cada abastecimento gera <strong>litros ideais = KM ÷ meta daquele registro</strong>. O R$ só é exibido quando <strong>100% dos registros do período têm meta e Valor Litro válidos</strong>; então o IGNIS compara litros reais x ideais e converte a diferença pelo <strong>preço médio ponderado pelos litros de todos os abastecimentos</strong>. Assim, abaixo de 100% da meta nunca pode aparecer como economia. Para motorista PX, <strong>2 meses sem registros</strong> separam os períodos.</div>
+      <div class="mot-page-note">Auditoria financeira: a <strong>Média real = ΣKM ÷ Σlitros reais</strong> e a <strong>Média ideal = ΣKM ÷ Σlitros ideais</strong>. Se uma linha vier sem meta, o IGNIS usa a <strong>última meta registrada da placa</strong>. O financeiro é calculado <strong>abastecimento por abastecimento</strong>: <strong>(litros ideais − litros reais) × Valor Litro daquela linha</strong>, e só depois os R$ são somados. Assim, abaixo de 100% da meta nunca pode aparecer como economia. Para motorista PX, <strong>2 meses sem registros</strong> separam os períodos.</div>
     </div>
 
     <div id="mot-panel-idt" style="display:none">
@@ -6922,14 +6922,24 @@ function ignisMotoristaDatasOcorrencia(a,m){
   if(inicio&&fim&&fim<inicio){const t=inicio;inicio=fim;fim=t;}
   return{inicio,fim:fim||inicio};
 }
+function ignisMotoristaMetaPositiva(...vals){
+  for(const v of vals){const n=Number(v);if(Number.isFinite(n)&&n>0)return n;}return 0;
+}
+function ignisMotoristaMetaFallback(a,m,d,metaDia){
+  // Regra operacional: se o registro não trouxe meta, usa a última meta conhecida da placa.
+  // A ordem evita zerar uma meta só porque um abastecimento veio sem Média Ideal no relatório.
+  const metaMotor=Number(m?.metaLitros)>0?Number(m?.metaNum)/Number(m?.metaLitros):0;
+  const metaEntrada=Number(a?.metaIdeal)||0;
+  const metaCadastro=Number(getMaquina(a?.placa)?.meta)||0;
+  return ignisMotoristaMetaPositiva(metaDia,Number(d?.meta),Number(d?.metaIdeal),metaMotor,metaEntrada,metaCadastro);
+}
 function motoristasOcorrenciaFinanceira(a,m,km,litros,meta){
-  // Fallback para dados antigos. Ele serve apenas para reconstruir a base técnica;
-  // NÃO libera o R$ como auditado porque o preço individual de cada abastecimento
-  // não ficou preservado nas versões antigas.
+  // Compatibilidade com bases anteriores. A meta pode ser reconstruída pela última meta
+  // conhecida, porém o R$ só é marcado como EXATO quando o impacto foi preservado linha a linha (v3).
   const preco=Number(a?.precoLitro)||0,cob=Number(a?.precoCobertura);
   const precoOk=preco>0&&(!Number.isFinite(cob)||cob>=0.999999);
-  const metaOk=meta>0&&km>0;
-  const idealLitros=metaOk?km/meta:0;
+  const metaOk=meta>0;
+  const idealLitros=metaOk?Math.max(0,km)/meta:0;
   return{
     impactoR:0,
     idealLitros,
@@ -6955,20 +6965,24 @@ function motoristasColetarCiclos(){
         const metaLegada=metaLitros>0?metaNum/metaLitros:0,media=litros>0?km/litros:0;
         const dataIni=ignisMotoristaDataIso(d.data||d.inicio||d.primeiraData||''),dataFim=ignisMotoristaDataIso(d.data||d.fim||d.ultimaData||dataIni);
         const financeiroV=Number(d.financeiroV||m.financeiroV||0);
-        const temAuditoriaV2=financeiroV>=2;
-        const idealDireto=Number(d.idealLitros),metaCovDireto=Number(d.litrosComMeta),custoDireto=Number(d.custoReal),precoCovDireto=Number(d.litrosComPreco);
-        const fin=temAuditoriaV2&&Number.isFinite(idealDireto)&&Number.isFinite(metaCovDireto)&&Number.isFinite(custoDireto)&&Number.isFinite(precoCovDireto)
-          ?{idealLitros:idealDireto,litrosComMeta:metaCovDireto,custoReal:custoDireto,litrosComPreco:precoCovDireto,financeiroExato:true,financeiroV}
-          :motoristasOcorrenciaFinanceira(a,m,km,litros,metaLegada);
-        // A média ideal consolidada precisa partir de litros-alvo: ΣKM ÷ Σ(KM/meta).
-        // Isso elimina a antiga inconsistência em que o status usava uma meta ponderada
-        // diferente da mesma base usada pelo cálculo financeiro.
-        const meta=Number(fin.idealLitros)>0?km/Number(fin.idealLitros):metaLegada;
+        const metaResolvida=ignisMotoristaMetaFallback(a,m,d,metaLegada);
+        const idealDireto=Number(d.idealLitros),metaCovDireto=Number(d.litrosComMeta),custoDireto=Number(d.custoReal),precoCovDireto=Number(d.litrosComPreco),impactoDireto=Number(d.impactoR);
+        const metaCobDireta=litros>0&&Number.isFinite(metaCovDireto)?metaCovDireto/litros:0;
+        // Se a v2 trouxe cobertura parcial de meta, não usa eficiência parcial. Completa o registro
+        // inteiro com a última meta conhecida da placa, que é a regra definida para o IGNIS.
+        const idealResolvido=metaCobDireta>=0.999999&&Number.isFinite(idealDireto)?Math.max(0,idealDireto):(metaResolvida>0?Math.max(0,km)/metaResolvida:0);
+        const litrosMetaResolvidos=idealResolvido>=0&&metaResolvida>0?litros:(metaCobDireta>=0.999999?metaCovDireto:0);
+        const temPrecoV2=financeiroV>=2&&Number.isFinite(custoDireto)&&Number.isFinite(precoCovDireto);
+        const temImpactoExato=financeiroV>=3&&Number.isFinite(impactoDireto);
+        const fin=financeiroV>=2
+          ?{idealLitros:idealResolvido,litrosComMeta:litrosMetaResolvidos,custoReal:temPrecoV2?custoDireto:0,litrosComPreco:temPrecoV2?precoCovDireto:0,impactoR:temImpactoExato?impactoDireto:0,financeiroExato:temImpactoExato,financeiroV}
+          :motoristasOcorrenciaFinanceira(a,m,km,litros,metaResolvida);
+        const meta=Number(fin.idealLitros)>0&&km>0?km/Number(fin.idealLitros):metaResolvida;
         base.ocorrencias.push({
           inicio:dataIni,fim:dataFim||dataIni,periodo:state.semanas?.[a.periodoId]?.label||dataIni||a.data||'—',
           placa:a.placa||'—',operacao:a.operacao||'—',km,litros,metaNum,metaLitros,media,meta,registros:Number(d.registros)||0,
           idealLitros:Number(fin.idealLitros)||0,litrosComMeta:Number(fin.litrosComMeta)||0,custoReal:Number(fin.custoReal)||0,
-          litrosComPreco:Number(fin.litrosComPreco)||0,financeiroExato:!!fin.financeiroExato,financeiroV:Number(fin.financeiroV)||0,legado:!!legado
+          litrosComPreco:Number(fin.litrosComPreco)||0,impactoR:Number(fin.impactoR)||0,financeiroExato:!!fin.financeiroExato,financeiroV:Number(fin.financeiroV)||0,legado:!!legado
         });
       };
       if(dias.length){dias.forEach(d=>pushOcc(d,false));}
@@ -6988,25 +7002,25 @@ function motoristasColetarCiclos(){
       const limite=atual&&atual.fim?ignisMotoristaAddMeses(atual.fim,IGNIS_MOTORISTA_GAP_MESES):'';
       const novoCiclo=!atual||(limite&&o.inicio&&o.inicio>=limite);
       if(novoCiclo){
-        atual={inicio:o.inicio||o.fim,fim:o.fim||o.inicio,km:0,litros:0,metaNum:0,metaLitros:0,registros:0,placas:new Set(),ops:new Set(),detalhes:[],idealLitros:0,litrosComMeta:0,custoReal:0,litrosComPreco:0,financeiroExato:true};
+        atual={inicio:o.inicio||o.fim,fim:o.fim||o.inicio,km:0,litros:0,metaNum:0,metaLitros:0,registros:0,placas:new Set(),ops:new Set(),detalhes:[],idealLitros:0,litrosComMeta:0,custoReal:0,litrosComPreco:0,impactoR:0,financeiroExato:true};
         ciclos.push(atual);
       }
       if(o.inicio&&(!atual.inicio||o.inicio<atual.inicio))atual.inicio=o.inicio;
       if(o.fim&&(!atual.fim||o.fim>atual.fim))atual.fim=o.fim;
       atual.km+=o.km;atual.litros+=o.litros;atual.metaNum+=o.metaNum;atual.metaLitros+=o.metaLitros;atual.registros+=o.registros;
       atual.idealLitros+=Number(o.idealLitros)||0;atual.litrosComMeta+=Number(o.litrosComMeta)||0;atual.custoReal+=Number(o.custoReal)||0;
-      atual.litrosComPreco+=Number(o.litrosComPreco)||0;if(!o.financeiroExato)atual.financeiroExato=false;
+      atual.litrosComPreco+=Number(o.litrosComPreco)||0;atual.impactoR+=Number(o.impactoR)||0;if(!o.financeiroExato)atual.financeiroExato=false;
       if(o.placa&&o.placa!=='—')atual.placas.add(o.placa);if(o.operacao&&o.operacao!=='—')atual.ops.add(o.operacao);atual.detalhes.push(o);
     });
     ciclos.forEach((c,i)=>{
       c.media=c.litros>0?c.km/c.litros:0;
       const metaCobertura=c.litros>0?c.litrosComMeta/c.litros:0,precoCobertura=c.litros>0?c.litrosComPreco/c.litros:0;
       c.meta=metaCobertura>=0.999999&&c.idealLitros>0?c.km/c.idealLitros:0;
-      c.efic=c.litros>0&&c.idealLitros>0?c.idealLitros/c.litros*100:0;
+      c.efic=metaCobertura>=0.999999&&c.litros>0?c.idealLitros/c.litros*100:0;
       c.precoMedio=precoCobertura>=0.999999&&c.litrosComPreco>0?c.custoReal/c.litrosComPreco:0;
       c.deltaLitros=c.idealLitros-c.litros; // positivo = economia; negativo = desperdício
-      c.impactoR=c.precoMedio>0?c.deltaLitros*c.precoMedio:0;
-      c.financeiroOk=!!c.financeiroExato&&metaCobertura>=0.999999&&precoCobertura>=0.999999&&c.meta>0&&c.precoMedio>0;
+      // v3: impactoR já é a soma exata linha a linha: (L ideal - L real) × Valor Litro daquele abastecimento.
+      c.financeiroOk=!!c.financeiroExato&&metaCobertura>=0.999999&&precoCobertura>=0.999999&&c.meta>0;
       rows.push({...base,...c,ciclo:i+1,totalCiclos:ciclos.length});
     });
   });
@@ -7014,23 +7028,22 @@ function motoristasColetarCiclos(){
 }
 function motoristasReagruparDetalhes(base,detalhes){
   if(!detalhes?.length)return null;
-  const r={...base,km:0,litros:0,metaNum:0,metaLitros:0,registros:0,placas:new Set(),ops:new Set(),detalhes:[...detalhes],idealLitros:0,litrosComMeta:0,custoReal:0,litrosComPreco:0,financeiroExato:true};
+  const r={...base,km:0,litros:0,metaNum:0,metaLitros:0,registros:0,placas:new Set(),ops:new Set(),detalhes:[...detalhes],idealLitros:0,litrosComMeta:0,custoReal:0,litrosComPreco:0,impactoR:0,financeiroExato:true};
   r.inicio='';r.fim='';
   detalhes.forEach(o=>{
     if(o.inicio&&(!r.inicio||o.inicio<r.inicio))r.inicio=o.inicio;if(o.fim&&(!r.fim||o.fim>r.fim))r.fim=o.fim;
     r.km+=Number(o.km)||0;r.litros+=Number(o.litros)||0;r.metaNum+=Number(o.metaNum)||0;r.metaLitros+=Number(o.metaLitros)||0;r.registros+=Number(o.registros)||0;
     r.idealLitros+=Number(o.idealLitros)||0;r.litrosComMeta+=Number(o.litrosComMeta)||0;r.custoReal+=Number(o.custoReal)||0;
-    r.litrosComPreco+=Number(o.litrosComPreco)||0;if(!o.financeiroExato)r.financeiroExato=false;
+    r.litrosComPreco+=Number(o.litrosComPreco)||0;r.impactoR+=Number(o.impactoR)||0;if(!o.financeiroExato)r.financeiroExato=false;
     if(o.placa&&o.placa!=='—')r.placas.add(o.placa);if(o.operacao&&o.operacao!=='—')r.ops.add(o.operacao);
   });
   r.media=r.litros>0?r.km/r.litros:0;
   const metaCobertura=r.litros>0?r.litrosComMeta/r.litros:0,precoCobertura=r.litros>0?r.litrosComPreco/r.litros:0;
   r.meta=metaCobertura>=0.999999&&r.idealLitros>0?r.km/r.idealLitros:0;
-  r.efic=r.litros>0&&r.idealLitros>0?r.idealLitros/r.litros*100:0;
+  r.efic=metaCobertura>=0.999999&&r.litros>0?r.idealLitros/r.litros*100:0;
   r.precoMedio=precoCobertura>=0.999999&&r.litrosComPreco>0?r.custoReal/r.litrosComPreco:0;
   r.deltaLitros=r.idealLitros-r.litros;
-  r.impactoR=r.precoMedio>0?r.deltaLitros*r.precoMedio:0;
-  r.financeiroOk=!!r.financeiroExato&&metaCobertura>=0.999999&&precoCobertura>=0.999999&&r.meta>0&&r.precoMedio>0;
+  r.financeiroOk=!!r.financeiroExato&&metaCobertura>=0.999999&&precoCobertura>=0.999999&&r.meta>0;
   return r;
 }
 function motoristasPeriodoConfig(){
@@ -7138,7 +7151,7 @@ function renderMotoristas(force=false){
   tb.innerHTML=rows.map(r=>{
     const st=motoristasStatus(r),has=r.litros>0&&r.km>0,click=has&&r.ciclo>0?` onclick="motoristasAbrirDetalhe('${r.key.replace(/'/g,"\\'")}',${r.ciclo})"`:'';
     const deltaL=Number(r.deltaLitros)||0,precoMed=Number(r.precoMedio)||0;
-    const fin=!r.financeiroOk?'<span class="mot-money none" title="Financeiro não auditável neste período. Reimporte o período com a versão atual para preservar meta e preço de 100% dos abastecimentos.">—</span>':(Math.abs(Number(r.impactoR)||0)<0.005?'<span class="mot-money none" title="Consumo real igual ao consumo ideal">R$ 0,00</span>':Number(r.impactoR)>0?`<span class="mot-money ok" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L economizados × R$ ${precoMed.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:4})}/L médio ponderado"><small>Economia</small>${Number(r.impactoR).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L excedentes × R$ ${precoMed.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:4})}/L médio ponderado"><small>Desperdício</small>${Math.abs(Number(r.impactoR)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);
+    const fin=!r.financeiroOk?'<span class="mot-money none" title="Para exibir R$ exato, este período precisa ter sido importado na versão v30 ou posterior, preservando o Valor Litro de cada abastecimento no cálculo linha a linha.">—</span>':(Math.abs(Number(r.impactoR)||0)<0.005?'<span class="mot-money none" title="Consumo real igual ao consumo ideal">R$ 0,00</span>':Number(r.impactoR)>0?`<span class="mot-money ok" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L economizados. R$ calculado linha a linha com o Valor Litro de cada abastecimento."><small>Economia</small>${Number(r.impactoR).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L excedentes. R$ calculado linha a linha com o Valor Litro de cada abastecimento."><small>Desperdício</small>${Math.abs(Number(r.impactoR)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);
     return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td class="mot-number">${fin}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
   }).join('');
   _markPageClean('motoristas');
@@ -7161,7 +7174,7 @@ function motoristasAbrirDetalhe(key,ciclo){
   const d=motoristasRowsPeriodo(motoristasColetarCiclos()).find(x=>x.key===key&&x.ciclo===Number(ciclo))||motoristasColetarCiclos().find(x=>x.key===key&&x.ciclo===Number(ciclo));if(!d)return;
   let ov=document.getElementById('mot-detalhe-modal');if(!ov){ov=document.createElement('div');ov.id='mot-detalhe-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:980px"><div id="mot-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('mot-detail-content'),st=motoristasStatus(d),det=[...d.detalhes].sort((a,b)=>String(b.inicio||b.fim).localeCompare(String(a.inicio||a.fim)));
-  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média ideal</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Média real</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média ideal</th><th>Média real</th><th>Economia / desperdício</th></tr></thead><tbody>${det.length?det.map(x=>{const covMeta=x.litros>0?(Number(x.litrosComMeta)||0)/x.litros:0,covPreco=x.litros>0?(Number(x.litrosComPreco)||0)/x.litros:0,ok=!!x.financeiroExato&&covMeta>=0.999999&&covPreco>=0.999999&&Number(x.idealLitros)>0;const pm=ok&&x.litrosComPreco>0?(Number(x.custoReal)||0)/x.litrosComPreco:0,dl=(Number(x.idealLitros)||0)-x.litros,vr=pm>0?dl*pm:0;const f=!ok?'—':(Math.abs(vr)<.005?'R$ 0,00':vr>0?`<span class="mot-money ok">${vr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(vr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${f}</td></tr>`}).join(''):'<tr><td colspan="8" class="mot-empty">Sem dados nesse período.</td></tr>'}</tbody></table></div>`;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média ideal</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Média real</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média ideal</th><th>Média real</th><th>Economia / desperdício</th></tr></thead><tbody>${det.length?det.map(x=>{const covMeta=x.litros>0?(Number(x.litrosComMeta)||0)/x.litros:0,covPreco=x.litros>0?(Number(x.litrosComPreco)||0)/x.litros:0,ok=!!x.financeiroExato&&covMeta>=0.999999&&covPreco>=0.999999&&Number(x.meta)>0;const vr=Number(x.impactoR)||0;const f=!ok?'—':(Math.abs(vr)<.005?'R$ 0,00':vr>0?`<span class="mot-money ok">${vr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(vr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${f}</td></tr>`}).join(''):'<tr><td colspan="8" class="mot-empty">Sem dados nesse período.</td></tr>'}</tbody></table></div>`;
   ov.classList.add('open');
 }
 
@@ -7722,6 +7735,15 @@ async function importarRelatorioDiario(input) {
       const importMonitorBatch = new Map();
       let ignoradasExclusao = 0;
       let ignoradasArla = 0;
+      // Última meta válida por placa dentro do próprio arquivo. Isso permite completar linhas
+      // onde "Média Ideal" veio zerada, sem depender da ordem das linhas nem perder cobertura.
+      const metaArquivoPorPlaca=new Map();
+      raw.forEach((r)=>{
+        const pl=String(r['Placa']||'').trim().toUpperCase();if(!pl)return;
+        const meta=ignisNumeroSeguro(r['Média Ideal']);if(!(meta>0))return;
+        const dt=parseDataBR(r['Data']);const ts=dt&&!isNaN(dt)?dt.getTime():0;
+        const prev=metaArquivoPorPlaca.get(pl);if(!prev||ts>=prev.ts)metaArquivoPorPlaca.set(pl,{meta,ts});
+      });
       raw.forEach((row,rowIdx) => {
         const placa = String(row['Placa']||'').trim().toUpperCase();
         if (!placa) return;
@@ -7748,7 +7770,7 @@ async function importarRelatorioDiario(input) {
         if (excluirOps.some(x => opUp.includes(x))) { ignoradasExclusao++; return; }
         if(typeof ignisImportMonitorCollect==='function')ignisImportMonitorCollect(importMonitorBatch,operacao,combustivel,dataObj);
         const tipUpRaw=tipoVeic.toUpperCase(); let tipoIgnisRaw; if(modUp.includes('MOFFETT')||placa.startsWith('EMP'))tipoIgnisRaw='empilhadeira'; else if(tipUpRaw==='VEICULO LEVE'||opUp.startsWith('VL')||opUp.includes('MERCADO LIVRE'))tipoIgnisRaw='leve'; else if(placa.startsWith('MAQ'))tipoIgnisRaw='maquina'; else if(placa.startsWith('TRA'))tipoIgnisRaw='trator'; else tipoIgnisRaw='pesada';
-        const metaEvento = mediaIdeal>0 ? mediaIdeal : (Number(getMaquina(placa)?.meta)||0);
+        const metaEvento = mediaIdeal>0 ? mediaIdeal : ignisMotoristaMetaPositiva(metaArquivoPorPlaca.get(placa)?.meta,Number(getMaquina(placa)?.meta)||0);
         if (combustivelParaAnomalia && litros>0 && kmReal>0 && metaEvento>0 && typeof ignisAvaliarEficienciaAnomalia==='function') {
           const an=ignisAvaliarEficienciaAnomalia({placa,data:dataParaISO(dataObj),operacao,modelo,tipoVeic,tipoIgnis:tipoIgnisRaw,litros,kmHoras:kmReal,meta:metaEvento,source:'Relatório diário',rowIndex:rowIdx,combustivel,propulsaoOnly:true});
           if(an)anomaliasEficienciaImport.push(an);
@@ -7843,21 +7865,23 @@ async function importarRelatorioDiario(input) {
           p._litrosPreco += l.litros;
         }
         if (l.motoristaKey) {
-          if (!p._motoristas[l.motoristaKey]) p._motoristas[l.motoristaKey] = { nome:l.motoristaNome, matricula:l.motoristaMatricula||'', key:l.motoristaKey, litros:0, km:0, metaNum:0, metaLitros:0, registros:0, primeiraData:'', ultimaData:'', idealLitros:0, litrosComMeta:0, custoReal:0, litrosComPreco:0, financeiroV:2, _dias:{} };
+          if (!p._motoristas[l.motoristaKey]) p._motoristas[l.motoristaKey] = { nome:l.motoristaNome, matricula:l.motoristaMatricula||'', key:l.motoristaKey, litros:0, km:0, metaNum:0, metaLitros:0, registros:0, primeiraData:'', ultimaData:'', idealLitros:0, litrosComMeta:0, custoReal:0, litrosComPreco:0, financeiroV:3, impactoR:0, _dias:{} };
           const md=p._motoristas[l.motoristaKey]; md.litros+=l.litros; md.km+=l.kmReal; md.registros++;
           if (!md.matricula && l.motoristaMatricula) md.matricula=l.motoristaMatricula;
           const dataMotorista=dataParaISO(l.data);if(dataMotorista){if(!md.primeiraData||dataMotorista<md.primeiraData)md.primeiraData=dataMotorista;if(!md.ultimaData||dataMotorista>md.ultimaData)md.ultimaData=dataMotorista;}
-          const metaMotorista=Number(l.metaEvento)||0,metaMotoristaOk=metaMotorista>0&&l.kmReal>0;
+          const metaMotorista=Number(l.metaEvento)||0,metaMotoristaOk=metaMotorista>0;
           if (metaMotorista>0) { md.metaNum+=metaMotorista*l.litros; md.metaLitros+=l.litros; }
           if(metaMotoristaOk){md.idealLitros+=l.kmReal/metaMotorista;md.litrosComMeta+=l.litros;}
-          const precoMotoristaOk=l.valorLitro>0&&ignisPrecoCombustivelValido(fuelKey,l.valorLitro);
+          const precoMotoristaOk=Number.isFinite(Number(l.valorLitro))&&Number(l.valorLitro)>0;
           if(precoMotoristaOk){md.litrosComPreco+=l.litros;md.custoReal+=l.litros*l.valorLitro;}
+          if(metaMotoristaOk&&precoMotoristaOk){md.impactoR+=(l.kmReal/metaMotorista-l.litros)*l.valorLitro;}
           if(dataMotorista){
-            if(!md._dias[dataMotorista])md._dias[dataMotorista]={data:dataMotorista,km:0,litros:0,metaNum:0,metaLitros:0,registros:0,idealLitros:0,litrosComMeta:0,custoReal:0,litrosComPreco:0,financeiroV:2};
+            if(!md._dias[dataMotorista])md._dias[dataMotorista]={data:dataMotorista,km:0,litros:0,metaNum:0,metaLitros:0,registros:0,idealLitros:0,litrosComMeta:0,custoReal:0,litrosComPreco:0,financeiroV:3,impactoR:0};
             const dia=md._dias[dataMotorista];dia.km+=l.kmReal;dia.litros+=l.litros;dia.registros++;
             if(metaMotorista>0){dia.metaNum+=metaMotorista*l.litros;dia.metaLitros+=l.litros;}
             if(metaMotoristaOk){dia.idealLitros+=l.kmReal/metaMotorista;dia.litrosComMeta+=l.litros;}
             if(precoMotoristaOk){dia.litrosComPreco+=l.litros;dia.custoReal+=l.litros*l.valorLitro;}
+            if(metaMotoristaOk&&precoMotoristaOk){dia.impactoR+=(l.kmReal/metaMotorista-l.litros)*l.valorLitro;}
           }
         }
       });
@@ -7952,7 +7976,7 @@ async function importarRelatorioDiario(input) {
             const precoPonderado = p._litrosPreco>0 ? (p._custoComb/p._litrosPreco) : 0;
             const operacaoMista = false; // importação nova já foi separada por operação acima
             const coberturaPrecoSemana = p.litros>0 ? p._litrosPreco/p.litros : 0;
-            const motoristasPeriodo=Object.values(p._motoristas||{}).map(m=>({nome:m.nome,matricula:m.matricula||'',key:m.key,litros:Number(m.litros)||0,km:Number(m.km)||0,metaNum:Number(m.metaNum)||0,metaLitros:Number(m.metaLitros)||0,registros:Number(m.registros)||0,primeiraData:m.primeiraData||dIni,ultimaData:m.ultimaData||dFim,idealLitros:Number(m.idealLitros)||0,litrosComMeta:Number(m.litrosComMeta)||0,custoReal:Number(m.custoReal)||0,litrosComPreco:Number(m.litrosComPreco)||0,financeiroV:2,dias:Object.values(m._dias||{}).sort((a,b)=>String(a.data).localeCompare(String(b.data))).map(d=>({data:String(d.data||''),km:Number(d.km)||0,litros:Number(d.litros)||0,metaNum:Number(d.metaNum)||0,metaLitros:Number(d.metaLitros)||0,registros:Number(d.registros)||0,idealLitros:Number(d.idealLitros)||0,litrosComMeta:Number(d.litrosComMeta)||0,custoReal:Number(d.custoReal)||0,litrosComPreco:Number(d.litrosComPreco)||0,financeiroV:2}))}));
+            const motoristasPeriodo=Object.values(p._motoristas||{}).map(m=>({nome:m.nome,matricula:m.matricula||'',key:m.key,litros:Number(m.litros)||0,km:Number(m.km)||0,metaNum:Number(m.metaNum)||0,metaLitros:Number(m.metaLitros)||0,registros:Number(m.registros)||0,primeiraData:m.primeiraData||dIni,ultimaData:m.ultimaData||dFim,idealLitros:Number(m.idealLitros)||0,litrosComMeta:Number(m.litrosComMeta)||0,custoReal:Number(m.custoReal)||0,litrosComPreco:Number(m.litrosComPreco)||0,impactoR:Number(m.impactoR)||0,financeiroV:3,dias:Object.values(m._dias||{}).sort((a,b)=>String(a.data).localeCompare(String(b.data))).map(d=>({data:String(d.data||''),km:Number(d.km)||0,litros:Number(d.litros)||0,metaNum:Number(d.metaNum)||0,metaLitros:Number(d.metaLitros)||0,registros:Number(d.registros)||0,idealLitros:Number(d.idealLitros)||0,litrosComMeta:Number(d.litrosComMeta)||0,custoReal:Number(d.custoReal)||0,litrosComPreco:Number(d.litrosComPreco)||0,impactoR:Number(d.impactoR)||0,financeiroV:3}))}));
             const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId, metaIdeal:p.mediaIdeal||0, combustivel:combustivelSemana, precoLitro:(combustivelSemana&&combustivelSemana!=='MISTO'&&coberturaPrecoSemana>=0.999&&ignisPrecoCombustivelValido(combustivelSemana,precoPonderado))?precoPonderado:0, precoCobertura:coberturaPrecoSemana, operacaoMista, operacoesPeriodo:opsSemana, motoristas:motoristasPeriodo };
             dadosSemana.push(entry);
             state.abastecimentos.push(entry);
