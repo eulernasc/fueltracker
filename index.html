@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v27 · IDT por tipo de desvio (Velocidade / RPM / Motor ocioso) + total acumulado — 26/08/2026 | base v26 -->
+<!-- IGNIS v28 · IDT por tipo de desvio (Velocidade / RPM / Motor ocioso) + total acumulado — 26/08/2026 | base v26 -->
 <meta name="ignis-build" content="2026-08-26-sync-import-v24">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -1978,7 +1978,9 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     .mot-subtab{border:0;border-radius:9px;padding:10px 18px;background:transparent;color:var(--text2);font:600 13px 'DM Sans',sans-serif;cursor:pointer;transition:.16s;white-space:nowrap}.mot-subtab:hover{color:#fff;background:rgba(255,255,255,.035)}.mot-subtab.active{background:var(--accent);color:#fff}
     .mot-periodbar{display:grid;grid-template-columns:minmax(230px,310px) minmax(330px,470px) minmax(180px,1fr);gap:10px;align-items:end;margin-bottom:12px;padding:12px;border:1px solid var(--border);border-radius:13px;background:rgba(255,255,255,.012)}
     .mot-period-dates{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mot-period-summary{min-height:42px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:#111820;color:var(--text3);font-size:10px;line-height:1.4}.mot-period-summary strong{color:var(--text2)}
-    .mot-toolbar{display:grid;grid-template-columns:minmax(180px,230px) minmax(280px,1fr) auto;gap:10px;align-items:end;margin-bottom:18px}
+    .mot-toolbar{display:grid;grid-template-columns:minmax(280px,1fr);gap:10px;align-items:end;margin-bottom:14px}
+    .mot-filterbar{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:14px}.mot-state-tabs{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:4px;border:1px solid var(--border);border-radius:11px;background:#10151c}.mot-state-btn{border:0;border-radius:8px;background:transparent;color:var(--text2);padding:8px 11px;font:700 10px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;transition:.15s}.mot-state-btn:hover{color:#fff;background:rgba(255,255,255,.035)}.mot-state-btn.active{background:rgba(233,95,50,.16);color:#ff865f;box-shadow:inset 0 0 0 1px rgba(233,95,50,.28)}.mot-state-btn.activity.active{background:rgba(52,201,139,.10);color:var(--green);box-shadow:inset 0 0 0 1px rgba(52,201,139,.20)}.mot-state-btn.inactive.active{background:rgba(240,95,87,.09);color:var(--red);box-shadow:inset 0 0 0 1px rgba(240,95,87,.18)}.mot-filter-search{min-width:260px;flex:1}.mot-filter-search .filter-input{width:100%}.mot-filter-meta{width:150px;flex:0 0 150px}
+    .mot-activity-config{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:16px 0 4px;padding:11px 12px;border:1px solid var(--border);border-radius:10px;background:#111820}.mot-activity-copy strong{display:block;font-size:11px}.mot-activity-copy span{display:block;font-size:9px;color:var(--text3);margin-top:3px;line-height:1.35}.mot-activity-days{display:flex;align-items:center;gap:7px;white-space:nowrap}.mot-activity-days input{width:64px;height:34px;border:1px solid var(--border);border-radius:8px;background:#0e141b;color:#fff;text-align:center;font:700 12px 'DM Mono',monospace;outline:none}.mot-activity-days span{font-size:10px;color:var(--text3);font-weight:700}
     .mot-field{display:flex;flex-direction:column;gap:6px}.mot-field label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
     .mot-date-input{height:42px;width:100%;border:1px solid var(--border);border-radius:10px;background:#111820;color:var(--text);padding:0 11px;font:600 12px 'DM Sans',sans-serif;outline:none;color-scheme:dark}.mot-date-input:focus{border-color:rgba(233,95,50,.55);box-shadow:0 0 0 2px rgba(233,95,50,.08)}
     .mot-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}.mot-kpi{background:linear-gradient(180deg,rgba(19,25,33,.98),rgba(16,21,28,.98));border:1px solid var(--border);border-radius:14px;padding:16px 18px}.mot-kpi-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:800}.mot-kpi-value{font-size:25px;font-weight:760;margin-top:6px;letter-spacing:-.7px}.mot-kpi-sub{font-size:10px;color:var(--text3);margin-top:3px}
@@ -1987,17 +1989,17 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     .mot-money{font-weight:800;white-space:nowrap}.mot-money.ok{color:var(--green)}.mot-money.bad{color:var(--red)}.mot-money.none{color:var(--text3);font-weight:600}.mot-money small{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:1px;opacity:.8}
     .mot-manage-list{display:flex;flex-direction:column;gap:7px;max-height:280px;overflow:auto;margin-top:12px}.mot-manage-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-manage-copy{min-width:0;flex:1}.mot-manage-name{font-size:12px;font-weight:700}.mot-manage-meta{font-size:9px;color:var(--text3);margin-top:2px}.mot-remove{width:28px;height:28px;border:1px solid rgba(240,95,87,.23);background:rgba(240,95,87,.06);color:#ff8d86;border-radius:8px;cursor:pointer}.mot-add-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.mot-suggestions{display:flex;flex-direction:column;gap:5px;max-height:190px;overflow:auto;margin-top:8px}.mot-suggestion{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--border);border-radius:9px;background:#111820;color:var(--text);cursor:pointer;font-family:inherit}.mot-suggestion:hover{border-color:rgba(233,95,50,.35)}.mot-suggestion small{color:var(--text3)}
     .mot-detail-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.mot-detail-card{padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg3)}.mot-detail-card span{display:block;font-size:9px;color:var(--text3);text-transform:uppercase}.mot-detail-card strong{display:block;font-size:16px;margin-top:3px}.mot-detail-table{width:100%;border-collapse:collapse}.mot-detail-table th,.mot-detail-table td{padding:9px;border-bottom:1px solid rgba(255,255,255,.05);font-size:10px;text-align:left}.mot-detail-scroll{max-height:330px;overflow:auto;border:1px solid var(--border);border-radius:10px}
-    .idt-toolbar{display:grid;grid-template-columns:minmax(230px,310px) minmax(180px,220px) minmax(220px,1fr) auto auto;gap:10px;align-items:end;margin-bottom:18px}.idt-toolbar-clean{grid-template-columns:minmax(180px,230px) minmax(280px,1fr) 150px auto;margin-bottom:10px}.idt-actions-clean{display:flex;gap:8px;align-items:center;justify-content:flex-end}.idt-summary-clean{display:flex;align-items:stretch;gap:8px;margin:0 0 14px;min-height:48px}.idt-summary-main,.idt-summary-item{display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:rgba(255,255,255,.012);border-radius:10px;padding:8px 12px}.idt-summary-main span,.idt-summary-item span{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}.idt-summary-main strong{font-size:18px}.idt-summary-main small{font-size:9px;color:var(--text3);white-space:nowrap}.idt-summary-item strong{font-size:13px}.mot-page-note-compact{padding-top:8px}.idt-history-list{display:flex;flex-direction:column;gap:7px;margin-top:14px;max-height:420px;overflow:auto}.idt-history-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:#111820}.idt-history-copy{min-width:0;flex:1}.idt-history-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.idt-history-meta{font-size:9px;color:var(--text3);margin-top:2px}.idt-history-actions{display:flex;gap:6px;flex-shrink:0}.idt-history-active{border-color:rgba(233,95,50,.4);background:rgba(233,95,50,.04)}.idt-meta-box{display:flex;align-items:center;height:42px;border:1px solid var(--border);border-radius:10px;background:#121820;overflow:hidden}.idt-meta-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:0 10px;white-space:nowrap}.idt-meta-input{width:72px;height:100%;border:0;border-left:1px solid var(--border);background:transparent;color:#fff;text-align:center;font:700 12px 'DM Mono',monospace;outline:none}.idt-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.idt-idt-value{font-family:'DM Mono',monospace}.idt-idt-value.ok{color:var(--green)}.idt-idt-value.bad{color:var(--red)}
+    .idt-toolbar{display:grid;grid-template-columns:minmax(230px,310px) minmax(180px,220px) minmax(220px,1fr) auto auto;gap:10px;align-items:end;margin-bottom:18px}.idt-toolbar-clean{display:block;margin-bottom:10px}.idt-actions-clean{display:flex;gap:8px;align-items:center;justify-content:flex-end}.idt-summary-clean{display:flex;align-items:stretch;gap:8px;margin:0 0 14px;min-height:48px}.idt-summary-main,.idt-summary-item{display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:rgba(255,255,255,.012);border-radius:10px;padding:8px 12px}.idt-summary-main span,.idt-summary-item span{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}.idt-summary-main strong{font-size:18px}.idt-summary-main small{font-size:9px;color:var(--text3);white-space:nowrap}.idt-summary-item strong{font-size:13px}.mot-page-note-compact{padding-top:8px}.idt-history-list{display:flex;flex-direction:column;gap:7px;margin-top:14px;max-height:420px;overflow:auto}.idt-history-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:#111820}.idt-history-copy{min-width:0;flex:1}.idt-history-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.idt-history-meta{font-size:9px;color:var(--text3);margin-top:2px}.idt-history-actions{display:flex;gap:6px;flex-shrink:0}.idt-history-active{border-color:rgba(233,95,50,.4);background:rgba(233,95,50,.04)}.idt-meta-box{display:flex;align-items:center;height:42px;border:1px solid var(--border);border-radius:10px;background:#121820;overflow:hidden}.idt-meta-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:0 10px;white-space:nowrap}.idt-meta-input{width:72px;height:100%;border:0;border-left:1px solid var(--border);background:transparent;color:#fff;text-align:center;font:700 12px 'DM Mono',monospace;outline:none}.idt-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.idt-idt-value{font-family:'DM Mono',monospace}.idt-idt-value.ok{color:var(--green)}.idt-idt-value.bad{color:var(--red)}
     .idt-period-empty{padding:48px 20px;border:1px dashed var(--border);border-radius:14px;text-align:center;background:rgba(255,255,255,.012)}.idt-period-empty strong{display:block;font-size:14px;margin-bottom:6px}.idt-period-empty span{font-size:11px;color:var(--text3)}
     .idt-import-box{border:1px dashed rgba(233,95,50,.35);border-radius:12px;padding:16px;background:rgba(233,95,50,.025);margin-top:14px;cursor:pointer;transition:.15s}.idt-import-box:hover{border-color:rgba(233,95,50,.65);background:rgba(233,95,50,.045)}.idt-import-title{font-size:12px;font-weight:720}.idt-import-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.45}.idt-modal-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}.idt-import-history{margin-top:14px;font-size:10px;color:var(--text3)}
     @media(max-width:1180px){.idt-toolbar-clean{grid-template-columns:1fr 1fr}.idt-toolbar-clean .mot-search{grid-column:1/-1}.idt-actions-clean{justify-content:stretch}.idt-actions-clean .btn{flex:1}.mot-periodbar{grid-template-columns:1fr 1fr}.mot-period-summary{grid-column:1/-1}.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{width:100%}.idt-toolbar{grid-template-columns:1fr 1fr}.idt-toolbar .mot-search{grid-column:1/-1}.idt-toolbar>.btn{width:100%}.idt-kpis{grid-template-columns:1fr 1fr}}
-    @media(max-width:900px){.idt-toolbar-clean{grid-template-columns:1fr}.idt-toolbar-clean .mot-search{grid-column:auto}.idt-actions-clean{width:100%}.idt-summary-clean{overflow-x:auto;padding-bottom:2px}.idt-summary-main,.idt-summary-item{flex:0 0 auto}.mot-periodbar{grid-template-columns:1fr}.mot-period-dates,.mot-period-summary{grid-column:auto}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1180px}.mot-detail-summary{grid-template-columns:1fr 1fr}.idt-toolbar{grid-template-columns:1fr}.idt-kpis{grid-template-columns:1fr 1fr}.idt-table{min-width:760px}}
-    @media(max-width:520px){.mot-subtabs{width:100%}.mot-period-dates{grid-template-columns:1fr}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
+    @media(max-width:900px){.idt-toolbar-clean{display:block}.mot-filterbar{align-items:stretch}.mot-state-tabs{width:100%}.mot-filter-search{min-width:100%}.mot-filter-meta{width:100%;flex:1}.idt-actions-clean{width:100%}.idt-summary-clean{overflow-x:auto;padding-bottom:2px}.idt-summary-main,.idt-summary-item{flex:0 0 auto}.mot-periodbar{grid-template-columns:1fr}.mot-period-dates,.mot-period-summary{grid-column:auto}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1180px}.mot-detail-summary{grid-template-columns:1fr 1fr}.idt-toolbar{grid-template-columns:1fr}.idt-kpis{grid-template-columns:1fr 1fr}.idt-table{min-width:760px}}
+    @media(max-width:520px){.mot-subtabs{width:100%}.mot-state-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mot-state-btn{width:100%}.mot-period-dates{grid-template-columns:1fr}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
   </style>
   <div id="page-motoristas" class="page">
     <div class="page-header">
       <div><div class="page-title">Motoristas PX</div><div class="page-sub">Acompanhamento de consumo e telemetria dos motoristas PX</div></div>
-      <div class="header-actions"><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
+      <div class="header-actions"><button class="btn btn-secondary" id="btn-idt-historico" style="display:none" onclick="idtAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-idt-importar" style="display:none" onclick="idtAbrirImportacao()">Importar desvios</button><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
     </div>
 
     <div class="mot-subtabs">
@@ -2006,19 +2008,25 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     </div>
 
     <div class="mot-periodbar" id="mot-periodbar">
-      <div class="mot-field"><label>Período da análise</label><select class="filter-select" id="mot-period-mode" onchange="motoristasPeriodoModoChanged()"><option value="recente">Período mais recente de cada motorista</option><option value="personalizado">Selecionar período no calendário</option><option value="todos">Todos os períodos com dados (separados)</option></select></div>
+      <div class="mot-field"><label>Período da análise</label><select class="filter-select" id="mot-period-mode" onchange="motoristasPeriodoModoChanged()"><option value="todos">Todos</option><option value="personalizado">Personalizado</option></select></div>
       <div class="mot-period-dates" id="mot-period-dates" style="display:none">
         <div class="mot-field"><label>Data inicial</label><input class="mot-date-input" id="mot-data-ini" type="date" onchange="motoristasPeriodoDatasChanged()"></div>
         <div class="mot-field"><label>Data final</label><input class="mot-date-input" id="mot-data-fim" type="date" onchange="motoristasPeriodoDatasChanged()"></div>
       </div>
-      <div class="mot-period-summary" id="mot-period-summary"><strong>Período mais recente</strong>&nbsp;de cada motorista. Retornos após 2 meses continuam separados.</div>
+      <div class="mot-period-summary" id="mot-period-summary"><strong>Todos os períodos com dados</strong>, mantendo retornos após 2 meses separados.</div>
     </div>
 
     <div id="mot-panel-media">
-      <div class="mot-toolbar">
-        <div class="mot-field"><label>Situação</label><select class="filter-select" id="mot-status-filter" onchange="renderMotoristas(false)"><option value="identificados">Identificados</option><option value="meta">Meta atingida</option><option value="abaixo">Abaixo da meta</option><option value="todos">Todos</option></select></div>
-        <div class="mot-field mot-search"><label>Buscar</label><input class="filter-input" id="mot-busca" placeholder="Buscar motorista..." oninput="motoristasDebouncedRender()"></div>
-        <button class="btn btn-secondary" onclick="motoristasAbrirGestao()">+ Incluir / retirar</button>
+      <div class="mot-filterbar">
+        <div class="mot-state-tabs" id="mot-status-tabs">
+          <button class="mot-state-btn active" data-filter="todos" onclick="motoristasSetStatusFilter('todos')">Todos</button>
+          <button class="mot-state-btn" data-filter="meta" onclick="motoristasSetStatusFilter('meta')">Dentro da meta</button>
+          <button class="mot-state-btn" data-filter="atencao" onclick="motoristasSetStatusFilter('atencao')">Atenção</button>
+          <button class="mot-state-btn" data-filter="abaixo" onclick="motoristasSetStatusFilter('abaixo')">Abaixo da meta</button>
+          <button class="mot-state-btn activity" data-filter="ativos" onclick="motoristasSetStatusFilter('ativos')">Ativos</button>
+          <button class="mot-state-btn inactive" data-filter="desativos" onclick="motoristasSetStatusFilter('desativos')">Desativos</button>
+        </div>
+        <div class="mot-filter-search"><input class="filter-input" id="mot-busca" placeholder="Buscar motorista..." oninput="motoristasDebouncedRender()"></div>
       </div>
       <div class="mot-kpis">
         <div class="mot-kpi"><div class="mot-kpi-label">Acompanhados</div><div class="mot-kpi-value" id="mot-kpi-acomp">0</div><div class="mot-kpi-sub">motoristas selecionados</div></div>
@@ -2049,10 +2057,17 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     <div id="mot-panel-idt" style="display:none">
       <div class="idt-toolbar idt-toolbar-clean">
         <select id="idt-periodo" onchange="renderIDT()" style="display:none" aria-hidden="true"></select>
-        <div class="mot-field"><label>Situação</label><select class="filter-select" id="idt-status-filter" onchange="renderIDT()"><option value="identificados">Identificados</option><option value="meta">Dentro/abaixo da meta</option><option value="acima">Acima da meta</option><option value="todos">Todos</option></select></div>
-        <div class="mot-field mot-search"><label>Buscar</label><input class="filter-input" id="idt-busca" placeholder="Buscar motorista..." oninput="idtDebouncedRender()"></div>
-        <div class="mot-field"><label>Meta</label><div class="idt-meta-box"><span class="idt-meta-label">IDT</span><input class="idt-meta-input" id="idt-meta" type="number" min="0" step="0.1" value="1.5" onchange="idtSalvarMeta()"></div></div>
-        <div class="idt-actions-clean"><button class="btn btn-secondary" id="btn-idt-historico" onclick="idtAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-idt-importar" onclick="idtAbrirImportacao()">Importar desvios</button></div>
+        <div class="mot-filterbar">
+          <div class="mot-state-tabs" id="idt-status-tabs">
+            <button class="mot-state-btn active" data-filter="todos" onclick="idtSetStatusFilter('todos')">Todos</button>
+            <button class="mot-state-btn" data-filter="meta" onclick="idtSetStatusFilter('meta')">Dentro da meta</button>
+            <button class="mot-state-btn" data-filter="acima" onclick="idtSetStatusFilter('acima')">Acima da meta</button>
+            <button class="mot-state-btn activity" data-filter="ativos" onclick="idtSetStatusFilter('ativos')">Ativos</button>
+            <button class="mot-state-btn inactive" data-filter="desativos" onclick="idtSetStatusFilter('desativos')">Desativos</button>
+          </div>
+          <div class="mot-filter-search"><input class="filter-input" id="idt-busca" placeholder="Buscar motorista..." oninput="idtDebouncedRender()"></div>
+          <div class="mot-filter-meta"><div class="idt-meta-box"><span class="idt-meta-label">Meta IDT</span><input class="idt-meta-input" id="idt-meta" type="number" min="0" step="0.1" value="1.5" onchange="idtSalvarMeta()"></div></div>
+        </div>
       </div>
       <div class="idt-summary-clean">
         <div class="idt-summary-main"><span>IDT geral</span><strong class="idt-idt-value" id="idt-kpi-geral">—</strong><small id="idt-kpi-geral-sub">meta ≤ 1,5</small></div>
@@ -3294,7 +3309,7 @@ async function idbLoad() {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, idtMeta:1.5, idtImportacoes:[] };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, motoristasInatividadeDias:5, idtMeta:1.5, idtImportacoes:[] };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -3919,8 +3934,11 @@ function authExigirPermissao(perm,mensagem){
   return false;
 }
 function authAplicarPermissoesMotoristas(){
-  const btn=document.getElementById('btn-idt-importar');
-  if(btn)btn.style.display=authTemPermissao('motoristas_idt_importar')?'':'none';
+  const noIdt=_motSubtab==='idt';
+  const hist=document.getElementById('btn-idt-historico');
+  const imp=document.getElementById('btn-idt-importar');
+  if(hist)hist.style.display=noIdt?'':'none';
+  if(imp)imp.style.display=noIdt&&authTemPermissao('motoristas_idt_importar')?'':'none';
 }
 
 // Todas as abas disponíveis
@@ -6854,6 +6872,7 @@ function ignisParseMotorista(raw){
 }
 function ignisEnsureMotoristasState(){
   if(!Array.isArray(state.motoristasMonitorados))state.motoristasMonitorados=[];
+  if(!Number.isFinite(Number(state.motoristasInatividadeDias))||Number(state.motoristasInatividadeDias)<1)state.motoristasInatividadeDias=5;
   if(!state.motoristasMonitoradosInicializados){
     state.motoristasMonitorados=IGNIS_MOTORISTAS_INICIAIS.map(nome=>({nome,key:ignisMotoristaNorm(nome),matricula:''}));
     state.motoristasMonitoradosInicializados=true;
@@ -6982,7 +7001,7 @@ function motoristasReagruparDetalhes(base,detalhes){
   return r;
 }
 function motoristasPeriodoConfig(){
-  const mode=document.getElementById('mot-period-mode')?.value||'recente',ini=document.getElementById('mot-data-ini')?.value||'',fim=document.getElementById('mot-data-fim')?.value||'';
+  const mode=document.getElementById('mot-period-mode')?.value||'todos',ini=document.getElementById('mot-data-ini')?.value||'',fim=document.getElementById('mot-data-fim')?.value||'';
   return{mode,ini,fim};
 }
 function motoristasFaixaDisponivel(){
@@ -6994,25 +7013,22 @@ function motoristasPeriodoAtualizarUI(){
   if(dates)dates.style.display=cfg.mode==='personalizado'?'grid':'none';
   if(!sum)return;
   if(cfg.mode==='personalizado')sum.innerHTML=cfg.ini&&cfg.fim?`Exibindo <strong>${ignisMotoristaFormatData(cfg.ini)} → ${ignisMotoristaFormatData(cfg.fim)}</strong>. O cálculo é refeito somente com os dados desse intervalo.`:'Selecione a <strong>data inicial e final</strong> no calendário.';
-  else if(cfg.mode==='todos')sum.innerHTML='<strong>Todos os períodos com dados</strong>, mantendo retornos após 2 meses em períodos separados.';
-  else sum.innerHTML='<strong>Período mais recente</strong>&nbsp;de cada motorista. Retornos após 2 meses continuam separados.';
+  else sum.innerHTML='<strong>Todos os períodos com dados</strong>, mantendo retornos após 2 meses em períodos separados.';
 }
 function motoristasPeriodoModoChanged(){
   const cfg=motoristasPeriodoConfig();
   if(cfg.mode==='personalizado'&&(!cfg.ini||!cfg.fim)){
     const f=motoristasFaixaDisponivel(),ini=document.getElementById('mot-data-ini'),fim=document.getElementById('mot-data-fim');if(ini&&!ini.value)ini.value=f.ini;if(fim&&!fim.value)fim.value=f.fim;
   }
-  motoristasPeriodoAtualizarUI();renderMotoristas(false);if(_motSubtab==='idt')renderIDT();
+  motoristasPeriodoAtualizarUI();if(_motSubtab==='idt')renderIDT();else renderMotoristas(false);
 }
 function motoristasPeriodoDatasChanged(){
   const cfg=motoristasPeriodoConfig();if(cfg.ini&&cfg.fim&&cfg.ini>cfg.fim){const fim=document.getElementById('mot-data-fim');if(fim)fim.value=cfg.ini;}
-  motoristasPeriodoAtualizarUI();renderMotoristas(false);if(_motSubtab==='idt')renderIDT();
+  motoristasPeriodoAtualizarUI();if(_motSubtab==='idt')renderIDT();else renderMotoristas(false);
 }
 function motoristasRowsPeriodo(all=motoristasColetarCiclos()){
   const cfg=motoristasPeriodoConfig();let rows=all;
-  if(cfg.mode==='recente'){
-    const ultimo=new Map();all.forEach(r=>{const prev=ultimo.get(r.key);if(!prev||r.ciclo>prev.ciclo)ultimo.set(r.key,r);});rows=[...ultimo.values()].sort((a,b)=>a.ord-b.ord);
-  }else if(cfg.mode==='personalizado'&&cfg.ini&&cfg.fim){
+  if(cfg.mode==='personalizado'&&cfg.ini&&cfg.fim){
     rows=all.map(r=>{
       if(!(r.ciclo>0))return null;
       const det=(r.detalhes||[]).filter(o=>{const oi=o.inicio||o.fim||'',of=o.fim||o.inicio||'';return oi&&of&&oi<=cfg.fim&&of>=cfg.ini;});
@@ -7024,6 +7040,20 @@ function motoristasRowsPeriodo(all=motoristasColetarCiclos()){
 function motoristasColetar(){return motoristasRowsPeriodo();}
 let _motRenderTimer=null;function motoristasDebouncedRender(){clearTimeout(_motRenderTimer);_motRenderTimer=setTimeout(()=>renderMotoristas(false),100);}
 function motoristasStatus(d){if(!(d.litros>0&&d.km>0))return{cls:'none',label:'Sem dados'};if(!(d.meta>0))return{cls:'none',label:'Sem meta'};if(d.efic>=98)return{cls:'ok',label:'Dentro da meta'};if(d.efic>=90)return{cls:'warn',label:'Atenção'};return{cls:'bad',label:'Abaixo da meta'};}
+function ignisMotoristasDiasInatividade(){ignisEnsureMotoristasState();return Math.max(1,Math.floor(Number(state.motoristasInatividadeDias)||5));}
+function ignisMotoristaHojeIso(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function ignisMotoristaDiffDias(a,b){if(!/^\d{4}-\d{2}-\d{2}$/.test(String(a||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(b||'')))return Infinity;const pa=a.split('-').map(Number),pb=b.split('-').map(Number);return Math.floor((Date.UTC(pb[0],pb[1]-1,pb[2])-Date.UTC(pa[0],pa[1]-1,pa[2]))/86400000);}
+function motoristasAtividadeMap(all=motoristasColetarCiclos()){
+  const map=new Map(),hoje=ignisMotoristaHojeIso(),limite=ignisMotoristasDiasInatividade();
+  all.forEach(r=>{if(!(r.ciclo>0)||!r.fim)return;const prev=map.get(r.key);if(!prev||Number(r.ciclo)>Number(prev.ciclo)||Number(r.ciclo)===Number(prev.ciclo)&&String(r.fim)>String(prev.ultimaData))map.set(r.key,{ultimoCiclo:Number(r.ciclo),ultimaData:r.fim});});
+  map.forEach(v=>{v.diasSem=Math.max(0,ignisMotoristaDiffDias(v.ultimaData,hoje));v.ativo=v.diasSem<=limite;});
+  return map;
+}
+function motoristasLinhaAtiva(r,map){const a=map.get(r.key);return Boolean(a&&a.ativo&&Number(r.ciclo||0)===Number(a.ultimoCiclo||0));}
+let _motStatusFilter='todos',_idtStatusFilter='todos';
+function motoristasAtualizarStatusBotoes(){document.querySelectorAll('#mot-status-tabs .mot-state-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===_motStatusFilter));document.querySelectorAll('#idt-status-tabs .mot-state-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===_idtStatusFilter));}
+function motoristasSetStatusFilter(v){_motStatusFilter=String(v||'todos');motoristasAtualizarStatusBotoes();renderMotoristas(false);}
+function idtSetStatusFilter(v){_idtStatusFilter=String(v||'todos');motoristasAtualizarStatusBotoes();renderIDT();}
 let _motSort={key:'nome',dir:'asc'}, _idtSort={key:'nome',dir:'asc'};
 function ignisMotorSortToggle(sort,key){return sort.key===key?{key,dir:sort.dir==='asc'?'desc':'asc'}:{key,dir:'asc'};}
 function ignisMotorSortText(v){return ignisMotoristaNorm(v||'');}
@@ -7047,15 +7077,17 @@ function motoristasSetSort(key){_motSort=ignisMotorSortToggle(_motSort,key);rend
 function idtSetSort(key){_idtSort=ignisMotorSortToggle(_idtSort,key);renderIDT();}
 function renderMotoristas(force=false){
   ignisEnsureMotoristasState();
-  const all=motoristasColetarCiclos(),q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),filtro=document.getElementById('mot-status-filter')?.value||'identificados';
-  motoristasPeriodoAtualizarUI();
+  const all=motoristasColetarCiclos(),q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),filtro=_motStatusFilter||'todos',atividadeMap=motoristasAtividadeMap(all);
+  motoristasPeriodoAtualizarUI();motoristasAtualizarStatusBotoes();
   const periodRows=motoristasRowsPeriodo(all);
   let rows=[...periodRows];
   if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
   const identificado=r=>r.ciclo>0&&r.litros>0&&r.km>0;
-  if(filtro==='identificados')rows=rows.filter(identificado);
-  else if(filtro==='meta')rows=rows.filter(r=>identificado(r)&&r.meta>0&&r.efic>=98);
-  else if(filtro==='abaixo')rows=rows.filter(r=>identificado(r)&&r.meta>0&&r.efic<98);
+  if(filtro==='meta')rows=rows.filter(r=>identificado(r)&&r.meta>0&&r.efic>=98);
+  else if(filtro==='atencao')rows=rows.filter(r=>identificado(r)&&r.meta>0&&r.efic>=90&&r.efic<98);
+  else if(filtro==='abaixo')rows=rows.filter(r=>identificado(r)&&r.meta>0&&r.efic<90);
+  else if(filtro==='ativos')rows=rows.filter(r=>motoristasLinhaAtiva(r,atividadeMap));
+  else if(filtro==='desativos')rows=rows.filter(r=>!motoristasLinhaAtiva(r,atividadeMap));
   const statusRank=r=>{const st=motoristasStatus(r);return st.cls==='bad'?0:st.cls==='warn'?1:st.cls==='ok'?2:3;};
   rows=[...rows].sort((a,b)=>ignisMotorSortCompare(a,b,_motSort,(r,key)=>({nome:ignisMotorSortText(r.nome),periodo:r.inicio||r.fim||'',km:Number(r.km)||0,litros:Number(r.litros)||0,media:Number(r.media)||0,meta:Number(r.meta)||0,efic:Number(r.efic)||0,registros:Number(r.registros)||0,placas:Number(r.placas?.size)||0,financeiro:r.financeiroOk?Number(r.impactoR)||0:-Infinity,status:statusRank(r)}[key])));
   ignisMotorSortHeaderUpdate('mot-table-head',_motSort);
@@ -7079,9 +7111,12 @@ function renderMotoristas(force=false){
   if(_motSubtab==='idt')renderIDT();
 }
 function motoristasAbrirGestao(){
-  ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Períodos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="form-group" style="margin-top:18px"><label class="form-label">Adicionar motorista</label><div class="mot-add-row"><input id="mot-add-input" class="form-input" placeholder="Digite o nome ou busque nos motoristas encontrados" oninput="motoristasRenderSugestoes()" onkeydown="if(event.key==='Enter')motoristasAdicionarDigitado()"><button class="btn btn-primary" onclick="motoristasAdicionarDigitado()">Adicionar</button></div><div id="mot-sugestoes" class="mot-suggestions"></div></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-top:16px">Selecionados</div><div id="mot-manage-list" class="mot-manage-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Períodos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="mot-activity-config"><div class="mot-activity-copy"><strong>Status Ativo / Desativo</strong><span>O motorista vira Desativo quando passar mais do que este número de dias sem um novo abastecimento.</span></div><div class="mot-activity-days"><input id="mot-inatividade-dias" type="number" min="1" max="365" step="1" onchange="motoristasSalvarInatividadeDias()"><span>dias</span></div></div><div class="form-group" style="margin-top:18px"><label class="form-label">Adicionar motorista</label><div class="mot-add-row"><input id="mot-add-input" class="form-input" placeholder="Digite o nome ou busque nos motoristas encontrados" oninput="motoristasRenderSugestoes()" onkeydown="if(event.key==='Enter')motoristasAdicionarDigitado()"><button class="btn btn-primary" onclick="motoristasAdicionarDigitado()">Adicionar</button></div><div id="mot-sugestoes" class="mot-suggestions"></div></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-top:16px">Selecionados</div><div id="mot-manage-list" class="mot-manage-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  const dias=document.getElementById('mot-inatividade-dias');if(dias)dias.value=ignisMotoristasDiasInatividade();
   motoristasRenderGestao();motoristasRenderSugestoes();ov.classList.add('open');setTimeout(()=>document.getElementById('mot-add-input')?.focus(),50);
 }
+function motoristasSalvarInatividadeDias(){const inp=document.getElementById('mot-inatividade-dias'),n=Math.floor(Number(inp?.value));if(!Number.isFinite(n)||n<1||n>365){showToast('Informe um período entre 1 e 365 dias.','error');if(inp)inp.value=ignisMotoristasDiasInatividade();return;}state.motoristasInatividadeDias=n;saveState({mode:'light'});if(_motSubtab==='idt')renderIDT();else renderMotoristas(false);showToast(`Motoristas passam para Desativo após mais de ${n} dia${n===1?'':'s'} sem abastecimento.`,'success');}
+
 function motoristasRenderGestao(){const el=document.getElementById('mot-manage-list');if(!el)return;const arr=ignisEnsureMotoristasState();el.innerHTML=arr.length?arr.map(m=>`<div class="mot-manage-row"><div class="mot-manage-copy"><div class="mot-manage-name">${pendEsc(m.nome)}</div><div class="mot-manage-meta">${pendEsc(m.matricula||'Nome acompanhado')}</div></div><button class="mot-remove" title="Retirar do acompanhamento" onclick="motoristasRemover('${m.key.replace(/'/g,"\\'")}')">×</button></div>`).join(''):'<div class="mot-empty">Nenhum motorista selecionado.</div>';}
 function motoristasRenderSugestoes(){const el=document.getElementById('mot-sugestoes');if(!el)return;const q=ignisMotoristaNorm(document.getElementById('mot-add-input')?.value||''),sel=new Set(ignisEnsureMotoristasState().map(m=>m.key));let cat=ignisMotoristaCatalogo().filter(m=>!sel.has(m.key));if(q)cat=cat.filter(m=>ignisMotoristaNorm(m.nome).includes(q)||ignisMotoristaNorm(m.matricula).includes(q));else cat=cat.slice(0,8);el.innerHTML=cat.slice(0,12).map(m=>`<button class="mot-suggestion" onclick="motoristasAdicionarCatalogo('${m.key.replace(/'/g,"\\'")}')"><span>${pendEsc(m.nome)}</span><small>${pendEsc(m.matricula||'detectado no relatório')}</small></button>`).join('');}
 function motoristasAdicionar(nome,matricula=''){nome=String(nome||'').trim();if(!nome)return false;const key=ignisMotoristaNorm(nome);if(!key)return false;const arr=ignisEnsureMotoristasState();if(arr.some(m=>m.key===key)){showToast('Esse motorista já está sendo acompanhado.','info');return false;}arr.push({nome,matricula:String(matricula||''),key});saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);return true;}
@@ -7115,8 +7150,8 @@ function motoristasSetSubtab(tab,el){
   if(media)media.style.display=_motSubtab==='media'?'':'none';
   if(idt)idt.style.display=_motSubtab==='idt'?'':'none';
   if(periodbar)periodbar.style.display='grid';
-  motoristasPeriodoAtualizarUI();
-  if(_motSubtab==='idt'){authAplicarPermissoesMotoristas();idtAtualizarSeletor();renderIDT();}else renderMotoristas(false);
+  motoristasPeriodoAtualizarUI();authAplicarPermissoesMotoristas();
+  if(_motSubtab==='idt'){idtAtualizarSeletor();renderIDT();}else renderMotoristas(false);
 }
 function idtDebouncedRender(){clearTimeout(_idtRenderTimer);_idtRenderTimer=setTimeout(renderIDT,100);}
 function idtFmtNumero(v,casas=0){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:casas,maximumFractionDigits:casas});}
@@ -7194,7 +7229,7 @@ function idtAtualizarSeletor(preferId=''){
   sel.innerHTML=atuais.length?atuais.map(x=>`<option value="${pendEsc(x.id)}">${pendEsc(idtImportLabel(x))}</option>`).join(''):'<option value="">Nenhuma importação</option>';
   if(atuais.some(x=>x.id===old))sel.value=old;else if(atuais.length)sel.value=atuais[0].id;
   const meta=document.getElementById('idt-meta');if(meta)meta.value=Number(state.idtMeta||1.5).toFixed(1);
-  const hist=document.getElementById('btn-idt-historico');if(hist){hist.style.display=atuais.length?'':'none';hist.textContent=atuais.length>1?`Histórico (${atuais.length})`:'Histórico';}
+  const hist=document.getElementById('btn-idt-historico');if(hist){hist.style.display=_motSubtab==='idt'&&atuais.length?'':'none';hist.textContent=atuais.length>1?`Histórico (${atuais.length})`:'Histórico';}
 }
 function idtSalvarMeta(){
   ignisEnsureIdtState();const inp=document.getElementById('idt-meta');const v=Number(String(inp?.value||'').replace(',','.'));
@@ -7227,22 +7262,19 @@ function renderIDT(){
     content.innerHTML='<div class="idt-period-empty"><strong>Nenhuma planilha de desvios importada.</strong><span>Clique em “Importar desvios” e selecione a planilha. O IGNIS usará automaticamente, para cada motorista, o mesmo período consolidado e o mesmo KM da tela Média por Motorista.</span></div>';
     return;
   }
-  const ciclosAtuais=idtCiclosAtuaisMap();
+  const allCiclos=motoristasColetarCiclos(),atividadeMap=motoristasAtividadeMap(allCiclos),periodRows=motoristasRowsPeriodo(allCiclos);
   const periodosSnapshot=imp.periodos&&typeof imp.periodos==='object'?imp.periodos:{};
-  const cfg=motoristasPeriodoConfig();
-  const q=ignisMotoristaNorm(document.getElementById('idt-busca')?.value||''),filtro=document.getElementById('idt-status-filter')?.value||'identificados';
-  let baseRows=ignisEnsureMotoristasState().map(m=>{
-    const snap=periodosSnapshot[m.key]||null;
-    const atual=ciclosAtuais.get(m.key)||null;
-    // No calendário personalizado, data e KM vêm obrigatoriamente do intervalo atual.
-    // Fora dele, o snapshot da importação continua como fallback para dados antigos.
-    const c=atual||(cfg.mode==='personalizado'?null:snap);
-    const ciclo=Number(c?.ciclo||0);
-    const detDesv=idtDesviosAcumuladosAteDetalhado(imp,m.key,ciclo,cfg);
+  const cfg=motoristasPeriodoConfig();motoristasAtualizarStatusBotoes();
+  const q=ignisMotoristaNorm(document.getElementById('idt-busca')?.value||''),filtro=_idtStatusFilter||'todos';
+  let baseRows=periodRows.map(c=>{
+    const snap=periodosSnapshot[c.key]||null;
+    const base=(c&&c.ciclo>0)?c:(cfg.mode==='personalizado'?c:(snap?{...c,...snap}:c));
+    const ciclo=Number(base?.ciclo||0);
+    const detDesv=idtDesviosAcumuladosAteDetalhado(imp,c.key,ciclo,cfg);
     const desv=detDesv?detDesv.total:null;
-    const km=Number(c?.km)||0;
+    const km=Number(base?.km)||0;
     const idt=desv!==null&&km>0?(desv/km*1000):null;
-    return{...m,desvios:Number.isFinite(desv)?desv:null,velocidade:detDesv?detDesv.velocidade:null,rpm:detDesv?detDesv.rpm:null,ocioso:detDesv?detDesv.ocioso:null,legado:detDesv?detDesv.legado:0,temClassificados:Boolean(detDesv?.temClassificados),km,idt,inicio:c?.inicio||'',fim:c?.fim||'',ciclo};
+    return{...c,desvios:Number.isFinite(desv)?desv:null,velocidade:detDesv?detDesv.velocidade:null,rpm:detDesv?detDesv.rpm:null,ocioso:detDesv?detDesv.ocioso:null,legado:detDesv?detDesv.legado:0,temClassificados:Boolean(detDesv?.temClassificados),km,idt,inicio:base?.inicio||'',fim:base?.fim||'',ciclo};
   });
   const validAll=baseRows.filter(r=>r.desvios!==null&&r.km>0&&r.idt!==null),totalKm=validAll.reduce((s,r)=>s+r.km,0),totalDesv=validAll.reduce((s,r)=>s+r.desvios,0),idtGeral=totalKm>0?totalDesv/totalKm*1000:null;
   set('idt-kpi-avaliados',validAll.length);set('idt-kpi-km',idtFmtNumero(totalKm,0));set('idt-kpi-desvios',idtFmtNumero(totalDesv,0));set('idt-kpi-geral',idtGeral!==null?idtGeral.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}):'—');
@@ -7250,9 +7282,10 @@ function renderIDT(){
   let rows=baseRows;
   if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
   const identificado=r=>r.desvios!==null&&r.km>0&&r.idt!==null;
-  if(filtro==='identificados')rows=rows.filter(identificado);
-  else if(filtro==='meta')rows=rows.filter(r=>identificado(r)&&r.idt<=meta);
+  if(filtro==='meta')rows=rows.filter(r=>identificado(r)&&r.idt<=meta);
   else if(filtro==='acima')rows=rows.filter(r=>identificado(r)&&r.idt>meta);
+  else if(filtro==='ativos')rows=rows.filter(r=>motoristasLinhaAtiva(r,atividadeMap));
+  else if(filtro==='desativos')rows=rows.filter(r=>!motoristasLinhaAtiva(r,atividadeMap));
   const statusRank=r=>{const st=idtStatus(r,meta);return st.cls==='bad'?0:st.cls==='ok'?1:2;};
   rows=[...rows].sort((a,b)=>ignisMotorSortCompare(a,b,_idtSort,(r,key)=>({nome:ignisMotorSortText(r.nome),periodo:r.inicio||r.fim||'',km:Number(r.km)||0,velocidade:r.velocidade===null?-Infinity:Number(r.velocidade)||0,rpm:r.rpm===null?-Infinity:Number(r.rpm)||0,ocioso:r.ocioso===null?-Infinity:Number(r.ocioso)||0,desvios:r.desvios===null?-Infinity:Number(r.desvios)||0,idt:r.idt===null?-Infinity:Number(r.idt)||0,meta,status:statusRank(r)}[key])));
   const head=`<thead id="idt-table-head"><tr>
@@ -8067,7 +8100,7 @@ function limparTodosDados() {
 
   // Reseta estado em memória
   state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:state.sheetsUrl,
-            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, idtMeta:1.5, idtImportacoes:[] };
+            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, motoristasInatividadeDias:5, idtMeta:1.5, idtImportacoes:[] };
   _periodosSelec = new Set();
   window._selectedOps = new Set();
   window._dashList = []; window._dashIsKmL = false;
