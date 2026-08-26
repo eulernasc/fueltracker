@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v24 · sincronização robusta pós-importação + chunks adaptativos — 26/08/2026 -->
+<!-- IGNIS v25 · correção nested arrays na sincronização + migração automática — 26/08/2026 -->
 <meta name="ignis-build" content="2026-08-26-sync-import-v24">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -96,6 +96,71 @@ function fbBuildAdaptiveChunks(items, maxItems, maxBytes=620000) {
   if (atual.length) chunks.push(atual);
   return chunks;
 }
+function fbNormalizeMotoristaDiasFirestore(dias) {
+  if (!Array.isArray(dias)) return [];
+  return dias.map(d => {
+    // v19–v24 gravavam cada dia como uma tupla [data, km, litros, ...].
+    // Isso cria array dentro de array quando o abastecimento entra no chunk do Firestore,
+    // formato que o Firestore rejeita. Convertemos para objetos sem perder nenhum dado.
+    if (Array.isArray(d)) {
+      return {
+        data: String(d[0] || ''),
+        km: Number(d[1]) || 0,
+        litros: Number(d[2]) || 0,
+        metaNum: Number(d[3]) || 0,
+        metaLitros: Number(d[4]) || 0,
+        registros: Number(d[5]) || 0,
+        impactoR: Number(d[6]) || 0,
+        litrosComPreco: Number(d[7]) || 0
+      };
+    }
+    if (d && typeof d === 'object') {
+      return {
+        ...d,
+        data: String(d.data || ''),
+        km: Number(d.km) || 0,
+        litros: Number(d.litros) || 0,
+        metaNum: Number(d.metaNum) || 0,
+        metaLitros: Number(d.metaLitros) || 0,
+        registros: Number(d.registros) || 0,
+        impactoR: Number(d.impactoR) || 0,
+        litrosComPreco: Number(d.litrosComPreco) || 0
+      };
+    }
+    return null;
+  }).filter(Boolean);
+}
+function fbNormalizeFuelSeriesFirestore(items) {
+  return (Array.isArray(items) ? items : []).map(a => {
+    if (!a || typeof a !== 'object' || Array.isArray(a)) return a;
+    if (!Array.isArray(a.motoristas)) return a;
+    return {
+      ...a,
+      motoristas: a.motoristas.map(m => {
+        if (!m || typeof m !== 'object' || Array.isArray(m)) return m;
+        return Array.isArray(m.dias) ? { ...m, dias: fbNormalizeMotoristaDiasFirestore(m.dias) } : m;
+      })
+    };
+  });
+}
+function fbFindDirectNestedArray(value, path='root') {
+  if (Array.isArray(value)) {
+    for (let i=0;i<value.length;i++) {
+      if (Array.isArray(value[i])) return `${path}[${i}]`;
+      const found = fbFindDirectNestedArray(value[i], `${path}[${i}]`);
+      if (found) return found;
+    }
+    return '';
+  }
+  if (value && typeof value === 'object') {
+    for (const [k,v] of Object.entries(value)) {
+      const found = fbFindDirectNestedArray(v, `${path}.${k}`);
+      if (found) return found;
+    }
+  }
+  return '';
+}
+
 async function fbWriteChunkSeries(prefix, version, items, chunkSize) {
   const chunks = fbBuildAdaptiveChunks(items, Math.max(1, Number(chunkSize)||200));
   const total = chunks.length;
@@ -106,6 +171,8 @@ async function fbWriteChunkSeries(prefix, version, items, chunkSize) {
   // passou a guardar detalhamento diário, 260 registros podiam ultrapassar 1 MiB e o
   // Firestore recusava a importação para sempre, mesmo clicando em "tentar novamente".
   const jobs = chunks.map((chunk, i) => async () => {
+    const nestedPath = fbFindDirectNestedArray(chunk, 'registros');
+    if (nestedPath) throw new Error(`${prefix}: estrutura incompatível com Firebase em ${nestedPath} (array dentro de array).`);
     await fbRetry(() => withTimeout(setDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`), {
       registros: chunk, chunk: i, total, version
     }), 24000), 3, 650);
@@ -244,7 +311,10 @@ window.fbSave = async function(data) {
     let arlaVersion  = antigo._arlaVersion  || '', arlaChunks  = Number(antigo._arlaChunks  || 0), arlaCount  = Number(antigo._arlaCount  || 0);
 
     if (writeFuel) {
-      const abast = Array.isArray(abastecimentos) ? abastecimentos : [];
+      // Migração automática dos dados já processados nas v19–v24.
+      // Assim o botão “Tentar salvar novamente” reaproveita a importação local e
+      // não exige reimportar o Excel só para corrigir o formato dos dias do motorista.
+      const abast = fbNormalizeFuelSeriesFirestore(Array.isArray(abastecimentos) ? abastecimentos : []);
       const maqs  = Array.isArray(maquinas) ? maquinas : [];
       const meds  = Array.isArray(medidorAnomalias) ? medidorAnomalias : [];
       const efics = Array.isArray(eficienciaAnomalias) ? eficienciaAnomalias : [];
@@ -7756,7 +7826,7 @@ async function importarRelatorioDiario(input) {
             const precoPonderado = p._litrosPreco>0 ? (p._custoComb/p._litrosPreco) : 0;
             const operacaoMista = false; // importação nova já foi separada por operação acima
             const coberturaPrecoSemana = p.litros>0 ? p._litrosPreco/p.litros : 0;
-            const motoristasPeriodo=Object.values(p._motoristas||{}).map(m=>({nome:m.nome,matricula:m.matricula||'',key:m.key,litros:Number(m.litros)||0,km:Number(m.km)||0,metaNum:Number(m.metaNum)||0,metaLitros:Number(m.metaLitros)||0,registros:Number(m.registros)||0,primeiraData:m.primeiraData||dIni,ultimaData:m.ultimaData||dFim,impactoR:Number(m.impactoR)||0,litrosComPreco:Number(m.litrosComPreco)||0,dias:Object.values(m._dias||{}).sort((a,b)=>String(a.data).localeCompare(String(b.data))).map(d=>[d.data,Number(d.km)||0,Number(d.litros)||0,Number(d.metaNum)||0,Number(d.metaLitros)||0,Number(d.registros)||0,Number(d.impactoR)||0,Number(d.litrosComPreco)||0])}));
+            const motoristasPeriodo=Object.values(p._motoristas||{}).map(m=>({nome:m.nome,matricula:m.matricula||'',key:m.key,litros:Number(m.litros)||0,km:Number(m.km)||0,metaNum:Number(m.metaNum)||0,metaLitros:Number(m.metaLitros)||0,registros:Number(m.registros)||0,primeiraData:m.primeiraData||dIni,ultimaData:m.ultimaData||dFim,impactoR:Number(m.impactoR)||0,litrosComPreco:Number(m.litrosComPreco)||0,dias:Object.values(m._dias||{}).sort((a,b)=>String(a.data).localeCompare(String(b.data))).map(d=>({data:String(d.data||''),km:Number(d.km)||0,litros:Number(d.litros)||0,metaNum:Number(d.metaNum)||0,metaLitros:Number(d.metaLitros)||0,registros:Number(d.registros)||0,impactoR:Number(d.impactoR)||0,litrosComPreco:Number(d.litrosComPreco)||0}))}));
             const entry = { placa, data:dIni, litros:p.litros, horas:p.kmReal, operador:'', operacao:p.operacao, modelo:p.modelo, tipo:p.tipoVeic, tipoIgnis, periodoId, metaIdeal:p.mediaIdeal||0, combustivel:combustivelSemana, precoLitro:(combustivelSemana&&combustivelSemana!=='MISTO'&&coberturaPrecoSemana>=0.999&&ignisPrecoCombustivelValido(combustivelSemana,precoPonderado))?precoPonderado:0, precoCobertura:coberturaPrecoSemana, operacaoMista, operacoesPeriodo:opsSemana, motoristas:motoristasPeriodo };
             dadosSemana.push(entry);
             state.abastecimentos.push(entry);
