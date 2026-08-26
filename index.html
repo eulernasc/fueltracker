@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v22 · IDT acumulativo por motorista + período/financeiro v19 + Sync Guard v17 — 25/08/2026 -->
+<!-- IGNIS v23 · IDT acumulativo por motorista + período/financeiro v19 + Sync Guard v17 — 25/08/2026 -->
 <meta name="ignis-build" content="2026-08-25-motoristas-permissoes-idt-v22">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -6896,7 +6896,8 @@ function renderMotoristas(force=false){
   ignisEnsureMotoristasState();
   const all=motoristasColetarCiclos(),q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),filtro=document.getElementById('mot-status-filter')?.value||'identificados';
   motoristasPeriodoAtualizarUI();
-  let rows=motoristasRowsPeriodo(all);
+  const periodRows=motoristasRowsPeriodo(all);
+  let rows=[...periodRows];
   if(q)rows=rows.filter(r=>ignisMotoristaNorm(r.nome).includes(q)||ignisMotoristaNorm(r.matricula).includes(q));
   const identificado=r=>r.ciclo>0&&r.litros>0&&r.km>0;
   if(filtro==='identificados')rows=rows.filter(identificado);
@@ -6905,12 +6906,15 @@ function renderMotoristas(force=false){
   const statusRank=r=>{const st=motoristasStatus(r);return st.cls==='bad'?0:st.cls==='warn'?1:st.cls==='ok'?2:3;};
   rows=[...rows].sort((a,b)=>ignisMotorSortCompare(a,b,_motSort,(r,key)=>({nome:ignisMotorSortText(r.nome),periodo:r.inicio||r.fim||'',km:Number(r.km)||0,litros:Number(r.litros)||0,media:Number(r.media)||0,meta:Number(r.meta)||0,efic:Number(r.efic)||0,registros:Number(r.registros)||0,placas:Number(r.placas?.size)||0,financeiro:r.financeiroOk?Number(r.impactoR)||0:-Infinity,status:statusRank(r)}[key])));
   ignisMotorSortHeaderUpdate('mot-table-head',_motSort);
-  const comDadosMotoristas=new Set(all.filter(r=>r.ciclo>0&&r.litros>0&&r.km>0).map(r=>r.key));
-  const ultimos=new Map();all.forEach(r=>{const prev=ultimos.get(r.key);if(!prev||r.ciclo>prev.ciclo)ultimos.set(r.key,r);});
-  const abaixo=[...ultimos.values()].filter(r=>identificado(r)&&r.meta>0&&r.efic<98).length;
+  const comDadosMotoristas=new Set(periodRows.filter(r=>identificado(r)).map(r=>r.key));
+  const abaixo=periodRows.filter(r=>identificado(r)&&r.meta>0&&r.efic<98).length;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   set('mot-kpi-acomp',ignisEnsureMotoristasState().length);set('mot-kpi-dados',comDadosMotoristas.size);set('mot-kpi-abaixo',abaixo);
-  const sub=document.getElementById('mot-kpi-dados-sub');if(sub)sub.textContent='motoristas com movimentação';
+  const sub=document.getElementById('mot-kpi-dados-sub');if(sub)sub.textContent='motoristas com movimentação no período exibido';
+  const cfgPeriodo=motoristasPeriodoConfig(),sum=document.getElementById('mot-period-summary');
+  if(sum&&cfgPeriodo.mode==='personalizado'&&cfgPeriodo.ini&&cfgPeriodo.fim){
+    sum.innerHTML=`Exibindo <strong>${ignisMotoristaFormatData(cfgPeriodo.ini)} → ${ignisMotoristaFormatData(cfgPeriodo.fim)}</strong> · <strong>${comDadosMotoristas.size}</strong> motorista(s) com dados. KM, litros, médias, eficiência e financeiro foram recalculados somente nesse intervalo.`;
+  }
   const tb=document.getElementById('mot-table-body');if(!tb)return;
   if(!rows.length){tb.innerHTML='<tr><td colspan="11"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>';_markPageClean('motoristas');return;}
   tb.innerHTML=rows.map(r=>{
@@ -6940,7 +6944,7 @@ function motoristasAbrirDetalhe(key,ciclo){
 }
 
 
-// ── MOTORISTAS PX · IDT (ÍNDICE DE DESVIO DE TELEMETRIA) · permissões granulares v22 ──
+// ── MOTORISTAS PX · IDT · calendário compartilhado + permissões granulares v23 ──
 let _motSubtab='media', _idtRenderTimer=null;
 function ignisEnsureIdtState(){
   if(!Number.isFinite(Number(state.idtMeta))||Number(state.idtMeta)<0)state.idtMeta=1.5;
@@ -6957,7 +6961,8 @@ function motoristasSetSubtab(tab,el){
   const media=document.getElementById('mot-panel-media'),idt=document.getElementById('mot-panel-idt'),periodbar=document.getElementById('mot-periodbar');
   if(media)media.style.display=_motSubtab==='media'?'':'none';
   if(idt)idt.style.display=_motSubtab==='idt'?'':'none';
-  if(periodbar)periodbar.style.display=_motSubtab==='media'?'grid':'none';
+  if(periodbar)periodbar.style.display='grid';
+  motoristasPeriodoAtualizarUI();
   if(_motSubtab==='idt'){authAplicarPermissoesMotoristas();idtAtualizarSeletor();renderIDT();}else renderMotoristas(false);
 }
 function idtDebouncedRender(){clearTimeout(_idtRenderTimer);_idtRenderTimer=setTimeout(renderIDT,100);}
@@ -6994,7 +6999,7 @@ function idtRegistroMap(imp){
   });
   return map;
 }
-function idtDesviosAcumuladosAte(imp,key,cicloAlvo){
+function idtDesviosAcumuladosAte(imp,key,cicloAlvo,cfg=motoristasPeriodoConfig()){
   let soma=0,informado=false;
   const alvo=Number(cicloAlvo||0);
   idtImportacoesAte(imp).forEach(src=>{
@@ -7002,8 +7007,15 @@ function idtDesviosAcumuladosAte(imp,key,cicloAlvo){
     if(!rec||rec.desvios===null||rec.desvios===undefined||!Number.isFinite(Number(rec.desvios)))return;
     const snap=src.periodos&&typeof src.periodos==='object'?src.periodos[key]:null;
     const cicloSrc=Number(snap?.ciclo||0);
-    // Não mistura uma futura volta do PX com o período anterior.
     if(alvo>0&&cicloSrc>0&&cicloSrc!==alvo)return;
+    if(cfg?.mode==='personalizado'&&cfg.ini&&cfg.fim){
+      const si=ignisMotoristaDataIso(snap?.inicio||src.dataIni||'');
+      const sf=ignisMotoristaDataIso(snap?.fim||src.dataFim||si);
+      // A planilha de IDT informa apenas o TOTAL de desvios. Para não fracionar
+      // um total sem saber em quais dias ocorreram os desvios, só entra no filtro
+      // uma importação cujo período capturado esteja totalmente dentro do calendário.
+      if(!si||!sf||si<cfg.ini||sf>cfg.fim)return;
+    }
     soma+=Number(rec.desvios);informado=true;
   });
   return informado?soma:null;
@@ -7048,11 +7060,16 @@ function renderIDT(){
   }
   const ciclosAtuais=idtCiclosAtuaisMap();
   const periodosSnapshot=imp.periodos&&typeof imp.periodos==='object'?imp.periodos:{};
+  const cfg=motoristasPeriodoConfig();
   const q=ignisMotoristaNorm(document.getElementById('idt-busca')?.value||''),filtro=document.getElementById('idt-status-filter')?.value||'identificados';
   let baseRows=ignisEnsureMotoristasState().map(m=>{
-    const snap=periodosSnapshot[m.key]||null,c=snap||ciclosAtuais.get(m.key)||null;
+    const snap=periodosSnapshot[m.key]||null;
+    const atual=ciclosAtuais.get(m.key)||null;
+    // No calendário personalizado, data e KM vêm obrigatoriamente do intervalo atual.
+    // Fora dele, o snapshot da importação continua como fallback para dados antigos.
+    const c=atual||(cfg.mode==='personalizado'?null:snap);
     const ciclo=Number(c?.ciclo||0);
-    const desv=idtDesviosAcumuladosAte(imp,m.key,ciclo);
+    const desv=idtDesviosAcumuladosAte(imp,m.key,ciclo,cfg);
     const km=Number(c?.km)||0;
     const idt=desv!==null&&km>0?(desv/km*1000):null;
     return{...m,desvios:Number.isFinite(desv)?desv:null,km,idt,inicio:c?.inicio||'',fim:c?.fim||'',ciclo};
@@ -7077,7 +7094,7 @@ function renderIDT(){
     <th><button class="mot-sort num" data-key="meta" onclick="idtSetSort('meta')">Meta <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort" data-key="status" onclick="idtSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
   </tr></thead>`;
-  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Planilha: <strong style="color:var(--text2)">${pendEsc(imp.arquivo||'Desvios')}</strong> · importada ${pendEsc(imp.importedAt||'')}</div>${authTemPermissao('motoristas_idt_excluir')?`<button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button>`:''}</div><div class="mot-page-note" style="margin:0 0 10px"><strong>IDT acumulado:</strong> os desvios desta importação são somados aos desvios anteriores do mesmo motorista dentro do mesmo período PX. A data, o KM e o ciclo usados no cálculo são os desta importação selecionada.</div><div class="mot-table-wrap"><table class="mot-table idt-table">${head}<tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>'}</tbody></table></div>`;
+  content.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px"><div style="font-size:11px;color:var(--text3)">Planilha: <strong style="color:var(--text2)">${pendEsc(imp.arquivo||'Desvios')}</strong> · importada ${pendEsc(imp.importedAt||'')}</div>${authTemPermissao('motoristas_idt_excluir')?`<button class="btn btn-ghost btn-sm" onclick="idtExcluirImportacao('${String(imp.id).replace(/'/g,"\\'")}')">Excluir importação</button>`:''}</div><div class="mot-page-note" style="margin:0 0 10px"><strong>IDT acumulado no período exibido:</strong> o calendário acima também recalcula o KM do IDT. Em período personalizado, entram apenas importações de desvios totalmente contidas nas datas escolhidas, para não misturar desvios de fora do intervalo.</div><div class="mot-table-wrap"><table class="mot-table idt-table">${head}<tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>'}</tbody></table></div>`;
   ignisMotorSortHeaderUpdate('idt-table-head',_idtSort);
 }
 function idtAbrirImportacao(){
