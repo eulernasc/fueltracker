@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v32 · financeiro PX auditado com Valor Total + cobertura explícita -->
+<!-- IGNIS v33 · sincronização incremental por período para importações grandes -->
 <meta name="ignis-build" content="2026-08-26-motoristas-finance-v30">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -219,6 +219,38 @@ function fbDeleteChunkSeries(prefix, version, total) {
   })().catch(() => {});
 }
 
+function fbPatchIdsFromMapString(v){
+  return String(v||'').split('|').map(x=>x.trim()).filter(Boolean);
+}
+async function fbApplyAbastPatches(base, patches){
+  let out = Array.isArray(base) ? base.slice() : [];
+  const lista = Array.isArray(patches) ? patches : [];
+  for (const p of lista) {
+    const removidos = new Set(fbPatchIdsFromMapString(p?.removed));
+    if (removidos.size) out = out.filter(a => !removidos.has(String(a?.periodoId||'')));
+    const total = Number(p?.chunks||0);
+    if (p?.version && total>0) {
+      const novos = await fbReadChunkSeries(FB_SERIES_PREFIX+'abpatch', String(p.version), total);
+      if (novos.length) out.push(...novos);
+    }
+  }
+  return out;
+}
+function fbDetectFuelPeriodDelta(semanasNovo, semanasAntigo){
+  const novo = semanasNovo && typeof semanasNovo==='object' ? semanasNovo : {};
+  const antigo = semanasAntigo && typeof semanasAntigo==='object' ? semanasAntigo : {};
+  const novosIds = Object.keys(novo), antigosIds = Object.keys(antigo);
+  const antigoSet = new Set(antigosIds), novoSet = new Set(novosIds);
+  const added = novosIds.filter(id => !antigoSet.has(id));
+  const removed = antigosIds.filter(id => !novoSet.has(id));
+  return {added, removed};
+}
+function fbCleanupAbastPatches(patches){
+  (Array.isArray(patches)?patches:[]).forEach(p=>{
+    if(p?.version&&Number(p?.chunks||0)>0)fbDeleteChunkSeries(FB_SERIES_PREFIX+'abpatch',String(p.version),Number(p.chunks||0));
+  });
+}
+
 window.fbSave = async function(data) {
   try {
     // O snapshot já é criado uma única vez no saveState. Clonar tudo aqui de novo
@@ -240,6 +272,8 @@ window.fbSave = async function(data) {
       _baseFuelSignature,
       _baseArlaSignature,
       _saveMode,
+      _saveChangedPeriods,
+      _saveRemovedPeriods,
       importacaoMonitorEventos,
       importacaoMonitorRegras,
       importacaoMonitorInicializado,
@@ -280,7 +314,8 @@ window.fbSave = async function(data) {
     // continuem exatamente os mesmos de quando a importação começou.
     const currentRevision = String(antigo._revision || '');
     const expectedRevisionOriginal = String(_baseRevision || '');
-    const currentFuelSignature = [antigo._abastVersion||'',antigo._maqVersion||'',antigo._medVersion||'',antigo._eficVersion||''].join('|');
+    const patchSig = Array.isArray(antigo._abastPatches) ? antigo._abastPatches.map(p=>String(p?.version||'')).join(',') : '';
+    const currentFuelSignature = [antigo._abastVersion||'',...(patchSig?[patchSig]:[]),antigo._maqVersion||'',antigo._medVersion||'',antigo._eficVersion||''].join('|');
     const currentArlaSignature = String(antigo._arlaVersion || '');
     const baseFuelSignature = String(_baseFuelSignature || '');
     const baseArlaSignature = String(_baseArlaSignature || '');
@@ -309,16 +344,56 @@ window.fbSave = async function(data) {
     let medVersion   = antigo._medVersion   || '', medChunks   = Number(antigo._medChunks   || 0), medCount   = Number(antigo._medCount   || 0);
     let eficVersion  = antigo._eficVersion  || '', eficChunks  = Number(antigo._eficChunks  || 0), eficCount  = Number(antigo._eficCount  || 0);
     let arlaVersion  = antigo._arlaVersion  || '', arlaChunks  = Number(antigo._arlaChunks  || 0), arlaCount  = Number(antigo._arlaCount  || 0);
+    let abastPatches = Array.isArray(antigo._abastPatches) ? antigo._abastPatches.slice() : [];
+    let usedIncrementalFuel = false;
 
     if (writeFuel) {
-      // Migração automática dos dados já processados nas v19–v24.
-      // Assim o botão “Tentar salvar novamente” reaproveita a importação local e
-      // não exige reimportar o Excel só para corrigir o formato dos dias do motorista.
+      // Migração/normalização dos dados processados antes do formato atual.
       const abast = fbNormalizeFuelSeriesFirestore(Array.isArray(abastecimentos) ? abastecimentos : []);
       const maqs  = Array.isArray(maquinas) ? maquinas : [];
       const meds  = Array.isArray(medidorAnomalias) ? medidorAnomalias : [];
       const efics = Array.isArray(eficienciaAnomalias) ? eficienciaAnomalias : [];
-      abastChunks = await fbWriteChunkSeries(FB_SERIES_PREFIX+'abast', version, abast, 260); abastVersion=version; abastCount=abast.length;
+
+      // Importações grandes não regravam mais TODO o histórico de abastecimentos.
+      // Detectamos as semanas adicionadas/removidas e gravamos somente esse delta.
+      const autoDelta = fbDetectFuelPeriodDelta(semanasSemRegistros, antigo.semanas || {});
+      const explicitAdded = Array.isArray(_saveChangedPeriods) ? _saveChangedPeriods.map(String) : [];
+      const explicitRemoved = Array.isArray(_saveRemovedPeriods) ? _saveRemovedPeriods.map(String) : [];
+      const added = [...new Set(explicitAdded.length ? explicitAdded : autoDelta.added)];
+      const removed = [...new Set(explicitRemoved.length ? explicitRemoved : autoDelta.removed)];
+      const canIncrement = Number(antigo._storageVersion||0)===FB_STORAGE_VERSION && !!antigo._abastVersion && (added.length>0 || removed.length>0);
+
+      if (canIncrement) {
+        const addSet = new Set(added);
+        const deltaRegs = abast.filter(a => addSet.has(String(a?.periodoId||'')));
+        const patchVersion = fbVersion();
+        const patchChunks = deltaRegs.length ? await fbWriteChunkSeries(FB_SERIES_PREFIX+'abpatch', patchVersion, deltaRegs, 260) : 0;
+        abastPatches.push({
+          version:patchVersion,
+          chunks:patchChunks,
+          count:deltaRegs.length,
+          removed:removed.join('|'),
+          createdAt:Date.now()
+        });
+        // Evita crescimento infinito do manifesto. Se houver muitos patches, o próximo
+        // save sem alteração de período fará compactação completa automaticamente.
+        if (abastPatches.length > 36) {
+          abastChunks = await fbWriteChunkSeries(FB_SERIES_PREFIX+'abast', version, abast, 260);
+          abastVersion=version; abastCount=abast.length;
+          fbCleanupAbastPatches(abastPatches);
+          abastPatches=[];
+        } else {
+          abastCount = abast.length;
+          usedIncrementalFuel = true;
+        }
+      } else {
+        // Edição manual/compactação: regrava a série completa para garantir consistência.
+        abastChunks = await fbWriteChunkSeries(FB_SERIES_PREFIX+'abast', version, abast, 260); abastVersion=version; abastCount=abast.length;
+        fbCleanupAbastPatches(abastPatches);
+        abastPatches=[];
+      }
+
+      // Séries menores ainda são substituídas por completo; são muito menores que abastecimentos.
       maqChunks   = await fbWriteChunkSeries(FB_SERIES_PREFIX+'maq',   version, maqs,  260); maqVersion=version;   maqCount=maqs.length;
       medChunks   = await fbWriteChunkSeries(FB_SERIES_PREFIX+'med',   version, meds,  220); medVersion=version;   medCount=meds.length;
       eficChunks  = await fbWriteChunkSeries(FB_SERIES_PREFIX+'efic',  version, efics, 180); eficVersion=version;  eficCount=efics.length;
@@ -346,6 +421,7 @@ window.fbSave = async function(data) {
       _storageVersion: FB_STORAGE_VERSION,
       _hasAbast: true,
       _abastVersion: abastVersion, _abastChunks: abastChunks, _abastCount: abastCount,
+      _abastPatches: abastPatches,
       _maqVersion: maqVersion,     _maqChunks: maqChunks,     _maqCount: maqCount,
       _medVersion: medVersion,     _medChunks: medChunks,     _medCount: medCount,
       _eficVersion: eficVersion,   _eficChunks: eficChunks,   _eficCount: eficCount,
@@ -365,7 +441,9 @@ window.fbSave = async function(data) {
 
     // Só remove a versão anterior das séries que realmente foram regravadas.
     if (writeFuel) {
-      fbDeleteChunkSeries(FB_SERIES_PREFIX+'abast', antigo._abastVersion, antigo._abastChunks);
+      // No save incremental a base de abastecimentos continua sendo referência;
+      // só versões de máquinas/anomalias são trocadas.
+      if (!usedIncrementalFuel) fbDeleteChunkSeries(FB_SERIES_PREFIX+'abast', antigo._abastVersion, antigo._abastChunks);
       fbDeleteChunkSeries(FB_SERIES_PREFIX+'maq',   antigo._maqVersion,   antigo._maqChunks);
       fbDeleteChunkSeries(FB_SERIES_PREFIX+'med',   antigo._medVersion,   antigo._medChunks);
       fbDeleteChunkSeries(FB_SERIES_PREFIX+'efic',  antigo._eficVersion,  antigo._eficChunks);
@@ -375,7 +453,7 @@ window.fbSave = async function(data) {
     window._lastFirebaseSaveError = '';
     return {
       ok:true, revision:version, mode:saveMode,
-      fuelSignature:[abastVersion||'',maqVersion||'',medVersion||'',eficVersion||''].join('|'),
+      fuelSignature:(()=>{const ps=abastPatches.map(p=>String(p?.version||'')).join(',');return [abastVersion||'',...(ps?[ps]:[]),maqVersion||'',medVersion||'',eficVersion||''].join('|');})(),
       arlaSignature:String(arlaVersion||'')
     };
   } catch(e) {
@@ -423,6 +501,9 @@ window.fbLoad = async function() {
           }
         }
       }
+    }
+    if (Array.isArray(dados._abastPatches) && dados._abastPatches.length) {
+      abastecimentos = await fbApplyAbastPatches(abastecimentos, dados._abastPatches);
     }
     dados.abastecimentos = abastecimentos;
 
@@ -482,12 +563,12 @@ window.fbLoad = async function() {
     // sobrescrita por cache antigo em outro computador/usuário.
     dados._cloudRevision = usingV4 ? String(dados._revision || '') : '';
     dados._cloudNamespace = usingV4 ? 'v4' : 'legacy';
-    dados._cloudFuelSignature = usingV4 ? [dados._abastVersion||'',dados._maqVersion||'',dados._medVersion||'',dados._eficVersion||''].join('|') : '';
+    dados._cloudFuelSignature = usingV4 ? (()=>{const ps=Array.isArray(dados._abastPatches)?dados._abastPatches.map(p=>String(p?.version||'')).join(','):'';return [dados._abastVersion||'',...(ps?[ps]:[]),dados._maqVersion||'',dados._medVersion||'',dados._eficVersion||''].join('|');})() : '';
     dados._cloudArlaSignature = usingV4 ? String(dados._arlaVersion || '') : '';
 
     // Remove somente metadados internos do storage.
     [
-      '_revision','_hasAbast','_storageVersion','_abastVersion','_abastChunks','_abastCount',
+      '_revision','_hasAbast','_storageVersion','_abastVersion','_abastChunks','_abastCount','_abastPatches',
       '_maqVersion','_maqChunks','_maqCount','_medVersion','_medChunks','_medCount',
       '_eficVersion','_eficChunks','_eficCount','_arlaVersion','_arlaChunks','_arlaCount'
     ].forEach(k => delete dados[k]);
@@ -3632,7 +3713,7 @@ async function syncFromFirebase() {
         window._firebaseRevision = cloudRevision || null;
         window._firebaseFuelSignature = cloudFuelSignature;
         window._firebaseArlaSignature = cloudArlaSignature;
-        const recovered = await saveState({ immediate:true, recovery:true, mode:pendingMode });
+        const recovered = await saveState({ immediate:true, recovery:true, mode:pendingMode, changedPeriodIds:pending.changedPeriodIds||[], removedPeriodIds:pending.removedPeriodIds||[] });
         if (recovered) {
           updateSyncStatus('connected');
           showToast('Importação pendente recuperada e confirmada no Firebase.', 'success');
@@ -3870,11 +3951,14 @@ function saveState(options = {}) {
   snapshot._baseRevision = String(window._firebaseRevision || '');
   snapshot._baseFuelSignature = String(window._firebaseFuelSignature || '');
   snapshot._baseArlaSignature = String(window._firebaseArlaSignature || '');
+  snapshot._saveChangedPeriods = Array.isArray(options?.changedPeriodIds) ? options.changedPeriodIds.map(String) : [];
+  snapshot._saveRemovedPeriods = Array.isArray(options?.removedPeriodIds) ? options.removedPeriodIds.map(String) : [];
   delete snapshot.importacaoMonitorEventos; delete snapshot.importacaoMonitorRegras; delete snapshot.importacaoMonitorInicializado;
   try {
     localStorage.setItem('ignis_pending_cloud_save', JSON.stringify({
       savedAt:localSaveAt, baseRevision:snapshot._baseRevision, mode,
-      fuelSignature:snapshot._baseFuelSignature, arlaSignature:snapshot._baseArlaSignature
+      fuelSignature:snapshot._baseFuelSignature, arlaSignature:snapshot._baseArlaSignature,
+      changedPeriodIds:snapshot._saveChangedPeriods, removedPeriodIds:snapshot._saveRemovedPeriods
     }));
   } catch(e) {}
 
@@ -7476,7 +7560,8 @@ function idtExcluirImportacao(id){
 async function ignisRetryImportacaoPendente(){
   updateSyncStatus('syncing');
   showToast('Tentando confirmar a importação no Firebase…','info');
-  const ok=await saveState({immediate:true,mode:'fuel'});
+  let pending={};try{pending=JSON.parse(localStorage.getItem('ignis_pending_cloud_save')||'{}')||{};}catch(e){}
+  const ok=await saveState({immediate:true,mode:'fuel',changedPeriodIds:pending.changedPeriodIds||[],removedPeriodIds:pending.removedPeriodIds||[]});
   if(ok){
     document.querySelectorAll('[data-ignis-import-pending]').forEach(el=>el.remove());
     showToast('Importação confirmada no Firebase!','success');
@@ -7944,6 +8029,8 @@ async function importarRelatorioDiario(input) {
       }
 
       const conflitos = [...conflitosMap.values()];
+      const removedPeriodIds = conflitos.map(c=>String(c.idAntigo));
+      const newPeriodIds = [];
       if (conflitos.length) {
         const lista = conflitos.map(c => '• ' + c.labelAntigo).join('\n');
         if (!confirm(`${conflitos.length} período(s) coberto(s) por este arquivo já existem no sistema:\n\n${lista}\n\nSubstituir os dados antigos pelos dados recalculados deste arquivo?`)) {
@@ -8025,6 +8112,7 @@ async function importarRelatorioDiario(input) {
         });
 
         state.semanas[periodoId] = { label: nomePeriodo, registros: dadosSemana, count: dadosSemana.length, importedAt: new Date().toLocaleDateString('pt-BR'), dataIni: dIni, dataFim: dFim };
+        newPeriodIds.push(periodoId);
         semanasNovas++;
         registrosTotais += dadosSemana.length;
       });
@@ -8062,7 +8150,7 @@ async function importarRelatorioDiario(input) {
       }
 
       ignisImportProgress(previewEl,86,'Salvando dados','Análises concluídas. Sincronizando com o Firebase');await ignisNextFrame();
-      const savePromise = saveState({ immediate: true, mode:'fuel' }); // grava somente séries de combustível/máquinas/anomalias
+      const savePromise = saveState({ immediate: true, mode:'fuel', changedPeriodIds:newPeriodIds, removedPeriodIds }); // salva só as semanas alteradas + séries auxiliares
       renderHistoricoPeriodos();
       updateFilters(true);
       ignisRunIdle(()=>{try{relChecarReincidencia()}catch(e){};try{renderPendencias(true)}catch(e){};try{renderAnomalias(true)}catch(e){}});
