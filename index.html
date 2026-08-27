@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v30 · financeiro Motoristas PX linha a linha + fallback de última meta — 26/08/2026 | base v29 -->
+<!-- IGNIS v31 · correção autocomplete no campo de dias de inatividade -->
 <meta name="ignis-build" content="2026-08-26-motoristas-finance-v30">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -7158,7 +7158,20 @@ function renderMotoristas(force=false){
   if(_motSubtab==='idt')renderIDT();
 }
 function motoristasAbrirGestao(){
-  ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Períodos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="mot-activity-config"><div class="mot-activity-copy"><strong>Status Ativo / Desativo</strong><span>O motorista vira Desativo quando passar mais do que este número de dias sem um novo abastecimento.</span></div><div class="mot-activity-days"><input id="mot-inatividade-dias" type="number" min="1" max="365" step="1" onchange="motoristasSalvarInatividadeDias()"><span>dias</span></div></div><div class="form-group" style="margin-top:18px"><label class="form-label">Adicionar motorista</label><div class="mot-add-row"><input id="mot-add-input" class="form-input" placeholder="Digite o nome ou busque nos motoristas encontrados" oninput="motoristasRenderSugestoes()" onkeydown="if(event.key==='Enter')motoristasAdicionarDigitado()"><button class="btn btn-primary" onclick="motoristasAdicionarDigitado()">Adicionar</button></div><div id="mot-sugestoes" class="mot-suggestions"></div></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-top:16px">Selecionados</div><div id="mot-manage-list" class="mot-manage-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Períodos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="mot-activity-config"><div class="mot-activity-copy"><strong>Status Ativo / Desativo</strong><span>O motorista vira Desativo quando passar mais do que este número de dias sem um novo abastecimento.</span></div><div class="mot-activity-days"><input id="mot-inatividade-dias"
+  name="ignis_status_inatividade_dias"
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  maxlength="3"
+  autocomplete="off"
+  autocapitalize="off"
+  spellcheck="false"
+  data-lpignore="true"
+  data-1p-ignore="true"
+  aria-label="Dias sem abastecimento para considerar motorista desativo"
+  oninput="this.value=this.value.replace(/\D/g,'').slice(0,3)"
+  onchange="motoristasSalvarInatividadeDias()"><span>dias</span></div></div><div class="form-group" style="margin-top:18px"><label class="form-label">Adicionar motorista</label><div class="mot-add-row"><input id="mot-add-input" class="form-input" placeholder="Digite o nome ou busque nos motoristas encontrados" oninput="motoristasRenderSugestoes()" onkeydown="if(event.key==='Enter')motoristasAdicionarDigitado()"><button class="btn btn-primary" onclick="motoristasAdicionarDigitado()">Adicionar</button></div><div id="mot-sugestoes" class="mot-suggestions"></div></div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-top:16px">Selecionados</div><div id="mot-manage-list" class="mot-manage-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const dias=document.getElementById('mot-inatividade-dias');if(dias)dias.value=ignisMotoristasDiasInatividade();
   motoristasRenderGestao();motoristasRenderSugestoes();ov.classList.add('open');setTimeout(()=>document.getElementById('mot-add-input')?.focus(),50);
 }
