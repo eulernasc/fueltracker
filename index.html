@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v34 · permissão financeira Motoristas PX por usuário -->
+<!-- IGNIS v35 · indicador de atualização dos dados em Motoristas PX -->
 <meta name="ignis-build" content="2026-08-26-motoristas-finance-v30">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -2056,6 +2056,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   <!-- MOTORISTAS -->
   <style>
     .mot-subtabs{display:flex;background:#10151c;border:1px solid var(--border);padding:5px;border-radius:13px;gap:4px;margin-bottom:18px;width:max-content;max-width:100%}
+    .mot-data-freshness{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 9px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.018);color:var(--text3);font-size:10px;font-weight:650;line-height:1;white-space:nowrap}.mot-data-freshness .mot-data-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(52,201,139,.08);flex:0 0 7px}.mot-data-freshness.empty .mot-data-dot{background:var(--text3);box-shadow:none}.mot-data-freshness strong{color:var(--text2);font-weight:800}
     .mot-subtab{border:0;border-radius:9px;padding:10px 18px;background:transparent;color:var(--text2);font:600 13px 'DM Sans',sans-serif;cursor:pointer;transition:.16s;white-space:nowrap}.mot-subtab:hover{color:#fff;background:rgba(255,255,255,.035)}.mot-subtab.active{background:var(--accent);color:#fff}
     .mot-periodbar{display:grid;grid-template-columns:minmax(230px,310px) minmax(330px,470px) minmax(180px,1fr);gap:10px;align-items:end;margin-bottom:12px;padding:12px;border:1px solid var(--border);border-radius:13px;background:rgba(255,255,255,.012)}
     .mot-period-dates{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mot-period-summary{min-height:42px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:#111820;color:var(--text3);font-size:10px;line-height:1.4}.mot-period-summary strong{color:var(--text2)}
@@ -2084,7 +2085,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   </style>
   <div id="page-motoristas" class="page">
     <div class="page-header">
-      <div><div class="page-title">Motoristas PX</div><div class="page-sub">Acompanhamento de consumo e telemetria dos motoristas PX</div></div>
+      <div><div class="page-title">Motoristas PX</div><div class="page-sub">Acompanhamento de consumo e telemetria dos motoristas PX</div><div class="mot-data-freshness" id="mot-data-freshness" title="Maior data de abastecimento disponível na base do IGNIS"><span class="mot-data-dot"></span><span id="mot-data-freshness-text">Verificando última data...</span></div></div>
       <div class="header-actions"><button class="btn btn-secondary" id="btn-idt-historico" style="display:none" onclick="idtAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-idt-importar" style="display:none" onclick="idtAbrirImportacao()">Importar desvios</button><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
     </div>
 
@@ -7165,6 +7166,33 @@ function motoristasReagruparDetalhes(base,detalhes){
   r.financeiroOk=metaCobertura>=0.999999&&precoCobertura>=0.999999&&financeiroCobertura>=0.999999&&r.meta>0;
   return r;
 }
+function motoristasUltimaDataBase(){
+  let latest='';
+  // `state.abastecimentos.data` representa o início do bloco semanal nas importações novas.
+  // `state.semanas.dataFim` guarda a cobertura real do período importado e, por isso,
+  // é a referência correta para dizer até que dia a base está atualizada.
+  Object.values(state.semanas||{}).forEach(p=>{
+    const fim=ignisMotoristaDataIso(p?.dataFim||'');
+    const count=Number(p?.count ?? p?.registros?.length ?? 0);
+    if(fim&&count>0&&(!latest||fim>latest))latest=fim;
+  });
+  // Compatibilidade com bases antigas em que o histórico não possuía dataFim.
+  if(!latest)(state.abastecimentos||[]).forEach(a=>{
+    const d=ignisMotoristaDataIso(a?.data||'');
+    if(d&&(!latest||d>latest))latest=d;
+  });
+  return latest;
+}
+function motoristasAtualizarUltimaData(){
+  const box=document.getElementById('mot-data-freshness'),txt=document.getElementById('mot-data-freshness-text');
+  if(!box||!txt)return;
+  const iso=motoristasUltimaDataBase();
+  box.classList.toggle('empty',!iso);
+  if(!iso){txt.textContent='Sem dados de abastecimento importados';box.title='Nenhum abastecimento disponível na base do IGNIS';return;}
+  const label=ignisMotoristaFormatData(iso);
+  txt.innerHTML=`Dados de abastecimento até <strong>${label}</strong>`;
+  box.title=`Maior data de abastecimento disponível na base: ${label}`;
+}
 function motoristasPeriodoConfig(){
   const mode=document.getElementById('mot-period-mode')?.value||'todos',ini=document.getElementById('mot-data-ini')?.value||'',fim=document.getElementById('mot-data-fim')?.value||'';
   return{mode,ini,fim};
@@ -7242,6 +7270,7 @@ function motoristasSetSort(key){_motSort=ignisMotorSortToggle(_motSort,key);rend
 function idtSetSort(key){_idtSort=ignisMotorSortToggle(_idtSort,key);renderIDT();}
 function renderMotoristas(force=false){
   ignisEnsureMotoristasState();
+  motoristasAtualizarUltimaData();
   const podeFinanceiro=authPodeVerFinanceiroMotoristas();
   document.body.classList.toggle('mot-financeiro-visivel',podeFinanceiro);
   const all=motoristasColetarCiclos(),q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),filtro=_motStatusFilter||'todos',atividadeMap=motoristasAtividadeMap(all);
@@ -7435,7 +7464,7 @@ function idtStatus(row,meta){
 }
 function renderIDT(){
   authAplicarPermissoesMotoristas();
-  ignisEnsureIdtState();idtAtualizarSeletor();
+  ignisEnsureIdtState();motoristasAtualizarUltimaData();idtAtualizarSeletor();
   const sel=document.getElementById('idt-periodo'),content=document.getElementById('idt-content');if(!content)return;
   const imp=state.idtImportacoes.find(x=>x.id===sel?.value)||idtOrdenadas()[0]||null;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
