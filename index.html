@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- IGNIS v38 · mobile responsivo + carregamento progressivo Firebase -->
+<!-- IGNIS v39 · mobile rápido + Firestore cache/bulk + UX sem zoom -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- IGNIS v36 · indicador de atualização mais visível em Motoristas PX -->
-<meta name="ignis-build" content="2026-08-27-mobile-progressive-sync-v38">
+<meta name="ignis-build" content="2026-08-27-mobile-fast-sync-v39">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
 <script async src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script type="module" async>
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, deleteDoc, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, query, where, documentId, getDocs, getDocsFromCache, doc, setDoc, getDoc, deleteDoc, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBdfrSrif-vThP3WqWJF76hhKE7FXGFpL0",
@@ -28,7 +28,15 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+let db;
+try {
+  // v39: os chunks são versionados/imutáveis. O cache persistente do Firestore faz
+  // uma segunda abertura no iPhone reaproveitar os mesmos documentos localmente.
+  db = initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+} catch(e) {
+  console.warn('IGNIS: cache persistente do Firestore indisponível; usando cache em memória.',e);
+  db = getFirestore(app);
+}
 window._firebaseRevision = null; // revisão compartilhada da base para impedir que um computador desatualizado sobrescreva a nuvem
 window._firebaseFuelSignature = ''; // identifica a versão das séries de abastecimentos/máquinas/anomalias
 window._firebaseArlaSignature = '';
@@ -204,22 +212,61 @@ async function fbReadChunkSeries(prefix, version, total) {
   if (!Number.isInteger(total) || total < 0 || total > FB_MAX_CHUNKS) {
     throw new Error(`${prefix}: manifesto inválido (${total} chunks)`);
   }
-  const out = [];
   const isMobile = fbIsMobileDevice();
-
-  // v38: no iPhone o gargalo não era CPU, e sim abrir poucos documentos por vez.
-  // 12 leituras concorrentes mantém estabilidade e reduz bastante o tempo total.
-  const batchSize = isMobile ? 12 : 20;
-  const timeoutMs = isMobile ? 16000 : 16000;
+  const baseId = `${prefix}_${version}_`;
   fbEmitProgress(prefix,0,total);
 
+  // v39: como cada versão é imutável, se TODOS os chunks dessa versão já estão
+  // no cache persistente do Firestore não há motivo para baixá-los de novo.
+  const buildFromSnapshot = (qsnap) => {
+    const docs = (qsnap?.docs || [])
+      .filter(d => String(d.id||'').startsWith(baseId))
+      .map(d => ({d, i:Number(String(d.id).slice(baseId.length))}))
+      .filter(x => Number.isInteger(x.i) && x.i >= 0 && x.i < total)
+      .sort((a,b)=>a.i-b.i);
+    if (docs.length !== total) return null;
+    for(let i=0;i<docs.length;i++) if(docs[i].i!==i) return null;
+    const out=[];
+    docs.forEach(x => out.push(...(x.d.data().registros || [])));
+    return out;
+  };
+
+  const makeQuery = () => query(
+    collection(db,'fueltracker'),
+    where(documentId(),'>=',baseId),
+    where(documentId(),'<=',baseId+'\uf8ff')
+  );
+
+  if (isMobile) {
+    try {
+      const cached = await getDocsFromCache(makeQuery());
+      const ready = buildFromSnapshot(cached);
+      if (ready) { fbEmitProgress(prefix,total,total); return ready; }
+    } catch(e) { /* cache incompleto/indisponível: segue para rede */ }
+  }
+
+  // Uma consulta por prefixo substitui dezenas/centenas de getDoc individuais.
+  // No iPhone isso reduz muito o custo de round-trips HTTP e o tempo em Sincronizando.
+  try {
+    const qsnap = await withTimeout(getDocs(makeQuery()), isMobile ? 30000 : 22000);
+    const ready = buildFromSnapshot(qsnap);
+    if (ready) { fbEmitProgress(prefix,total,total); return ready; }
+    console.warn(`IGNIS: leitura em lote de ${prefix} retornou ${qsnap?.docs?.length||0}/${total}; usando fallback.`);
+  } catch(e) {
+    console.warn(`IGNIS: consulta em lote de ${prefix} falhou; usando fallback por chunks.`,e);
+  }
+
+  // Fallback conservador para browsers/regras antigas.
+  const out = [];
+  const batchSize = isMobile ? 16 : 24;
+  const timeoutMs = isMobile ? 14000 : 16000;
   for (let base = 0; base < total; base += batchSize) {
     const size = Math.min(batchSize, total - base);
     const snaps = await Promise.all(Array.from({length:size}, (_, off) => {
       const i = base + off;
       return fbRetry(
         () => withTimeout(getDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`)), timeoutMs),
-        3, 400
+        2, 300
       );
     }));
     snaps.forEach((snap, off) => {
@@ -250,20 +297,16 @@ function fbPatchIdsFromMapString(v){
   return String(v||'').split('|').map(x=>x.trim()).filter(Boolean);
 }
 async function fbApplyAbastPatches(base, patches){
-  let out = Array.isArray(base) ? base.slice() : [];
   const lista = Array.isArray(patches) ? patches : [];
-  if(!lista.length) return out;
+  if(!lista.length) return Array.isArray(base)?base:[];
 
-  // v38: versões anteriores baixavam cada patch em sequência. Depois de várias
-  // reimportações, um celular podia ficar minutos em "Sincronizando...".
-  // Prefetch em pequenos lotes e aplica na ordem original para preservar a semântica.
+  // Busca os patches em paralelo; fbReadChunkSeries já usa cache/bulk query no mobile.
   const isMobile=fbIsMobileDevice();
   const fetched=new Array(lista.length).fill(null);
-  const parallel=isMobile?2:5;
+  const parallel=isMobile?3:6;
   for(let baseIdx=0;baseIdx<lista.length;baseIdx+=parallel){
     await Promise.all(lista.slice(baseIdx,baseIdx+parallel).map(async (p,off)=>{
-      const idx=baseIdx+off;
-      const total=Number(p?.chunks||0);
+      const idx=baseIdx+off,total=Number(p?.chunks||0);
       fetched[idx]=(p?.version&&total>0)
         ? await fbReadChunkSeries(FB_SERIES_PREFIX+'abpatch',String(p.version),total)
         : [];
@@ -271,13 +314,26 @@ async function fbApplyAbastPatches(base, patches){
     await fbSleep(0);
   }
 
+  // v39: versões antigas faziam out.filter(...) para CADA patch, relendo a base
+  // inteira dezenas de vezes no iPhone. Agrupamos uma vez por período e aplicamos
+  // os deltas diretamente no Map: O(base + patches), sem cópias gigantes repetidas.
+  const buckets=new Map(), loose=[];
+  (Array.isArray(base)?base:[]).forEach(a=>{
+    const pid=String(a?.periodoId||'');
+    if(!pid){loose.push(a);return;}
+    let arr=buckets.get(pid); if(!arr)buckets.set(pid,arr=[]); arr.push(a);
+  });
   for(let idx=0;idx<lista.length;idx++){
     const p=lista[idx];
-    const removidos = new Set(fbPatchIdsFromMapString(p?.removed));
-    if (removidos.size) out = out.filter(a => !removidos.has(String(a?.periodoId||'')));
-    const novos=fetched[idx]||[];
-    if(novos.length) out.push(...novos);
+    fbPatchIdsFromMapString(p?.removed).forEach(id=>buckets.delete(id));
+    (fetched[idx]||[]).forEach(a=>{
+      const pid=String(a?.periodoId||'');
+      if(!pid){loose.push(a);return;}
+      let arr=buckets.get(pid); if(!arr)buckets.set(pid,arr=[]); arr.push(a);
+    });
   }
+  const out=loose.slice();
+  buckets.forEach(arr=>out.push(...arr));
   return out;
 }
 function fbDetectFuelPeriodDelta(semanasNovo, semanasAntigo){
@@ -616,9 +672,9 @@ window.fbLoad = async function() {
 
     // Reconstrói registros das semanas em UMA passada.
     if (dados.semanas) {
-      const porPeriodo = new Map();
+      const porPeriodo = new Map(), semPeriodo=[];
       abastecimentos.forEach(a => {
-        if (!a?.periodoId) return;
+        if (!a?.periodoId) { semPeriodo.push(a); return; }
         let regs = porPeriodo.get(a.periodoId);
         if (!regs) porPeriodo.set(a.periodoId, regs = []);
         regs.push(a);
@@ -626,14 +682,12 @@ window.fbLoad = async function() {
       Object.keys(dados.semanas).forEach(id => {
         const periodo = dados.semanas[id];
         let regs = porPeriodo.get(id) || [];
-        if (regs.length === 0 && periodo.dataIni && periodo.dataFim) {
+        // Só registros legados SEM periodoId podem cair nesse fallback. Antes o
+        // IGNIS filtrava TODOS os abastecimentos novamente para cada semana.
+        if (regs.length === 0 && semPeriodo.length && periodo.dataIni && periodo.dataFim) {
           const ini = periodo.dataIni, fim = periodo.dataFim;
-          regs = abastecimentos.filter(a => {
-            if (a.periodoId && a.periodoId !== id) return false;
-            const data = a.data || '';
-            return data >= ini && data <= fim;
-          });
-          regs.forEach(a => { if (!a.periodoId) a.periodoId = id; });
+          regs = semPeriodo.filter(a => { const data=a.data||''; return data>=ini && data<=fim; });
+          regs.forEach(a => { a.periodoId = id; });
         }
         periodo.registros = regs;
         periodo.count = regs.length;
@@ -1628,6 +1682,12 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
      Isso era a principal causa de precisar "tirar zoom" ao navegar/pesquisar. */
   input,select,textarea{font-size:16px!important;line-height:1.25!important}
   input[type="checkbox"],input[type="radio"]{font-size:initial!important}
+  html{-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}
+  button,a,.nav-item,.dash-filter-trigger,.dash-option{touch-action:manipulation}
+  .dash-dropdown-heading{position:sticky;top:-12px;z-index:3;background:#11171e;padding:12px 2px 8px;margin:-12px -2px 4px}
+  .dash-dropdown-done{border:1px solid rgba(233,95,50,.34);background:rgba(233,95,50,.12);color:#ff8b65;border-radius:9px;min-height:36px;padding:0 12px;font:800 12px 'DM Sans',sans-serif;touch-action:manipulation}
+  .dash-search-box{position:sticky;top:48px;z-index:2;background:#11171e;margin-bottom:6px}
+  .dash-option{min-height:42px!important}
   .filter-input,.filter-select,.form-input,.form-select{min-width:0!important;max-width:100%!important;width:100%}
   .page,.page.active,.main>div,.dashboard-content{min-width:0!important;max-width:100%!important}
   .btn,.tab-group,.filter-group,.dashboard-toolbar>*{min-width:0!important;max-width:100%!important}
@@ -1637,7 +1697,27 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   .sidebar .logo{padding:18px 16px!important}
   .sidebar .sync-status{padding:13px 16px calc(13px + env(safe-area-inset-bottom,0px))!important}
   .modal input,.modal select,.modal textarea{font-size:16px!important}
-  .table-card,.mot-table-wrap,.anom-table-wrap,.comp-table-wrap,.abast-table-wrap{width:100%!important;max-width:100%!important;overflow-x:auto!important}
+  .table-card,.anom-table-wrap,.comp-table-wrap,.abast-table-wrap{width:100%!important;max-width:100%!important;overflow-x:auto!important}
+
+  /* Motoristas/IDT no celular viram cards legíveis. Não é mais necessário girar
+     o iPhone nem arrastar uma tabela de 10 colunas para enxergar o resultado. */
+  #page-motoristas .mot-table-wrap{border:0!important;background:transparent!important;overflow:visible!important}
+  #page-motoristas .mot-table{display:block!important;width:100%!important;min-width:0!important}
+  #page-motoristas .mot-table thead{display:none!important}
+  #page-motoristas .mot-table tbody{display:grid!important;grid-template-columns:1fr!important;gap:10px!important;width:100%!important}
+  #page-motoristas .mot-table tr{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;border:1px solid var(--border)!important;border-radius:13px!important;background:#111820!important;overflow:hidden!important}
+  #page-motoristas .mot-table td{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:flex-start!important;gap:3px!important;min-width:0!important;padding:9px 11px!important;border:0!important;border-top:1px solid rgba(255,255,255,.035)!important;font-size:12px!important}
+  #page-motoristas .mot-table td::before{content:attr(data-label);display:block;font-size:8px;line-height:1.2;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
+  #page-motoristas .mot-table td:first-child{grid-column:1/-1!important;padding:12px!important;border-top:0!important;background:rgba(255,255,255,.012)!important}
+  #page-motoristas .mot-table td:first-child::before{display:none!important}
+  #page-motoristas .mot-table td:only-child{grid-column:1/-1!important}
+  #page-motoristas .mot-table td:only-child::before{display:none!important}
+  #page-motoristas .mot-name{font-size:13px!important;line-height:1.3!important}
+  #page-motoristas .mot-matricula{font-size:9px!important}
+  #page-motoristas .mot-money small{font-size:8px!important}
+  #page-motoristas .mot-page-note{display:none!important}
+  #page-motoristas .mot-detail-summary{grid-template-columns:1fr 1fr!important}
+
   .page *{min-inline-size:0}
 }
 @media (max-width:430px){
@@ -2008,10 +2088,11 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
               <div class="dash-dropdown-title">Operações</div>
               <div class="dash-dropdown-subtitle">Selecione uma ou mais filiais</div>
             </div>
+            <button type="button" class="dash-dropdown-done" onclick="closeDashDropdown('op-dropdown-menu')">Concluir</button>
           </div>
           <label class="dash-search-box">
             <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input type="text" id="op-search" placeholder="Buscar operação" oninput="filtrarOpsDropdown()" autocomplete="off">
+            <input type="text" id="op-search" placeholder="Buscar operação" oninput="filtrarOpsDropdown()" onkeydown="dashSearchKeydown(event,'op-dropdown-menu')" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="search" enterkeyhint="done">
           </label>
           <label class="dash-option dash-option-all">
             <input type="checkbox" id="op-all-check" checked onchange="toggleAllOps(this)">
@@ -2037,10 +2118,11 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
               <div class="dash-dropdown-title">Placas</div>
               <div class="dash-dropdown-subtitle">Filtre uma ou mais placas</div>
             </div>
+            <button type="button" class="dash-dropdown-done" onclick="closeDashDropdown('placa-dropdown-menu')">Concluir</button>
           </div>
           <label class="dash-search-box">
             <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input type="text" id="placa-search" placeholder="Buscar placa" oninput="filtrarPlacasDropdown()" autocomplete="off">
+            <input type="text" id="placa-search" placeholder="Buscar placa" oninput="filtrarPlacasDropdown()" onkeydown="dashSearchKeydown(event,'placa-dropdown-menu')" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="search" enterkeyhint="done">
           </label>
           <label class="dash-option dash-option-all">
             <input type="checkbox" id="placa-all-check" checked onchange="toggleAllPlacas(this)">
@@ -2078,10 +2160,11 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
               <div class="dash-dropdown-title">Modelos</div>
               <div class="dash-dropdown-subtitle">Refine o painel por modelo</div>
             </div>
+            <button type="button" class="dash-dropdown-done" onclick="closeDashDropdown('modelo-dropdown-menu')">Concluir</button>
           </div>
           <label class="dash-search-box">
             <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-            <input type="text" id="modelo-search" placeholder="Buscar modelo" oninput="filtrarModelosDropdown()" autocomplete="off">
+            <input type="text" id="modelo-search" placeholder="Buscar modelo" oninput="filtrarModelosDropdown()" onkeydown="dashSearchKeydown(event,'modelo-dropdown-menu')" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="search" enterkeyhint="done">
           </label>
           <label class="dash-option dash-option-all">
             <input type="checkbox" id="modelo-all-check" checked onchange="toggleAllModelos(this)">
@@ -5437,10 +5520,18 @@ function updateFilters(force=false) {
 
 
 
+function ignisMobileUI(){ try{return window.matchMedia&&window.matchMedia('(max-width:768px)').matches;}catch(e){return false;} }
+function closeDashDropdown(id){
+  const menu=document.getElementById(id); if(menu)menu.style.display='none';
+  const a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){try{a.blur();}catch(e){}}
+}
+function dashSearchKeydown(ev,id){
+  if(ev.key==='Enter'||ev.key==='Escape'){ev.preventDefault();closeDashDropdown(id);}
+}
 function toggleOpDropdown() {
   const menu=document.getElementById('op-dropdown-menu');
   const isOpen = menu.style.display !== 'none';
-  if(!isOpen) setTimeout(()=>document.getElementById('op-search')?.focus(),50);
+  if(!isOpen && !ignisMobileUI()) setTimeout(()=>document.getElementById('op-search')?.focus(),50);
   menu.style.display=isOpen?'none':'block';
 }
 
@@ -5460,7 +5551,7 @@ function togglePlacaDropdown() {
   document.getElementById('op-dropdown-menu').style.display = 'none';
   menu.style.display = isOpen ? 'none' : 'block';
   if(!isOpen) {
-    setTimeout(() => document.getElementById('placa-search')?.focus(), 50);
+    if(!ignisMobileUI()) setTimeout(() => document.getElementById('placa-search')?.focus(), 50);
     populatePlacaDropdown();
   }
 }
@@ -5526,7 +5617,7 @@ function toggleModeloDropdown() {
   const opMenu = document.getElementById('op-dropdown-menu'); if (opMenu) opMenu.style.display = 'none';
   const pm = document.getElementById('placa-dropdown-menu'); if (pm) pm.style.display = 'none';
   menu.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) setTimeout(() => document.getElementById('modelo-search')?.focus(), 50);
+  if (!isOpen && !ignisMobileUI()) setTimeout(() => document.getElementById('modelo-search')?.focus(), 50);
 }
 
 function filtrarModelosDropdown() {
@@ -7573,7 +7664,7 @@ function renderMotoristas(force=false){
     const metaCov=Math.max(0,Math.min(1,Number(r.metaCobertura)||0)),precoCov=Math.max(0,Math.min(1,Number(r.precoCobertura)||0)),finCov=Math.max(0,Math.min(1,Number(r.financeiroCobertura)||0));
     const pendTitle=`Financeiro ainda não 100% auditável neste período. Cobertura exata ${(finCov*100).toFixed(1)}% · meta ${(metaCov*100).toFixed(1)}% · preço ${(precoCov*100).toFixed(1)}%. O IGNIS não exibe R$ parcial para evitar valor incorreto. Reimporte todas as semanas que compõem este período com a versão v32 ou posterior.`;
     const fin=!r.financeiroOk?`<span class="mot-money none" title="${pendEsc(pendTitle)}"><small>Pendente</small>${(finCov*100).toLocaleString('pt-BR',{maximumFractionDigits:0})}%</span>`:(Math.abs(Number(r.impactoR)||0)<0.005?'<span class="mot-money none" title="Consumo real igual ao consumo ideal">R$ 0,00</span>':Number(r.impactoR)>0?`<span class="mot-money ok" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L economizados. R$ calculado linha a linha com o custo efetivo do abastecimento (Valor Total ÷ Litros; fallback para Valor Litro)."><small>Economia</small>${Number(r.impactoR).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L excedentes. R$ calculado linha a linha com o custo efetivo do abastecimento (Valor Total ÷ Litros; fallback para Valor Litro)."><small>Desperdício</small>${Math.abs(Number(r.impactoR)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);
-    return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td>${podeFinanceiro?`<td class="mot-number mot-financeiro-col">${fin}</td>`:''}<td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
+    return `<tr class="${has?'mot-driver-row':''}"${click}><td data-label="Motorista"><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td data-label="Período" class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td data-label="KM" class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td data-label="Litros" class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td data-label="Média ideal" class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td data-label="Média real" class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td data-label="Eficiência" class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td data-label="Abastecimentos">${r.registros||'—'}</td><td data-label="Placas">${r.placas.size||'—'}</td>${podeFinanceiro?`<td data-label="Economia / desperdício" class="mot-number mot-financeiro-col">${fin}</td>`:''}<td data-label="Status"><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
   }).join('');
   _markPageClean('motoristas');
   if(_motSubtab==='idt')renderIDT();
@@ -7783,7 +7874,7 @@ function renderIDT(){
     <th><button class="mot-sort num" data-key="meta" onclick="idtSetSort('meta')">Meta <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort" data-key="status" onclick="idtSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
   </tr></thead>`;
-  content.innerHTML=`<div class="mot-table-wrap"><table class="mot-table idt-table">${head}<tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);const cat=v=>r.temClassificados?idtFmtNumero(v||0,0):'—';const legado=r.legado>0?`<div class="mot-matricula" title="Desvios importados no modelo antigo, sem classificação por tipo">+ ${idtFmtNumero(r.legado,0)} não class.</div>`:'';return `<tr><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td>${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td class="mot-number">${cat(r.velocidade)}</td><td class="mot-number">${cat(r.rpm)}</td><td class="mot-number">${cat(r.ocioso)}</td><td class="mot-number"><strong>${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</strong>${legado}</td><td class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}):'—'}</strong></td><td class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="10"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>'}</tbody></table></div>`;
+  content.innerHTML=`<div class="mot-table-wrap"><table class="mot-table idt-table">${head}<tbody>${rows.length?rows.map(r=>{const st=idtStatus(r,meta);const cat=v=>r.temClassificados?idtFmtNumero(v||0,0):'—';const legado=r.legado>0?`<div class="mot-matricula" title="Desvios importados no modelo antigo, sem classificação por tipo">+ ${idtFmtNumero(r.legado,0)} não class.</div>`:'';return `<tr><td data-label="Motorista"><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td data-label="Período">${r.inicio?pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim)):'—'}</td><td data-label="KM" class="mot-number">${r.km>0?idtFmtNumero(r.km,0)+' km':'—'}</td><td data-label="Velocidade" class="mot-number">${cat(r.velocidade)}</td><td data-label="RPM" class="mot-number">${cat(r.rpm)}</td><td data-label="Motor ocioso" class="mot-number">${cat(r.ocioso)}</td><td data-label="Total" class="mot-number"><strong>${r.desvios!==null?idtFmtNumero(r.desvios,0):'—'}</strong>${legado}</td><td data-label="IDT" class="mot-number"><strong class="idt-idt-value ${r.idt!==null?(r.idt<=meta?'ok':'bad'):''}">${r.idt!==null?r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}):'—'}</strong></td><td data-label="Meta" class="mot-number">${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</td><td data-label="Status"><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`}).join(''):'<tr><td colspan="10"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>'}</tbody></table></div>`;
   ignisMotorSortHeaderUpdate('idt-table-head',_idtSort);
 }
 function idtAbrirHistorico(){
