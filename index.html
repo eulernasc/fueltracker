@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- IGNIS v33 · sincronização incremental por período para importações grandes -->
+<!-- IGNIS v34 · permissão financeira Motoristas PX por usuário -->
 <meta name="ignis-build" content="2026-08-26-motoristas-finance-v30">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -2073,6 +2073,11 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     .idt-toolbar{display:grid;grid-template-columns:minmax(230px,310px) minmax(180px,220px) minmax(220px,1fr) auto auto;gap:10px;align-items:end;margin-bottom:18px}.idt-toolbar-clean{display:block;margin-bottom:10px}.idt-actions-clean{display:flex;gap:8px;align-items:center;justify-content:flex-end}.idt-summary-clean{display:flex;align-items:stretch;gap:8px;margin:0 0 14px;min-height:48px}.idt-summary-main,.idt-summary-item{display:flex;align-items:center;gap:8px;border:1px solid var(--border);background:rgba(255,255,255,.012);border-radius:10px;padding:8px 12px}.idt-summary-main span,.idt-summary-item span{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}.idt-summary-main strong{font-size:18px}.idt-summary-main small{font-size:9px;color:var(--text3);white-space:nowrap}.idt-summary-item strong{font-size:13px}.mot-page-note-compact{padding-top:8px}.idt-history-list{display:flex;flex-direction:column;gap:7px;margin-top:14px;max-height:420px;overflow:auto}.idt-history-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:#111820}.idt-history-copy{min-width:0;flex:1}.idt-history-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.idt-history-meta{font-size:9px;color:var(--text3);margin-top:2px}.idt-history-actions{display:flex;gap:6px;flex-shrink:0}.idt-history-active{border-color:rgba(233,95,50,.4);background:rgba(233,95,50,.04)}.idt-meta-box{display:flex;align-items:center;height:42px;border:1px solid var(--border);border-radius:10px;background:#121820;overflow:hidden}.idt-meta-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:0 10px;white-space:nowrap}.idt-meta-input{width:72px;height:100%;border:0;border-left:1px solid var(--border);background:transparent;color:#fff;text-align:center;font:700 12px 'DM Mono',monospace;outline:none}.idt-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.idt-idt-value{font-family:'DM Mono',monospace}.idt-idt-value.ok{color:var(--green)}.idt-idt-value.bad{color:var(--red)}
     .idt-period-empty{padding:48px 20px;border:1px dashed var(--border);border-radius:14px;text-align:center;background:rgba(255,255,255,.012)}.idt-period-empty strong{display:block;font-size:14px;margin-bottom:6px}.idt-period-empty span{font-size:11px;color:var(--text3)}
     .idt-import-box{border:1px dashed rgba(233,95,50,.35);border-radius:12px;padding:16px;background:rgba(233,95,50,.025);margin-top:14px;cursor:pointer;transition:.15s}.idt-import-box:hover{border-color:rgba(233,95,50,.65);background:rgba(233,95,50,.045)}.idt-import-title{font-size:12px;font-weight:720}.idt-import-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.45}.idt-modal-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}.idt-import-history{margin-top:14px;font-size:10px;color:var(--text3)}
+
+    /* v34 · Financeiro de Motoristas PX é oculto por padrão. */
+    .mot-financeiro-col{display:none!important}
+    body.mot-financeiro-visivel .mot-financeiro-col{display:table-cell!important}
+    #perm-motoristas-financeiro-label.perm-locked{opacity:.55}
     @media(max-width:1180px){.idt-toolbar-clean{grid-template-columns:1fr 1fr}.idt-toolbar-clean .mot-search{grid-column:1/-1}.idt-actions-clean{justify-content:stretch}.idt-actions-clean .btn{flex:1}.mot-periodbar{grid-template-columns:1fr 1fr}.mot-period-summary{grid-column:1/-1}.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{width:100%}.idt-toolbar{grid-template-columns:1fr 1fr}.idt-toolbar .mot-search{grid-column:1/-1}.idt-toolbar>.btn{width:100%}.idt-kpis{grid-template-columns:1fr 1fr}}
     @media(max-width:900px){.idt-toolbar-clean{display:block}.mot-filterbar{align-items:stretch}.mot-state-tabs{width:100%}.mot-filter-search{min-width:100%}.mot-filter-meta{width:100%;flex:1}.idt-actions-clean{width:100%}.idt-summary-clean{overflow-x:auto;padding-bottom:2px}.idt-summary-main,.idt-summary-item{flex:0 0 auto}.mot-periodbar{grid-template-columns:1fr}.mot-period-dates,.mot-period-summary{grid-column:auto}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1180px}.mot-detail-summary{grid-template-columns:1fr 1fr}.idt-toolbar{grid-template-columns:1fr}.idt-kpis{grid-template-columns:1fr 1fr}.idt-table{min-width:760px}}
     @media(max-width:520px){.mot-subtabs{width:100%}.mot-state-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mot-state-btn{width:100%}.mot-period-dates{grid-template-columns:1fr}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
@@ -2126,7 +2131,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
             <th><button class="mot-sort num" data-key="efic" onclick="motoristasSetSort('efic')">Eficiência <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort num" data-key="registros" onclick="motoristasSetSort('registros')">Abastecimentos <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort num" data-key="placas" onclick="motoristasSetSort('placas')">Placas <span class="mot-sort-arrow">↕</span></button></th>
-            <th><button class="mot-sort num" data-key="financeiro" onclick="motoristasSetSort('financeiro')">Economia / desperdício <span class="mot-sort-arrow">↕</span></button></th>
+            <th class="mot-financeiro-col"><button class="mot-sort num" data-key="financeiro" onclick="motoristasSetSort('financeiro')">Economia / desperdício <span class="mot-sort-arrow">↕</span></button></th>
             <th><button class="mot-sort" data-key="status" onclick="motoristasSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
           </tr></thead>
           <tbody id="mot-table-body"></tbody>
@@ -3183,8 +3188,9 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
           <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_idt_importar"> Importar IDT</label>
           <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_idt_excluir"> Excluir importações IDT</label>
+          <label class="perm-item" id="perm-motoristas-financeiro-label" style="margin:0;grid-column:1/-1"><input type="checkbox" data-perm="motoristas_financeiro_ver"> Ver Economia / Desperdício</label>
         </div>
-        <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-top:8px">Essas permissões valem <strong>somente</strong> para o IDT em Motoristas PX. Não liberam importação ou exclusão em Abastecimentos, Arla ou qualquer outra aba.</div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-top:8px">Importar/Excluir valem <strong>somente</strong> para o IDT em Motoristas PX. A permissão <strong>Ver Economia / Desperdício</strong> libera somente a coluna financeira dos motoristas e começa desativada para todos, exceto o ADM Master.</div>
       </div>
       <div style="margin-top:10px;padding:10px;background:rgba(232,148,26,.08);border:1px solid rgba(232,148,26,.3);border-radius:8px">
         <label class="perm-item" style="background:none;border:none;padding:0;gap:8px">
@@ -4017,12 +4023,33 @@ function authExigirPermissao(perm,mensagem){
   showToast(mensagem||'Sem permissão para realizar esta ação.','error');
   return false;
 }
+// Regra especial: financeiro de Motoristas PX NÃO herda acesso amplo da tag Admin.
+// O ADM Master sempre vê; qualquer outro perfil só vê quando o ADM Master marcar
+// explicitamente a permissão no cadastro daquele usuário.
+function authPodeVerFinanceiroMotoristas(){
+  const u=window._authUser;
+  if(!u)return false;
+  if(u.role==='adm')return true;
+  return Array.isArray(u.perms)&&u.perms.includes('motoristas_financeiro_ver');
+}
+function authAtualizarControlePermissaoFinanceiro(){
+  const cb=document.querySelector('[data-perm="motoristas_financeiro_ver"]');
+  const label=document.getElementById('perm-motoristas-financeiro-label');
+  if(!cb)return;
+  const podeAlterar=window._authUser?.role==='adm';
+  cb.disabled=!podeAlterar;
+  if(label){
+    label.classList.toggle('perm-locked',!podeAlterar);
+    label.title=podeAlterar?'Permissão individual para visualizar Economia / Desperdício em Motoristas PX.':'Somente o ADM Master pode alterar esta permissão.';
+  }
+}
 function authAplicarPermissoesMotoristas(){
   const noIdt=_motSubtab==='idt';
   const hist=document.getElementById('btn-idt-historico');
   const imp=document.getElementById('btn-idt-importar');
   if(hist)hist.style.display=noIdt?'':'none';
   if(imp)imp.style.display=noIdt&&authTemPermissao('motoristas_idt_importar')?'':'none';
+  document.body.classList.toggle('mot-financeiro-visivel',authPodeVerFinanceiroMotoristas());
 }
 
 // Todas as abas disponíveis
@@ -4406,6 +4433,7 @@ function authResumoPermissoesUsuario(usr){
   const acoes=[];
   if(perms.includes('motoristas_idt_importar'))acoes.push('importar IDT');
   if(perms.includes('motoristas_idt_excluir'))acoes.push('excluir IDT');
+  if(perms.includes('motoristas_financeiro_ver'))acoes.push('ver financeiro PX');
   const acaoTxt=acoes.length?` · <span style="color:#93b7df">${acoes.join(' + ')}</span>`:'';
   const manage=perms.includes('manage_users')?'<span style="color:var(--yellow)"> · gerencia usuários</span>':'';
   return `${abas} aba(s)${acaoTxt}${manage}`;
@@ -4443,6 +4471,7 @@ function abrirModalNovoUsuario() {
   document.getElementById('user-field-senha2').value = '';
   document.querySelectorAll('[data-perm]').forEach(cb => cb.checked = false);
   document.getElementById('user-field-admin').checked = false;
+  authAtualizarControlePermissaoFinanceiro();
   document.getElementById('user-modal-error').style.display = 'none';
   document.getElementById('modal-usuario').classList.add('open');
 }
@@ -4461,6 +4490,7 @@ async function abrirModalEditarUsuario(id) {
     cb.checked = (u.perms || []).includes(cb.dataset.perm);
   });
   document.getElementById('user-field-admin').checked = (u.role === 'admin');
+  authAtualizarControlePermissaoFinanceiro();
   document.getElementById('user-modal-error').style.display = 'none';
   document.getElementById('modal-usuario').classList.add('open');
 }
@@ -4476,7 +4506,7 @@ async function salvarUsuario() {
   const pass   = document.getElementById('user-field-senha').value;
   const pass2  = document.getElementById('user-field-senha2').value;
   const perms  = [...document.querySelectorAll('[data-perm]:checked')].map(cb=>cb.dataset.perm);
-  if (perms.some(p=>p==='motoristas_idt_importar'||p==='motoristas_idt_excluir') && !perms.includes('motoristas')) perms.push('motoristas');
+  if (perms.some(p=>p==='motoristas_idt_importar'||p==='motoristas_idt_excluir'||p==='motoristas_financeiro_ver') && !perms.includes('motoristas')) perms.push('motoristas');
   const isAdmin = document.getElementById('user-field-admin').checked;
   const errEl  = document.getElementById('user-modal-error');
   errEl.style.display = 'none';
@@ -7212,6 +7242,8 @@ function motoristasSetSort(key){_motSort=ignisMotorSortToggle(_motSort,key);rend
 function idtSetSort(key){_idtSort=ignisMotorSortToggle(_idtSort,key);renderIDT();}
 function renderMotoristas(force=false){
   ignisEnsureMotoristasState();
+  const podeFinanceiro=authPodeVerFinanceiroMotoristas();
+  document.body.classList.toggle('mot-financeiro-visivel',podeFinanceiro);
   const all=motoristasColetarCiclos(),q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),filtro=_motStatusFilter||'todos',atividadeMap=motoristasAtividadeMap(all);
   motoristasPeriodoAtualizarUI();motoristasAtualizarStatusBotoes();
   const periodRows=motoristasRowsPeriodo(all);
@@ -7233,17 +7265,17 @@ function renderMotoristas(force=false){
   const sub=document.getElementById('mot-kpi-dados-sub');if(sub)sub.textContent='motoristas com movimentação no período exibido';
   const cfgPeriodo=motoristasPeriodoConfig(),sum=document.getElementById('mot-period-summary');
   if(sum&&cfgPeriodo.mode==='personalizado'&&cfgPeriodo.ini&&cfgPeriodo.fim){
-    sum.innerHTML=`Exibindo <strong>${ignisMotoristaFormatData(cfgPeriodo.ini)} → ${ignisMotoristaFormatData(cfgPeriodo.fim)}</strong> · <strong>${comDadosMotoristas.size}</strong> motorista(s) com dados. KM, litros, médias, eficiência e financeiro foram recalculados somente nesse intervalo.`;
+    sum.innerHTML=`Exibindo <strong>${ignisMotoristaFormatData(cfgPeriodo.ini)} → ${ignisMotoristaFormatData(cfgPeriodo.fim)}</strong> · <strong>${comDadosMotoristas.size}</strong> motorista(s) com dados. KM, litros, médias e eficiência foram recalculados somente nesse intervalo.${podeFinanceiro?' O financeiro também respeita o período selecionado.':''}`;
   }
   const tb=document.getElementById('mot-table-body');if(!tb)return;
-  if(!rows.length){tb.innerHTML='<tr><td colspan="11"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>';_markPageClean('motoristas');return;}
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="${podeFinanceiro?11:10}"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>`;_markPageClean('motoristas');return;}
   tb.innerHTML=rows.map(r=>{
     const st=motoristasStatus(r),has=r.litros>0&&r.km>0,click=has&&r.ciclo>0?` onclick="motoristasAbrirDetalhe('${r.key.replace(/'/g,"\\'")}',${r.ciclo})"`:'';
     const deltaL=Number(r.deltaLitros)||0,precoMed=Number(r.precoMedio)||0;
     const metaCov=Math.max(0,Math.min(1,Number(r.metaCobertura)||0)),precoCov=Math.max(0,Math.min(1,Number(r.precoCobertura)||0)),finCov=Math.max(0,Math.min(1,Number(r.financeiroCobertura)||0));
     const pendTitle=`Financeiro ainda não 100% auditável neste período. Cobertura exata ${(finCov*100).toFixed(1)}% · meta ${(metaCov*100).toFixed(1)}% · preço ${(precoCov*100).toFixed(1)}%. O IGNIS não exibe R$ parcial para evitar valor incorreto. Reimporte todas as semanas que compõem este período com a versão v32 ou posterior.`;
     const fin=!r.financeiroOk?`<span class="mot-money none" title="${pendEsc(pendTitle)}"><small>Pendente</small>${(finCov*100).toLocaleString('pt-BR',{maximumFractionDigits:0})}%</span>`:(Math.abs(Number(r.impactoR)||0)<0.005?'<span class="mot-money none" title="Consumo real igual ao consumo ideal">R$ 0,00</span>':Number(r.impactoR)>0?`<span class="mot-money ok" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L economizados. R$ calculado linha a linha com o custo efetivo do abastecimento (Valor Total ÷ Litros; fallback para Valor Litro)."><small>Economia</small>${Number(r.impactoR).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad" title="${Math.abs(deltaL).toLocaleString('pt-BR',{maximumFractionDigits:2})} L excedentes. R$ calculado linha a linha com o custo efetivo do abastecimento (Valor Total ÷ Litros; fallback para Valor Litro)."><small>Desperdício</small>${Math.abs(Number(r.impactoR)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);
-    return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td><td class="mot-number">${fin}</td><td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
+    return `<tr class="${has?'mot-driver-row':''}"${click}><td><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td>${r.registros||'—'}</td><td>${r.placas.size||'—'}</td>${podeFinanceiro?`<td class="mot-number mot-financeiro-col">${fin}</td>`:''}<td><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
   }).join('');
   _markPageClean('motoristas');
   if(_motSubtab==='idt')renderIDT();
@@ -7275,10 +7307,12 @@ function motoristasAdicionarDigitado(){const inp=document.getElementById('mot-ad
 function motoristasAdicionarCatalogo(key){const m=ignisMotoristaCatalogo().find(x=>x.key===key);if(m&&motoristasAdicionar(m.nome,m.matricula)){const inp=document.getElementById('mot-add-input');if(inp)inp.value='';}}
 function motoristasRemover(key){state.motoristasMonitorados=ignisEnsureMotoristasState().filter(m=>m.key!==key);saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);}
 function motoristasAbrirDetalhe(key,ciclo){
+  const podeFinanceiro=authPodeVerFinanceiroMotoristas();
+  document.body.classList.toggle('mot-financeiro-visivel',podeFinanceiro);
   const d=motoristasRowsPeriodo(motoristasColetarCiclos()).find(x=>x.key===key&&x.ciclo===Number(ciclo))||motoristasColetarCiclos().find(x=>x.key===key&&x.ciclo===Number(ciclo));if(!d)return;
   let ov=document.getElementById('mot-detalhe-modal');if(!ov){ov=document.createElement('div');ov.id='mot-detalhe-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:980px"><div id="mot-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('mot-detail-content'),st=motoristasStatus(d),det=[...d.detalhes].sort((a,b)=>String(b.inicio||b.fim).localeCompare(String(a.inicio||a.fim)));
-  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média ideal</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Média real</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média ideal</th><th>Média real</th><th>Economia / desperdício</th></tr></thead><tbody>${det.length?det.map(x=>{const covMeta=x.litros>0?(Number(x.litrosComMeta)||0)/x.litros:0,covPreco=x.litros>0?(Number(x.litrosComPreco)||0)/x.litros:0,ok=!!x.financeiroExato&&covMeta>=0.999999&&covPreco>=0.999999&&Number(x.meta)>0;const vr=Number(x.impactoR)||0;const f=!ok?'—':(Math.abs(vr)<.005?'R$ 0,00':vr>0?`<span class="mot-money ok">${vr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(vr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td><td>${f}</td></tr>`}).join(''):'<tr><td colspan="8" class="mot-empty">Sem dados nesse período.</td></tr>'}</tbody></table></div>`;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média ideal</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Média real</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média ideal</th><th>Média real</th>${podeFinanceiro?'<th class="mot-financeiro-col">Economia / desperdício</th>':''}</tr></thead><tbody>${det.length?det.map(x=>{const covMeta=x.litros>0?(Number(x.litrosComMeta)||0)/x.litros:0,covPreco=x.litros>0?(Number(x.litrosComPreco)||0)/x.litros:0,ok=!!x.financeiroExato&&covMeta>=0.999999&&covPreco>=0.999999&&Number(x.meta)>0;const vr=Number(x.impactoR)||0;const f=!ok?'—':(Math.abs(vr)<.005?'R$ 0,00':vr>0?`<span class="mot-money ok">${vr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(vr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td>${podeFinanceiro?`<td class="mot-financeiro-col">${f}</td>`:''}</tr>`}).join(''):`<tr><td colspan="${podeFinanceiro?8:7}" class="mot-empty">Sem dados nesse período.</td></tr>`}</tbody></table></div>`;
   ov.classList.add('open');
 }
 
