@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+<!-- IGNIS v37 · mobile responsivo + sincronização confiável entre dispositivos -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- IGNIS v36 · indicador de atualização mais visível em Motoristas PX -->
-<meta name="ignis-build" content="2026-08-26-motoristas-finance-v30">
+<meta name="ignis-build" content="2026-08-27-mobile-sync-v37">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -191,17 +192,28 @@ async function fbReadChunkSeries(prefix, version, total) {
     throw new Error(`${prefix}: manifesto inválido (${total} chunks)`);
   }
   const out = [];
-  for (let base = 0; base < total; base += 24) {
-    const size = Math.min(24, total - base);
+  // Safari/iPhone fica instável quando dezenas de leituras do Firestore são abertas ao mesmo tempo.
+  // Em telas móveis usamos lotes menores e retry por chunk; no desktop mantemos paralelismo maior.
+  const isMobile = (window.matchMedia && window.matchMedia('(max-width: 768px)').matches)
+    || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
+  const batchSize = isMobile ? 8 : 18;
+  const timeoutMs = isMobile ? 22000 : 18000;
+  for (let base = 0; base < total; base += batchSize) {
+    const size = Math.min(batchSize, total - base);
     const snaps = await Promise.all(Array.from({length:size}, (_, off) => {
       const i = base + off;
-      return withTimeout(getDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`)), 15000);
+      return fbRetry(
+        () => withTimeout(getDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`)), timeoutMs),
+        3, 450
+      );
     }));
     snaps.forEach((snap, off) => {
       const i = base + off;
       if (!snap.exists()) throw new Error(`${prefix}: chunk ${i+1}/${total} não encontrado`);
       out.push(...(snap.data().registros || []));
     });
+    // Libera a thread principal entre lotes, importante no Safari móvel.
+    await fbSleep(0);
   }
   return out;
 }
@@ -1461,6 +1473,83 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 @media(max-width:1100px){.anom-kpis{grid-template-columns:1fr 1fr}.anom-filter-row{grid-template-columns:1fr 1fr}.anom-search,.anom-op{grid-column:span 1}}
 @media(max-width:650px){.anom-kpis{grid-template-columns:1fr}.anom-header-tools{width:100%;justify-content:stretch}.anom-import-ops-btn{width:100%;justify-content:center}.anom-rules{width:100%;flex-wrap:wrap}.anom-filter-row{grid-template-columns:1fr}.anom-search,.anom-op{grid-column:auto}.anom-type-tabs{overflow:auto;flex-wrap:nowrap}.anom-type-tab{white-space:nowrap}}
 </style>
+
+<style id="ignis-mobile-v37">
+/* v37 — mobile: uma única navegação (hambúrguer), menos altura e leitura mais confiável */
+@media (max-width:768px){
+  html,body{max-width:100%;overflow-x:hidden!important}
+  body{display:block!important}
+  .mob-topbar{display:flex!important;height:62px!important;padding:0 18px!important;padding-top:env(safe-area-inset-top,0)!important;background:rgba(10,14,19,.97)!important;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+  .mob-logo-icon{width:36px!important;height:36px!important;border-radius:11px!important;background:rgba(233,95,50,.10)!important;border:1px solid rgba(233,95,50,.28)!important;color:var(--accent)!important}
+  .mob-logo-icon .ui-icon{width:20px;height:20px}
+  .mob-logo-text{font-size:16px!important;letter-spacing:.1px}
+  .mob-hamburger{width:42px!important;height:42px!important;border:1px solid rgba(255,255,255,.07)!important;background:#111720!important}
+  .mob-hamburger span{width:20px!important;height:1.7px!important}
+
+  /* O menu inferior tinha itens demais e ficava inutilizável. O menu lateral do hambúrguer vira a navegação móvel oficial. */
+  .mob-bottom-nav{display:none!important}
+  .main{margin-left:0!important;padding:82px 12px calc(28px + env(safe-area-inset-bottom,0px))!important;min-width:0!important;width:100%!important}
+  .sidebar{width:min(86vw,320px)!important;max-width:320px!important;transform:translateX(-105%);box-shadow:22px 0 60px rgba(0,0,0,.42);overflow:hidden!important}
+  .sidebar.open{transform:translateX(0)!important}
+  .sidebar .nav{overflow-y:auto!important;overscroll-behavior:contain;padding-bottom:18px!important}
+  .sidebar-toggle{display:none!important}
+  .sidebar .user-info,.sidebar .sync-status{flex-shrink:0}
+  .sidebar-overlay{z-index:149!important}
+
+  .page-header{margin-bottom:16px!important;gap:10px!important}
+  .page-title{font-size:26px!important;line-height:1.1!important;letter-spacing:-.7px!important}
+  .page-sub{font-size:12px!important;line-height:1.45!important;margin-top:5px!important}
+  .header-actions{gap:8px!important}
+  .header-actions .btn{min-height:42px!important}
+
+  /* Dashboard: mantém os filtros utilizáveis sem transformar o topo em uma tela inteira. */
+  .dashboard-toolbar,.dashboard-filter-shell{padding:10px!important;gap:8px!important;border-radius:14px!important;margin-bottom:14px!important}
+  .dash-filter-control,.dash-native-control,.dash-period-control{flex:1 1 100%!important;max-width:none!important}
+  .dash-filter-trigger,.dash-select-shell,.dashboard-toolbar .tab-group{height:42px!important}
+  .dashboard-toolbar .tab-btn{height:34px!important;font-size:11px!important}
+  .dash-import-btn{height:44px!important;margin-top:1px!important}
+  .dash-dropdown,.dash-dropdown-compact{position:fixed!important;left:12px!important;right:12px!important;top:76px!important;width:auto!important;max-width:none!important;max-height:calc(100dvh - 100px)!important;overflow:auto!important}
+
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;margin-bottom:14px!important}
+  .kpi-card{min-height:102px!important;padding:14px!important;border-radius:13px!important}
+  .kpi-label{font-size:9px!important;line-height:1.35!important;padding-right:30px!important}
+  .kpi-value{font-size:23px!important}
+  .kpi-icon{right:12px!important;top:13px!important;width:23px!important;height:23px!important}
+  .kpi-icon .ui-icon{width:18px!important;height:18px!important}
+  .chart-card{padding:14px!important;border-radius:14px!important;margin-bottom:12px!important}
+  .chart-title{font-size:13px!important;margin-bottom:10px!important}
+
+  /* Tabelas grandes continuam completas, mas rolam somente dentro do card em vez de estourar a página inteira. */
+  .table-card,.mot-table-wrap,.comp-maq-table,.mot-detail-scroll{max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-x:contain}
+  table{max-width:none}
+
+  /* Modal móvel ocupa a largura útil e tem rolagem própria. */
+  .modal-overlay{align-items:flex-end!important;padding:0!important}
+  .modal{width:100%!important;max-width:100%!important;max-height:calc(100dvh - 12px)!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;border-radius:20px 20px 0 0!important;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px))!important}
+  .modal-title{font-size:20px!important;line-height:1.2!important;margin-bottom:14px!important}
+  .import-area,.import-primary-card{padding:22px 16px!important;min-height:0!important}
+  #historico-periodos{max-height:38dvh!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch!important}
+  .history-period-item{padding:12px!important}
+
+  /* Motoristas PX */
+  #page-motoristas .page-header{align-items:stretch!important}
+  .mot-subtabs{width:100%!important}
+  .mot-periodbar,.mot-filterbar{padding:10px!important;border-radius:13px!important}
+  .mot-kpis{gap:8px!important}
+  .mot-kpi{min-height:100px!important;padding:13px!important}
+  .mot-state-tabs{overflow-x:auto!important;display:flex!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch!important;padding-bottom:2px}
+  .mot-state-btn{flex:0 0 auto!important;white-space:nowrap!important;width:auto!important}
+  .mot-filter-search{min-width:100%!important}
+}
+@media (max-width:430px){
+  .main{padding-left:10px!important;padding-right:10px!important}
+  .page-title{font-size:24px!important}
+  .kpi-grid{grid-template-columns:1fr 1fr!important}
+  .kpi-card{min-height:96px!important;padding:12px!important}
+  .dashboard-toolbar,.dashboard-filter-shell{padding:9px!important}
+}
+</style>
+
 </head>
 <body>
 
@@ -1540,6 +1629,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   <div class="mob-logo">
     <div class="mob-logo-icon"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2.5c.4 3-1.2 4.5-2.5 5.9-1.3 1.4-2.4 2.7-1.8 5 .8-1.1 1.8-1.9 3-2.6-.2 2.6 1.3 3.9 2.1 5 .6.8 1 1.5.9 2.5 2.1-1.2 3.3-3.3 3.3-5.7 0-3.9-2.4-7.5-5-10.1Z"/><path d="M8.3 8.1c-2.1 2.1-3.5 4.5-3.5 7.1A7.2 7.2 0 0 0 12 22c3.9 0 7.1-2.8 7.2-6.5"/></svg></div>
     <div class="mob-logo-text">Ignis</div>
+    <span id="mob-sync-dot" aria-label="Status de sincronização" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block;margin-left:2px"></span>
   </div>
   <button class="mob-hamburger" onclick="toggleSidebar()" aria-label="Abrir menu"><span></span><span></span><span></span></button>
 </div>
@@ -3672,6 +3762,28 @@ async function loadState() {
   try { relgInit(); } catch(e) { console.warn('relgInit no boot falhou:', e); }
   updateSyncStatus('idle');
   window._dadosCarregados = true; // libera importação só depois do sync inicial terminar
+
+  // O login possui um watchdog para não congelar a interface. Em celular o download dos chunks
+  // pode ultrapassar esse tempo; antes, o watchdog desenhava zeros e quando o Firebase terminava
+  // não havia um novo render porque _dadosCarregados ainda era false dentro de syncFromFirebase.
+  // Agora o término REAL do carregamento sempre redesenha a página que estiver aberta.
+  setTimeout(() => {
+    try { updateFilters(); } catch(e) { console.warn('updateFilters pós-load:', e); }
+    const activeId = document.querySelector('.page.active')?.id?.replace('page-','') || 'dashboard';
+    try {
+      if (activeId === 'dashboard') renderDashboard();
+      else if (activeId === 'comparativo') renderComparativo();
+      else if (activeId === 'abastecimentos') renderAbastecimentos();
+      else if (activeId === 'maquinas') renderMaquinas();
+      else if (activeId === 'motoristas' && typeof renderMotoristas==='function') { renderMotoristas(true); if(typeof _motSubtab!=='undefined'&&_motSubtab==='idt'&&typeof renderIDT==='function') renderIDT(); }
+      else if (activeId === 'pendencias' && typeof renderPendencias==='function') renderPendencias(true);
+      else if (activeId === 'anomalias' && typeof renderAnomalias==='function') renderAnomalias(true);
+      else if (activeId === 'fechamento' && typeof renderFechamento==='function') renderFechamento(true);
+      else if (activeId === 'relatorio' && typeof relgRender==='function') relgRender();
+      else if (activeId === 'arla' && typeof arlaRenderRelatorio==='function') arlaRenderRelatorio();
+    } catch(e) { console.warn('render final pós-load:', e); }
+    try { document.dispatchEvent(new CustomEvent('ignis:data-ready')); } catch(e) {}
+  }, 0);
 }
 
 async function syncFromFirebase() {
@@ -6789,6 +6901,10 @@ function editarMaquina(idx) {
 }
 
 function openImport() {
+  if (!window._dadosCarregados) {
+    showToast('Os dados ainda estão sendo sincronizados com o Firebase. Aguarde concluir para importar.', 'info');
+    return;
+  }
   // O modal atual importa o relatório mensal completo. A versão antiga desta função
   // ainda procurava campos de período removidos no Stage 2 e lançava erro antes de
   // abrir o modal. Mantemos somente os elementos que realmente existem hoje.
@@ -8269,6 +8385,12 @@ function updateSyncStatus(status) {
   const c = configs[status] || configs.disconnected;
   dot.className = 'sync-dot' + (c.cls ? ' '+c.cls : '') + (status==='syncing' ? ' sync-dot-pulse' : '');
   label.textContent = c.text;
+  const mobDot=document.getElementById('mob-sync-dot');
+  if(mobDot){
+    const color=(status==='connected'||status==='idle')?'var(--green)':status==='syncing'?'var(--yellow)':status==='error'?'var(--red)':'var(--text3)';
+    mobDot.style.background=color;
+    mobDot.style.boxShadow=status==='syncing'?'0 0 0 3px rgba(232,148,26,.12)':'none';
+  }
 }
 
 async function testarConexao() {
