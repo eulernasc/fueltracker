@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- IGNIS v37 · mobile responsivo + sincronização confiável entre dispositivos -->
+<!-- IGNIS v38 · mobile responsivo + carregamento progressivo Firebase -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <!-- IGNIS v36 · indicador de atualização mais visível em Motoristas PX -->
-<meta name="ignis-build" content="2026-08-27-mobile-sync-v37">
+<meta name="ignis-build" content="2026-08-27-mobile-progressive-sync-v38">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,6 +62,19 @@ function fbVersion() {
 }
 
 function fbSleep(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
+function fbIsMobileDevice(){
+  try {
+    return !!((window.matchMedia && window.matchMedia('(max-width: 768px)').matches)
+      || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || ''));
+  } catch(e) { return false; }
+}
+function fbEmitProgress(prefix, done, total){
+  try {
+    const p=String(prefix||'');
+    if(!/(?:abast|abpatch|maq)$/.test(p)) return;
+    window.dispatchEvent(new CustomEvent('ignis:firebase-progress',{detail:{prefix:p,done:Number(done||0),total:Number(total||0)}}));
+  } catch(e) {}
+}
 async function fbRetry(task, attempts=3, baseDelay=450) {
   let lastErr;
   for (let tentativa=1; tentativa<=attempts; tentativa++) {
@@ -192,19 +205,21 @@ async function fbReadChunkSeries(prefix, version, total) {
     throw new Error(`${prefix}: manifesto inválido (${total} chunks)`);
   }
   const out = [];
-  // Safari/iPhone fica instável quando dezenas de leituras do Firestore são abertas ao mesmo tempo.
-  // Em telas móveis usamos lotes menores e retry por chunk; no desktop mantemos paralelismo maior.
-  const isMobile = (window.matchMedia && window.matchMedia('(max-width: 768px)').matches)
-    || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
-  const batchSize = isMobile ? 8 : 18;
-  const timeoutMs = isMobile ? 22000 : 18000;
+  const isMobile = fbIsMobileDevice();
+
+  // v38: no iPhone o gargalo não era CPU, e sim abrir poucos documentos por vez.
+  // 12 leituras concorrentes mantém estabilidade e reduz bastante o tempo total.
+  const batchSize = isMobile ? 12 : 20;
+  const timeoutMs = isMobile ? 16000 : 16000;
+  fbEmitProgress(prefix,0,total);
+
   for (let base = 0; base < total; base += batchSize) {
     const size = Math.min(batchSize, total - base);
     const snaps = await Promise.all(Array.from({length:size}, (_, off) => {
       const i = base + off;
       return fbRetry(
         () => withTimeout(getDoc(doc(db, 'fueltracker', `${prefix}_${version}_${i}`)), timeoutMs),
-        3, 450
+        3, 400
       );
     }));
     snaps.forEach((snap, off) => {
@@ -212,7 +227,7 @@ async function fbReadChunkSeries(prefix, version, total) {
       if (!snap.exists()) throw new Error(`${prefix}: chunk ${i+1}/${total} não encontrado`);
       out.push(...(snap.data().registros || []));
     });
-    // Libera a thread principal entre lotes, importante no Safari móvel.
+    fbEmitProgress(prefix,Math.min(base+size,total),total);
     await fbSleep(0);
   }
   return out;
@@ -237,14 +252,31 @@ function fbPatchIdsFromMapString(v){
 async function fbApplyAbastPatches(base, patches){
   let out = Array.isArray(base) ? base.slice() : [];
   const lista = Array.isArray(patches) ? patches : [];
-  for (const p of lista) {
+  if(!lista.length) return out;
+
+  // v38: versões anteriores baixavam cada patch em sequência. Depois de várias
+  // reimportações, um celular podia ficar minutos em "Sincronizando...".
+  // Prefetch em pequenos lotes e aplica na ordem original para preservar a semântica.
+  const isMobile=fbIsMobileDevice();
+  const fetched=new Array(lista.length).fill(null);
+  const parallel=isMobile?2:5;
+  for(let baseIdx=0;baseIdx<lista.length;baseIdx+=parallel){
+    await Promise.all(lista.slice(baseIdx,baseIdx+parallel).map(async (p,off)=>{
+      const idx=baseIdx+off;
+      const total=Number(p?.chunks||0);
+      fetched[idx]=(p?.version&&total>0)
+        ? await fbReadChunkSeries(FB_SERIES_PREFIX+'abpatch',String(p.version),total)
+        : [];
+    }));
+    await fbSleep(0);
+  }
+
+  for(let idx=0;idx<lista.length;idx++){
+    const p=lista[idx];
     const removidos = new Set(fbPatchIdsFromMapString(p?.removed));
     if (removidos.size) out = out.filter(a => !removidos.has(String(a?.periodoId||'')));
-    const total = Number(p?.chunks||0);
-    if (p?.version && total>0) {
-      const novos = await fbReadChunkSeries(FB_SERIES_PREFIX+'abpatch', String(p.version), total);
-      if (novos.length) out.push(...novos);
-    }
+    const novos=fetched[idx]||[];
+    if(novos.length) out.push(...novos);
   }
   return out;
 }
@@ -490,6 +522,21 @@ window.fbLoad = async function() {
     const dados = snap.data();
     const storageV = Number(dados._storageVersion || 0);
     const seriesPrefix = usingV4 ? FB_SERIES_PREFIX : '';
+    const mobileLoad = fbIsMobileDevice();
+
+    // v38: no celular carregamos primeiro o cadastro de frota (pequeno), para que
+    // operações/placas apareçam nos filtros antes do histórico pesado terminar.
+    let mobileMaqPromise = null;
+    if (mobileLoad && storageV >= 3) {
+      mobileMaqPromise = fbReadChunkSeries(seriesPrefix+'maq', dados._maqVersion, dados._maqChunks);
+      mobileMaqPromise.then(maqs => {
+        try {
+          window.dispatchEvent(new CustomEvent('ignis:firebase-metadata',{
+            detail:{maquinas:maqs,semanas:dados.semanas||{}}
+          }));
+        } catch(e) {}
+      }).catch(e => console.warn('IGNIS: pré-carga da frota falhou:',e));
+    }
 
     let abastecimentos = [];
     if (dados._hasAbast) {
@@ -519,18 +566,51 @@ window.fbLoad = async function() {
     }
     dados.abastecimentos = abastecimentos;
 
-    // Storage v3: restaura dados grandes que não ficam mais no manifesto principal.
+    // Storage v3/v4: no mobile, dados essenciais primeiro; históricos secundários
+    // continuam em background. Assim Dashboard/Filtros não esperam Anomalias + Arla.
     if (storageV >= 3) {
-      const [maqs, meds, efics, arla] = await Promise.all([
-        fbReadChunkSeries(seriesPrefix+'maq',  dados._maqVersion,  dados._maqChunks),
-        fbReadChunkSeries(seriesPrefix+'med',  dados._medVersion,  dados._medChunks),
-        fbReadChunkSeries(seriesPrefix+'efic', dados._eficVersion, dados._eficChunks),
-        fbReadChunkSeries(seriesPrefix+'arla', dados._arlaVersion, dados._arlaChunks)
-      ]);
-      dados.maquinas = maqs;
-      dados.medidorAnomalias = meds;
-      dados.eficienciaAnomalias = efics;
-      dados.arlaMeses = arla;
+      if (mobileLoad) {
+        const maqs = await (mobileMaqPromise || fbReadChunkSeries(seriesPrefix+'maq', dados._maqVersion, dados._maqChunks));
+        dados.maquinas = maqs;
+
+        // Evita que eventuais campos inline antigos sobrescrevam o cache enquanto
+        // as séries oficiais são carregadas em segundo plano.
+        delete dados.medidorAnomalias;
+        delete dados.eficienciaAnomalias;
+        delete dados.arlaMeses;
+        delete dados.anomaliaRevisoes;
+
+        (async()=>{
+          try{
+            const [meds,efics,arla] = await Promise.all([
+              fbReadChunkSeries(seriesPrefix+'med',  dados._medVersion,  dados._medChunks),
+              fbReadChunkSeries(seriesPrefix+'efic', dados._eficVersion, dados._eficChunks),
+              fbReadChunkSeries(seriesPrefix+'arla', dados._arlaVersion, dados._arlaChunks)
+            ]);
+            let revisoes=[];
+            try{
+              const revSnap=await withTimeout(getDoc(doc(db,'fueltracker','anomalia_revisoes')),10000);
+              revisoes=revSnap.exists()&&Array.isArray(revSnap.data()?.items)?revSnap.data().items:[];
+            }catch(e){}
+            window.dispatchEvent(new CustomEvent('ignis:firebase-secondary',{
+              detail:{medidorAnomalias:meds,eficienciaAnomalias:efics,arlaMeses:arla,anomaliaRevisoes:revisoes}
+            }));
+          }catch(e){
+            console.warn('IGNIS: dados secundários serão tentados novamente ao abrir o sistema:',e);
+          }
+        })();
+      } else {
+        const [maqs, meds, efics, arla] = await Promise.all([
+          fbReadChunkSeries(seriesPrefix+'maq',  dados._maqVersion,  dados._maqChunks),
+          fbReadChunkSeries(seriesPrefix+'med',  dados._medVersion,  dados._medChunks),
+          fbReadChunkSeries(seriesPrefix+'efic', dados._eficVersion, dados._eficChunks),
+          fbReadChunkSeries(seriesPrefix+'arla', dados._arlaVersion, dados._arlaChunks)
+        ]);
+        dados.maquinas = maqs;
+        dados.medidorAnomalias = meds;
+        dados.eficienciaAnomalias = efics;
+        dados.arlaMeses = arla;
+      }
     }
     // Em storage v1/v2, esses campos continuam inline e são mantidos como vieram.
 
@@ -560,15 +640,17 @@ window.fbLoad = async function() {
       });
     }
 
-    // Histórico de anomalias revisadas fica em documento próprio. Assim marcar
-    // uma ocorrência não exige regravar todos os chunks de abastecimentos.
-    try {
-      const revSnap = await withTimeout(getDoc(doc(db, 'fueltracker', 'anomalia_revisoes')), 10000);
-      if (revSnap.exists() && Array.isArray(revSnap.data()?.items)) dados.anomaliaRevisoes = revSnap.data().items;
-      else if (!Array.isArray(dados.anomaliaRevisoes)) dados.anomaliaRevisoes = [];
-    } catch (e) {
-      console.warn('IGNIS: histórico de anomalias revisadas indisponível no momento.', e);
-      if (!Array.isArray(dados.anomaliaRevisoes)) dados.anomaliaRevisoes = [];
+    // Histórico de anomalias revisadas: no mobile ele já está incluído no carregamento
+    // secundário e não bloqueia a abertura do Dashboard.
+    if (!mobileLoad) {
+      try {
+        const revSnap = await withTimeout(getDoc(doc(db, 'fueltracker', 'anomalia_revisoes')), 10000);
+        if (revSnap.exists() && Array.isArray(revSnap.data()?.items)) dados.anomaliaRevisoes = revSnap.data().items;
+        else if (!Array.isArray(dados.anomaliaRevisoes)) dados.anomaliaRevisoes = [];
+      } catch (e) {
+        console.warn('IGNIS: histórico de anomalias revisadas indisponível no momento.', e);
+        if (!Array.isArray(dados.anomaliaRevisoes)) dados.anomaliaRevisoes = [];
+      }
     }
 
     // A revisão viaja separada do state de negócio e é usada para impedir
@@ -637,6 +719,7 @@ window.dispatchEvent(new Event('firebaseReady'));
   --card-shadow:0 4px 24px rgba(0,0,0,0.5);--radius:14px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;line-height:1.6;}
 .sidebar{width:220px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;transition:width .3s cubic-bezier(.4,0,.2,1);overflow:hidden;will-change:width;}
 .sidebar.collapsed{width:64px;}
@@ -1540,6 +1623,22 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   .mot-state-tabs{overflow-x:auto!important;display:flex!important;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch!important;padding-bottom:2px}
   .mot-state-btn{flex:0 0 auto!important;white-space:nowrap!important;width:auto!important}
   .mot-filter-search{min-width:100%!important}
+
+  /* iOS aumenta o zoom automaticamente quando um input tem fonte menor que 16px.
+     Isso era a principal causa de precisar "tirar zoom" ao navegar/pesquisar. */
+  input,select,textarea{font-size:16px!important;line-height:1.25!important}
+  input[type="checkbox"],input[type="radio"]{font-size:initial!important}
+  .filter-input,.filter-select,.form-input,.form-select{min-width:0!important;max-width:100%!important;width:100%}
+  .page,.page.active,.main>div,.dashboard-content{min-width:0!important;max-width:100%!important}
+  .btn,.tab-group,.filter-group,.dashboard-toolbar>*{min-width:0!important;max-width:100%!important}
+  .sidebar{width:min(82vw,300px)!important;max-width:300px!important}
+  .sidebar .nav-item{min-height:48px!important;padding:12px 14px!important;font-size:14px!important}
+  .sidebar .nav-label{margin-top:16px!important}
+  .sidebar .logo{padding:18px 16px!important}
+  .sidebar .sync-status{padding:13px 16px calc(13px + env(safe-area-inset-bottom,0px))!important}
+  .modal input,.modal select,.modal textarea{font-size:16px!important}
+  .table-card,.mot-table-wrap,.anom-table-wrap,.comp-table-wrap,.abast-table-wrap{width:100%!important;max-width:100%!important;overflow-x:auto!important}
+  .page *{min-inline-size:0}
 }
 @media (max-width:430px){
   .main{padding-left:10px!important;padding-right:10px!important}
@@ -3456,15 +3555,21 @@ function _idbOpen(timeout=2500) {
   });
 }
 async function idbSave(data) {
+  let db=null;
   try {
-    const db = await _idbOpen();
-    await new Promise((res, rej) => {
-      const tx = db.transaction(IDB_STORE, 'readwrite');
-      tx.objectStore(IDB_STORE).put({ id:'main', ...data, _idbAt: Date.now() });
-      tx.oncomplete = res; tx.onerror = rej;
-    });
-    db.close();
+    db = await _idbOpen();
+    await Promise.race([
+      new Promise((res, rej) => {
+        const tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).put({ id:'main', ...data, _idbAt: Date.now() });
+        tx.oncomplete = res;
+        tx.onerror = () => rej(tx.error || new Error('IndexedDB transaction error'));
+        tx.onabort = () => rej(tx.error || new Error('IndexedDB transaction aborted'));
+      }),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('IndexedDB timeout ao salvar')),6500))
+    ]);
   } catch(e) { console.warn('IDB save erro:', e); }
+  finally { try{db?.close();}catch(e){} }
 }
 async function idbLoad() {
   try {
@@ -3490,6 +3595,50 @@ async function idbLoad() {
 let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, motoristasInatividadeDias:5, idtMeta:1.5, idtImportacoes:[] };
 let selectedIds = new Set();
 let abastFiltrados = [];
+
+// v38 · sincronização progressiva no celular
+window.addEventListener('ignis:firebase-progress', (ev)=>{
+  const d=ev.detail||{}, total=Number(d.total||0), done=Number(d.done||0);
+  if(!total) return;
+  const pct=Math.max(0,Math.min(100,Math.round(done/total*100)));
+  const label=document.getElementById('sync-label');
+  const dot=document.getElementById('sync-dot');
+  if(!label||!dot||!dot.classList.contains('syncing')) return;
+  const p=String(d.prefix||'');
+  const nome=p.endsWith('maq')?'frota':p.endsWith('abpatch')?'atualizações':'abastecimentos';
+  label.textContent=`Carregando ${nome} ${pct}%`;
+});
+window.addEventListener('ignis:firebase-metadata', (ev)=>{
+  try{
+    const d=ev.detail||{};
+    if(Array.isArray(d.maquinas)) state.maquinas=d.maquinas;
+    if(d.semanas&&typeof d.semanas==='object'){
+      const atual=state.semanas||{}, prox={};
+      Object.entries(d.semanas).forEach(([id,p])=>{
+        prox[id]={...(p||{}),registros:Array.isArray(atual[id]?.registros)?atual[id].registros:[]};
+      });
+      state.semanas=prox;
+    }
+    markIgnisDataDirty('firebase-metadata');
+    updateFilters(true);
+    populatePlacaDropdown?.();
+    populateModeloDropdown?.();
+  }catch(e){console.warn('metadata progressiva:',e);}
+});
+window.addEventListener('ignis:firebase-secondary', (ev)=>{
+  try{
+    const d=ev.detail||{};
+    if(Array.isArray(d.medidorAnomalias)) state.medidorAnomalias=d.medidorAnomalias;
+    if(Array.isArray(d.eficienciaAnomalias)) state.eficienciaAnomalias=d.eficienciaAnomalias;
+    if(Array.isArray(d.arlaMeses)) state.arlaMeses=d.arlaMeses;
+    if(Array.isArray(d.anomaliaRevisoes)) state.anomaliaRevisoes=d.anomaliaRevisoes;
+    markIgnisDataDirty('firebase-secondary');
+    const activeId=document.querySelector('.page.active')?.id?.replace('page-','')||'';
+    if(activeId==='anomalias'&&typeof renderAnomalias==='function') renderAnomalias(true);
+    if(activeId==='pendencias'&&typeof renderPendencias==='function') renderPendencias(true);
+    if(activeId==='arla'&&typeof arlaInit==='function'){window._arlaState.meses=[];arlaInit();if(typeof arlaRenderRelatorio==='function')arlaRenderRelatorio();}
+  }catch(e){console.warn('secondary progressivo:',e);}
+});
 
 // ── STAGE 1 PERFORMANCE — índices em memória + invalidação de telas ──────────
 // O sistema tinha vários .find()/.filter() aninhados. Com milhares de registros,
@@ -3876,7 +4025,11 @@ async function syncFromFirebase() {
         }
         localStorage.setItem('fueltracker_v3', JSON.stringify(lean));
       } catch(e) { console.warn('localStorage quota ignorada (dados no Firebase):', e); }
-      await idbSave({ ...state, _savedAt:tsFirebase });
+
+      // v38: IndexedDB é apenas cache. No Safari uma transação grande pode demorar
+      // muito e NÃO pode manter a interface inteira em "Sincronizando...".
+      updateSyncStatus('connected');
+      idbSave({ ...state, _savedAt:tsFirebase }).catch?.(()=>{});
 
       if (window._dadosCarregados) {
         try { updateFilters(); } catch(e) { console.warn('updateFilters error:', e); }
