@@ -2383,6 +2383,33 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     .gobrax-config-range{font-size:9px;color:var(--text3);line-height:1.35}
     @media(max-width:900px){.gobrax-source-metrics{grid-template-columns:1fr 1fr}.gobrax-plate summary{grid-template-columns:1fr 1fr}.gobrax-plate summary>div:first-child{grid-column:1/-1}}
     @media(max-width:520px){.gobrax-source-metrics{grid-template-columns:1fr 1fr}.gobrax-plate summary{grid-template-columns:1fr 1fr;padding:10px}.gobrax-config-table{min-width:680px}}
+    /* Gobrax v43 · telas amplas para análise e configuração */
+    #gobrax-detail-modal,#gobrax-config-modal{padding:14px!important;align-items:stretch!important;justify-content:stretch!important}
+    #gobrax-detail-modal .modal,#gobrax-config-modal .modal{width:calc(100vw - 28px)!important;max-width:none!important;height:calc(100dvh - 28px)!important;max-height:none!important;border-radius:18px!important;overflow:auto!important;padding:24px 28px!important}
+    #gobrax-detail-modal #gobrax-detail-content,#gobrax-config-modal #gobrax-config-content{max-width:1500px;width:100%;margin:0 auto}
+    #gobrax-detail-modal .mot-detail-summary{grid-template-columns:repeat(5,minmax(0,1fr))}
+    #gobrax-detail-modal .gobrax-plate summary{grid-template-columns:minmax(170px,1.1fr) minmax(180px,1fr) minmax(130px,.7fr) minmax(120px,.6fr) minmax(150px,.7fr)}
+    #gobrax-config-modal .gobrax-config-table-wrap{max-height:calc(100dvh - 230px);overflow:auto}
+    #gobrax-config-modal .gobrax-config-table{min-width:980px}
+    .gobrax-note-source{font-size:8px;color:var(--text3);margin-top:4px;line-height:1.35}
+    .gobrax-km-missing{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:7px;border:1px solid rgba(244,181,68,.25);background:rgba(244,181,68,.08);color:var(--yellow);font-size:8px;font-weight:800;white-space:nowrap}
+    .gobrax-coverage-box{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:9px;color:var(--text3)}
+    .gobrax-formula-box.warn{border-color:rgba(244,181,68,.28);background:rgba(244,181,68,.06);color:#d8c292}
+    @media(max-width:900px){
+      #gobrax-detail-modal,#gobrax-config-modal{padding:0!important}
+      #gobrax-detail-modal .modal,#gobrax-config-modal .modal{width:100vw!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;padding:18px 14px calc(22px + env(safe-area-inset-bottom,0px))!important}
+      #gobrax-detail-modal .mot-detail-summary{grid-template-columns:1fr 1fr}
+      #gobrax-detail-modal .gobrax-plate summary{grid-template-columns:1fr 1fr}
+      #gobrax-detail-modal .gobrax-plate summary>div:first-child{grid-column:1/-1}
+      #gobrax-config-modal .gobrax-config-table-wrap{max-height:none;overflow:visible;border:0}
+      #gobrax-config-modal .gobrax-config-table{min-width:0;display:block}
+      #gobrax-config-modal .gobrax-config-table thead{display:none}
+      #gobrax-config-modal .gobrax-config-table tbody,#gobrax-config-modal .gobrax-config-table tr,#gobrax-config-modal .gobrax-config-table td{display:block;width:100%}
+      #gobrax-config-modal .gobrax-config-table tr{margin-bottom:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:#111820}
+      #gobrax-config-modal .gobrax-config-table td{border:0;padding:5px 0}
+      #gobrax-config-modal .gobrax-config-table td:first-child{font-size:14px;margin-bottom:5px}
+    }
+
 .idt-history-row{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:10px;background:#111820}.idt-history-copy{min-width:0;flex:1}.idt-history-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.idt-history-meta{font-size:9px;color:var(--text3);margin-top:2px}.idt-history-actions{display:flex;gap:6px;flex-shrink:0}.idt-history-active{border-color:rgba(233,95,50,.4);background:rgba(233,95,50,.04)}.idt-meta-box{display:flex;align-items:center;height:42px;border:1px solid var(--border);border-radius:10px;background:#121820;overflow:hidden}.idt-meta-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:0 10px;white-space:nowrap}.idt-meta-input{width:72px;height:100%;border:0;border-left:1px solid var(--border);background:transparent;color:#fff;text-align:center;font:700 12px 'DM Mono',monospace;outline:none}.idt-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.idt-idt-value{font-family:'DM Mono',monospace}.idt-idt-value.ok{color:var(--green)}.idt-idt-value.bad{color:var(--red)}
     .idt-period-empty{padding:48px 20px;border:1px dashed var(--border);border-radius:14px;text-align:center;background:rgba(255,255,255,.012)}.idt-period-empty strong{display:block;font-size:14px;margin-bottom:6px}.idt-period-empty span{font-size:11px;color:var(--text3)}
     .idt-import-box{border:1px dashed rgba(233,95,50,.35);border-radius:12px;padding:16px;background:rgba(233,95,50,.025);margin-top:14px;cursor:pointer;transition:.15s}.idt-import-box:hover{border-color:rgba(233,95,50,.65);background:rgba(233,95,50,.045)}.idt-import-title{font-size:12px;font-weight:720}.idt-import-sub{font-size:10px;color:var(--text3);margin-top:4px;line-height:1.45}.idt-modal-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px}.idt-import-history{margin-top:14px;font-size:10px;color:var(--text3)}
@@ -8112,7 +8139,8 @@ function gobraxOverlapFraction(di,df,ri,rf){
 }
 function gobraxBand(metric,value,hasScore=true){
   ignisEnsureGobraxState();const def=GOBRAX_METRIC_DEFS[metric],cfg=state.gobraxFaixas?.[metric]||def;
-  const n=def?.unit==='pct'?gobraxPctValue(value):Number(value);
+  const vazio=value===null||value===undefined||String(value).trim()==='';
+  const n=vazio?NaN:(def?.unit==='pct'?gobraxPctValue(value):Number(value));
   if(!Number.isFinite(n)||(metric==='nota'&&n<=0)||(metric!=='nota'&&!hasScore))return{cls:'none',value:n};
   if(cfg.dir==='low'){
     if(n<=Number(cfg.c1))return{cls:'ok',value:n};
@@ -8175,7 +8203,7 @@ function gobraxConsolidar(){
     let g=grupos.get(key);
     if(!g){
       const a=atividade.get(key);
-      g={key,nome:item.nome,matricula:item.matricula,periodoIni:'',periodoFim:'',kmTotal:0,kmNota:0,kmSemNota:0,pontos:0,metaPontos:0,metaKm:0,placas:new Map(),operacionais:new Set(),origens:[],_ativo:Boolean(a?.ativo)};
+      g={key,nome:item.nome,matricula:item.matricula,periodoIni:'',periodoFim:'',kmTotal:0,kmNota:0,kmSemNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,placas:new Map(),operacionais:new Set(),origens:[],_ativo:Boolean(a?.ativo)};
       grupos.set(key,g);
     }
     if(dataIni&&(!g.periodoIni||dataIni<g.periodoIni))g.periodoIni=dataIni;
@@ -8183,19 +8211,42 @@ function gobraxConsolidar(){
     g.kmTotal+=kmInfo.km;g.origens.push(item);if(item.operacional)g.operacionais.add(item.operacional);
     const pkey=gobraxPlacaNorm(item.cavalo)||`SEMPLACA_${idx}`;
     let p=g.placas.get(pkey);
-    if(!p){p={placa:item.cavalo||'—',inicio:'',fim:'',kmTotal:0,kmNota:0,pontos:0,metaPontos:0,metaKm:0,operacionais:new Set(),origens:[]};g.placas.set(pkey,p);}
+    if(!p){p={placa:item.cavalo||'—',inicio:'',fim:'',kmTotal:0,kmNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,operacionais:new Set(),origens:[]};g.placas.set(pkey,p);}
     if(dataIni&&(!p.inicio||dataIni<p.inicio))p.inicio=dataIni;if(dataFim&&(!p.fim||dataFim>p.fim))p.fim=dataFim;
     p.kmTotal+=kmInfo.km;p.origens.push(item);if(item.operacional)p.operacionais.add(item.operacional);
+    const temNota=Number.isFinite(nota)&&nota>0;
+    if(temNota){
+      g.notaRawPontos+=nota;g.notaRawCount++;g.avaliacoesValidas++;
+      p.notaRawPontos+=nota;p.notaRawCount++;p.avaliacoesValidas++;
+      if(Number.isFinite(meta)&&meta>0){g.metaRawPontos+=meta;g.metaRawCount++;p.metaRawPontos+=meta;p.metaRawCount++;}
+      if(kmInfo.km>0){g.avaliacoesComKm++;p.avaliacoesComKm++;}
+      else{g.avaliacoesSemKm++;p.avaliacoesSemKm++;}
+    }
     if(notaValida){
       g.kmNota+=kmInfo.km;g.pontos+=nota*kmInfo.km;
       p.kmNota+=kmInfo.km;p.pontos+=nota*kmInfo.km;
       if(Number.isFinite(meta)&&meta>0){g.metaPontos+=meta*kmInfo.km;g.metaKm+=kmInfo.km;p.metaPontos+=meta*kmInfo.km;p.metaKm+=kmInfo.km;}
-    }else if(kmInfo.km>0)g.kmSemNota+=kmInfo.km;
+    }else if(kmInfo.km>0&&!temNota)g.kmSemNota+=kmInfo.km;
   });
   const rows=[...grupos.values()].map(g=>{
-    g.nota=g.kmNota>0?g.pontos/g.kmNota:null;g.meta=g.metaKm>0?g.metaPontos/g.metaKm:null;g._status=gobraxStatus(g);
-    g.placas=[...g.placas.values()].map(p=>{p.nota=p.kmNota>0?p.pontos/p.kmNota:null;p.meta=p.metaKm>0?p.metaPontos/p.metaKm:null;p._status=gobraxStatus(p);return p;})
-      .sort((a,b)=>(Number(b.kmNota)||0)-(Number(a.kmNota)||0)||String(a.placa).localeCompare(String(b.placa),'pt-BR'));
+    g.notaPonderada=g.kmNota>0?g.pontos/g.kmNota:null;
+    g.notaReferencia=g.notaRawCount>0?g.notaRawPontos/g.notaRawCount:null;
+    g.nota=g.notaPonderada;
+    g.meta=g.metaKm>0?g.metaPontos/g.metaKm:(g.metaRawCount>0?g.metaRawPontos/g.metaRawCount:null);
+    g.coberturaAvaliacoes=g.avaliacoesValidas>0?g.avaliacoesComKm/g.avaliacoesValidas*100:null;
+    g._status=gobraxStatus(g);
+    if(!(g.kmNota>0)&&g.notaRawCount>0)g._status={cls:'none',label:'Sem KM p/ ponderar'};
+    g.placas=[...g.placas.values()].map(p=>{
+      p.notaPonderada=p.kmNota>0?p.pontos/p.kmNota:null;
+      p.notaReferencia=p.notaRawCount>0?p.notaRawPontos/p.notaRawCount:null;
+      p.nota=p.notaPonderada;
+      p.notaExibida=p.notaPonderada??p.notaReferencia;
+      p.meta=p.metaKm>0?p.metaPontos/p.metaKm:(p.metaRawCount>0?p.metaRawPontos/p.metaRawCount:null);
+      p.coberturaAvaliacoes=p.avaliacoesValidas>0?p.avaliacoesComKm/p.avaliacoesValidas*100:null;
+      p._status=gobraxStatus({nota:p.notaExibida,meta:p.meta});
+      if(!(p.kmNota>0)&&p.notaRawCount>0)p._status={cls:'none',label:'Nota sem KM'};
+      return p;
+    }).sort((a,b)=>(Number(b.kmNota)||0)-(Number(a.kmNota)||0)||String(a.placa).localeCompare(String(b.placa),'pt-BR'));
     return g;
   });
   return{imp,rows,fora,raw:imp.registros||[]};
@@ -8239,13 +8290,13 @@ function renderGobrax(){
     <th><button class="mot-sort" data-key="status" onclick="gobraxSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
   </tr></thead>`;
   const body=rows.length?rows.map(r=>{
-    const cobertura=r.kmTotal>0?r.kmNota/r.kmTotal*100:0,band=gobraxBand('nota',r.nota,true);
+    const cobertura=Number.isFinite(Number(r.coberturaAvaliacoes))?Number(r.coberturaAvaliacoes):null,band=gobraxBand('nota',r.nota,true);
     return `<tr class="mot-driver-row" onclick="gobraxAbrirDetalhe('${String(r.key).replace(/'/g,"\\'")}')">
       <td data-label="Motorista"><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Nome identificado')}</div></td>
       <td data-label="Período">${pendEsc(ignisMotoristaPeriodoLabel(r.periodoIni,r.periodoFim))}</td>
       <td data-label="KM ponderado"><strong>${r.kmNota>0?Math.round(r.kmNota).toLocaleString('pt-BR')+' km':'—'}</strong>${r.kmSemNota>0?`<div class="gobrax-coverage warn">${Math.round(r.kmSemNota).toLocaleString('pt-BR')} km sem nota</div>`:''}</td>
       <td data-label="Placas">${r.placas.filter(p=>p.kmTotal>0).length||r.placas.length}</td>
-      <td data-label="Nota consolidada">${Number.isFinite(Number(r.nota))?gobraxBandHtml('nota',r.nota,true):'<span class="gobrax-band none">—</span>'}${r.kmTotal>0&&cobertura<99.999?`<div class="gobrax-coverage ${cobertura<80?'warn':''}">cobertura ${cobertura.toLocaleString('pt-BR',{maximumFractionDigits:0})}%</div>`:''}</td>
+      <td data-label="Nota consolidada">${Number.isFinite(Number(r.nota))?gobraxBandHtml('nota',r.nota,true):(Number.isFinite(Number(r.notaReferencia))?`${gobraxBandHtml('nota',r.notaReferencia,true)}<div class="gobrax-note-source">referência sem ponderação</div>`:'<span class="gobrax-band none">—</span>')}${Number.isFinite(cobertura)&&cobertura<99.999?`<div class="gobrax-coverage ${cobertura<80?'warn':''}">${r.avaliacoesComKm}/${r.avaliacoesValidas} avaliações com KM</div>`:''}</td>
       <td data-label="Meta">${Number.isFinite(Number(r.meta))?Number(r.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</td>
       <td data-label="Status"><span class="mot-status ${r._status.cls}">${r._status.label}</span></td>
     </tr>`;
@@ -8255,25 +8306,28 @@ function renderGobrax(){
 }
 function gobraxAbrirDetalhe(key){
   const {imp,rows}=gobraxConsolidar();const r=rows.find(x=>x.key===key);if(!imp||!r)return;
-  let ov=document.getElementById('gobrax-detail-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-detail-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:1000px"><div id="gobrax-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  let ov=document.getElementById('gobrax-detail-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-detail-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal"><div id="gobrax-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('gobrax-detail-content');if(!c)return;
-  const cobertura=r.kmTotal>0?r.kmNota/r.kmTotal*100:0;
+  const cobertura=Number.isFinite(Number(r.coberturaAvaliacoes))?Number(r.coberturaAvaliacoes):null;
   const placasHtml=r.placas.length?r.placas.map(p=>{
     const fontes=p.origens.map(o=>{
       const scoreOk=Number(o.nota)>0;
       const metricHtml=Object.entries(GOBRAX_METRIC_DEFS).filter(([k])=>k!=='nota').map(([k,d])=>`<div class="gobrax-source-metric"><span>${pendEsc(d.label)}</span>${gobraxBandHtml(k,o[d.campo],scoreOk)}</div>`).join('');
-      return `<div class="gobrax-source-row"><div class="gobrax-source-head"><div><strong>${pendEsc(ignisMotoristaPeriodoLabel(o.dataIni,o.dataFim))}</strong>${o.operacional?` · ${pendEsc(o.operacional)}`:''}</div><div>${o._km>0?Math.round(o._km).toLocaleString('pt-BR')+' km':'KM não localizado'} · Nota ${Number(o.nota)>0?Number(o.nota).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</div></div><div class="gobrax-source-metrics">${metricHtml}</div></div>`;
+      return `<div class="gobrax-source-row"><div class="gobrax-source-head"><div><strong>${pendEsc(ignisMotoristaPeriodoLabel(o.dataIni,o.dataFim))}</strong>${o.operacional?` · ${pendEsc(o.operacional)}`:''}</div><div>${o._km>0?Math.round(o._km).toLocaleString('pt-BR')+' km':'KM não localizado'} · Nota Gobrax ${Number(o.nota)>0?Number(o.nota).toLocaleString('pt-BR',{maximumFractionDigits:1}):'Sem avaliação'}</div></div><div class="gobrax-source-metrics">${metricHtml}</div></div>`;
     }).join('');
-    return `<details class="gobrax-plate"><summary><div><div class="gobrax-plate-title">${pendEsc(p.placa)}</div><div class="gobrax-plate-sub">${pendEsc([...p.operacionais].join(', ')||'Operacional não informado')}</div></div><div><div class="gobrax-plate-sub">Período</div><strong>${pendEsc(ignisMotoristaPeriodoLabel(p.inicio,p.fim))}</strong></div><div><div class="gobrax-plate-sub">KM ponderado</div><strong>${p.kmNota>0?Math.round(p.kmNota).toLocaleString('pt-BR')+' km':'—'}</strong></div><div><div class="gobrax-plate-sub">Nota</div>${gobraxBandHtml('nota',p.nota,true)}</div><div><span class="mot-status ${p._status.cls}">${p._status.label}</span></div></summary><div class="gobrax-source-list">${fontes||'<div class="mot-empty">Sem avaliações de origem.</div>'}</div></details>`;
+    const notaPlaca=Number.isFinite(Number(p.notaPonderada))?p.notaPonderada:p.notaReferencia;
+    const semKm=!(p.kmNota>0)&&p.notaRawCount>0;
+    return `<details class="gobrax-plate"><summary><div><div class="gobrax-plate-title">${pendEsc(p.placa)}</div><div class="gobrax-plate-sub">${pendEsc([...p.operacionais].join(', ')||'Operacional não informado')}</div></div><div><div class="gobrax-plate-sub">Período</div><strong>${pendEsc(ignisMotoristaPeriodoLabel(p.inicio,p.fim))}</strong></div><div><div class="gobrax-plate-sub">KM ponderado</div><strong>${p.kmNota>0?Math.round(p.kmNota).toLocaleString('pt-BR')+' km':'—'}</strong>${semKm?'<div class="gobrax-km-missing">KM não localizado</div>':''}</div><div><div class="gobrax-plate-sub">${semKm?'Nota informada':'Nota ponderada'}</div>${Number.isFinite(Number(notaPlaca))?gobraxBandHtml('nota',notaPlaca,true):'<span class="gobrax-band none">—</span>'}${semKm?'<div class="gobrax-note-source">não entra na consolidação sem KM</div>':''}</div><div><span class="mot-status ${p._status.cls}">${p._status.label}</span></div></summary><div class="gobrax-source-list">${fontes||'<div class="mot-empty">Sem avaliações de origem.</div>'}</div></details>`;
   }).join(''):'<div class="mot-empty">Nenhuma placa encontrada para este motorista.</div>';
   c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(r.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">${pendEsc(ignisMotoristaPeriodoLabel(r.periodoIni,r.periodoFim))} · ${r.placas.length} placa(s)</div></div><button class="pend-close" onclick="closeModal('gobrax-detail-modal')">×</button></div>
     <div class="mot-detail-summary">
-      <div class="mot-detail-card"><span>Nota consolidada</span><strong>${gobraxBandHtml('nota',r.nota,true)}</strong></div>
+      <div class="mot-detail-card"><span>Nota consolidada</span><strong>${Number.isFinite(Number(r.nota))?gobraxBandHtml('nota',r.nota,true):'<span class="gobrax-band none">—</span>'}</strong></div>
       <div class="mot-detail-card"><span>KM ponderado</span><strong>${r.kmNota>0?Math.round(r.kmNota).toLocaleString('pt-BR')+' km':'—'}</strong></div>
       <div class="mot-detail-card"><span>Meta Gobrax</span><strong>${Number.isFinite(Number(r.meta))?Number(r.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</strong></div>
-      <div class="mot-detail-card"><span>Cobertura</span><strong>${r.kmTotal>0?cobertura.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%':'—'}</strong></div>
+      <div class="mot-detail-card"><span>Avaliações com KM</span><strong>${r.avaliacoesComKm}/${r.avaliacoesValidas}</strong></div>
+      <div class="mot-detail-card"><span>Média bruta informativa</span><strong>${Number.isFinite(Number(r.notaReferencia))?gobraxBandHtml('nota',r.notaReferencia,true):'<span class="gobrax-band none">—</span>'}</strong></div>
     </div>
-    <div class="gobrax-formula-box"><strong>Cálculo IGNIS:</strong> Σ(Nota Gobrax × KM localizado na mesma placa e período) ÷ ΣKM com nota válida. ${r.kmSemNota>0?`${Math.round(r.kmSemNota).toLocaleString('pt-BR')} km foram localizados em linhas sem nota válida e ficaram fora da ponderação.`:'Toda a quilometragem localizada com avaliação válida entrou na ponderação.'}</div>
+    <div class="gobrax-formula-box ${r.avaliacoesSemKm>0?'warn':''}"><strong>Cálculo consolidado:</strong> Σ(Nota Gobrax × KM localizado na mesma placa e período) ÷ ΣKM com nota válida. ${r.avaliacoesSemKm>0?`${r.avaliacoesSemKm} avaliação(ões) têm Nota Gobrax, mas o KM da mesma placa/período não foi localizado. Essas notas continuam visíveis abaixo como <strong>Nota informada</strong>, porém não são misturadas na ponderação para não gerar um resultado matematicamente falso.`:'Todas as avaliações com nota válida tiveram KM localizado e entraram na ponderação.'} ${r.kmSemNota>0?`${Math.round(r.kmSemNota).toLocaleString('pt-BR')} km foram localizados em linhas sem nota válida e também ficaram fora da ponderação.`:''}</div>
     <div style="font-size:11px;font-weight:800;color:var(--text2);margin-top:14px">Nota por placa</div><div class="gobrax-plate-list">${placasHtml}</div>`;
   ov.classList.add('open');
 }
@@ -8285,7 +8339,7 @@ function gobraxConfigRangeText(k,cfg){
 function gobraxAbrirConfig(){
   if(!(window._authUser?.role==='adm'||window._authUser?.role==='admin')){showToast('Somente ADM Master e Admin podem alterar as faixas da Nota Gobrax.','error');return;}
   ignisEnsureGobraxState();
-  let ov=document.getElementById('gobrax-config-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-config-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:950px"><div id="gobrax-config-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  let ov=document.getElementById('gobrax-config-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-config-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal"><div id="gobrax-config-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('gobrax-config-content');if(!c)return;
   const rows=Object.entries(GOBRAX_METRIC_DEFS).map(([k,d])=>{const cfg=state.gobraxFaixas[k];return `<tr><td><strong>${pendEsc(d.label)}</strong></td><td><select data-gobrax-dir="${k}" onchange="gobraxAtualizarPreviewConfig('${k}')"><option value="high" ${cfg.dir==='high'?'selected':''}>Maior é melhor</option><option value="low" ${cfg.dir==='low'?'selected':''}>Menor é melhor</option></select></td><td><input type="number" step="0.1" data-gobrax-c1="${k}" value="${Number(cfg.c1)}" oninput="gobraxAtualizarPreviewConfig('${k}')"></td><td><input type="number" step="0.1" data-gobrax-c2="${k}" value="${Number(cfg.c2)}" oninput="gobraxAtualizarPreviewConfig('${k}')"></td><td><div class="gobrax-config-range" id="gobrax-preview-${k}">${pendEsc(gobraxConfigRangeText(k,cfg))}</div></td></tr>`;}).join('');
   c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Faixas de cores · Nota Gobrax</div><div class="gobrax-config-note">Cada indicador tem dois cortes. Em <strong>Maior é melhor</strong>: vermelho abaixo do Corte 1, amarelo entre os cortes e verde a partir do Corte 2. Em <strong>Menor é melhor</strong>: verde até o Corte 1, amarelo entre os cortes e vermelho acima do Corte 2. As porcentagens são informadas em pontos percentuais (ex.: 15 = 15%).</div></div><button class="pend-close" onclick="closeModal('gobrax-config-modal')">×</button></div><div class="gobrax-config-table-wrap"><table class="gobrax-config-table"><thead><tr><th>Indicador</th><th>Lógica</th><th>Corte 1</th><th>Corte 2</th><th>Resultado das faixas</th></tr></thead><tbody>${rows}</tbody></table></div><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:14px"><button class="btn btn-ghost" onclick="gobraxResetConfig()">Restaurar padrões</button><div style="display:flex;gap:8px"><button class="btn btn-secondary" onclick="closeModal('gobrax-config-modal')">Cancelar</button><button class="btn btn-primary" onclick="gobraxSalvarConfig()">Salvar faixas</button></div></div>`;
