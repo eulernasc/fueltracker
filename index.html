@@ -2506,11 +2506,6 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <button class="mot-state-btn inactive" data-filter="desativos" onclick="motoristasGeralSetActivityFilter('desativos')">Desativos</button>
         </div>
         <input class="filter-input" id="mot-geral-busca" placeholder="Buscar motorista..." oninput="motoristasGeralDebouncedRender()">
-        <select class="filter-select mot-geral-efic-sort" id="mot-geral-efic-sort" onchange="motoristasGeralSetEficienciaSort(this.value)" aria-label="Ordenar por eficiência geral">
-          <option value="">Ordem padrão</option>
-          <option value="desc">Eficiência: maior → menor</option>
-          <option value="asc">Eficiência: menor → maior</option>
-        </select>
         <button class="mot-geral-efic-config-btn" id="mot-geral-efic-config-btn" type="button" onclick="motoristasEficienciaAbrirConfig()" title="Configurar faixas da Eficiência Geral" style="display:none"><span>Faixas eficiência</span><strong id="mot-geral-efic-config-label">Verde ≥ 98%</strong></button>
       </div>
       <div class="mot-geral-legend">Resumo integrado por motorista. A <strong>Eficiência Geral</strong> é a média das eficiências disponíveis de Combustível, IDT e Nota Gobrax, usando teto de 100% em cada componente. Se houver apenas 2 indicadores, a média é feita pelos 2. Clique em uma das análises para ver a eficiência real, inclusive quando passar de 100%.</div>
@@ -8731,7 +8726,7 @@ function motoristasEficienciaCap(v){
 function motoristasEficienciaGeralCalcular(f,i,g,metaIdt){
   const fuel=motoristasEficienciaFuelRaw(f),idt=motoristasEficienciaIdtRaw(i,metaIdt),gobrax=motoristasEficienciaGobraxRaw(g);
   const componentes=[fuel,idt,gobrax].filter(Number.isFinite).map(motoristasEficienciaCap).filter(Number.isFinite);
-  if(componentes.length<2)return{fuel,idt,gobrax,geral:null,qtd:componentes.length,completo:false};
+  if(!componentes.length)return{fuel,idt,gobrax,geral:null,qtd:0,completo:false};
   const geral=componentes.reduce((s,v)=>s+v,0)/componentes.length;
   return{fuel,idt,gobrax,geral,qtd:componentes.length,completo:true};
 }
@@ -8766,7 +8761,7 @@ function motoristasGeralPreencherEficiencias(drivers,fuel,idt,gob,metaIdt){
     const el=document.getElementById(`mot-geral-ef-${idx}`);if(!el)return;
     try{
       const ef=motoristasEficienciaGeralCalcular(fuel.get(m.key),idt.get(m.key),gob.get(m.key),metaIdt);
-      if(!ef.completo){el.className='mot-geral-overall empty';el.textContent='Sem dados suficientes';return;}
+      if(!ef.completo){el.className='mot-geral-overall empty';el.textContent='Sem indicadores para calcular';return;}
       const st=motoristasEficienciaStatus(ef.geral,cfg);
       el.className='mot-geral-overall';
       const partes=[];
@@ -8797,7 +8792,10 @@ let _motGeralActivityFilter='todos';
 let _motGeralEficienciaSort='';
 function motoristasGeralSetEficienciaSort(v){
   _motGeralEficienciaSort=['desc','asc'].includes(String(v))?String(v):'';
-  const sel=document.getElementById('mot-geral-efic-sort');if(sel&&sel.value!==_motGeralEficienciaSort)sel.value=_motGeralEficienciaSort;
+  renderMotoristasGeral();
+}
+function motoristasGeralToggleEficienciaSort(){
+  _motGeralEficienciaSort=_motGeralEficienciaSort==='desc'?'asc':'desc';
   renderMotoristasGeral();
 }
 function motoristasGeralAtualizarActivityBotoes(){
@@ -8822,7 +8820,6 @@ function renderMotoristasGeral(){
       if(_motGeralActivityFilter==='desativos'&&ativo)return false;
       return true;
     });
-    const sortSel=document.getElementById('mot-geral-efic-sort');if(sortSel&&sortSel.value!==_motGeralEficienciaSort)sortSel.value=_motGeralEficienciaSort;
     if(_motGeralEficienciaSort){
       drivers.sort((a,b)=>{
         const ea=motoristasEficienciaGeralCalcular(fuel.get(a.key),idt.get(a.key),gob.get(a.key),metaIdt).geral;
@@ -8835,7 +8832,9 @@ function renderMotoristasGeral(){
       });
     }
     if(!drivers.length){box.innerHTML='<div class="mot-empty">Nenhum motorista corresponde à busca.</div>';_markPageClean('motoristas');return;}
-    const header=`<div class="mot-geral-grid-head"><div>Motorista</div><div>Combustível</div><div>IDT</div><div>Nota Gobrax</div><div>Eficiência Geral</div></div>`;
+    const eficArrow=_motGeralEficienciaSort==='desc'?'↓':(_motGeralEficienciaSort==='asc'?'↑':'↕');
+    const eficTitle=_motGeralEficienciaSort==='desc'?'Maior para menor':(_motGeralEficienciaSort==='asc'?'Menor para maior':'Clique para ordenar');
+    const header=`<div class="mot-geral-grid-head"><div>Motorista</div><div>Combustível</div><div>IDT</div><div>Nota Gobrax</div><div class="mot-geral-efic-head"><button type="button" class="mot-geral-efic-sort-btn" onclick="motoristasGeralToggleEficienciaSort()" title="${eficTitle}" aria-label="Ordenar Eficiência Geral. ${eficTitle}"><span>Eficiência Geral</span><span class="mot-geral-efic-sort-arrow">${eficArrow}</span></button></div></div>`;
     const body=drivers.map((m,idx)=>{
       const f=fuel.get(m.key),i=idt.get(m.key),g=gob.get(m.key),fst=f?motoristasStatus(f):null,ist=i?idtStatus(i,metaIdt):null,gst=g?g._status:null;
       const safeKey=m.key.replace(/'/g,"\\'");
@@ -15786,8 +15785,11 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 
 
 /* IGNIS v59 · eficiência parcial + ordenação */
-#mot-panel-geral .mot-geral-efic-sort{height:38px;min-width:190px;max-width:220px;padding:0 34px 0 11px;font-size:10px;font-weight:750;white-space:nowrap}
-@media(max-width:900px){#mot-panel-geral .mot-geral-efic-sort{width:100%;max-width:none}}
+#mot-panel-geral .mot-geral-efic-head{padding:0!important}
+#mot-panel-geral .mot-geral-efic-sort-btn{width:100%;height:100%;min-height:40px;border:0;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;font-weight:900;font-size:12px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+#mot-panel-geral .mot-geral-efic-sort-btn:hover{background:rgba(233,95,50,.08)}
+#mot-panel-geral .mot-geral-efic-sort-btn:focus-visible{outline:2px solid rgba(233,95,50,.55);outline-offset:-2px}
+#mot-panel-geral .mot-geral-efic-sort-arrow{font-size:14px;line-height:1;color:var(--accent);font-weight:900}
 </style>
 <script id="ignis-custom-calendar-2026">
 (function(){
