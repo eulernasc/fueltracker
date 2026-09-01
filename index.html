@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- IGNIS v45 · Geral Motoristas PX + Gobrax com KM da telemetria + identificação robusta de nomes -->
+<!-- IGNIS v46 · correção de travamento Motoristas PX + cache de nomes + renderização única -->
 <meta name="ignis-build" content="2026-08-27-mobile-fast-sync-v39">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -5479,8 +5479,12 @@ function showPage(page,el) {
   // Se o estado e os filtros não mudaram desde a última visita, mantém o DOM já
   // pronto. Antes cada clique reconstruía tabelas/cards inteiros do zero.
   const precisaAtualizar = _isPageDirty(page);
-  const renders = {dashboard:renderDashboard,pendencias:renderPendencias,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas,motoristas:renderMotoristas};
-  if(renders[page] && precisaAtualizar) renders[page]();
+  const renders = {dashboard:renderDashboard,pendencias:renderPendencias,comparativo:renderComparativo,abastecimentos:renderAbastecimentos,maquinas:renderMaquinas};
+  if(page==='motoristas'&&precisaAtualizar){
+    const box=document.getElementById('mot-geral-content');
+    if(_motSubtab==='geral'&&box&&!box.innerHTML.trim())box.innerHTML='<div class="mot-empty">Carregando visão dos motoristas…</div>';
+    requestAnimationFrame(()=>setTimeout(()=>{if(document.getElementById('page-motoristas')?.classList.contains('active'))renderMotoristas();},0));
+  }else if(renders[page] && precisaAtualizar) renders[page]();
 
   if(page==='fechamento') { renderFechamento(); _markPageClean(page); }
   if(page==='anomalias') { renderAnomalias(); _markPageClean(page); }
@@ -7475,32 +7479,38 @@ function ignisMotoristaEditSimilarity(a,b){
   }
   return 1-prev[n]/Math.max(m,n);
 }
+let _ignisMotoristaCatalogCache={sig:'',list:[]};
+const _ignisMotoristaResolverCache=new Map();
 function ignisMotoristaCatalogoResolucao(){
+  const monitorados=Array.isArray(state?.motoristasMonitorados)?state.motoristasMonitorados:[];
+  const sig=monitorados.map(x=>typeof x==='string'?ignisMotoristaNorm(x):`${ignisMotoristaNorm(x?.key||x?.nome)}:${String(x?.matricula||'')}`).join('|');
+  if(_ignisMotoristaCatalogCache.sig===sig&&_ignisMotoristaCatalogCache.list.length)return _ignisMotoristaCatalogCache.list;
   const by=new Map();
   const add=(nome,matricula='',key='')=>{nome=String(nome||'').replace(/\s+/g,' ').trim();if(!nome)return;const k=ignisMotoristaNorm(key||nome);if(!k)return;const prev=by.get(k);if(!prev)by.set(k,{nome,matricula:String(matricula||''),key:k});else if(!prev.matricula&&matricula)prev.matricula=String(matricula);};
-  (Array.isArray(state?.motoristasMonitorados)?state.motoristasMonitorados:[]).forEach(x=>{if(typeof x==='string')add(x);else add(x?.nome,x?.matricula,x?.key);});
+  monitorados.forEach(x=>{if(typeof x==='string')add(x);else add(x?.nome,x?.matricula,x?.key);});
   IGNIS_MOTORISTAS_INICIAIS.forEach(n=>add(n));
-  return [...by.values()];
+  const list=[...by.values()].map(x=>{const base=ignisMotoristaNomeBase(x.key),tokens=base.split(' ').filter(Boolean);return{...x,_base:base,_compact:x.key.replace(/\s/g,''),_tokens:tokens,_first:tokens[0]||'',_last:tokens[tokens.length-1]||''};});
+  _ignisMotoristaCatalogCache={sig,list};_ignisMotoristaResolverCache.clear();return list;
 }
 function ignisMotoristaResolver(v){
   let raw=String(v??'').replace(/\s+/g,' ').trim();
   const pref=raw.match(/^([A-Z0-9_./]+)\s*-\s*(.+)$/i);if(pref)raw=pref[2].trim();
   const norm=ignisMotoristaNorm(raw);if(!norm)return{key:'',nome:raw,matched:false,score:0,original:raw};
-  const cat=ignisMotoristaCatalogoResolucao();
-  let c=cat.find(x=>x.key===norm);if(c)return{...c,matched:true,score:1,original:raw};
-  const base=ignisMotoristaNomeBase(norm),compact=norm.replace(/\s/g,'');
-  const exactBase=cat.filter(x=>ignisMotoristaNomeBase(x.key)===base||x.key.replace(/\s/g,'')===compact);
-  if(exactBase.length===1)return{...exactBase[0],matched:true,score:.99,original:raw};
-  const toks=base.split(' ').filter(Boolean),first=toks[0]||'',last=toks[toks.length-1]||'';
-  const scored=cat.map(x=>{
-    const xb=ignisMotoristaNomeBase(x.key),xt=xb.split(' ').filter(Boolean),xf=xt[0]||'',xl=xt[xt.length-1]||'';
-    const setA=new Set(toks),setB=new Set(xt),inter=[...setA].filter(t=>setB.has(t)).length,union=new Set([...setA,...setB]).size||1;
-    const jac=inter/union,edit=ignisMotoristaEditSimilarity(base,xb),edge=(first&&last&&first===xf&&last===xl)?1:0;
-    return{x,score:edit*.58+jac*.32+edge*.10,edge,edit,jac};
-  }).sort((a,b)=>b.score-a.score);
-  const best=scored[0],second=scored[1];
-  if(best&&(best.score>=.90||best.edge&&best.score>=.82)&&(!second||best.score-second.score>=.035))return{...best.x,matched:true,score:best.score,original:raw};
-  return{key:norm,nome:raw,matricula:'',matched:false,score:best?.score||0,original:raw};
+  const cat=ignisMotoristaCatalogoResolucao(),cacheKey=`${_ignisMotoristaCatalogCache.sig}::${norm}`;
+  const cached=_ignisMotoristaResolverCache.get(cacheKey);if(cached)return{...cached,original:raw};
+  let result=null,c=cat.find(x=>x.key===norm);if(c)result={key:c.key,nome:c.nome,matricula:c.matricula,matched:true,score:1};
+  if(!result){
+    const base=ignisMotoristaNomeBase(norm),compact=norm.replace(/\s/g,''),exactBase=cat.filter(x=>x._base===base||x._compact===compact);
+    if(exactBase.length===1){const x=exactBase[0];result={key:x.key,nome:x.nome,matricula:x.matricula,matched:true,score:.99};}
+    else{
+      const toks=base.split(' ').filter(Boolean),first=toks[0]||'',last=toks[toks.length-1]||'',setA=new Set(toks);
+      const scored=cat.map(x=>{const setB=new Set(x._tokens),inter=[...setA].filter(t=>setB.has(t)).length,union=new Set([...setA,...setB]).size||1,jac=inter/union,edit=ignisMotoristaEditSimilarity(base,x._base),edge=(first&&last&&first===x._first&&last===x._last)?1:0;return{x,score:edit*.58+jac*.32+edge*.10,edge};}).sort((a,b)=>b.score-a.score);
+      const best=scored[0],second=scored[1];
+      if(best&&(best.score>=.90||best.edge&&best.score>=.82)&&(!second||best.score-second.score>=.035))result={key:best.x.key,nome:best.x.nome,matricula:best.x.matricula,matched:true,score:best.score};
+      else result={key:norm,nome:raw,matricula:'',matched:false,score:best?.score||0};
+    }
+  }
+  _ignisMotoristaResolverCache.set(cacheKey,result);return{...result,original:raw};
 }
 function ignisMotoristaKeyResolvida(v){const r=ignisMotoristaResolver(v);return r.matched?r.key:ignisMotoristaNorm(v);}
 function ignisParseMotorista(raw){
@@ -7796,6 +7806,11 @@ function ignisMotorSortHeaderUpdate(headId,sort){
 function motoristasSetSort(key){_motSort=ignisMotorSortToggle(_motSort,key);renderMotoristas(false);}
 function idtSetSort(key){_idtSort=ignisMotorSortToggle(_idtSort,key);renderIDT();}
 function renderMotoristas(force=false){
+  // v46: showPage chama esta função para a página Motoristas. Não reconstrói a tabela
+  // de combustível se a aba visível for Geral/IDT/Gobrax — isso era o principal travamento ao clicar no menu.
+  if(_motSubtab==='geral'){renderMotoristasGeral();return;}
+  if(_motSubtab==='idt'){idtAtualizarSeletor();renderIDT();return;}
+  if(_motSubtab==='gobrax'){gobraxAtualizarSeletor();renderGobrax();return;}
   ignisEnsureMotoristasState();
   motoristasAtualizarUltimaData();
   const podeFinanceiro=authPodeVerFinanceiroMotoristas();
@@ -7834,9 +7849,6 @@ function renderMotoristas(force=false){
     return `<tr class="${has?'mot-driver-row':''}"${click}><td data-label="Motorista"><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td data-label="Período" class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td data-label="KM" class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td data-label="Litros" class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td data-label="Média ideal" class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td data-label="Média real" class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td data-label="Eficiência" class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td data-label="Abastecimentos">${r.registros||'—'}</td><td data-label="Placas">${r.placas.size||'—'}</td>${podeFinanceiro?`<td data-label="Economia / desperdício" class="mot-number mot-financeiro-col">${fin}</td>`:''}<td data-label="Status"><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
   }).join('');
   _markPageClean('motoristas');
-  if(_motSubtab==='geral')renderMotoristasGeral();
-  else if(_motSubtab==='idt')renderIDT();
-  else if(_motSubtab==='gobrax')renderGobrax();
 }
 function motoristasAbrirGestao(){
   ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Períodos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="mot-activity-config"><div class="mot-activity-copy"><strong>Status Ativo / Desativo</strong><span>O motorista vira Desativo quando passar mais do que este número de dias sem um novo abastecimento.</span></div><div class="mot-activity-days"><input id="mot-inatividade-dias"
@@ -8156,13 +8168,13 @@ function idtExcluirImportacao(id){
 
 // ── MOTORISTAS PX · GERAL v45 ────────────────────────────────────────────────
 let _motGeralTimer=null;function motoristasGeralDebouncedRender(){clearTimeout(_motGeralTimer);_motGeralTimer=setTimeout(renderMotoristasGeral,100);}
-function motoristasGeralFuelMap(){const map=new Map();motoristasRowsPeriodo(motoristasColetarCiclos()).forEach(r=>{if(!(r.ciclo>0&&r.km>0&&r.litros>0))return;const prev=map.get(r.key);if(!prev||String(r.fim||r.inicio)>String(prev.fim||prev.inicio)||Number(r.ciclo)>Number(prev.ciclo))map.set(r.key,r);});return map;}
-function motoristasGeralIdtMap(){
+function motoristasGeralFuelMap(periodRows=null){const map=new Map();(periodRows||motoristasRowsPeriodo(motoristasColetarCiclos())).forEach(r=>{if(!(r.ciclo>0&&r.km>0&&r.litros>0))return;const prev=map.get(r.key);if(!prev||String(r.fim||r.inicio)>String(prev.fim||prev.inicio)||Number(r.ciclo)>Number(prev.ciclo))map.set(r.key,r);});return map;}
+function motoristasGeralIdtMap(periodRows=null){
   const map=new Map(),imp=idtOrdenadas()[0]||null;if(!imp)return map;const cfg=motoristasPeriodoConfig(),snapshot=imp.periodos&&typeof imp.periodos==='object'?imp.periodos:{};
-  motoristasRowsPeriodo(motoristasColetarCiclos()).forEach(c=>{const snap=snapshot[c.key]||null,base=(c&&c.ciclo>0)?c:(cfg.mode==='personalizado'?c:(snap?{...c,...snap}:c)),ciclo=Number(base?.ciclo||0),det=idtDesviosAcumuladosAteDetalhado(imp,c.key,ciclo,cfg),desv=det?det.total:null,km=Number(base?.km)||0,idt=desv!==null&&km>0?desv/km*1000:null;if(idt!==null)map.set(c.key,{...c,desvios:desv,velocidade:det?.velocidade??null,rpm:det?.rpm??null,ocioso:det?.ocioso??null,km,idt,inicio:base?.inicio||'',fim:base?.fim||'',ciclo});});
+  (periodRows||motoristasRowsPeriodo(motoristasColetarCiclos())).forEach(c=>{const snap=snapshot[c.key]||null,base=(c&&c.ciclo>0)?c:(cfg.mode==='personalizado'?c:(snap?{...c,...snap}:c)),ciclo=Number(base?.ciclo||0),det=idtDesviosAcumuladosAteDetalhado(imp,c.key,ciclo,cfg),desv=det?det.total:null,km=Number(base?.km)||0,idt=desv!==null&&km>0?desv/km*1000:null;if(idt!==null)map.set(c.key,{...c,desvios:desv,velocidade:det?.velocidade??null,rpm:det?.rpm??null,ocioso:det?.ocioso??null,km,idt,inicio:base?.inicio||'',fim:base?.fim||'',ciclo});});
   return map;
 }
-function motoristasGeralGobraxMap(){const m=new Map();const b=gobraxConsolidar();b.rows.forEach(r=>m.set(r.key,r));return m;}
+function motoristasGeralGobraxMap(ciclos=null){const m=new Map();const b=gobraxConsolidar(ciclos);b.rows.forEach(r=>m.set(r.key,r));return m;}
 function motoristasGeralAbrir(secao,key){
   if(secao==='combustivel'){const r=motoristasGeralFuelMap().get(key);if(r)motoristasAbrirDetalhe(key,r.ciclo);return;}
   if(secao==='idt'){idtAbrirDetalheMotorista(key);return;}
@@ -8170,7 +8182,9 @@ function motoristasGeralAbrir(secao,key){
 }
 function renderMotoristasGeral(){
   const box=document.getElementById('mot-geral-content');if(!box)return;ignisEnsureMotoristasState();motoristasAtualizarUltimaData();motoristasPeriodoAtualizarUI();authAplicarPermissoesMotoristas();
-  const q=ignisMotoristaNorm(document.getElementById('mot-geral-busca')?.value||'');const gLatest=gobraxOrdenadas()[0];if(gLatest)gobraxAtualizarSeletor(gLatest.id);const fuel=motoristasGeralFuelMap(),idt=motoristasGeralIdtMap(),gob=motoristasGeralGobraxMap(),metaIdt=Number(state.idtMeta)||1.5;
+  const q=ignisMotoristaNorm(document.getElementById('mot-geral-busca')?.value||'');const gLatest=gobraxOrdenadas()[0];if(gLatest)gobraxAtualizarSeletor(gLatest.id);
+  // Uma única coleta dos ciclos alimenta Combustível, IDT e atividade Gobrax nesta renderização.
+  const ciclos=motoristasColetarCiclos(),periodRows=motoristasRowsPeriodo(ciclos),fuel=motoristasGeralFuelMap(periodRows),idt=motoristasGeralIdtMap(periodRows),gob=motoristasGeralGobraxMap(ciclos),metaIdt=Number(state.idtMeta)||1.5;
   let drivers=ignisEnsureMotoristasState().filter(m=>!q||ignisMotoristaNorm(`${m.nome} ${m.matricula||''}`).includes(q));
   if(!drivers.length){box.innerHTML='<div class="mot-empty">Nenhum motorista corresponde à busca.</div>';return;}
   box.innerHTML=drivers.map(m=>{
@@ -8309,10 +8323,10 @@ function gobraxKmRegistro(r,kmIndex,pares=[]){
   }
   return{km:0,aprox:false,ocorrencias:0,fonte:'nenhum',placasBase:[...placasPeriodo]};
 }
-function gobraxConsolidar(){
+function gobraxConsolidar(ciclosCache=null){
   gobraxAtualizarSeletor();const sel=document.getElementById('gobrax-importacao'),imp=ignisEnsureGobraxState().find(x=>x.id===sel?.value)||gobraxOrdenadas()[0]||null;
   if(!imp)return{imp:null,rows:[],fora:0,raw:[]};
-  const monitorados=ignisEnsureMotoristasState(),monitoradosMap=new Map(monitorados.map(m=>[m.key,m])),cfg=motoristasPeriodoConfig(),atividade=motoristasAtividadeMap(motoristasColetarCiclos());
+  const monitorados=ignisEnsureMotoristasState(),monitoradosMap=new Map(monitorados.map(m=>[m.key,m])),cfg=motoristasPeriodoConfig(),atividade=motoristasAtividadeMap(ciclosCache||motoristasColetarCiclos());
   const grupos=new Map();let fora=0;
   (imp.registros||[]).forEach((r,idx)=>{
     const rr=ignisMotoristaResolver(r.nome||r.key),key=rr.matched?rr.key:ignisMotoristaNorm(r.key||r.nome),m=monitoradosMap.get(key);if(!m){fora++;return;}
