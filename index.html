@@ -2499,7 +2499,14 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     </div>
 
     <div id="mot-panel-geral">
-      <div class="mot-geral-toolbar"><input class="filter-input" id="mot-geral-busca" placeholder="Buscar motorista..." oninput="motoristasGeralDebouncedRender()"></div>
+      <div class="mot-geral-toolbar">
+        <div class="mot-state-tabs mot-geral-state-tabs" id="mot-geral-status-tabs">
+          <button class="mot-state-btn active" data-filter="todos" onclick="motoristasGeralSetActivityFilter('todos')">Todos</button>
+          <button class="mot-state-btn activity" data-filter="ativos" onclick="motoristasGeralSetActivityFilter('ativos')">Ativos</button>
+          <button class="mot-state-btn inactive" data-filter="desativos" onclick="motoristasGeralSetActivityFilter('desativos')">Desativos</button>
+        </div>
+        <input class="filter-input" id="mot-geral-busca" placeholder="Buscar motorista..." oninput="motoristasGeralDebouncedRender()">
+      </div>
       <div class="mot-geral-legend">Resumo integrado por motorista. Clique em <strong>Combustível</strong>, <strong>IDT</strong> ou <strong>Nota Gobrax</strong> para abrir o detalhamento completo daquela análise.</div>
       <div id="mot-geral-content" class="mot-geral-list"></div>
     </div>
@@ -3170,6 +3177,54 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
   .main.collapsed,.sidebar.collapsed + .main,.sidebar.collapsed~.main{margin-left:0!important}
 }
 @media(min-width:901px) and (max-width:1200px){:root{--ignis-sidebar-open:250px}}
+
+/* v53 · Menu lateral explícito + Geral compacto e auditável */
+@media(min-width:901px){
+  .sidebar-toggle{
+    top:18px!important;
+    left:calc(var(--ignis-sidebar-open) - 48px)!important;
+    transform:none!important;
+    width:36px!important;height:36px!important;
+    border:1px solid rgba(255,255,255,.10)!important;
+    border-radius:10px!important;
+    background:#151c24!important;
+    color:#aab6c3!important;
+    font-size:20px!important;font-weight:800!important;
+    box-shadow:0 6px 18px rgba(0,0,0,.24)!important;
+    z-index:210!important;
+  }
+  .sidebar-toggle:hover{color:var(--accent)!important;border-color:rgba(233,95,50,.42)!important;background:#19212b!important}
+  .sidebar.collapsed .sidebar-toggle{left:14px!important;top:18px!important;color:var(--accent)!important;background:#151c24!important;border:1px solid rgba(233,95,50,.28)!important}
+}
+
+#mot-panel-geral .mot-geral-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+#mot-panel-geral .mot-geral-state-tabs{flex:0 0 auto}
+#mot-panel-geral .mot-geral-toolbar .filter-input{flex:1;max-width:520px;height:38px}
+#mot-panel-geral .mot-geral-legend{margin:0 0 8px;font-size:9px}
+#mot-panel-geral .mot-geral-list{border-color:rgba(138,157,178,.14);border-radius:12px;background:#0f151d}
+#mot-panel-geral .mot-geral-grid-head,#mot-panel-geral .mot-geral-row{grid-template-columns:minmax(250px,1.15fr) repeat(3,minmax(225px,1fr));min-width:0}
+#mot-panel-geral .mot-geral-grid-head{position:sticky;top:0;z-index:8;background:#171f28;border-bottom:1px solid rgba(138,157,178,.22);box-shadow:0 7px 18px rgba(0,0,0,.18)}
+#mot-panel-geral .mot-geral-grid-head>div{padding:10px 12px;font-size:12px;font-weight:900;letter-spacing:.08em;color:var(--accent)!important;border-right:1px solid rgba(138,157,178,.12)}
+#mot-panel-geral .mot-geral-row{min-height:58px;border-bottom:1px solid rgba(138,157,178,.13);background:#10171f}
+#mot-panel-geral .mot-geral-row:nth-child(odd){background:#10171f}
+#mot-panel-geral .mot-geral-row:hover{background:#111a23}
+#mot-panel-geral .mot-geral-driver{min-height:58px;padding:7px 12px;border-right:1px solid rgba(138,157,178,.12)}
+#mot-panel-geral .mot-geral-driver strong{font-size:11.5px;line-height:1.18}
+#mot-panel-geral .mot-geral-driver span{font-size:7.5px;margin-top:3px}
+#mot-panel-geral .mot-geral-card{min-height:58px;padding:6px 11px;border-right:1px solid rgba(138,157,178,.12)}
+#mot-panel-geral .mot-geral-card-head{min-height:15px;margin-bottom:1px}
+#mot-panel-geral .mot-geral-card .mot-status{padding:3px 6px;font-size:8px}
+#mot-panel-geral .mot-geral-metrics{gap:8px}
+#mot-panel-geral .mot-geral-metric span{font-size:6.8px;margin-bottom:0}
+#mot-panel-geral .mot-geral-metric strong{font-size:12.5px;line-height:1.2}
+#mot-panel-geral .mot-geral-empty{padding:7px 0;font-size:8.5px}
+@media(min-width:1101px){#mot-panel-geral .mot-geral-list{overflow:visible}}
+@media(min-width:901px) and (max-width:1100px){#mot-panel-geral .mot-geral-list{overflow-x:auto;overflow-y:visible}#mot-panel-geral .mot-geral-grid-head,#mot-panel-geral .mot-geral-row{min-width:920px}}
+@media(max-width:900px){
+  #mot-panel-geral .mot-geral-toolbar{align-items:stretch;flex-direction:column}
+  #mot-panel-geral .mot-geral-state-tabs{width:100%}
+  #mot-panel-geral .mot-geral-toolbar .filter-input{max-width:none;width:100%}
+}
 </style>
 
 <div id="page-kmcomp" class="page">
@@ -8434,12 +8489,28 @@ function motoristasGeralAbrir(secao,key){
   if(secao==='idt'){idtAbrirDetalheMotorista(key);return;}
   if(secao==='gobrax'){gobraxAbrirDetalhe(key);return;}
 }
+let _motGeralActivityFilter='todos';
+function motoristasGeralAtualizarActivityBotoes(){
+  document.querySelectorAll('#mot-geral-status-tabs .mot-state-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===_motGeralActivityFilter));
+}
+function motoristasGeralSetActivityFilter(v){
+  _motGeralActivityFilter=['ativos','desativos'].includes(String(v))?String(v):'todos';
+  motoristasGeralAtualizarActivityBotoes();
+  renderMotoristasGeral();
+}
 function renderMotoristasGeral(){
   const box=document.getElementById('mot-geral-content');if(!box)return;ignisEnsureMotoristasState();motoristasAtualizarUltimaData();motoristasPeriodoAtualizarUI();authAplicarPermissoesMotoristas();
+  motoristasGeralAtualizarActivityBotoes();
   const q=ignisMotoristaNorm(document.getElementById('mot-geral-busca')?.value||'');const gLatest=gobraxOrdenadas()[0];if(gLatest)gobraxAtualizarSeletor(gLatest.id);
-  // Uma única coleta dos ciclos alimenta Combustível, IDT e atividade Gobrax nesta renderização.
-  const ciclos=motoristasColetarCiclos(),periodRows=motoristasRowsPeriodo(ciclos),fuel=motoristasGeralFuelMap(periodRows),idt=motoristasGeralIdtMap(periodRows),gob=motoristasGeralGobraxMap(ciclos),metaIdt=Number(state.idtMeta)||1.5;
-  let drivers=ignisEnsureMotoristasState().filter(m=>!q||ignisMotoristaNorm(`${m.nome} ${m.matricula||''}`).includes(q));
+  // Uma única coleta dos ciclos alimenta Combustível, IDT, atividade e Gobrax nesta renderização.
+  const ciclos=motoristasColetarCiclos(),atividade=motoristasAtividadeMap(ciclos),periodRows=motoristasRowsPeriodo(ciclos),fuel=motoristasGeralFuelMap(periodRows),idt=motoristasGeralIdtMap(periodRows),gob=motoristasGeralGobraxMap(ciclos),metaIdt=Number(state.idtMeta)||1.5;
+  let drivers=ignisEnsureMotoristasState().filter(m=>{
+    if(q&&!ignisMotoristaNorm(`${m.nome} ${m.matricula||''}`).includes(q))return false;
+    const a=atividade.get(m.key),ativo=Boolean(a?.ativo);
+    if(_motGeralActivityFilter==='ativos'&&!ativo)return false;
+    if(_motGeralActivityFilter==='desativos'&&ativo)return false;
+    return true;
+  });
   if(!drivers.length){box.innerHTML='<div class="mot-empty">Nenhum motorista corresponde à busca.</div>';return;}
   const header=`<div class="mot-geral-grid-head"><div>Motorista</div><div>Combustível</div><div>IDT</div><div>Nota Gobrax</div></div>`;
   const body=drivers.map(m=>{
@@ -14792,7 +14863,7 @@ function toggleSidebarCollapse() {
   const collapsed = sidebar.classList.toggle('collapsed');
   main.classList.toggle('collapsed', collapsed);
   btn.style.left = '';
-  btn.innerHTML = collapsed ? '&#8250;' : '&#8249;';
+  btn.innerHTML = collapsed ? '&#9776;' : '&#8249;';
   btn.title = collapsed ? 'Abrir menu lateral' : 'Fechar menu lateral';
   btn.setAttribute('aria-label', btn.title);
   localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
@@ -14805,7 +14876,7 @@ function ignisRestoreSidebarState(){
   sidebar.classList.toggle('collapsed',collapsed);
   main.classList.toggle('collapsed',collapsed);
   btn.style.left='';
-  btn.innerHTML=collapsed?'&#8250;':'&#8249;';
+  btn.innerHTML=collapsed?'&#9776;':'&#8249;';
   btn.title=collapsed?'Abrir menu lateral':'Fechar menu lateral';
   btn.setAttribute('aria-label',btn.title);
 }
