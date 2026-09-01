@@ -2450,6 +2450,12 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
 
 @media(max-width:520px){.mot-subtabs{width:100%}.mot-state-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mot-state-btn{width:100%}.mot-period-dates{grid-template-columns:1fr}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
 
+    /* v49 · Vínculos manuais de nomes entre Abastecimentos, IDT e Nota Gobrax */
+    .mot-link-alert{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 15px;margin:0 0 14px;border:1px solid rgba(244,181,68,.24);border-radius:13px;background:rgba(244,181,68,.055)}
+    .mot-link-alert-copy{min-width:0}.mot-link-alert-copy strong{display:block;font-size:12px;color:#f4cf83}.mot-link-alert-copy span{display:block;margin-top:3px;font-size:10px;color:var(--text3);line-height:1.45}.mot-link-alert-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.mot-link-chip{display:inline-flex;align-items:center;max-width:250px;padding:4px 8px;border-radius:999px;background:#121a23;border:1px solid rgba(244,181,68,.16);font-size:9px;color:#c7b27f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mot-link-modal{width:min(980px,94vw)!important;max-width:none!important;max-height:90vh!important}.mot-link-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.mot-link-sub{font-size:10.5px;color:var(--text3);line-height:1.5;margin-top:4px}.mot-link-section-title{font-size:9px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#8ca0b6;margin:18px 0 8px}.mot-link-list{display:grid;gap:8px}.mot-link-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--border);border-radius:11px;background:#101720}.mot-link-row-copy{min-width:0;flex:1}.mot-link-row-copy strong{display:block;font-size:11.5px;color:#fff}.mot-link-row-copy span{display:block;font-size:9px;color:var(--text3);margin-top:3px;line-height:1.35}.mot-link-source-badge{display:inline-flex;margin-top:5px;padding:3px 6px;border-radius:6px;border:1px solid rgba(244,181,68,.18);background:rgba(244,181,68,.06);font-size:8px;color:#d9bd78}.mot-link-target-current{font-size:9.5px;color:#91a4b8;white-space:nowrap;max-width:300px;overflow:hidden;text-overflow:ellipsis}.mot-link-target-current strong{color:#dce6ef}.mot-link-choice-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.mot-link-choice-source{padding:11px 13px;border:1px solid rgba(233,95,50,.22);border-radius:11px;background:rgba(233,95,50,.055);margin-bottom:12px}.mot-link-choice-source span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)}.mot-link-choice-source strong{display:block;margin-top:4px;font-size:14px}.mot-link-search{width:100%;height:42px;border:1px solid var(--border);border-radius:10px;background:#101720;color:#fff;padding:0 12px;font:inherit;outline:none}.mot-link-search:focus{border-color:rgba(233,95,50,.55)}.mot-link-targets{margin-top:10px;max-height:50vh;overflow:auto;display:grid;gap:7px;padding-right:3px}.mot-link-target{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#101720;color:var(--text);cursor:pointer}.mot-link-target:hover{border-color:rgba(233,95,50,.35);background:#121a23}.mot-link-target strong{display:block;font-size:11px}.mot-link-target small{display:block;font-size:8.5px;color:var(--text3);margin-top:2px}.mot-link-target .mot-status{flex-shrink:0}.mot-link-manual{border-color:rgba(53,200,145,.16);background:rgba(53,200,145,.025)}
+    @media(max-width:720px){.mot-link-alert{align-items:stretch;flex-direction:column}.mot-link-alert .btn{width:100%}.mot-link-modal{width:100vw!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important}.mot-link-row{align-items:stretch;flex-direction:column}.mot-link-row .btn{width:100%}.mot-link-target-current{max-width:none;white-space:normal}}
+
     /* v45 · Visão Geral Motoristas PX */
     .mot-geral-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}.mot-geral-toolbar .filter-input{max-width:620px}
     .mot-geral-list{display:grid;gap:12px}.mot-geral-row{display:grid;grid-template-columns:minmax(190px,.9fr) repeat(3,minmax(235px,1fr));gap:10px;align-items:stretch}
@@ -2463,7 +2469,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   <div id="page-motoristas" class="page">
     <div class="page-header">
       <div><div class="page-title">Motoristas PX</div><div class="page-sub">Acompanhamento de consumo e telemetria dos motoristas PX</div></div>
-      <div class="header-actions"><div class="mot-data-freshness" id="mot-data-freshness" title="Maior data de abastecimento disponível na base do IGNIS"><span class="mot-data-dot"></span><span id="mot-data-freshness-text"><span class="mot-data-label">Dados atualizados até</span><strong>Verificando...</strong></span></div><button class="btn btn-secondary" id="btn-idt-historico" style="display:none" onclick="idtAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-idt-importar" style="display:none" onclick="idtAbrirImportacao()">Importar desvios</button><button class="btn btn-secondary" id="btn-gobrax-historico" style="display:none" onclick="gobraxAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-gobrax-importar" style="display:none" onclick="gobraxAbrirImportacao()">Importar Nota Gobrax</button><button class="btn btn-secondary" id="btn-gobrax-config" style="display:none" onclick="gobraxAbrirConfig()">Configurar faixas</button><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
+      <div class="header-actions"><div class="mot-data-freshness" id="mot-data-freshness" title="Maior data de abastecimento disponível na base do IGNIS"><span class="mot-data-dot"></span><span id="mot-data-freshness-text"><span class="mot-data-label">Dados atualizados até</span><strong>Verificando...</strong></span></div><button class="btn btn-secondary" id="btn-idt-historico" style="display:none" onclick="idtAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-idt-importar" style="display:none" onclick="idtAbrirImportacao()">Importar desvios</button><button class="btn btn-secondary" id="btn-gobrax-historico" style="display:none" onclick="gobraxAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-gobrax-importar" style="display:none" onclick="gobraxAbrirImportacao()">Importar Nota Gobrax</button><button class="btn btn-secondary" id="btn-gobrax-config" style="display:none" onclick="gobraxAbrirConfig()">Configurar faixas</button><button class="btn btn-secondary" id="btn-mot-vinculos" style="display:none" onclick="motoristasAbrirVinculos(_motSubtab)">Vincular nomes</button><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
     </div>
 
     <div class="mot-subtabs">
@@ -2500,6 +2506,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         </div>
         <div class="mot-filter-search"><input class="filter-input" id="mot-busca" placeholder="Buscar motorista..." oninput="motoristasDebouncedRender()"></div>
       </div>
+      <div id="mot-vinculos-alert-media"></div>
       <div class="mot-kpis">
         <div class="mot-kpi"><div class="mot-kpi-label">Acompanhados</div><div class="mot-kpi-value" id="mot-kpi-acomp">0</div><div class="mot-kpi-sub">motoristas selecionados</div></div>
         <div class="mot-kpi"><div class="mot-kpi-label">Com dados</div><div class="mot-kpi-value" id="mot-kpi-dados">0</div><div class="mot-kpi-sub" id="mot-kpi-dados-sub">motoristas com movimentação</div></div>
@@ -2541,6 +2548,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <div class="mot-filter-meta"><div class="idt-meta-box"><span class="idt-meta-label">Meta IDT</span><input class="idt-meta-input" id="idt-meta" type="number" min="0" step="0.1" value="1.5" onchange="idtSalvarMeta()"></div></div>
         </div>
       </div>
+      <div id="mot-vinculos-alert-idt"></div>
       <div class="idt-summary-clean">
         <div class="idt-summary-main"><span>IDT geral</span><strong class="idt-idt-value" id="idt-kpi-geral">—</strong><small id="idt-kpi-geral-sub">meta ≤ 1,5</small></div>
         <div class="idt-summary-item"><span>Desvios</span><strong id="idt-kpi-desvios">0</strong></div>
@@ -2563,6 +2571,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         </div>
         <div class="mot-filter-search"><input class="filter-input" id="gobrax-busca" placeholder="Buscar motorista, cavalo ou operacional..." oninput="gobraxDebouncedRender()"></div>
       </div>
+      <div id="mot-vinculos-alert-gobrax"></div>
       <div class="gobrax-kpis">
         <div class="mot-kpi"><div class="mot-kpi-label">Motoristas avaliados</div><div class="mot-kpi-value" id="gobrax-kpi-motoristas">0</div><div class="mot-kpi-sub">com nota consolidada</div></div>
         <div class="mot-kpi"><div class="mot-kpi-label">Avaliações válidas</div><div class="mot-kpi-value" id="gobrax-kpi-registros">0</div><div class="mot-kpi-sub">linhas usadas na ponderação</div></div>
@@ -4536,11 +4545,13 @@ function authAplicarPermissoesMotoristas(){
   const gh=document.getElementById('btn-gobrax-historico');
   const gi=document.getElementById('btn-gobrax-importar');
   const gc=document.getElementById('btn-gobrax-config');
+  const vb=document.getElementById('btn-mot-vinculos');
   if(hist)hist.style.display=noIdt?'':'none';
   if(imp)imp.style.display=noIdt&&authTemPermissao('motoristas_idt_importar')?'':'none';
   if(gh)gh.style.display=noGobrax?'':'none';
   if(gi)gi.style.display=noGobrax&&authTemPermissao('motoristas_gobrax_importar')?'':'none';
   if(gc)gc.style.display=noGobrax&&(window._authUser?.role==='adm'||window._authUser?.role==='admin')?'':'none';
+  if(vb)vb.style.display=(_motSubtab==='media'||_motSubtab==='idt'||_motSubtab==='gobrax')&&motoristasPodeVincularNomes()?'':'none';
   document.body.classList.toggle('mot-financeiro-visivel',authPodeVerFinanceiroMotoristas());
 }
 
@@ -7566,6 +7577,31 @@ function ignisMotoristaEditSimilarity(a,b){
   }
   return 1-prev[n]/Math.max(m,n);
 }
+// v49 · Catálogo bruto dos motoristas realmente importados em Abastecimentos.
+// Não usa o resolvedor para não esconder grafias diferentes: essas são justamente
+// as opções canônicas disponíveis para um vínculo manual.
+let _ignisFuelDriverCatalogCache={ref:null,len:-1,periods:-1,ts:0,list:[]};
+function ignisMotoristaCatalogoAbastecimentosRaw(force=false){
+  const arr=Array.isArray(state?.abastecimentos)?state.abastecimentos:[],periods=Object.keys(state?.semanas||{}).length,now=Date.now();
+  const cacheOk=!force&&_ignisFuelDriverCatalogCache.ref===arr&&_ignisFuelDriverCatalogCache.len===arr.length&&_ignisFuelDriverCatalogCache.periods===periods&&(now-_ignisFuelDriverCatalogCache.ts)<5000;
+  if(cacheOk)return _ignisFuelDriverCatalogCache.list;
+  const by=new Map();
+  arr.forEach(a=>(Array.isArray(a?.motoristas)?a.motoristas:[]).forEach(m=>{
+    const nome=String(m?.nome||'').replace(/\s+/g,' ').trim();if(!nome)return;const key=ignisMotoristaNorm(m?.key||nome);if(!key)return;
+    const prev=by.get(key),matricula=String(m?.matricula||'').trim();
+    if(!prev)by.set(key,{key,nome,matricula});else if(!prev.matricula&&matricula)prev.matricula=matricula;
+  }));
+  const list=[...by.values()].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+  _ignisFuelDriverCatalogCache={ref:arr,len:arr.length,periods,ts:now,list};return list;
+}
+function ignisEnsureMotoristaVinculos(){
+  if(!state.motoristasVinculos||typeof state.motoristasVinculos!=='object'||Array.isArray(state.motoristasVinculos))state.motoristasVinculos={};
+  if(!state.motoristasVinculosMeta||typeof state.motoristasVinculosMeta!=='object'||Array.isArray(state.motoristasVinculosMeta))state.motoristasVinculosMeta={};
+  const clean={};Object.entries(state.motoristasVinculos).forEach(([s,t])=>{const sk=ignisMotoristaNorm(s),tk=ignisMotoristaNorm(t);if(sk&&tk)clean[sk]=tk;});state.motoristasVinculos=clean;
+  return state.motoristasVinculos;
+}
+function ignisMotoristaVinculoManual(norm){const n=ignisMotoristaNorm(norm);return ignisEnsureMotoristaVinculos()[n]||'';}
+
 let _ignisMotoristaCatalogCache={sig:'',list:[]};
 const _ignisMotoristaResolverCache=new Map();
 function ignisMotoristaCatalogoResolucao(){
@@ -7583,6 +7619,11 @@ function ignisMotoristaResolver(v){
   let raw=String(v??'').replace(/\s+/g,' ').trim();
   const pref=raw.match(/^([A-Z0-9_./]+)\s*-\s*(.+)$/i);if(pref)raw=pref[2].trim();
   const norm=ignisMotoristaNorm(raw);if(!norm)return{key:'',nome:raw,matched:false,score:0,original:raw};
+  const manualKey=ignisMotoristaVinculoManual(norm);
+  if(manualKey){
+    const fuel=ignisMotoristaCatalogoAbastecimentosRaw().find(x=>x.key===manualKey),meta=state.motoristasVinculosMeta?.[norm]||{};
+    return{key:manualKey,nome:fuel?.nome||meta.targetName||raw,matricula:fuel?.matricula||meta.targetMatricula||'',matched:true,score:1,manual:true,original:raw};
+  }
   const cat=ignisMotoristaCatalogoResolucao(),cacheKey=`${_ignisMotoristaCatalogCache.sig}::${norm}`;
   const cached=_ignisMotoristaResolverCache.get(cacheKey);if(cached)return{...cached,original:raw};
   let result=null,c=cat.find(x=>x.key===norm);if(c)result={key:c.key,nome:c.nome,matricula:c.matricula,matched:true,score:1};
@@ -7609,6 +7650,7 @@ function ignisParseMotorista(raw){
   return{nome,matricula,key:ignisMotoristaNorm(nome)};
 }
 function ignisEnsureMotoristasState(){
+  ignisEnsureMotoristaVinculos();
   if(!Array.isArray(state.motoristasMonitorados))state.motoristasMonitorados=[];
   if(!Number.isFinite(Number(state.motoristasInatividadeDias))||Number(state.motoristasInatividadeDias)<1)state.motoristasInatividadeDias=5;
   if(!state.motoristasMonitoradosInicializados){
@@ -7900,6 +7942,7 @@ function renderMotoristas(force=false){
   if(_motSubtab==='gobrax'){gobraxAtualizarSeletor();renderGobrax();return;}
   ignisEnsureMotoristasState();
   motoristasAtualizarUltimaData();
+  motoristasAtualizarVinculosUI('media');
   const podeFinanceiro=authPodeVerFinanceiroMotoristas();
   document.body.classList.toggle('mot-financeiro-visivel',podeFinanceiro);
   const all=motoristasColetarCiclos(),q=ignisMotoristaNorm(document.getElementById('mot-busca')?.value||''),filtro=_motStatusFilter||'todos',atividadeMap=motoristasAtividadeMap(all);
@@ -7963,6 +8006,82 @@ function motoristasAdicionar(nome,matricula=''){nome=String(nome||'').trim();if(
 function motoristasAdicionarDigitado(){const inp=document.getElementById('mot-add-input'),v=inp?.value||'';if(motoristasAdicionar(v)){inp.value='';motoristasRenderSugestoes();}}
 function motoristasAdicionarCatalogo(key){const m=ignisMotoristaCatalogo().find(x=>x.key===key);if(m&&motoristasAdicionar(m.nome,m.matricula)){const inp=document.getElementById('mot-add-input');if(inp)inp.value='';}}
 function motoristasRemover(key){state.motoristasMonitorados=ignisEnsureMotoristasState().filter(m=>m.key!==key);saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);}
+// ── MOTORISTAS PX · VÍNCULOS MANUAIS DE NOMES v49 ───────────────────────────
+let _motVinculoFonte='media',_motVinculoSource='',_motVinculoTargetSearch='';
+function motoristasPodeVincularNomes(){return window._authUser?.role==='adm'||window._authUser?.role==='admin';}
+function motoristasVinculoFonteLabel(fonte){return fonte==='gobrax'?'Nota Gobrax':fonte==='idt'?'IDT':'Média por Motorista';}
+function motoristasVinculoImportacaoAtual(fonte){
+  if(fonte==='gobrax'){const sel=document.getElementById('gobrax-importacao')?.value;return ignisEnsureGobraxState().find(x=>x.id===sel)||gobraxOrdenadas()[0]||null;}
+  if(fonte==='idt'){const sel=document.getElementById('idt-periodo')?.value;return ignisEnsureIdtState().find(x=>x.id===sel)||idtOrdenadas()[0]||null;}
+  return null;
+}
+function motoristasPendenciasVinculo(fonte){
+  fonte=fonte==='gobrax'?'gobrax':fonte==='idt'?'idt':'media';
+  const mon=ignisEnsureMotoristasState(),monSet=new Set(mon.map(m=>m.key)),out=new Map();
+  const add=(nome,qtd=1,motivo='Sem associação segura')=>{nome=String(nome||'').replace(/\s+/g,' ').trim();if(!nome)return;const sourceNorm=ignisMotoristaNorm(nome);if(!sourceNorm)return;const prev=out.get(sourceNorm);if(prev){prev.qtd+=qtd;return;}const rr=ignisMotoristaResolver(nome);out.set(sourceNorm,{sourceNorm,sourceName:nome,qtd,motivo:rr.matched&&!monSet.has(rr.key)?'Nome localizado, mas ainda não está na lista acompanhada':motivo,sugestao:rr.matched?rr.nome:'',suggestedKey:rr.matched?rr.key:''});};
+  if(fonte==='gobrax'){
+    const imp=motoristasVinculoImportacaoAtual('gobrax');(imp?.registros||[]).forEach(r=>{const nome=r.nomeOriginal||r.nome||r.key,rr=ignisMotoristaResolver(nome);if(!(rr.matched&&monSet.has(rr.key)))add(nome);});
+  }else if(fonte==='idt'){
+    const imp=motoristasVinculoImportacaoAtual('idt');idtImportacoesAte(imp).forEach(src=>(src?.registros||[]).forEach(r=>{const nome=r.nome||r.key,rr=ignisMotoristaResolver(nome);if(!(rr.matched&&monSet.has(rr.key)))add(nome);}));
+  }else{
+    // Na Média por Motorista, o problema é o inverso: um nome acompanhado pode não
+    // encontrar nenhuma grafia segura entre os nomes realmente importados em abastecimentos.
+    const matchedKeys=new Set();ignisMotoristaCatalogoAbastecimentosRaw().forEach(f=>{const rr=ignisMotoristaResolver(f.nome);if(rr.matched)matchedKeys.add(rr.key);});
+    mon.forEach(m=>{if(!matchedKeys.has(m.key))add(m.nome,1,'Motorista acompanhado sem correspondência segura nos abastecimentos');});
+  }
+  return[...out.values()].sort((a,b)=>a.sourceName.localeCompare(b.sourceName,'pt-BR',{sensitivity:'base'}));
+}
+function motoristasAtualizarVinculosUI(fonte){
+  fonte=fonte==='gobrax'?'gobrax':fonte==='idt'?'idt':'media';const pend=motoristasPendenciasVinculo(fonte),box=document.getElementById(`mot-vinculos-alert-${fonte}`),pode=motoristasPodeVincularNomes();
+  if(box){
+    if(!pend.length)box.innerHTML='';
+    else{const chips=pend.slice(0,6).map(p=>`<span class="mot-link-chip" title="${pendEsc(p.sourceName)}">${pendEsc(p.sourceName)}</span>`).join('');box.innerHTML=`<div class="mot-link-alert"><div class="mot-link-alert-copy"><strong>${pend.length} nome${pend.length===1?'':'s'} precisa${pend.length===1?'':'m'} de vínculo</strong><span>${fonte==='media'?'Há nomes acompanhados que não foram associados com segurança aos motoristas dos abastecimentos.':'Esses nomes vieram na planilha e não foram associados com segurança a um motorista acompanhado.'}</span><div class="mot-link-alert-chips">${chips}${pend.length>6?`<span class="mot-link-chip">+${pend.length-6}</span>`:''}</div></div>${pode?`<button class="btn btn-secondary" onclick="motoristasAbrirVinculos('${fonte}')">Vincular nomes</button>`:'<span class="mot-link-target-current">Somente ADM/Admin pode criar vínculos.</span>'}</div>`;}
+  }
+  const btn=document.getElementById('btn-mot-vinculos');if(btn&&_motSubtab===fonte&&fonte!=='geral'&&pode){btn.style.display='';btn.textContent=pend.length?`Vincular nomes (${pend.length})`:'Vínculos de nomes';}
+}
+function motoristasAbrirVinculos(fonte,sourceNorm=''){
+  if(!motoristasPodeVincularNomes()){showToast('Somente ADM Master e Admin podem vincular nomes de motoristas.','error');return;}
+  _motVinculoFonte=fonte==='gobrax'?'gobrax':fonte==='idt'?'idt':'media';_motVinculoSource=sourceNorm?decodeURIComponent(sourceNorm):'';_motVinculoTargetSearch='';ignisMotoristaCatalogoAbastecimentosRaw(true);
+  let ov=document.getElementById('mot-vinculos-modal');if(!ov){ov=document.createElement('div');ov.id='mot-vinculos-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal mot-link-modal"><div id="mot-vinculos-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeModal('mot-vinculos-modal');});}
+  motoristasRenderVinculosModal();ov.classList.add('open');
+}
+function motoristasRenderVinculosModal(){
+  const c=document.getElementById('mot-vinculos-content');if(!c)return;ignisEnsureMotoristaVinculos();
+  const pend=motoristasPendenciasVinculo(_motVinculoFonte),meta=state.motoristasVinculosMeta||{},links=state.motoristasVinculos||{};
+  if(_motVinculoSource){
+    const p=pend.find(x=>x.sourceNorm===_motVinculoSource),m=meta[_motVinculoSource]||{},sourceName=p?.sourceName||m.sourceName||_motVinculoSource;
+    c.innerHTML=`<div class="mot-link-head"><div><div class="modal-title">Escolher motorista correto</div><div class="mot-link-sub">As opções abaixo são todos os motoristas encontrados nas importações de abastecimentos. Depois de vincular, o IGNIS reaplica o nome automaticamente em Média por Motorista, IDT e Nota Gobrax.</div></div><button class="pend-close" onclick="closeModal('mot-vinculos-modal')">×</button></div><div class="mot-link-choice-head"><button class="btn btn-ghost btn-sm" onclick="_motVinculoSource='';_motVinculoTargetSearch='';motoristasRenderVinculosModal()">← Voltar</button></div><div class="mot-link-choice-source"><span>Nome de origem</span><strong>${pendEsc(sourceName)}</strong></div><input id="mot-vinculo-target-search" class="mot-link-search" placeholder="Buscar motorista dos abastecimentos..." value="${pendEsc(_motVinculoTargetSearch)}" oninput="_motVinculoTargetSearch=this.value;motoristasRenderVinculoTargets()"><div id="mot-vinculo-targets" class="mot-link-targets"></div>`;motoristasRenderVinculoTargets();return;
+  }
+  const pendHtml=pend.length?pend.map(p=>`<div class="mot-link-row"><div class="mot-link-row-copy"><strong>${pendEsc(p.sourceName)}</strong><span>${pendEsc(p.motivo)}${p.sugestao?` · sugestão automática: ${pendEsc(p.sugestao)}`:''}</span><span class="mot-link-source-badge">${pendEsc(motoristasVinculoFonteLabel(_motVinculoFonte))}${p.qtd>1?` · ${p.qtd} linhas`:''}</span></div><button class="btn btn-secondary btn-sm" onclick="_motVinculoSource='${encodeURIComponent(p.sourceNorm)}';_motVinculoSource=decodeURIComponent(_motVinculoSource);motoristasRenderVinculosModal()">Vincular</button></div>`).join(''):'<div class="mot-empty">Nenhum nome pendente nesta aba.</div>';
+  const manuais=Object.entries(links).map(([source,targetKey])=>{const m=meta[source]||{},target=ignisMotoristaCatalogoAbastecimentosRaw().find(x=>x.key===targetKey);return{source,sourceName:m.sourceName||source,targetKey,targetName:target?.nome||m.targetName||targetKey,fonte:m.fonte||''};}).sort((a,b)=>a.sourceName.localeCompare(b.sourceName,'pt-BR'));
+  const manualHtml=manuais.length?manuais.map(v=>`<div class="mot-link-row mot-link-manual"><div class="mot-link-row-copy"><strong>${pendEsc(v.sourceName)}</strong><span>Vinculado manualmente a <strong>${pendEsc(v.targetName)}</strong>${v.fonte?` · criado em ${pendEsc(motoristasVinculoFonteLabel(v.fonte))}`:''}</span></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn btn-secondary btn-sm" onclick="_motVinculoSource='${encodeURIComponent(v.source)}';_motVinculoSource=decodeURIComponent(_motVinculoSource);motoristasRenderVinculosModal()">Alterar</button><button class="btn btn-ghost btn-sm" onclick="motoristasRemoverVinculo('${encodeURIComponent(v.source)}')">Desfazer</button></div></div>`).join(''):'<div class="mot-empty">Nenhum vínculo manual salvo.</div>';
+  c.innerHTML=`<div class="mot-link-head"><div><div class="modal-title">Vínculos de nomes · ${pendEsc(motoristasVinculoFonteLabel(_motVinculoFonte))}</div><div class="mot-link-sub">Quando uma grafia da planilha não é reconhecida, escolha quem é esse motorista na base de abastecimentos. O vínculo fica salvo no Firebase e passa a valer nas três análises.</div></div><button class="pend-close" onclick="closeModal('mot-vinculos-modal')">×</button></div><div class="mot-link-section-title">Pendentes (${pend.length})</div><div class="mot-link-list">${pendHtml}</div><div class="mot-link-section-title">Vínculos manuais salvos (${manuais.length})</div><div class="mot-link-list">${manualHtml}</div>`;
+}
+function motoristasRenderVinculoTargets(){
+  const box=document.getElementById('mot-vinculo-targets');if(!box)return;const q=ignisMotoristaNorm(_motVinculoTargetSearch||''),mon=new Set(ignisEnsureMotoristasState().map(m=>m.key));let list=ignisMotoristaCatalogoAbastecimentosRaw();if(q)list=list.filter(x=>ignisMotoristaNorm(`${x.nome} ${x.matricula||''}`).includes(q));
+  box.innerHTML=list.length?list.map(t=>`<button class="mot-link-target" onclick="motoristasSalvarVinculo('${encodeURIComponent(_motVinculoSource)}','${encodeURIComponent(t.key)}')"><div><strong>${pendEsc(t.nome)}</strong><small>${pendEsc(t.matricula||'Encontrado nos abastecimentos')}</small></div>${mon.has(t.key)?'<span class="mot-status ok">Acompanhado</span>':'<span class="mot-status none">Disponível</span>'}</button>`).join(''):'<div class="mot-empty">Nenhum motorista dos abastecimentos corresponde à busca.</div>';
+}
+async function motoristasSalvarVinculo(sourceEnc,targetEnc){
+  const sourceNorm=ignisMotoristaNorm(decodeURIComponent(sourceEnc||'')),targetKey=ignisMotoristaNorm(decodeURIComponent(targetEnc||''));if(!sourceNorm||!targetKey)return;
+  const fuel=ignisMotoristaCatalogoAbastecimentosRaw(true),target=fuel.find(x=>x.key===targetKey);if(!target){showToast('O motorista escolhido não está disponível na base de abastecimentos.','error');return;}
+  const pend=motoristasPendenciasVinculo(_motVinculoFonte),p=pend.find(x=>x.sourceNorm===sourceNorm),arr=ignisEnsureMotoristasState(),sourceObj=arr.find(x=>x.key===sourceNorm),targetWasMonitored=arr.some(x=>x.key===targetKey),links=ignisEnsureMotoristaVinculos();
+  links[sourceNorm]=targetKey;state.motoristasVinculosMeta[sourceNorm]={sourceName:p?.sourceName||sourceObj?.nome||sourceNorm,targetKey,targetName:target.nome,targetMatricula:target.matricula||'',fonte:_motVinculoFonte,wasMonitored:!!sourceObj,targetWasMonitored,updatedAt:Date.now()};
+  if(sourceObj&&sourceNorm!==targetKey)state.motoristasMonitorados=arr.filter(x=>x.key!==sourceNorm);
+  const atuais=ignisEnsureMotoristasState();if(!atuais.some(x=>x.key===targetKey))state.motoristasMonitorados.push({nome:target.nome,matricula:target.matricula||'',key:targetKey});
+  _ignisMotoristaCatalogCache={sig:'',list:[]};_ignisMotoristaResolverCache.clear();ignisEnsureMotoristasState();
+  const ok=await saveState({immediate:true,mode:'light'});if(!ok){showToast('O vínculo foi aplicado localmente, mas o Firebase ainda não confirmou.','error');return;}
+  showToast(`${p?.sourceName||sourceObj?.nome||'Nome'} vinculado a ${target.nome}.`,'success');_motVinculoSource='';_motVinculoTargetSearch='';
+  if(_motSubtab==='gobrax')renderGobrax();else if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='media')renderMotoristas(false);else renderMotoristasGeral();motoristasRenderVinculosModal();
+}
+async function motoristasRemoverVinculo(sourceEnc){
+  const source=ignisMotoristaNorm(decodeURIComponent(sourceEnc||'')),links=ignisEnsureMotoristaVinculos(),m=state.motoristasVinculosMeta?.[source]||{};if(!links[source])return;if(!confirm(`Desfazer o vínculo de ${m.sourceName||source}?`))return;
+  const targetKey=links[source];delete links[source];delete state.motoristasVinculosMeta[source];let arr=ignisEnsureMotoristasState();
+  if(m.wasMonitored&&!arr.some(x=>x.key===source))arr.push({nome:m.sourceName||source,matricula:'',key:source});
+  const outrosUsamTarget=Object.values(links).some(v=>v===targetKey);if(!m.targetWasMonitored&&!outrosUsamTarget)arr=arr.filter(x=>x.key!==targetKey);state.motoristasMonitorados=arr;
+  _ignisMotoristaCatalogCache={sig:'',list:[]};_ignisMotoristaResolverCache.clear();ignisEnsureMotoristasState();await saveState({immediate:true,mode:'light'});showToast('Vínculo removido.','success');
+  if(_motSubtab==='gobrax')renderGobrax();else if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='media')renderMotoristas(false);else renderMotoristasGeral();motoristasRenderVinculosModal();
+}
+
 function motoristasAbrirDetalhe(key,ciclo){
   const podeFinanceiro=authPodeVerFinanceiroMotoristas();
   document.body.classList.toggle('mot-financeiro-visivel',podeFinanceiro);
@@ -8097,7 +8216,7 @@ function idtStatus(row,meta){
 }
 function renderIDT(){
   authAplicarPermissoesMotoristas();
-  ignisEnsureIdtState();motoristasAtualizarUltimaData();idtAtualizarSeletor();
+  ignisEnsureIdtState();motoristasAtualizarUltimaData();idtAtualizarSeletor();motoristasAtualizarVinculosUI('idt');
   const sel=document.getElementById('idt-periodo'),content=document.getElementById('idt-content');if(!content)return;
   const imp=state.idtImportacoes.find(x=>x.id===sel?.value)||idtOrdenadas()[0]||null;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
@@ -8461,7 +8580,7 @@ function gobraxRegistrosFiltrados(){
   return{...base,rows};
 }
 function renderGobrax(){
-  ignisEnsureGobraxState();motoristasPeriodoAtualizarUI();motoristasAtualizarStatusBotoes();gobraxAtualizarSeletor();authAplicarPermissoesMotoristas();
+  ignisEnsureGobraxState();motoristasPeriodoAtualizarUI();motoristasAtualizarStatusBotoes();gobraxAtualizarSeletor();authAplicarPermissoesMotoristas();motoristasAtualizarVinculosUI('gobrax');
   const content=document.getElementById('gobrax-content');if(!content)return;const {imp,rows,fora}=gobraxRegistrosFiltrados();
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   const avaliados=rows.filter(r=>Number(r.peso)>0&&Number(r.nota)>0),avaliacoes=avaliados.reduce((s,r)=>s+Number(r.avaliacoesUsadas||0),0),naMeta=avaliados.filter(r=>r._status?.cls==='ok').length,abaixo=avaliados.filter(r=>r._status?.cls==='bad').length;
@@ -8483,7 +8602,7 @@ function renderGobrax(){
       <td data-label="Meta">${Number.isFinite(Number(r.meta))?Number(r.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</td>
       <td data-label="Status"><span class="mot-status ${r._status.cls}">${r._status.label}</span></td>
     </tr>`).join(''):'<tr><td colspan="6"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>';
-  content.innerHTML=`<div class="gobrax-import-meta"><span>Base selecionada:</span><strong>${pendEsc(imp.arquivo||'Nota Gobrax')}</strong><span>· importada ${pendEsc(imp.importedAt||'')}</span>${fora?`<span title="Nomes presentes no arquivo que não puderam ser associados com segurança à lista acompanhada">· ${fora} linha(s) sem associação segura</span>`:''}</div><div class="mot-table-wrap"><table class="mot-table">${head}<tbody>${body}</tbody></table></div>`;
+  content.innerHTML=`<div class="gobrax-import-meta"><span>Base selecionada:</span><strong>${pendEsc(imp.arquivo||'Nota Gobrax')}</strong><span>· importada ${pendEsc(imp.importedAt||'')}</span>${fora?`<span title="Os nomes pendentes aparecem acima e podem ser vinculados manualmente a qualquer motorista importado em Abastecimentos.">· ${fora} linha(s) ainda sem associação</span>`:''}</div><div class="mot-table-wrap"><table class="mot-table">${head}<tbody>${body}</tbody></table></div>`;
   ignisMotorSortHeaderUpdate('gobrax-table-head',_gobraxSort);_markPageClean('motoristas');
   if(_motSubtab==='geral')renderMotoristasGeral();
 }
