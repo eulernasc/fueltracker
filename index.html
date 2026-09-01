@@ -2425,7 +2425,28 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     #perm-motoristas-financeiro-label.perm-locked{opacity:.55}
     @media(max-width:1180px){.idt-toolbar-clean{grid-template-columns:1fr 1fr}.idt-toolbar-clean .mot-search{grid-column:1/-1}.idt-actions-clean{justify-content:stretch}.idt-actions-clean .btn{flex:1}.mot-periodbar{grid-template-columns:1fr 1fr}.mot-period-summary{grid-column:1/-1}.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{width:100%}.idt-toolbar{grid-template-columns:1fr 1fr}.idt-toolbar .mot-search{grid-column:1/-1}.idt-toolbar>.btn{width:100%}.idt-kpis{grid-template-columns:1fr 1fr}}
     @media(max-width:900px){.mot-data-freshness{width:100%;justify-content:flex-start}.page-header .header-actions{flex-wrap:wrap}.idt-toolbar-clean{display:block}.mot-filterbar{align-items:stretch}.mot-state-tabs{width:100%}.mot-filter-search{min-width:100%}.mot-filter-meta{width:100%;flex:1}.idt-actions-clean{width:100%}.idt-summary-clean{overflow-x:auto;padding-bottom:2px}.idt-summary-main,.idt-summary-item{flex:0 0 auto}.mot-periodbar{grid-template-columns:1fr}.mot-period-dates,.mot-period-summary{grid-column:auto}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1180px}.mot-detail-summary{grid-template-columns:1fr 1fr}.idt-toolbar{grid-template-columns:1fr}.idt-kpis{grid-template-columns:1fr 1fr}.idt-table{min-width:760px}}
-    @media(max-width:520px){.mot-subtabs{width:100%}.mot-state-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mot-state-btn{width:100%}.mot-period-dates{grid-template-columns:1fr}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
+    
+    /* Modais de detalhe do Motoristas maiores no desktop */
+    #mot-detalhe-modal,#idt-driver-detail-modal,#gobrax-detail-modal{padding:18px!important;align-items:center!important;justify-content:center!important}
+    #mot-detalhe-modal .modal,#idt-driver-detail-modal .modal,#gobrax-detail-modal .modal{width:min(1380px,96vw)!important;max-width:none!important;max-height:92vh!important;overflow:auto!important;padding:28px 30px!important;border-radius:20px!important}
+    #mot-detalhe-modal #mot-detail-content,#idt-driver-detail-modal #idt-driver-detail-content,#gobrax-detail-modal #gobrax-detail-content{max-width:1320px;width:100%;margin:0 auto}
+    #mot-detalhe-modal .mot-detail-summary,#idt-driver-detail-modal .mot-detail-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
+    #mot-detalhe-modal .mot-detail-scroll{max-height:64vh!important}
+    #mot-detalhe-modal .mot-detail-table th,#mot-detalhe-modal .mot-detail-table td{font-size:11px}
+    @media(max-width:1100px){
+      #mot-detalhe-modal,#idt-driver-detail-modal,#gobrax-detail-modal{padding:10px!important;align-items:stretch!important;justify-content:stretch!important}
+      #mot-detalhe-modal .modal,#idt-driver-detail-modal .modal,#gobrax-detail-modal .modal{width:calc(100vw - 20px)!important;max-width:none!important;max-height:calc(100dvh - 20px)!important;height:auto!important;padding:22px 18px!important;border-radius:18px!important}
+      #mot-detalhe-modal .mot-detail-summary,#idt-driver-detail-modal .mot-detail-summary{grid-template-columns:1fr 1fr!important}
+      #mot-detalhe-modal .mot-detail-scroll{max-height:calc(100dvh - 290px)!important}
+    }
+    @media(max-width:640px){
+      #mot-detalhe-modal,#idt-driver-detail-modal,#gobrax-detail-modal{padding:0!important}
+      #mot-detalhe-modal .modal,#idt-driver-detail-modal .modal,#gobrax-detail-modal .modal{width:100vw!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;padding:18px 14px calc(22px + env(safe-area-inset-bottom,0px))!important}
+      #mot-detalhe-modal .mot-detail-summary,#idt-driver-detail-modal .mot-detail-summary{grid-template-columns:1fr 1fr!important}
+      #mot-detalhe-modal .mot-detail-scroll{max-height:none!important}
+    }
+
+@media(max-width:520px){.mot-subtabs{width:100%}.mot-state-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mot-state-btn{width:100%}.mot-period-dates{grid-template-columns:1fr}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
 
     /* v45 · Visão Geral Motoristas PX */
     .mot-geral-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}.mot-geral-toolbar .filter-input{max-width:620px}
