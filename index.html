@@ -2508,7 +2508,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <input class="filter-input" id="mot-geral-busca" placeholder="Buscar motorista..." oninput="motoristasGeralDebouncedRender()">
         <button class="mot-geral-efic-config-btn" id="mot-geral-efic-config-btn" type="button" onclick="motoristasEficienciaAbrirConfig()" title="Configurar faixas da Eficiência Geral" style="display:none"><span>Faixas eficiência</span><strong id="mot-geral-efic-config-label">Verde ≥ 98%</strong></button>
       </div>
-      <div class="mot-geral-legend">Resumo integrado por motorista. A <strong>Eficiência Geral</strong> é a média das eficiências disponíveis de Combustível, IDT e Nota Gobrax, usando teto de 100% em cada componente. Se houver apenas 2 indicadores, a média é feita pelos 2. Clique em uma das análises para ver a eficiência real, inclusive quando passar de 100%.</div>
+      <div class="mot-geral-legend">Resumo integrado por motorista. A <strong>Eficiência Geral</strong> usa pesos de <strong>50% Combustível, 30% IDT e 20% Nota Gobrax</strong>, com teto de 100% em cada componente. Se houver apenas 2 indicadores, os pesos disponíveis são normalizados proporcionalmente. Clique em uma das análises para ver a eficiência real, inclusive quando passar de 100%.</div>
       <div id="mot-geral-content" class="mot-geral-list"></div>
     </div>
 
@@ -8725,10 +8725,26 @@ function motoristasEficienciaCap(v){
 }
 function motoristasEficienciaGeralCalcular(f,i,g,metaIdt){
   const fuel=motoristasEficienciaFuelRaw(f),idt=motoristasEficienciaIdtRaw(i,metaIdt),gobrax=motoristasEficienciaGobraxRaw(g);
-  const componentes=[fuel,idt,gobrax].filter(Number.isFinite).map(motoristasEficienciaCap).filter(Number.isFinite);
-  if(!componentes.length)return{fuel,idt,gobrax,geral:null,qtd:0,completo:false};
-  const geral=componentes.reduce((s,v)=>s+v,0)/componentes.length;
-  return{fuel,idt,gobrax,geral,qtd:componentes.length,completo:true};
+  const pesos={fuel:.50,idt:.30,gobrax:.20};
+  const disponiveis=[
+    {key:'fuel',raw:fuel,peso:pesos.fuel},
+    {key:'idt',raw:idt,peso:pesos.idt},
+    {key:'gobrax',raw:gobrax,peso:pesos.gobrax}
+  ].filter(x=>Number.isFinite(x.raw));
+  if(disponiveis.length<2)return{fuel,idt,gobrax,geral:null,qtd:disponiveis.length,completo:false,pesoDisponivel:0,contribuicoes:{}};
+  const pesoDisponivel=disponiveis.reduce((s,x)=>s+x.peso,0);
+  const contribuicoes={};
+  let somaPonderada=0;
+  disponiveis.forEach(x=>{
+    const capped=motoristasEficienciaCap(x.raw);
+    const contribuicao=capped*x.peso;
+    contribuicoes[x.key]={raw:x.raw,capped,peso:x.peso,contribuicao};
+    somaPonderada+=contribuicao;
+  });
+  // Se faltar um dos 3 indicadores, os pesos disponíveis são normalizados
+  // para que a Eficiência Geral continue variando de 0% a 100%.
+  const geral=pesoDisponivel>0?somaPonderada/pesoDisponivel:null;
+  return{fuel,idt,gobrax,geral,qtd:disponiveis.length,completo:Number.isFinite(geral),pesoDisponivel,contribuicoes};
 }
 function motoristasEficienciaStatus(v,cfg=motoristasEficienciaConfig()){
   const n=Number(v);if(!Number.isFinite(n))return{cls:'none',label:'Sem dados'};
@@ -8740,12 +8756,19 @@ function motoristasEficienciaAtualizarPainel(){
   const cfg=motoristasEficienciaConfig(),el=document.getElementById('mot-geral-efic-config-label');
   if(el)el.textContent=`Verde ≥ ${cfg.verde.toLocaleString('pt-BR',{maximumFractionDigits:1})}%`;
 }
+function motoristasEficienciaAbrirInfo(){
+  let ov=document.getElementById('mot-efic-info-modal');
+  if(!ov){ov=document.createElement('div');ov.id='mot-efic-info-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal mot-efic-info-modal"><div id="mot-efic-info-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeModal('mot-efic-info-modal');});}
+  const c=document.getElementById('mot-efic-info-content');if(!c)return;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Como é calculada a Eficiência Geral</div><div class="mot-efic-config-copy">Cada área tem um peso próprio. Antes de aplicar o peso, a eficiência usada no consolidado é limitada a 100%. A eficiência real, inclusive acima de 100%, continua visível ao abrir o detalhe da respectiva análise.</div></div><button class="pend-close" onclick="closeModal('mot-efic-info-modal')">×</button></div><div class="mot-efic-info-weights"><div><span>Combustível</span><strong>50%</strong></div><div><span>IDT</span><strong>30%</strong></div><div><span>Nota Gobrax</span><strong>20%</strong></div></div><div class="mot-efic-formula"><strong>Eficiência do Combustível:</strong> (Média Real ÷ Média Ideal) × 100<br><strong>Eficiência do IDT:</strong> (Meta IDT ÷ IDT realizado) × 100<br><strong>Eficiência da Gobrax:</strong> (Nota ÷ Meta Gobrax) × 100<br><br><strong>Exemplo:</strong><br>Combustível 98% × 0,50 = 49,0%<br>IDT 75% × 0,30 = 22,5%<br>Nota Gobrax 85% × 0,20 = 17,0%<br><strong>Total = 88,5%</strong><br><br>Se uma das três áreas estiver sem dados, o cálculo usa as duas disponíveis e normaliza proporcionalmente os pesos delas para que o resultado continue entre 0% e 100%.</div>`;
+  ov.classList.add('open');
+}
 function motoristasEficienciaAbrirConfig(){
   if(!authExigirAcaoMotoristas('motoristas_eficiencia_faixas','Sem permissão para configurar as faixas da Eficiência Geral.'))return;
   const cfg=motoristasEficienciaConfig();let ov=document.getElementById('mot-efic-config-modal');
   if(!ov){ov=document.createElement('div');ov.id='mot-efic-config-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal mot-efic-config-modal"><div id="mot-efic-config-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeModal('mot-efic-config-modal');});}
   const c=document.getElementById('mot-efic-config-content');if(!c)return;
-  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Faixas · Eficiência Geral</div><div class="mot-efic-config-copy">A Eficiência Geral usa os indicadores disponíveis. Para o consolidado, cada eficiência individual é limitada a 100%. Se um dos três indicadores estiver sem dados, a média é feita pelos outros dois. Nos detalhes, a eficiência real continua sendo mostrada sem esse teto.</div></div><button class="pend-close" onclick="closeModal('mot-efic-config-modal')">×</button></div><div class="mot-efic-config-grid"><div class="mot-efic-config-field"><label>Atenção a partir de</label><input id="mot-efic-atencao" type="number" min="0" max="100" step="0.1" value="${cfg.atencao}"></div><div class="mot-efic-config-field"><label>Verde a partir de</label><input id="mot-efic-verde" type="number" min="0" max="100" step="0.1" value="${cfg.verde}"></div></div><div class="mot-efic-formula"><strong>Combustível:</strong> (Média Real ÷ Média Ideal) × 100<br><strong>IDT:</strong> (Meta IDT ÷ IDT realizado) × 100<br><strong>Gobrax:</strong> (Nota ÷ Meta Gobrax) × 100<br><strong>Eficiência Geral:</strong> média das eficiências disponíveis, cada uma limitada a 100%. Com 3 indicadores divide por 3; com 2 divide por 2.</div><div class="modal-actions" style="margin-top:14px"><button class="btn btn-secondary" onclick="closeModal('mot-efic-config-modal')">Cancelar</button><button class="btn btn-primary" onclick="motoristasEficienciaSalvarConfig()">Salvar faixas</button></div>`;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Faixas · Eficiência Geral</div><div class="mot-efic-config-copy">A Eficiência Geral é ponderada: Combustível 50%, IDT 30% e Nota Gobrax 20%. Para o consolidado, cada eficiência individual é limitada a 100%. Se um dos três indicadores estiver sem dados, os pesos dos dois disponíveis são normalizados proporcionalmente. Nos detalhes, a eficiência real continua sendo mostrada sem esse teto.</div></div><button class="pend-close" onclick="closeModal('mot-efic-config-modal')">×</button></div><div class="mot-efic-config-grid"><div class="mot-efic-config-field"><label>Atenção a partir de</label><input id="mot-efic-atencao" type="number" min="0" max="100" step="0.1" value="${cfg.atencao}"></div><div class="mot-efic-config-field"><label>Verde a partir de</label><input id="mot-efic-verde" type="number" min="0" max="100" step="0.1" value="${cfg.verde}"></div></div><div class="mot-efic-formula"><strong>Combustível:</strong> (Média Real ÷ Média Ideal) × 100 · peso 50%<br><strong>IDT:</strong> (Meta IDT ÷ IDT realizado) × 100 · peso 30%<br><strong>Gobrax:</strong> (Nota ÷ Meta Gobrax) × 100 · peso 20%<br><strong>Eficiência Geral:</strong> soma ponderada das eficiências, com teto de 100% em cada componente. Se faltar 1 indicador, os pesos dos 2 restantes são reproporcionados para totalizar 100%.</div><div class="modal-actions" style="margin-top:14px"><button class="btn btn-secondary" onclick="closeModal('mot-efic-config-modal')">Cancelar</button><button class="btn btn-primary" onclick="motoristasEficienciaSalvarConfig()">Salvar faixas</button></div>`;
   ov.classList.add('open');
 }
 function motoristasEficienciaSalvarConfig(){
@@ -8765,11 +8788,11 @@ function motoristasGeralPreencherEficiencias(drivers,fuel,idt,gob,metaIdt){
       const st=motoristasEficienciaStatus(ef.geral,cfg);
       el.className='mot-geral-overall';
       const partes=[];
-      if(Number.isFinite(ef.fuel))partes.push(`Combustível: ${ef.fuel.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%`);
-      if(Number.isFinite(ef.idt))partes.push(`IDT: ${ef.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%`);
-      if(Number.isFinite(ef.gobrax))partes.push(`Gobrax: ${ef.gobrax.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%`);
+      if(Number.isFinite(ef.fuel))partes.push(`Combustível: ${ef.fuel.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}% · peso 50%`);
+      if(Number.isFinite(ef.idt))partes.push(`IDT: ${ef.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}% · peso 30%`);
+      if(Number.isFinite(ef.gobrax))partes.push(`Gobrax: ${ef.gobrax.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}% · peso 20%`);
       el.title=partes.join(' · ');
-      el.innerHTML=`<div><div class="mot-geral-overall-value ${st.cls}">${ef.geral.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%</div><small>${ef.qtd} indicador${ef.qtd===1?'':'es'} · teto 100%</small></div><span class="mot-status ${st.cls}">${st.label}</span>`;
+      el.innerHTML=`<div><div class="mot-geral-overall-value ${st.cls}">${ef.geral.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%</div><small>${ef.qtd} indicadores · pesos ${ef.qtd===3?'50/30/20':'normalizados'} · teto 100%</small></div><span class="mot-status ${st.cls}">${st.label}</span>`;
     }catch(err){console.error('Eficiência Geral PX:',m?.nome,err);el.className='mot-geral-overall empty';el.textContent='Não foi possível calcular';}
   });
 }
@@ -8834,7 +8857,7 @@ function renderMotoristasGeral(){
     if(!drivers.length){box.innerHTML='<div class="mot-empty">Nenhum motorista corresponde à busca.</div>';_markPageClean('motoristas');return;}
     const eficArrow=_motGeralEficienciaSort==='desc'?'↓':(_motGeralEficienciaSort==='asc'?'↑':'↕');
     const eficTitle=_motGeralEficienciaSort==='desc'?'Maior para menor':(_motGeralEficienciaSort==='asc'?'Menor para maior':'Clique para ordenar');
-    const header=`<div class="mot-geral-grid-head"><div>Motorista</div><div>Combustível</div><div>IDT</div><div>Nota Gobrax</div><div class="mot-geral-efic-head"><button type="button" class="mot-geral-efic-sort-btn" onclick="motoristasGeralToggleEficienciaSort()" title="${eficTitle}" aria-label="Ordenar Eficiência Geral. ${eficTitle}"><span>Eficiência Geral</span><span class="mot-geral-efic-sort-arrow">${eficArrow}</span></button></div></div>`;
+    const header=`<div class="mot-geral-grid-head"><div>Motorista</div><div>Combustível</div><div>IDT</div><div>Nota Gobrax</div><div class="mot-geral-efic-head"><button type="button" class="mot-geral-efic-sort-btn" onclick="motoristasGeralToggleEficienciaSort()" title="${eficTitle}" aria-label="Ordenar Eficiência Geral. ${eficTitle}"><span>Eficiência Geral</span><span class="mot-geral-efic-sort-arrow">${eficArrow}</span></button><button type="button" class="mot-geral-efic-info-btn" onclick="event.stopPropagation();motoristasEficienciaAbrirInfo()" title="Como é calculada a Eficiência Geral" aria-label="Ver explicação do cálculo da Eficiência Geral">i</button></div></div>`;
     const body=drivers.map((m,idx)=>{
       const f=fuel.get(m.key),i=idt.get(m.key),g=gob.get(m.key),fst=f?motoristasStatus(f):null,ist=i?idtStatus(i,metaIdt):null,gst=g?g._status:null;
       const safeKey=m.key.replace(/'/g,"\\'");
@@ -15786,10 +15809,16 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 
 /* IGNIS v59 · eficiência parcial + ordenação */
 #mot-panel-geral .mot-geral-efic-head{padding:0!important}
-#mot-panel-geral .mot-geral-efic-sort-btn{width:100%;height:100%;min-height:40px;border:0;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;font-weight:900;font-size:12px;font-family:inherit;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+#mot-panel-geral .mot-geral-efic-sort-btn{width:100%;height:100%;min-height:40px;border:0;background:transparent;color:var(--accent);display:flex;align-items:center;justify-content:center;gap:7px;padding:10px 12px;font:900 12px inherit;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
 #mot-panel-geral .mot-geral-efic-sort-btn:hover{background:rgba(233,95,50,.08)}
 #mot-panel-geral .mot-geral-efic-sort-btn:focus-visible{outline:2px solid rgba(233,95,50,.55);outline-offset:-2px}
 #mot-panel-geral .mot-geral-efic-sort-arrow{font-size:14px;line-height:1;color:var(--accent);font-weight:900}
+#mot-panel-geral .mot-geral-efic-head{position:relative}
+#mot-panel-geral .mot-geral-efic-sort-btn{padding-right:38px}
+#mot-panel-geral .mot-geral-efic-info-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;border:1px solid rgba(233,95,50,.35);background:rgba(233,95,50,.08);color:var(--accent);display:flex;align-items:center;justify-content:center;font:900 12px Georgia,serif;cursor:pointer;z-index:2}
+#mot-panel-geral .mot-geral-efic-info-btn:hover{background:rgba(233,95,50,.16);border-color:rgba(233,95,50,.55)}
+.mot-efic-info-modal{width:min(620px,92vw)!important}.mot-efic-info-weights{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 14px}.mot-efic-info-weights>div{padding:13px;border:1px solid var(--border);border-radius:11px;background:#101720}.mot-efic-info-weights span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:850}.mot-efic-info-weights strong{display:block;margin-top:5px;font:850 18px 'DM Mono',monospace;color:var(--accent)}
+@media(max-width:560px){.mot-efic-info-weights{grid-template-columns:1fr}.mot-efic-info-modal{width:100vw!important;max-width:none!important}}
 </style>
 <script id="ignis-custom-calendar-2026">
 (function(){
