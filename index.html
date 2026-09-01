@@ -3329,6 +3329,79 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
     align-self:center;
   }
 }
+
+/* IGNIS v55 · Geral PX em 4 blocos verticais arredondados */
+@media(min-width:901px){
+  #mot-panel-geral .mot-geral-list{
+    border:0!important;
+    background:transparent!important;
+    overflow:visible!important;
+  }
+  #mot-panel-geral .mot-geral-grid-head,
+  #mot-panel-geral .mot-geral-row{
+    column-gap:10px!important;
+  }
+  #mot-panel-geral .mot-geral-grid-head{
+    position:sticky!important;
+    top:8px!important;
+    z-index:8!important;
+    margin-bottom:0!important;
+    border:0!important;
+    border-radius:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  #mot-panel-geral .mot-geral-grid-head>div{
+    background:#171f28!important;
+    border:1px solid rgba(138,157,178,.20)!important;
+    border-bottom-color:rgba(138,157,178,.16)!important;
+    border-radius:12px 12px 0 0!important;
+    padding:10px 12px!important;
+    box-shadow:0 7px 16px rgba(0,0,0,.15)!important;
+  }
+  #mot-panel-geral .mot-geral-row{
+    margin-bottom:0!important;
+    border:0!important;
+    border-radius:0!important;
+    overflow:visible!important;
+    background:transparent!important;
+    min-height:52px!important;
+  }
+  #mot-panel-geral .mot-geral-row:hover{background:transparent!important}
+  #mot-panel-geral .mot-geral-row>div,
+  #mot-panel-geral .mot-geral-row>button{
+    background:#10171f!important;
+    border-left:1px solid rgba(138,157,178,.16)!important;
+    border-right:1px solid rgba(138,157,178,.16)!important;
+    border-top:0!important;
+    border-bottom:1px solid rgba(138,157,178,.11)!important;
+    border-radius:0!important;
+  }
+  #mot-panel-geral .mot-geral-row:hover>div,
+  #mot-panel-geral .mot-geral-row:hover>button{
+    background:#111a23!important;
+  }
+  #mot-panel-geral .mot-geral-row:last-child>div,
+  #mot-panel-geral .mot-geral-row:last-child>button{
+    border-bottom:1px solid rgba(138,157,178,.18)!important;
+    border-radius:0 0 12px 12px!important;
+    padding-bottom:6px!important;
+  }
+  #mot-panel-geral .mot-geral-driver{
+    background:#10171f!important;
+  }
+  #mot-panel-geral .mot-geral-card{
+    background:#10171f!important;
+  }
+  #mot-panel-geral .mot-geral-card:disabled{
+    background:#10171f!important;
+  }
+  #mot-panel-geral .mot-geral-card:hover{
+    background:#111a23!important;
+  }
+}
+
 </style>
 
 <div id="page-kmcomp" class="page">
