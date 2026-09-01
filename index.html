@@ -3225,6 +3225,110 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
   #mot-panel-geral .mot-geral-state-tabs{width:100%}
   #mot-panel-geral .mot-geral-toolbar .filter-input{max-width:none;width:100%}
 }
+
+/* IGNIS v54 · Geral PX mais compacto, arredondado e legível */
+@media(min-width:901px){
+  #mot-panel-geral .mot-geral-list{
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    overflow:visible!important;
+  }
+  #mot-panel-geral .mot-geral-grid-head,
+  #mot-panel-geral .mot-geral-row{
+    grid-template-columns:minmax(245px,1.02fr) minmax(310px,1.18fr) minmax(290px,1.05fr) minmax(220px,.85fr)!important;
+    column-gap:7px;
+    min-width:1080px!important;
+  }
+  #mot-panel-geral .mot-geral-grid-head{
+    top:8px!important;
+    margin-bottom:7px;
+    border:1px solid rgba(138,157,178,.18)!important;
+    border-radius:12px!important;
+    overflow:hidden;
+    background:#171f28!important;
+    box-shadow:0 8px 20px rgba(0,0,0,.20)!important;
+  }
+  #mot-panel-geral .mot-geral-grid-head>div{
+    padding:10px 10px!important;
+    border-right:0!important;
+    font-size:12px!important;
+    line-height:1!important;
+    color:var(--accent)!important;
+  }
+  #mot-panel-geral .mot-geral-row{
+    min-height:52px!important;
+    margin-bottom:6px;
+    border:1px solid rgba(138,157,178,.13)!important;
+    border-radius:12px!important;
+    overflow:hidden;
+    background:#10171f!important;
+  }
+  #mot-panel-geral .mot-geral-row:last-child{margin-bottom:0}
+  #mot-panel-geral .mot-geral-row:hover{
+    border-color:rgba(138,157,178,.22)!important;
+    background:#111a23!important;
+  }
+  #mot-panel-geral .mot-geral-driver{
+    min-height:52px!important;
+    padding:6px 10px!important;
+    border-right:0!important;
+    background:rgba(255,255,255,.006);
+  }
+  #mot-panel-geral .mot-geral-driver strong{font-size:11.5px!important;line-height:1.12!important}
+  #mot-panel-geral .mot-geral-driver span{font-size:8px!important;margin-top:2px!important}
+  #mot-panel-geral .mot-geral-card{
+    min-height:52px!important;
+    padding:5px 9px!important;
+    border:0!important;
+    border-radius:9px!important;
+    background:rgba(255,255,255,.012)!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:1fr!important;
+    align-items:center!important;
+    gap:7px!important;
+  }
+  #mot-panel-geral .mot-geral-card:hover{background:rgba(255,255,255,.03)!important}
+  #mot-panel-geral .mot-geral-card:disabled{background:rgba(255,255,255,.006)!important}
+  #mot-panel-geral .mot-geral-card-head{
+    grid-column:2!important;
+    grid-row:1!important;
+    align-self:center!important;
+    min-height:0!important;
+    margin:0!important;
+  }
+  #mot-panel-geral .mot-geral-card .mot-status{
+    padding:3px 6px!important;
+    font-size:7.7px!important;
+    white-space:nowrap;
+  }
+  #mot-panel-geral .mot-geral-metrics{
+    grid-column:1!important;
+    grid-row:1!important;
+    gap:6px!important;
+    align-items:center!important;
+    min-width:0;
+  }
+  #mot-panel-geral .mot-geral-metric{min-width:0}
+  #mot-panel-geral .mot-geral-metric span{
+    font-size:8.6px!important;
+    line-height:1.05!important;
+    letter-spacing:.045em!important;
+    margin-bottom:2px!important;
+    color:#7f91a6!important;
+  }
+  #mot-panel-geral .mot-geral-metric strong{
+    font-size:13px!important;
+    line-height:1.08!important;
+  }
+  #mot-panel-geral .mot-geral-empty{
+    grid-column:1/-1;
+    padding:0!important;
+    font-size:8.8px!important;
+    align-self:center;
+  }
+}
 </style>
 
 <div id="page-kmcomp" class="page">
