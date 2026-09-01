@@ -1041,7 +1041,9 @@ tr.selected-row td{background:rgba(79,142,247,.06);}
 .status-inativa::before{background:var(--red);}
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-.modal-overlay.open{display:flex;}
+.modal-overlay.open{display:flex;overscroll-behavior:contain;}
+html.ignis-modal-scroll-lock,body.ignis-modal-scroll-lock{overflow:hidden!important;overscroll-behavior:none!important;}
+.modal-overlay.open .modal{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 .modal{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:28px;width:480px;max-height:85vh;overflow-y:auto;}
 .modal-title{font-size:18px;font-weight:700;margin-bottom:22px;}
 .form-group{margin-bottom:16px;}
@@ -7384,8 +7386,72 @@ function limparPeriodosSelecionados(){
     const r=ignisRemoverPeriodos(ids);renderHistoricoPeriodos();showToast(`${r.periodos} semana(s) apagada(s) · ${r.registros} registro(s) removido(s)`,'success');
   });
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m && _mousedownTarget===m)m.classList.remove('open');});});
+/* Bloqueio global de rolagem do fundo enquanto qualquer modal estiver aberto. */
+let _ignisModalScrollLocked=false;
+let _ignisModalScrollY=0;
+let _ignisModalRestore=null;
+function ignisGetOpenModals(){return Array.from(document.querySelectorAll('.modal-overlay.open'));}
+function ignisLockBackgroundScroll(){
+  if(_ignisModalScrollLocked||!document.body)return;
+  _ignisModalScrollLocked=true;
+  _ignisModalScrollY=window.scrollY||window.pageYOffset||0;
+  const b=document.body,h=document.documentElement;
+  const gap=Math.max(0,window.innerWidth-h.clientWidth);
+  _ignisModalRestore={
+    bodyPosition:b.style.position,bodyTop:b.style.top,bodyLeft:b.style.left,bodyRight:b.style.right,
+    bodyWidth:b.style.width,bodyOverflow:b.style.overflow,bodyPaddingRight:b.style.paddingRight,
+    htmlOverflow:h.style.overflow,htmlOverscroll:h.style.overscrollBehavior,bodyOverscroll:b.style.overscrollBehavior
+  };
+  h.style.overflow='hidden';
+  h.style.overscrollBehavior='none';
+  b.style.position='fixed';
+  b.style.top=`-${_ignisModalScrollY}px`;
+  b.style.left='0';
+  b.style.right='0';
+  b.style.width='100%';
+  b.style.overflow='hidden';
+  b.style.overscrollBehavior='none';
+  if(gap>0)b.style.paddingRight=`${gap}px`;
+  b.classList.add('ignis-modal-scroll-lock');
+  h.classList.add('ignis-modal-scroll-lock');
+}
+function ignisUnlockBackgroundScroll(){
+  if(!_ignisModalScrollLocked||!document.body)return;
+  _ignisModalScrollLocked=false;
+  const b=document.body,h=document.documentElement,r=_ignisModalRestore||{};
+  b.style.position=r.bodyPosition||'';
+  b.style.top=r.bodyTop||'';
+  b.style.left=r.bodyLeft||'';
+  b.style.right=r.bodyRight||'';
+  b.style.width=r.bodyWidth||'';
+  b.style.overflow=r.bodyOverflow||'';
+  b.style.paddingRight=r.bodyPaddingRight||'';
+  b.style.overscrollBehavior=r.bodyOverscroll||'';
+  h.style.overflow=r.htmlOverflow||'';
+  h.style.overscrollBehavior=r.htmlOverscroll||'';
+  b.classList.remove('ignis-modal-scroll-lock');
+  h.classList.remove('ignis-modal-scroll-lock');
+  const y=_ignisModalScrollY;_ignisModalRestore=null;
+  requestAnimationFrame(()=>window.scrollTo(0,y));
+}
+function ignisSyncModalScrollLock(){
+  if(ignisGetOpenModals().length)ignisLockBackgroundScroll();
+  else ignisUnlockBackgroundScroll();
+}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('open');ignisSyncModalScrollLock();}
+document.querySelectorAll('.modal-overlay').forEach(m=>{m.addEventListener('click',e=>{if(e.target===m&&_mousedownTarget===m){m.classList.remove('open');ignisSyncModalScrollLock();}});});
+/* Cobre também modais criados dinamicamente e aberturas/fechamentos via classList em qualquer parte do sistema. */
+const _ignisModalObserver=new MutationObserver(ignisSyncModalScrollLock);
+_ignisModalObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+/* Impede wheel/touch de movimentar a página de trás, sem bloquear a rolagem interna do modal. */
+function ignisBlockBackgroundScrollEvent(e){
+  const opens=ignisGetOpenModals();if(!opens.length)return;
+  const top=opens[opens.length-1],modal=e.target?.closest?.('.modal');
+  if(!modal||!top.contains(modal))e.preventDefault();
+}
+document.addEventListener('wheel',ignisBlockBackgroundScrollEvent,{passive:false,capture:true});
+document.addEventListener('touchmove',ignisBlockBackgroundScrollEvent,{passive:false,capture:true});
+ignisSyncModalScrollLock();
 
 function salvarAbastecimento() {
   const placa=document.getElementById('abast-placa').value;
