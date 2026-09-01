@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IGNIS v44 · Gobrax: KM por período com fallback + detalhe ampliado -->
+<!-- IGNIS v50 · Permissão individual para gerenciar Motoristas PX -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -2469,7 +2469,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
   <div id="page-motoristas" class="page">
     <div class="page-header">
       <div><div class="page-title">Motoristas PX</div><div class="page-sub">Acompanhamento de consumo e telemetria dos motoristas PX</div></div>
-      <div class="header-actions"><div class="mot-data-freshness" id="mot-data-freshness" title="Maior data de abastecimento disponível na base do IGNIS"><span class="mot-data-dot"></span><span id="mot-data-freshness-text"><span class="mot-data-label">Dados atualizados até</span><strong>Verificando...</strong></span></div><button class="btn btn-secondary" id="btn-idt-historico" style="display:none" onclick="idtAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-idt-importar" style="display:none" onclick="idtAbrirImportacao()">Importar desvios</button><button class="btn btn-secondary" id="btn-gobrax-historico" style="display:none" onclick="gobraxAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-gobrax-importar" style="display:none" onclick="gobraxAbrirImportacao()">Importar Nota Gobrax</button><button class="btn btn-secondary" id="btn-gobrax-config" style="display:none" onclick="gobraxAbrirConfig()">Configurar faixas</button><button class="btn btn-secondary" id="btn-mot-vinculos" style="display:none" onclick="motoristasAbrirVinculos(_motSubtab)">Vincular nomes</button><button class="btn btn-secondary" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
+      <div class="header-actions"><div class="mot-data-freshness" id="mot-data-freshness" title="Maior data de abastecimento disponível na base do IGNIS"><span class="mot-data-dot"></span><span id="mot-data-freshness-text"><span class="mot-data-label">Dados atualizados até</span><strong>Verificando...</strong></span></div><button class="btn btn-secondary" id="btn-idt-historico" style="display:none" onclick="idtAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-idt-importar" style="display:none" onclick="idtAbrirImportacao()">Importar desvios</button><button class="btn btn-secondary" id="btn-gobrax-historico" style="display:none" onclick="gobraxAbrirHistorico()">Histórico</button><button class="btn btn-primary" id="btn-gobrax-importar" style="display:none" onclick="gobraxAbrirImportacao()">Importar Nota Gobrax</button><button class="btn btn-secondary" id="btn-gobrax-config" style="display:none" onclick="gobraxAbrirConfig()">Configurar faixas</button><button class="btn btn-secondary" id="btn-mot-vinculos" style="display:none" onclick="motoristasAbrirVinculos(_motSubtab)">Vincular nomes</button><button class="btn btn-secondary" id="btn-mot-gerenciar" style="display:none" onclick="motoristasAbrirGestao()">Gerenciar motoristas</button></div>
     </div>
 
     <div class="mot-subtabs">
@@ -3607,9 +3607,10 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
           <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_idt_excluir"> Excluir importações IDT</label>
           <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_importar"> Importar Nota Gobrax</label>
           <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_excluir"> Excluir importações Gobrax</label>
-          <label class="perm-item" id="perm-motoristas-financeiro-label" style="margin:0;grid-column:1/-1"><input type="checkbox" data-perm="motoristas_financeiro_ver"> Ver Economia / Desperdício</label>
+          <label class="perm-item" id="perm-motoristas-gerenciar-label" style="margin:0"><input type="checkbox" data-perm="motoristas_gerenciar"> Adicionar / remover motoristas</label>
+          <label class="perm-item" id="perm-motoristas-financeiro-label" style="margin:0"><input type="checkbox" data-perm="motoristas_financeiro_ver"> Ver Economia / Desperdício</label>
         </div>
-        <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-top:8px">Importar/Excluir são permissões separadas para <strong>IDT</strong> e <strong>Nota Gobrax</strong> em Motoristas PX. A permissão <strong>Ver Economia / Desperdício</strong> libera somente a coluna financeira dos motoristas e começa desativada para todos, exceto o ADM Master.</div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-top:8px">Importar/Excluir são permissões separadas para <strong>IDT</strong> e <strong>Nota Gobrax</strong>. <strong>Adicionar / remover motoristas</strong> controla exclusivamente o botão Gerenciar motoristas e começa desativado para todos, exceto o ADM Master. A permissão <strong>Ver Economia / Desperdício</strong> também é individual.</div>
       </div>
       <div style="margin-top:10px;padding:10px;background:rgba(232,148,26,.08);border:1px solid rgba(232,148,26,.3);border-radius:8px">
         <label class="perm-item" style="background:none;border:none;padding:0;gap:8px">
@@ -4527,6 +4528,14 @@ function authPodeVerFinanceiroMotoristas(){
   if(u.role==='adm')return true;
   return Array.isArray(u.perms)&&u.perms.includes('motoristas_financeiro_ver');
 }
+// Gerenciar a lista de Motoristas PX é uma permissão individual.
+// O ADM Master sempre pode; Admin/Usuário só quando o ADM Master liberar explicitamente.
+function authPodeGerenciarMotoristas(){
+  const u=window._authUser;
+  if(!u)return false;
+  if(u.role==='adm')return true;
+  return Array.isArray(u.perms)&&u.perms.includes('motoristas_gerenciar');
+}
 function authAtualizarControlePermissaoFinanceiro(){
   const cb=document.querySelector('[data-perm="motoristas_financeiro_ver"]');
   const label=document.getElementById('perm-motoristas-financeiro-label');
@@ -4538,6 +4547,17 @@ function authAtualizarControlePermissaoFinanceiro(){
     label.title=podeAlterar?'Permissão individual para visualizar Economia / Desperdício em Motoristas PX.':'Somente o ADM Master pode alterar esta permissão.';
   }
 }
+function authAtualizarControlePermissaoGerenciarMotoristas(){
+  const cb=document.querySelector('[data-perm="motoristas_gerenciar"]');
+  const label=document.getElementById('perm-motoristas-gerenciar-label');
+  if(!cb)return;
+  const podeAlterar=window._authUser?.role==='adm';
+  cb.disabled=!podeAlterar;
+  if(label){
+    label.classList.toggle('perm-locked',!podeAlterar);
+    label.title=podeAlterar?'Permissão individual para adicionar/remover Motoristas PX.':'Somente o ADM Master pode liberar esta permissão.';
+  }
+}
 function authAplicarPermissoesMotoristas(){
   const noIdt=_motSubtab==='idt',noGobrax=_motSubtab==='gobrax';
   const hist=document.getElementById('btn-idt-historico');
@@ -4546,12 +4566,14 @@ function authAplicarPermissoesMotoristas(){
   const gi=document.getElementById('btn-gobrax-importar');
   const gc=document.getElementById('btn-gobrax-config');
   const vb=document.getElementById('btn-mot-vinculos');
+  const mg=document.getElementById('btn-mot-gerenciar');
   if(hist)hist.style.display=noIdt?'':'none';
   if(imp)imp.style.display=noIdt&&authTemPermissao('motoristas_idt_importar')?'':'none';
   if(gh)gh.style.display=noGobrax?'':'none';
   if(gi)gi.style.display=noGobrax&&authTemPermissao('motoristas_gobrax_importar')?'':'none';
   if(gc)gc.style.display=noGobrax&&(window._authUser?.role==='adm'||window._authUser?.role==='admin')?'':'none';
   if(vb)vb.style.display=(_motSubtab==='media'||_motSubtab==='idt'||_motSubtab==='gobrax')&&motoristasPodeVincularNomes()?'':'none';
+  if(mg)mg.style.display=authPodeGerenciarMotoristas()?'':'none';
   document.body.classList.toggle('mot-financeiro-visivel',authPodeVerFinanceiroMotoristas());
 }
 
@@ -4938,6 +4960,7 @@ function authResumoPermissoesUsuario(usr){
   if(perms.includes('motoristas_idt_excluir'))acoes.push('excluir IDT');
   if(perms.includes('motoristas_gobrax_importar'))acoes.push('importar Gobrax');
   if(perms.includes('motoristas_gobrax_excluir'))acoes.push('excluir Gobrax');
+  if(perms.includes('motoristas_gerenciar'))acoes.push('gerenciar motoristas PX');
   if(perms.includes('motoristas_financeiro_ver'))acoes.push('ver financeiro PX');
   const acaoTxt=acoes.length?` · <span style="color:#93b7df">${acoes.join(' + ')}</span>`:'';
   const manage=perms.includes('manage_users')?'<span style="color:var(--yellow)"> · gerencia usuários</span>':'';
@@ -4977,6 +5000,7 @@ function abrirModalNovoUsuario() {
   document.querySelectorAll('[data-perm]').forEach(cb => cb.checked = false);
   document.getElementById('user-field-admin').checked = false;
   authAtualizarControlePermissaoFinanceiro();
+  authAtualizarControlePermissaoGerenciarMotoristas();
   document.getElementById('user-modal-error').style.display = 'none';
   document.getElementById('modal-usuario').classList.add('open');
 }
@@ -4996,6 +5020,7 @@ async function abrirModalEditarUsuario(id) {
   });
   document.getElementById('user-field-admin').checked = (u.role === 'admin');
   authAtualizarControlePermissaoFinanceiro();
+  authAtualizarControlePermissaoGerenciarMotoristas();
   document.getElementById('user-modal-error').style.display = 'none';
   document.getElementById('modal-usuario').classList.add('open');
 }
@@ -5011,7 +5036,7 @@ async function salvarUsuario() {
   const pass   = document.getElementById('user-field-senha').value;
   const pass2  = document.getElementById('user-field-senha2').value;
   const perms  = [...document.querySelectorAll('[data-perm]:checked')].map(cb=>cb.dataset.perm);
-  if (perms.some(p=>p==='motoristas_idt_importar'||p==='motoristas_idt_excluir'||p==='motoristas_financeiro_ver') && !perms.includes('motoristas')) perms.push('motoristas');
+  if (perms.some(p=>p==='motoristas_idt_importar'||p==='motoristas_idt_excluir'||p==='motoristas_gobrax_importar'||p==='motoristas_gobrax_excluir'||p==='motoristas_gerenciar'||p==='motoristas_financeiro_ver') && !perms.includes('motoristas')) perms.push('motoristas');
   const isAdmin = document.getElementById('user-field-admin').checked;
   const errEl  = document.getElementById('user-modal-error');
   errEl.style.display = 'none';
@@ -7981,6 +8006,7 @@ function renderMotoristas(force=false){
   _markPageClean('motoristas');
 }
 function motoristasAbrirGestao(){
+  if(!authPodeGerenciarMotoristas()){showToast('Sem permissão para adicionar ou remover motoristas PX.','error');return;}
   ignisEnsureMotoristasState();let ov=document.getElementById('mot-gestao-modal');if(!ov){ov=document.createElement('div');ov.id='mot-gestao-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Motoristas acompanhados</div><div style="font-size:11px;color:var(--text3);margin-top:4px">Inclua ou retire nomes sem alterar os dados importados. Períodos PX são separados automaticamente após 2 meses sem registros.</div></div><button class="pend-close" onclick="closeModal('mot-gestao-modal')">×</button></div><div class="mot-activity-config"><div class="mot-activity-copy"><strong>Status Ativo / Desativo</strong><span>O motorista vira Desativo quando passar mais do que este número de dias sem um novo abastecimento.</span></div><div class="mot-activity-days"><input id="mot-inatividade-dias"
   name="ignis_status_inatividade_dias"
   type="text"
@@ -8002,10 +8028,10 @@ function motoristasSalvarInatividadeDias(){const inp=document.getElementById('mo
 
 function motoristasRenderGestao(){const el=document.getElementById('mot-manage-list');if(!el)return;const arr=ignisEnsureMotoristasState();el.innerHTML=arr.length?arr.map(m=>`<div class="mot-manage-row"><div class="mot-manage-copy"><div class="mot-manage-name">${pendEsc(m.nome)}</div><div class="mot-manage-meta">${pendEsc(m.matricula||'Nome acompanhado')}</div></div><button class="mot-remove" title="Retirar do acompanhamento" onclick="motoristasRemover('${m.key.replace(/'/g,"\\'")}')">×</button></div>`).join(''):'<div class="mot-empty">Nenhum motorista selecionado.</div>';}
 function motoristasRenderSugestoes(){const el=document.getElementById('mot-sugestoes');if(!el)return;const q=ignisMotoristaNorm(document.getElementById('mot-add-input')?.value||''),sel=new Set(ignisEnsureMotoristasState().map(m=>m.key));let cat=ignisMotoristaCatalogo().filter(m=>!sel.has(m.key));if(q)cat=cat.filter(m=>ignisMotoristaNorm(m.nome).includes(q)||ignisMotoristaNorm(m.matricula).includes(q));else cat=cat.slice(0,8);el.innerHTML=cat.slice(0,12).map(m=>`<button class="mot-suggestion" onclick="motoristasAdicionarCatalogo('${m.key.replace(/'/g,"\\'")}')"><span>${pendEsc(m.nome)}</span><small>${pendEsc(m.matricula||'detectado no relatório')}</small></button>`).join('');}
-function motoristasAdicionar(nome,matricula=''){nome=String(nome||'').trim();if(!nome)return false;const key=ignisMotoristaNorm(nome);if(!key)return false;const arr=ignisEnsureMotoristasState();if(arr.some(m=>m.key===key)){showToast('Esse motorista já está sendo acompanhado.','info');return false;}arr.push({nome,matricula:String(matricula||''),key});saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);return true;}
+function motoristasAdicionar(nome,matricula=''){if(!authPodeGerenciarMotoristas()){showToast('Sem permissão para adicionar motoristas PX.','error');return false;}nome=String(nome||'').trim();if(!nome)return false;const key=ignisMotoristaNorm(nome);if(!key)return false;const arr=ignisEnsureMotoristasState();if(arr.some(m=>m.key===key)){showToast('Esse motorista já está sendo acompanhado.','info');return false;}arr.push({nome,matricula:String(matricula||''),key});saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);return true;}
 function motoristasAdicionarDigitado(){const inp=document.getElementById('mot-add-input'),v=inp?.value||'';if(motoristasAdicionar(v)){inp.value='';motoristasRenderSugestoes();}}
-function motoristasAdicionarCatalogo(key){const m=ignisMotoristaCatalogo().find(x=>x.key===key);if(m&&motoristasAdicionar(m.nome,m.matricula)){const inp=document.getElementById('mot-add-input');if(inp)inp.value='';}}
-function motoristasRemover(key){state.motoristasMonitorados=ignisEnsureMotoristasState().filter(m=>m.key!==key);saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);}
+function motoristasAdicionarCatalogo(key){if(!authPodeGerenciarMotoristas()){showToast('Sem permissão para adicionar motoristas PX.','error');return;}const m=ignisMotoristaCatalogo().find(x=>x.key===key);if(m&&motoristasAdicionar(m.nome,m.matricula)){const inp=document.getElementById('mot-add-input');if(inp)inp.value='';}}
+function motoristasRemover(key){if(!authPodeGerenciarMotoristas()){showToast('Sem permissão para remover motoristas PX.','error');return;}state.motoristasMonitorados=ignisEnsureMotoristasState().filter(m=>m.key!==key);saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);}
 // ── MOTORISTAS PX · VÍNCULOS MANUAIS DE NOMES v49 ───────────────────────────
 let _motVinculoFonte='media',_motVinculoSource='',_motVinculoTargetSearch='';
 function motoristasPodeVincularNomes(){return window._authUser?.role==='adm'||window._authUser?.role==='admin';}
