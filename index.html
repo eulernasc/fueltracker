@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IGNIS v42 · Nota Gobrax consolidada por KM + faixas configuráveis -->
+<!-- IGNIS v44 · Gobrax: KM por período com fallback + detalhe ampliado -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -2367,12 +2367,13 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     .gobrax-plate-title{font-weight:800;color:#fff}
     .gobrax-plate-sub{font-size:9px;color:var(--text3);margin-top:2px}
     .gobrax-source-list{border-top:1px solid var(--border);padding:10px;display:grid;gap:9px}
-    .gobrax-source-row{border:1px solid rgba(255,255,255,.045);border-radius:9px;padding:10px;background:#111820}
-    .gobrax-source-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:8px;font-size:10px;color:var(--text3)}
-    .gobrax-source-head strong{color:var(--text2)}
-    .gobrax-source-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
-    .gobrax-source-metric{padding:8px;border:1px solid var(--border);border-radius:8px;background:#0f151d}
-    .gobrax-source-metric span{display:block;font-size:7.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);line-height:1.25;margin-bottom:5px}
+    .gobrax-source-row{width:min(100%,1180px);border:1px solid rgba(255,255,255,.055);border-radius:11px;padding:14px;background:#111820}
+    .gobrax-source-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px;font-size:11.5px;color:var(--text3);line-height:1.4}
+    .gobrax-source-head strong{color:var(--text2);font-size:13px}
+    .gobrax-source-metrics{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:10px;max-width:1080px}
+    .gobrax-source-metric{min-height:66px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#0f151d;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+    .gobrax-source-metric span{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.055em;color:var(--text3);line-height:1.3;margin-bottom:8px}
+    #gobrax-detail-modal .gobrax-source-metric .gobrax-band{min-width:82px;padding:6px 10px;font-size:13px}
     .gobrax-config-note{font-size:10px;color:var(--text3);line-height:1.5;margin:8px 0 14px}
     .gobrax-config-table-wrap{overflow:auto;max-height:55vh;border:1px solid var(--border);border-radius:11px}
     .gobrax-config-table{width:100%;border-collapse:collapse;min-width:760px;font-size:11px}
@@ -2381,8 +2382,8 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     .gobrax-config-table input,.gobrax-config-table select{width:100%;height:34px;border:1px solid var(--border);border-radius:7px;background:#0f151d;color:#fff;padding:0 8px;font:700 11px 'DM Mono',monospace;outline:none}
     .gobrax-config-table select{font-family:inherit}
     .gobrax-config-range{font-size:9px;color:var(--text3);line-height:1.35}
-    @media(max-width:900px){.gobrax-source-metrics{grid-template-columns:1fr 1fr}.gobrax-plate summary{grid-template-columns:1fr 1fr}.gobrax-plate summary>div:first-child{grid-column:1/-1}}
-    @media(max-width:520px){.gobrax-source-metrics{grid-template-columns:1fr 1fr}.gobrax-plate summary{grid-template-columns:1fr 1fr;padding:10px}.gobrax-config-table{min-width:680px}}
+    @media(max-width:1100px){.gobrax-source-metrics{grid-template-columns:1fr 1fr;max-width:none}.gobrax-plate summary{grid-template-columns:1fr 1fr}.gobrax-plate summary>div:first-child{grid-column:1/-1}}
+    @media(max-width:520px){.gobrax-source-metrics{grid-template-columns:1fr}.gobrax-plate summary{grid-template-columns:1fr 1fr;padding:10px}.gobrax-config-table{min-width:680px}}
     /* Gobrax v43 · telas amplas para análise e configuração */
     #gobrax-detail-modal,#gobrax-config-modal{padding:14px!important;align-items:stretch!important;justify-content:stretch!important}
     #gobrax-detail-modal .modal,#gobrax-config-modal .modal{width:calc(100vw - 28px)!important;max-width:none!important;height:calc(100dvh - 28px)!important;max-height:none!important;border-radius:18px!important;overflow:auto!important;padding:24px 28px!important}
@@ -2393,6 +2394,10 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     #gobrax-config-modal .gobrax-config-table{min-width:980px}
     .gobrax-note-source{font-size:8px;color:var(--text3);margin-top:4px;line-height:1.35}
     .gobrax-km-missing{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:7px;border:1px solid rgba(244,181,68,.25);background:rgba(244,181,68,.08);color:var(--yellow);font-size:8px;font-weight:800;white-space:nowrap}
+    .gobrax-km-source{display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:3px 7px;border-radius:7px;font-size:8px;font-weight:800;line-height:1.3}
+    .gobrax-km-source.exato{color:#48d7a3;background:rgba(53,200,145,.08);border:1px solid rgba(53,200,145,.20)}
+    .gobrax-km-source.periodo{color:#ffc85a;background:rgba(244,181,68,.08);border:1px solid rgba(244,181,68,.22)}
+    .gobrax-km-source.ambiguo{color:#ff9a66;background:rgba(233,95,50,.08);border:1px solid rgba(233,95,50,.24)}
     .gobrax-coverage-box{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:9px;color:var(--text3)}
     .gobrax-formula-box.warn{border-color:rgba(244,181,68,.28);background:rgba(244,181,68,.06);color:#d8c292}
     @media(max-width:900px){
@@ -2525,7 +2530,7 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="mot-kpi"><div class="mot-kpi-label">Abaixo da meta</div><div class="mot-kpi-value" id="gobrax-kpi-abaixo">0</div><div class="mot-kpi-sub">motoristas com nota consolidada abaixo da meta</div></div>
       </div>
       <div id="gobrax-content"></div>
-      <div class="mot-page-note mot-page-note-compact"><strong>Nota consolidada IGNIS = Σ(Nota Gobrax × KM do motorista na mesma placa e período) ÷ ΣKM com nota válida.</strong> Nota 0 é tratada como sem avaliação. No período personalizado, entram apenas avaliações Gobrax totalmente contidas no intervalo para não fracionar uma nota de período.</div>
+      <div class="mot-page-note mot-page-note-compact"><strong>Nota consolidada IGNIS = Σ(Nota Gobrax × KM do motorista no período da avaliação) ÷ ΣKM com nota válida.</strong> Quando a mesma placa existe na base, ela tem prioridade; se não existir, o IGNIS usa o KM do motorista no mesmo intervalo e sinaliza o fallback. Nota 0 é tratada como sem avaliação. No período personalizado, entram apenas avaliações Gobrax totalmente contidas no intervalo para não fracionar uma nota de período.</div>
     </div>
   </div>
 
@@ -8172,23 +8177,46 @@ function gobraxKmIndex(ciclos=motoristasColetarCiclos()){
   });
   return map;
 }
-function gobraxKmRegistro(r,kmIndex){
+function gobraxPeriodosSobrepoem(a,b){
+  const ai=gobraxDateMs(a?.dataIni||a?.dataFim),af=gobraxDateMs(a?.dataFim||a?.dataIni),bi=gobraxDateMs(b?.dataIni||b?.dataFim),bf=gobraxDateMs(b?.dataFim||b?.dataIni);
+  return [ai,af,bi,bf].every(Number.isFinite)&&Math.max(ai,bi)<=Math.min(af,bf);
+}
+function gobraxKmRegistro(r,kmIndex,pares=[]){
   const key=ignisMotoristaNorm(r.key||r.nome),placa=gobraxPlacaNorm(r.cavalo),arr=kmIndex.get(key)||[];
-  if(!placa||!r.dataIni||!r.dataFim)return{km:0,aprox:false,ocorrencias:0};
-  let km=0,aprox=false,ocorrencias=0;
+  if(!r.dataIni||!r.dataFim)return{km:0,aprox:false,ocorrencias:0,fonte:'nenhum',placasBase:[]};
+  let kmPlaca=0,kmPeriodo=0,aproxPlaca=false,aproxPeriodo=false,ocPlaca=0,ocPeriodo=0;
+  const placasPeriodo=new Set();
   arr.forEach(d=>{
-    if(gobraxPlacaNorm(d.placa)!==placa)return;
     const frac=gobraxOverlapFraction(d.inicio||d.fim,d.fim||d.inicio,r.dataIni,r.dataFim);
     if(!(frac>0))return;
-    km+=(Number(d.km)||0)*frac;ocorrencias++;
-    if(frac<.999999&&String(d.inicio||'')!==String(d.fim||''))aprox=true;
+    const valor=(Number(d.km)||0)*frac;if(!(valor>0))return;
+    kmPeriodo+=valor;ocPeriodo++;
+    const p=gobraxPlacaNorm(d.placa);if(p)placasPeriodo.add(String(d.placa||p));
+    if(frac<.999999&&String(d.inicio||'')!==String(d.fim||''))aproxPeriodo=true;
+    if(placa&&p===placa){
+      kmPlaca+=valor;ocPlaca++;
+      if(frac<.999999&&String(d.inicio||'')!==String(d.fim||''))aproxPlaca=true;
+    }
   });
-  return{km,aprox,ocorrencias};
+  // Regra v44: a intenção operacional é ponderar a Nota Gobrax pelo KM do motorista
+  // no período de cada avaliação. Quando existe KM da mesma placa, ele tem prioridade.
+  // Se a placa Gobrax não aparece na base, usa o KM do motorista no mesmo intervalo
+  // para não descartar a avaliação; a tela sinaliza explicitamente esse fallback.
+  if(kmPlaca>0)return{km:kmPlaca,aprox:aproxPlaca,ocorrencias:ocPlaca,fonte:'placa',placasBase:[...placasPeriodo]};
+  if(kmPeriodo>0){
+    // Não duplica KM em intervalos Gobrax sobrepostos. Sem placa exata, o fallback por
+    // período só é usado quando a avaliação é temporalmente inequívoca para o motorista.
+    const idx=Number(r?._idx),conflito=(Array.isArray(pares)?pares:[]).some(o=>Number(o?._idx)!==idx&&Number(o?.nota)>0&&gobraxPeriodosSobrepoem(r,o));
+    if(conflito)return{km:0,aprox:aproxPeriodo,ocorrencias:ocPeriodo,fonte:'ambiguo',placasBase:[...placasPeriodo],kmPeriodoDisponivel:kmPeriodo};
+    return{km:kmPeriodo,aprox:aproxPeriodo,ocorrencias:ocPeriodo,fonte:'periodo',placasBase:[...placasPeriodo]};
+  }
+  return{km:0,aprox:false,ocorrencias:0,fonte:'nenhum',placasBase:[...placasPeriodo]};
 }
 function gobraxConsolidar(){
   gobraxAtualizarSeletor();const sel=document.getElementById('gobrax-importacao'),imp=ignisEnsureGobraxState().find(x=>x.id===sel?.value)||gobraxOrdenadas()[0]||null;
   if(!imp)return{imp:null,rows:[],fora:0,raw:[]};
   const monitorados=new Map(ignisEnsureMotoristasState().map(m=>[m.key,m])),cfg=motoristasPeriodoConfig(),ciclos=motoristasColetarCiclos(),atividade=motoristasAtividadeMap(ciclos),kmIndex=gobraxKmIndex(ciclos);
+  const paresPorKey=new Map();(imp.registros||[]).forEach((x,i)=>{const k=ignisMotoristaNorm(x.key||x.nome);if(!k||!monitorados.has(k))return;let a=paresPorKey.get(k);if(!a)paresPorKey.set(k,a=[]);a.push({...x,_idx:Number(x._idx??i)});});
   const grupos=new Map();let fora=0;
   (imp.registros||[]).forEach((r,idx)=>{
     const key=ignisMotoristaNorm(r.key||r.nome),m=monitorados.get(key);if(!m){fora++;return;}
@@ -8198,12 +8226,12 @@ function gobraxConsolidar(){
     if(cfg.mode==='personalizado'&&cfg.ini&&cfg.fim){
       if(!dataIni||!dataFim||dataIni<cfg.ini||dataFim>cfg.fim)return;
     }
-    const kmInfo=gobraxKmRegistro(r,kmIndex),nota=Number(r.nota),meta=Number(r.meta),notaValida=Number.isFinite(nota)&&nota>0&&kmInfo.km>0;
-    const item={...r,_idx:Number(r._idx??idx),key,nome:m.nome||r.nome,matricula:m.matricula||'',_km:kmInfo.km,_kmAprox:kmInfo.aprox,_notaValida:notaValida};
+    const kmInfo=gobraxKmRegistro({...r,_idx:Number(r._idx??idx)},kmIndex,paresPorKey.get(key)||[]),nota=Number(r.nota),meta=Number(r.meta),notaValida=Number.isFinite(nota)&&nota>0&&kmInfo.km>0;
+    const item={...r,_idx:Number(r._idx??idx),key,nome:m.nome||r.nome,matricula:m.matricula||'',_km:kmInfo.km,_kmAprox:kmInfo.aprox,_kmFonte:kmInfo.fonte,_kmPlacasBase:kmInfo.placasBase||[],_kmPeriodoDisponivel:Number(kmInfo.kmPeriodoDisponivel)||0,_notaValida:notaValida};
     let g=grupos.get(key);
     if(!g){
       const a=atividade.get(key);
-      g={key,nome:item.nome,matricula:item.matricula,periodoIni:'',periodoFim:'',kmTotal:0,kmNota:0,kmSemNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,placas:new Map(),operacionais:new Set(),origens:[],_ativo:Boolean(a?.ativo)};
+      g={key,nome:item.nome,matricula:item.matricula,periodoIni:'',periodoFim:'',kmTotal:0,kmNota:0,kmSemNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,avaliacoesKmPeriodo:0,placas:new Map(),operacionais:new Set(),origens:[],_ativo:Boolean(a?.ativo)};
       grupos.set(key,g);
     }
     if(dataIni&&(!g.periodoIni||dataIni<g.periodoIni))g.periodoIni=dataIni;
@@ -8211,7 +8239,7 @@ function gobraxConsolidar(){
     g.kmTotal+=kmInfo.km;g.origens.push(item);if(item.operacional)g.operacionais.add(item.operacional);
     const pkey=gobraxPlacaNorm(item.cavalo)||`SEMPLACA_${idx}`;
     let p=g.placas.get(pkey);
-    if(!p){p={placa:item.cavalo||'—',inicio:'',fim:'',kmTotal:0,kmNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,operacionais:new Set(),origens:[]};g.placas.set(pkey,p);}
+    if(!p){p={placa:item.cavalo||'—',inicio:'',fim:'',kmTotal:0,kmNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,avaliacoesKmPeriodo:0,operacionais:new Set(),origens:[]};g.placas.set(pkey,p);}
     if(dataIni&&(!p.inicio||dataIni<p.inicio))p.inicio=dataIni;if(dataFim&&(!p.fim||dataFim>p.fim))p.fim=dataFim;
     p.kmTotal+=kmInfo.km;p.origens.push(item);if(item.operacional)p.operacionais.add(item.operacional);
     const temNota=Number.isFinite(nota)&&nota>0;
@@ -8219,7 +8247,7 @@ function gobraxConsolidar(){
       g.notaRawPontos+=nota;g.notaRawCount++;g.avaliacoesValidas++;
       p.notaRawPontos+=nota;p.notaRawCount++;p.avaliacoesValidas++;
       if(Number.isFinite(meta)&&meta>0){g.metaRawPontos+=meta;g.metaRawCount++;p.metaRawPontos+=meta;p.metaRawCount++;}
-      if(kmInfo.km>0){g.avaliacoesComKm++;p.avaliacoesComKm++;}
+      if(kmInfo.km>0){g.avaliacoesComKm++;p.avaliacoesComKm++;if(kmInfo.fonte==='periodo'){g.avaliacoesKmPeriodo++;p.avaliacoesKmPeriodo++;}}
       else{g.avaliacoesSemKm++;p.avaliacoesSemKm++;}
     }
     if(notaValida){
@@ -8313,7 +8341,10 @@ function gobraxAbrirDetalhe(key){
     const fontes=p.origens.map(o=>{
       const scoreOk=Number(o.nota)>0;
       const metricHtml=Object.entries(GOBRAX_METRIC_DEFS).filter(([k])=>k!=='nota').map(([k,d])=>`<div class="gobrax-source-metric"><span>${pendEsc(d.label)}</span>${gobraxBandHtml(k,o[d.campo],scoreOk)}</div>`).join('');
-      return `<div class="gobrax-source-row"><div class="gobrax-source-head"><div><strong>${pendEsc(ignisMotoristaPeriodoLabel(o.dataIni,o.dataFim))}</strong>${o.operacional?` · ${pendEsc(o.operacional)}`:''}</div><div>${o._km>0?Math.round(o._km).toLocaleString('pt-BR')+' km':'KM não localizado'} · Nota Gobrax ${Number(o.nota)>0?Number(o.nota).toLocaleString('pt-BR',{maximumFractionDigits:1}):'Sem avaliação'}</div></div><div class="gobrax-source-metrics">${metricHtml}</div></div>`;
+      const kmFonte=o._kmFonte==='placa'?'KM da mesma placa':o._kmFonte==='periodo'?'KM do motorista no período':o._kmFonte==='ambiguo'?'KM do período ambíguo':'KM não localizado';
+      const placasBase=(o._kmPlacasBase||[]).filter(Boolean).join(', ');
+      const fonteBadge=o._km>0?`<div class="gobrax-km-source ${o._kmFonte==='periodo'?'periodo':'exato'}">${pendEsc(kmFonte)}${o._kmFonte==='periodo'&&placasBase?` · base: ${pendEsc(placasBase)}`:''}</div>`:o._kmFonte==='ambiguo'?`<div class="gobrax-km-source ambiguo">${Math.round(o._kmPeriodoDisponivel||0).toLocaleString('pt-BR')} km existem no intervalo, mas há avaliações Gobrax sobrepostas; não ponderado para evitar duplicidade</div>`:'';
+      return `<div class="gobrax-source-row"><div class="gobrax-source-head"><div><strong>${pendEsc(ignisMotoristaPeriodoLabel(o.dataIni,o.dataFim))}</strong>${o.operacional?` · ${pendEsc(o.operacional)}`:''}${fonteBadge}</div><div>${o._km>0?Math.round(o._km).toLocaleString('pt-BR')+' km':o._kmFonte==='ambiguo'?'KM não ponderado (sobreposição)':'KM não localizado'} · Nota Gobrax ${Number(o.nota)>0?Number(o.nota).toLocaleString('pt-BR',{maximumFractionDigits:1}):'Sem avaliação'}</div></div><div class="gobrax-source-metrics">${metricHtml}</div></div>`;
     }).join('');
     const notaPlaca=Number.isFinite(Number(p.notaPonderada))?p.notaPonderada:p.notaReferencia;
     const semKm=!(p.kmNota>0)&&p.notaRawCount>0;
@@ -8327,7 +8358,7 @@ function gobraxAbrirDetalhe(key){
       <div class="mot-detail-card"><span>Avaliações com KM</span><strong>${r.avaliacoesComKm}/${r.avaliacoesValidas}</strong></div>
       <div class="mot-detail-card"><span>Média bruta informativa</span><strong>${Number.isFinite(Number(r.notaReferencia))?gobraxBandHtml('nota',r.notaReferencia,true):'<span class="gobrax-band none">—</span>'}</strong></div>
     </div>
-    <div class="gobrax-formula-box ${r.avaliacoesSemKm>0?'warn':''}"><strong>Cálculo consolidado:</strong> Σ(Nota Gobrax × KM localizado na mesma placa e período) ÷ ΣKM com nota válida. ${r.avaliacoesSemKm>0?`${r.avaliacoesSemKm} avaliação(ões) têm Nota Gobrax, mas o KM da mesma placa/período não foi localizado. Essas notas continuam visíveis abaixo como <strong>Nota informada</strong>, porém não são misturadas na ponderação para não gerar um resultado matematicamente falso.`:'Todas as avaliações com nota válida tiveram KM localizado e entraram na ponderação.'} ${r.kmSemNota>0?`${Math.round(r.kmSemNota).toLocaleString('pt-BR')} km foram localizados em linhas sem nota válida e também ficaram fora da ponderação.`:''}</div>
+    <div class="gobrax-formula-box ${r.avaliacoesSemKm>0?'warn':''}"><strong>Cálculo consolidado:</strong> Σ(Nota Gobrax × KM do motorista no período da avaliação) ÷ ΣKM com nota válida. A mesma placa tem prioridade quando existe na base. ${r.avaliacoesKmPeriodo>0?`${r.avaliacoesKmPeriodo} avaliação(ões) usaram <strong>KM do período</strong> porque a placa informada pela Gobrax não foi localizada nos abastecimentos daquele intervalo; elas entram no cálculo e ficam sinalizadas abaixo.`:''} ${r.avaliacoesSemKm>0?`${r.avaliacoesSemKm} avaliação(ões) ficaram sem KM ponderável. Quando não há KM da mesma placa, o IGNIS usa o KM do motorista no período somente se o intervalo não conflitar com outra avaliação Gobrax; sobreposições ficam sinalizadas e não são duplicadas.`:'Todas as avaliações com nota válida tiveram KM localizado no período.'} ${r.kmSemNota>0?`${Math.round(r.kmSemNota).toLocaleString('pt-BR')} km foram localizados em linhas sem nota válida e também ficaram fora da ponderação.`:''}</div>
     <div style="font-size:11px;font-weight:800;color:var(--text2);margin-top:14px">Nota por placa</div><div class="gobrax-plate-list">${placasHtml}</div>`;
   ov.classList.add('open');
 }
@@ -8370,7 +8401,7 @@ function gobraxRenderHistorico(){const box=document.getElementById('gobrax-histo
 function gobraxSelecionarImportacao(id){gobraxAtualizarSeletor(id);renderGobrax();gobraxRenderHistorico();closeModal('gobrax-history-modal');}
 function gobraxAbrirImportacao(){
   if(!authExigirPermissao('motoristas_gobrax_importar','Sem permissão para importar Nota Gobrax em Motoristas PX.'))return;
-  let ov=document.getElementById('gobrax-import-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-import-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Importar Nota Gobrax</div><div style="font-size:11px;color:var(--text3);margin-top:4px">O IGNIS identifica o motorista pelo nome e, depois da importação, cruza cada linha com o KM da mesma placa e do mesmo período na base de abastecimentos.</div></div><button class="pend-close" onclick="closeModal('gobrax-import-modal')">×</button></div><input id="gobrax-file-input" type="file" accept=".xlsx,.xls" style="display:none" onchange="gobraxImportarArquivo(this)"><div class="idt-import-box" style="margin-top:18px" onclick="document.getElementById('gobrax-file-input').click()"><div class="idt-import-title">Selecionar planilha Nota Gobrax</div><div class="idt-import-sub">Padrão esperado: <strong>NOME</strong>, <strong>DATA INICIO</strong>, data final, <strong>OPERACIONAL</strong>, <strong>CAVALO</strong>, <strong>NOTA GERAL</strong>, <strong>META GOBRAX</strong> e os indicadores de condução.</div></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  let ov=document.getElementById('gobrax-import-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-import-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Importar Nota Gobrax</div><div style="font-size:11px;color:var(--text3);margin-top:4px">O IGNIS identifica o motorista pelo nome e, depois da importação, cruza cada linha com o KM do motorista no mesmo período. A mesma placa tem prioridade; se ela não estiver na base, o IGNIS usa o KM do motorista naquele intervalo e sinaliza isso no detalhe.</div></div><button class="pend-close" onclick="closeModal('gobrax-import-modal')">×</button></div><input id="gobrax-file-input" type="file" accept=".xlsx,.xls" style="display:none" onchange="gobraxImportarArquivo(this)"><div class="idt-import-box" style="margin-top:18px" onclick="document.getElementById('gobrax-file-input').click()"><div class="idt-import-title">Selecionar planilha Nota Gobrax</div><div class="idt-import-sub">Padrão esperado: <strong>NOME</strong>, <strong>DATA INICIO</strong>, data final, <strong>OPERACIONAL</strong>, <strong>CAVALO</strong>, <strong>NOTA GERAL</strong>, <strong>META GOBRAX</strong> e os indicadores de condução.</div></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   ov.classList.add('open');
 }
 async function gobraxImportarArquivo(input){
