@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IGNIS v50 · Permissão individual para gerenciar Motoristas PX -->
+<!-- IGNIS v56 · Cores Gobrax no Geral + permissões granulares de ações Gobrax -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -3859,12 +3859,15 @@ body{background:radial-gradient(900px 520px at 82% -10%,rgba(255,107,44,.065),tr
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
           <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_idt_importar"> Importar IDT</label>
           <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_idt_excluir"> Excluir importações IDT</label>
-          <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_importar"> Importar Nota Gobrax</label>
-          <label class="perm-item" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_excluir"> Excluir importações Gobrax</label>
+          <label class="perm-item" id="perm-motoristas-gobrax-historico-label" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_historico"> Ver histórico Gobrax</label>
+          <label class="perm-item" id="perm-motoristas-gobrax-importar-label" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_importar"> Importar Nota Gobrax</label>
+          <label class="perm-item" id="perm-motoristas-gobrax-excluir-label" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_excluir"> Excluir importações Gobrax</label>
+          <label class="perm-item" id="perm-motoristas-gobrax-faixas-label" style="margin:0"><input type="checkbox" data-perm="motoristas_gobrax_faixas"> Configurar faixas Gobrax</label>
+          <label class="perm-item" id="perm-motoristas-vinculos-label" style="margin:0"><input type="checkbox" data-perm="motoristas_vinculos"> Vincular nomes</label>
           <label class="perm-item" id="perm-motoristas-gerenciar-label" style="margin:0"><input type="checkbox" data-perm="motoristas_gerenciar"> Adicionar / remover motoristas</label>
           <label class="perm-item" id="perm-motoristas-financeiro-label" style="margin:0"><input type="checkbox" data-perm="motoristas_financeiro_ver"> Ver Economia / Desperdício</label>
         </div>
-        <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-top:8px">Importar/Excluir são permissões separadas para <strong>IDT</strong> e <strong>Nota Gobrax</strong>. <strong>Adicionar / remover motoristas</strong> controla exclusivamente o botão Gerenciar motoristas e começa desativado para todos, exceto o ADM Master. A permissão <strong>Ver Economia / Desperdício</strong> também é individual.</div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.45;margin-top:8px">As ações da <strong>Nota Gobrax</strong> são individuais: histórico, importar, excluir, configurar faixas e vincular nomes. O <strong>ADM Master</strong> sempre possui acesso; para qualquer outra conta, inclusive Admin, você escolhe exatamente quais botões aparecem. <strong>Adicionar / remover motoristas</strong> e <strong>Ver Economia / Desperdício</strong> continuam separados.</div>
       </div>
       <div style="margin-top:10px;padding:10px;background:rgba(232,148,26,.08);border:1px solid rgba(232,148,26,.3);border-radius:8px">
         <label class="perm-item" style="background:none;border:none;padding:0;gap:8px">
@@ -4790,6 +4793,19 @@ function authPodeGerenciarMotoristas(){
   if(u.role==='adm')return true;
   return Array.isArray(u.perms)&&u.perms.includes('motoristas_gerenciar');
 }
+// Ações sensíveis de Motoristas PX são explícitas: o ADM Master sempre pode;
+// qualquer outra conta (inclusive Admin) só recebe o botão se o ADM Master liberar.
+function authPodeAcaoMotoristas(perm){
+  const u=window._authUser;
+  if(!u)return false;
+  if(u.role==='adm')return true;
+  return Array.isArray(u.perms)&&u.perms.includes(perm);
+}
+function authExigirAcaoMotoristas(perm,mensagem){
+  if(authPodeAcaoMotoristas(perm))return true;
+  showToast(mensagem||'Sem permissão para esta ação em Motoristas PX.','error');
+  return false;
+}
 function authAtualizarControlePermissaoFinanceiro(){
   const cb=document.querySelector('[data-perm="motoristas_financeiro_ver"]');
   const label=document.getElementById('perm-motoristas-financeiro-label');
@@ -4812,6 +4828,21 @@ function authAtualizarControlePermissaoGerenciarMotoristas(){
     label.title=podeAlterar?'Permissão individual para adicionar/remover Motoristas PX.':'Somente o ADM Master pode liberar esta permissão.';
   }
 }
+function authAtualizarControlesPermissoesMotoristasAcoes(){
+  const podeAlterar=window._authUser?.role==='adm';
+  const itens=[
+    ['motoristas_gobrax_historico','perm-motoristas-gobrax-historico-label'],
+    ['motoristas_gobrax_importar','perm-motoristas-gobrax-importar-label'],
+    ['motoristas_gobrax_excluir','perm-motoristas-gobrax-excluir-label'],
+    ['motoristas_gobrax_faixas','perm-motoristas-gobrax-faixas-label'],
+    ['motoristas_vinculos','perm-motoristas-vinculos-label']
+  ];
+  itens.forEach(([perm,id])=>{
+    const cb=document.querySelector(`[data-perm="${perm}"]`),label=document.getElementById(id);
+    if(cb)cb.disabled=!podeAlterar;
+    if(label){label.classList.toggle('perm-locked',!podeAlterar);label.title=podeAlterar?'Permissão individual controlada pelo ADM Master.':'Somente o ADM Master pode alterar esta permissão.';}
+  });
+}
 function authAplicarPermissoesMotoristas(){
   const noIdt=_motSubtab==='idt',noGobrax=_motSubtab==='gobrax';
   const hist=document.getElementById('btn-idt-historico');
@@ -4823,9 +4854,9 @@ function authAplicarPermissoesMotoristas(){
   const mg=document.getElementById('btn-mot-gerenciar');
   if(hist)hist.style.display=noIdt?'':'none';
   if(imp)imp.style.display=noIdt&&authTemPermissao('motoristas_idt_importar')?'':'none';
-  if(gh)gh.style.display=noGobrax?'':'none';
-  if(gi)gi.style.display=noGobrax&&authTemPermissao('motoristas_gobrax_importar')?'':'none';
-  if(gc)gc.style.display=noGobrax&&(window._authUser?.role==='adm'||window._authUser?.role==='admin')?'':'none';
+  if(gh)gh.style.display=noGobrax&&authPodeAcaoMotoristas('motoristas_gobrax_historico')?'':'none';
+  if(gi)gi.style.display=noGobrax&&authPodeAcaoMotoristas('motoristas_gobrax_importar')?'':'none';
+  if(gc)gc.style.display=noGobrax&&authPodeAcaoMotoristas('motoristas_gobrax_faixas')?'':'none';
   if(vb)vb.style.display=(_motSubtab==='media'||_motSubtab==='idt'||_motSubtab==='gobrax')&&motoristasPodeVincularNomes()?'':'none';
   if(mg)mg.style.display=authPodeGerenciarMotoristas()?'':'none';
   document.body.classList.toggle('mot-financeiro-visivel',authPodeVerFinanceiroMotoristas());
@@ -5212,8 +5243,11 @@ function authResumoPermissoesUsuario(usr){
   const acoes=[];
   if(perms.includes('motoristas_idt_importar'))acoes.push('importar IDT');
   if(perms.includes('motoristas_idt_excluir'))acoes.push('excluir IDT');
+  if(perms.includes('motoristas_gobrax_historico'))acoes.push('histórico Gobrax');
   if(perms.includes('motoristas_gobrax_importar'))acoes.push('importar Gobrax');
   if(perms.includes('motoristas_gobrax_excluir'))acoes.push('excluir Gobrax');
+  if(perms.includes('motoristas_gobrax_faixas'))acoes.push('faixas Gobrax');
+  if(perms.includes('motoristas_vinculos'))acoes.push('vincular nomes');
   if(perms.includes('motoristas_gerenciar'))acoes.push('gerenciar motoristas PX');
   if(perms.includes('motoristas_financeiro_ver'))acoes.push('ver financeiro PX');
   const acaoTxt=acoes.length?` · <span style="color:#93b7df">${acoes.join(' + ')}</span>`:'';
@@ -5255,6 +5289,7 @@ function abrirModalNovoUsuario() {
   document.getElementById('user-field-admin').checked = false;
   authAtualizarControlePermissaoFinanceiro();
   authAtualizarControlePermissaoGerenciarMotoristas();
+  authAtualizarControlesPermissoesMotoristasAcoes();
   document.getElementById('user-modal-error').style.display = 'none';
   document.getElementById('modal-usuario').classList.add('open');
 }
@@ -5275,6 +5310,7 @@ async function abrirModalEditarUsuario(id) {
   document.getElementById('user-field-admin').checked = (u.role === 'admin');
   authAtualizarControlePermissaoFinanceiro();
   authAtualizarControlePermissaoGerenciarMotoristas();
+  authAtualizarControlesPermissoesMotoristasAcoes();
   document.getElementById('user-modal-error').style.display = 'none';
   document.getElementById('modal-usuario').classList.add('open');
 }
@@ -8288,7 +8324,7 @@ function motoristasAdicionarCatalogo(key){if(!authPodeGerenciarMotoristas()){sho
 function motoristasRemover(key){if(!authPodeGerenciarMotoristas()){showToast('Sem permissão para remover motoristas PX.','error');return;}state.motoristasMonitorados=ignisEnsureMotoristasState().filter(m=>m.key!==key);saveState({mode:'light'});motoristasRenderGestao();motoristasRenderSugestoes();renderMotoristas(true);}
 // ── MOTORISTAS PX · VÍNCULOS MANUAIS DE NOMES v49 ───────────────────────────
 let _motVinculoFonte='media',_motVinculoSource='',_motVinculoTargetSearch='';
-function motoristasPodeVincularNomes(){return window._authUser?.role==='adm'||window._authUser?.role==='admin';}
+function motoristasPodeVincularNomes(){return authPodeAcaoMotoristas('motoristas_vinculos');}
 function motoristasVinculoFonteLabel(fonte){return fonte==='gobrax'?'Nota Gobrax':fonte==='idt'?'IDT':'Média por Motorista';}
 function motoristasVinculoImportacaoAtual(fonte){
   if(fonte==='gobrax'){const sel=document.getElementById('gobrax-importacao')?.value;return ignisEnsureGobraxState().find(x=>x.id===sel)||gobraxOrdenadas()[0]||null;}
@@ -8315,12 +8351,12 @@ function motoristasAtualizarVinculosUI(fonte){
   fonte=fonte==='gobrax'?'gobrax':fonte==='idt'?'idt':'media';const pend=motoristasPendenciasVinculo(fonte),box=document.getElementById(`mot-vinculos-alert-${fonte}`),pode=motoristasPodeVincularNomes();
   if(box){
     if(!pend.length)box.innerHTML='';
-    else{const chips=pend.slice(0,6).map(p=>`<span class="mot-link-chip" title="${pendEsc(p.sourceName)}">${pendEsc(p.sourceName)}</span>`).join('');box.innerHTML=`<div class="mot-link-alert"><div class="mot-link-alert-copy"><strong>${pend.length} nome${pend.length===1?'':'s'} precisa${pend.length===1?'':'m'} de vínculo</strong><span>${fonte==='media'?'Há nomes acompanhados que não foram associados com segurança aos motoristas dos abastecimentos.':'Esses nomes vieram na planilha e não foram associados com segurança a um motorista acompanhado.'}</span><div class="mot-link-alert-chips">${chips}${pend.length>6?`<span class="mot-link-chip">+${pend.length-6}</span>`:''}</div></div>${pode?`<button class="btn btn-secondary" onclick="motoristasAbrirVinculos('${fonte}')">Vincular nomes</button>`:'<span class="mot-link-target-current">Somente ADM/Admin pode criar vínculos.</span>'}</div>`;}
+    else{const chips=pend.slice(0,6).map(p=>`<span class="mot-link-chip" title="${pendEsc(p.sourceName)}">${pendEsc(p.sourceName)}</span>`).join('');box.innerHTML=`<div class="mot-link-alert"><div class="mot-link-alert-copy"><strong>${pend.length} nome${pend.length===1?'':'s'} precisa${pend.length===1?'':'m'} de vínculo</strong><span>${fonte==='media'?'Há nomes acompanhados que não foram associados com segurança aos motoristas dos abastecimentos.':'Esses nomes vieram na planilha e não foram associados com segurança a um motorista acompanhado.'}</span><div class="mot-link-alert-chips">${chips}${pend.length>6?`<span class="mot-link-chip">+${pend.length-6}</span>`:''}</div></div>${pode?`<button class="btn btn-secondary" onclick="motoristasAbrirVinculos('${fonte}')">Vincular nomes</button>`:'<span class="mot-link-target-current">Sem permissão para criar vínculos.</span>'}</div>`;}
   }
   const btn=document.getElementById('btn-mot-vinculos');if(btn&&_motSubtab===fonte&&fonte!=='geral'&&pode){btn.style.display='';btn.textContent=pend.length?`Vincular nomes (${pend.length})`:'Vínculos de nomes';}
 }
 function motoristasAbrirVinculos(fonte,sourceNorm=''){
-  if(!motoristasPodeVincularNomes()){showToast('Somente ADM Master e Admin podem vincular nomes de motoristas.','error');return;}
+  if(!motoristasPodeVincularNomes()){showToast('Sem permissão para vincular nomes de motoristas.','error');return;}
   _motVinculoFonte=fonte==='gobrax'?'gobrax':fonte==='idt'?'idt':'media';_motVinculoSource=sourceNorm?decodeURIComponent(sourceNorm):'';_motVinculoTargetSearch='';ignisMotoristaCatalogoAbastecimentosRaw(true);
   let ov=document.getElementById('mot-vinculos-modal');if(!ov){ov=document.createElement('div');ov.id='mot-vinculos-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal mot-link-modal"><div id="mot-vinculos-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)closeModal('mot-vinculos-modal');});}
   motoristasRenderVinculosModal();ov.classList.add('open');
@@ -8695,7 +8731,8 @@ function renderMotoristasGeral(){
     const safeKey=m.key.replace(/'/g,"\'");
     const fcard=f?`<button class="mot-geral-card" data-section="Combustível" aria-label="Abrir detalhes de combustível de ${pendEsc(m.nome)}" onclick="motoristasGeralAbrir('combustivel','${safeKey}')"><div class="mot-geral-card-head"><span class="mot-status ${fst.cls}">${fst.label}</span></div><div class="mot-geral-metrics"><div class="mot-geral-metric"><span>KM</span><strong>${Math.round(f.km).toLocaleString('pt-BR')}</strong></div><div class="mot-geral-metric"><span>Média ideal</span><strong>${f.meta>0?f.meta.toFixed(2):'—'}</strong></div><div class="mot-geral-metric"><span>Média real</span><strong>${f.media>0?f.media.toFixed(2):'—'}</strong></div></div></button>`:`<button class="mot-geral-card" data-section="Combustível" disabled><div class="mot-geral-empty">Sem dados no período</div></button>`;
     const icard=i?`<button class="mot-geral-card" data-section="IDT" aria-label="Abrir detalhes de IDT de ${pendEsc(m.nome)}" onclick="motoristasGeralAbrir('idt','${safeKey}')"><div class="mot-geral-card-head"><span class="mot-status ${ist.cls}">${ist.label}</span></div><div class="mot-geral-metrics"><div class="mot-geral-metric"><span>IDT</span><strong class="${i.idt<=metaIdt?'ok':'bad'}">${i.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-geral-metric"><span>Meta</span><strong>${metaIdt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-geral-metric"><span>Desvios</span><strong>${Number(i.desvios||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</strong></div></div></button>`:`<button class="mot-geral-card" data-section="IDT" disabled><div class="mot-geral-empty">Sem dados no período</div></button>`;
-    const gcard=g&&Number(g.nota)>0?`<button class="mot-geral-card" data-section="Nota Gobrax" aria-label="Abrir detalhes da Nota Gobrax de ${pendEsc(m.nome)}" onclick="motoristasGeralAbrir('gobrax','${safeKey}')"><div class="mot-geral-card-head"><span class="mot-status ${gst.cls}">${gst.label}</span></div><div class="mot-geral-metrics two"><div class="mot-geral-metric"><span>Meta</span><strong>${Number.isFinite(Number(g.meta))?Number(g.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</strong></div><div class="mot-geral-metric"><span>Nota</span><strong class="${g.nota>=g.meta?'ok':'bad'}">${Number(g.nota).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div></div></button>`:`<button class="mot-geral-card" data-section="Nota Gobrax" disabled><div class="mot-geral-empty">Sem nota consolidada</div></button>`;
+    const gband=g&&Number(g.nota)>0?gobraxBand('nota',g.nota,true):{cls:'none'};
+    const gcard=g&&Number(g.nota)>0?`<button class="mot-geral-card" data-section="Nota Gobrax" aria-label="Abrir detalhes da Nota Gobrax de ${pendEsc(m.nome)}" onclick="motoristasGeralAbrir('gobrax','${safeKey}')"><div class="mot-geral-card-head"><span class="mot-status ${gst.cls}">${gst.label}</span></div><div class="mot-geral-metrics two"><div class="mot-geral-metric"><span>Meta</span><strong>${Number.isFinite(Number(g.meta))?Number(g.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</strong></div><div class="mot-geral-metric"><span>Nota</span><strong class="${gband.cls}">${Number(g.nota).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div></div></button>`:`<button class="mot-geral-card" data-section="Nota Gobrax" disabled><div class="mot-geral-empty">Sem nota consolidada</div></button>`;
     return `<div class="mot-geral-row"><div class="mot-geral-driver"><strong>${pendEsc(m.nome)}</strong><span>${pendEsc(m.matricula||'Motorista acompanhado')}</span></div>${fcard}${icard}${gcard}</div>`;
   }).join('');
   box.innerHTML=header+body;_markPageClean('motoristas');
@@ -8931,7 +8968,7 @@ function gobraxConfigRangeText(k,cfg){
   return `Vermelho < ${cfg.c1}${unit} · Amarelo ${cfg.c1}${unit} até < ${cfg.c2}${unit} · Verde ≥ ${cfg.c2}${unit}`;
 }
 function gobraxAbrirConfig(){
-  if(!(window._authUser?.role==='adm'||window._authUser?.role==='admin')){showToast('Somente ADM Master e Admin podem alterar as faixas da Nota Gobrax.','error');return;}
+  if(!authExigirAcaoMotoristas('motoristas_gobrax_faixas','Sem permissão para configurar as faixas da Nota Gobrax.'))return;
   ignisEnsureGobraxState();
   let ov=document.getElementById('gobrax-config-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-config-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal"><div id="gobrax-config-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('gobrax-config-content');if(!c)return;
@@ -8944,31 +8981,32 @@ function gobraxAtualizarPreviewConfig(k){
   if(el&&Number.isFinite(c1)&&Number.isFinite(c2))el.textContent=gobraxConfigRangeText(k,{dir,c1,c2});
 }
 function gobraxSalvarConfig(){
-  if(!(window._authUser?.role==='adm'||window._authUser?.role==='admin'))return;
+  if(!authExigirAcaoMotoristas('motoristas_gobrax_faixas','Sem permissão para configurar as faixas da Nota Gobrax.'))return;
   const next={};
   for(const [k,d] of Object.entries(GOBRAX_METRIC_DEFS)){
     const dir=document.querySelector(`[data-gobrax-dir="${k}"]`)?.value==='low'?'low':'high',c1=Number(document.querySelector(`[data-gobrax-c1="${k}"]`)?.value),c2=Number(document.querySelector(`[data-gobrax-c2="${k}"]`)?.value);
     if(!Number.isFinite(c1)||!Number.isFinite(c2)||c2<c1){showToast(`Revise os cortes de ${d.label}. O Corte 2 deve ser maior ou igual ao Corte 1.`,'error');return;}
     next[k]={dir,c1:Number(c1.toFixed(3)),c2:Number(c2.toFixed(3))};
   }
-  state.gobraxFaixas=next;saveState({immediate:true,mode:'light'});closeModal('gobrax-config-modal');renderGobrax();showToast('Faixas de cores da Nota Gobrax atualizadas.','success');
+  state.gobraxFaixas=next;saveState({immediate:true,mode:'light'});closeModal('gobrax-config-modal');renderGobrax();if(_motSubtab==='geral')renderMotoristasGeral();showToast('Faixas de cores da Nota Gobrax atualizadas.','success');
 }
 function gobraxResetConfig(){
   state.gobraxFaixas={};ignisEnsureGobraxState();gobraxAbrirConfig();
 }
 function gobraxAbrirHistorico(){
+  if(!authExigirAcaoMotoristas('motoristas_gobrax_historico','Sem permissão para acessar o histórico da Nota Gobrax.'))return;
   ignisEnsureGobraxState();let ov=document.getElementById('gobrax-history-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-history-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:700px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div><div class="modal-title">Histórico da Nota Gobrax</div><div style="font-size:10px;color:var(--text3);margin-top:4px">Cada importação é mantida como uma fotografia do relatório. Selecione uma base antiga para consultar sem misturar avaliações.</div></div><button class="pend-close" onclick="closeModal('gobrax-history-modal')">×</button></div><div id="gobrax-history-list" class="idt-history-list"></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   gobraxRenderHistorico();ov.classList.add('open');
 }
-function gobraxRenderHistorico(){const box=document.getElementById('gobrax-history-list');if(!box)return;const arr=gobraxOrdenadas(),sel=document.getElementById('gobrax-importacao')?.value||'';if(!arr.length){box.innerHTML='<div class="mot-empty">Nenhuma Nota Gobrax importada.</div>';return;}box.innerHTML=arr.map(x=>`<div class="idt-history-row ${x.id===sel?'selected':''}"><button class="idt-history-select" onclick="gobraxSelecionarImportacao('${String(x.id).replace(/'/g,"\\'")}')"><strong>${pendEsc(x.arquivo||'Nota Gobrax')}</strong><span>${pendEsc(x.importedAt||'')} · ${(x.registros||[]).length} registro(s)</span></button>${authTemPermissao('motoristas_gobrax_excluir')?`<button class="mot-remove" title="Excluir importação" onclick="event.stopPropagation();gobraxExcluirImportacao('${String(x.id).replace(/'/g,"\\'")}')">×</button>`:''}</div>`).join('');}
+function gobraxRenderHistorico(){const box=document.getElementById('gobrax-history-list');if(!box)return;const arr=gobraxOrdenadas(),sel=document.getElementById('gobrax-importacao')?.value||'';if(!arr.length){box.innerHTML='<div class="mot-empty">Nenhuma Nota Gobrax importada.</div>';return;}box.innerHTML=arr.map(x=>`<div class="idt-history-row ${x.id===sel?'selected':''}"><button class="idt-history-select" onclick="gobraxSelecionarImportacao('${String(x.id).replace(/'/g,"\\'")}')"><strong>${pendEsc(x.arquivo||'Nota Gobrax')}</strong><span>${pendEsc(x.importedAt||'')} · ${(x.registros||[]).length} registro(s)</span></button>${authPodeAcaoMotoristas('motoristas_gobrax_excluir')?`<button class="mot-remove" title="Excluir importação" onclick="event.stopPropagation();gobraxExcluirImportacao('${String(x.id).replace(/'/g,"\\'")}')">×</button>`:''}</div>`).join('');}
 function gobraxSelecionarImportacao(id){gobraxAtualizarSeletor(id);renderGobrax();gobraxRenderHistorico();closeModal('gobrax-history-modal');}
 function gobraxAbrirImportacao(){
-  if(!authExigirPermissao('motoristas_gobrax_importar','Sem permissão para importar Nota Gobrax em Motoristas PX.'))return;
+  if(!authExigirAcaoMotoristas('motoristas_gobrax_importar','Sem permissão para importar Nota Gobrax em Motoristas PX.'))return;
   let ov=document.getElementById('gobrax-import-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-import-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Importar Nota Gobrax</div><div style="font-size:11px;color:var(--text3);margin-top:4px">O IGNIS identifica o motorista pelo nome e usa a coluna KM RODADO da própria planilha somente como peso interno para consolidar a Nota Gobrax. A quilometragem não é exibida na tela.</div></div><button class="pend-close" onclick="closeModal('gobrax-import-modal')">×</button></div><input id="gobrax-file-input" type="file" accept=".xlsx,.xls" style="display:none" onchange="gobraxImportarArquivo(this)"><div class="idt-import-box" style="margin-top:18px" onclick="document.getElementById('gobrax-file-input').click()"><div class="idt-import-title">Selecionar planilha Nota Gobrax</div><div class="idt-import-sub">Padrão esperado: <strong>NOME</strong>, <strong>DATA INICIO</strong>, data final, <strong>KM RODADO</strong>, <strong>OPERACIONAL</strong>, <strong>CAVALO</strong>, <strong>NOTA GERAL</strong>, <strong>META GOBRAX</strong> e os indicadores de condução.</div></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   ov.classList.add('open');
 }
 async function gobraxImportarArquivo(input){
-  if(!authExigirPermissao('motoristas_gobrax_importar','Sem permissão para importar Nota Gobrax em Motoristas PX.')){if(input)input.value='';return;}if(!await ensureXLSXReady())return;const file=input.files?.[0];if(!file)return;
+  if(!authExigirAcaoMotoristas('motoristas_gobrax_importar','Sem permissão para importar Nota Gobrax em Motoristas PX.')){if(input)input.value='';return;}if(!await ensureXLSXReady())return;const file=input.files?.[0];if(!file)return;
   try{
     const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array',cellDates:true});let achado=null;
     for(const nomeAba of wb.SheetNames){const matriz=XLSX.utils.sheet_to_json(wb.Sheets[nomeAba],{header:1,defval:null,raw:true});for(let ri=0;ri<Math.min(15,matriz.length);ri++){const row=matriz[ri]||[];const heads=row.map(gobraxHeaderNorm);const idxNome=heads.findIndex(h=>h==='NOME'||h==='MOTORISTA');const idxNota=heads.findIndex(h=>h==='NOTAGERAL'||h==='NOTAGOBRAX');const idxMeta=heads.findIndex(h=>h==='METAGOBRAX'||h==='META');const idxIni=heads.findIndex(h=>h==='DATAINICIO'||h==='INICIO');if(idxNome>=0&&idxNota>=0&&idxMeta>=0&&idxIni>=0){achado={matriz,ri,heads,idxNome,idxNota,idxMeta,idxIni};break;}}if(achado)break;}
@@ -8992,7 +9030,7 @@ async function gobraxImportarArquivo(input){
   }catch(e){console.error('Gobrax import error',e);showToast(e?.message||'Não foi possível ler a planilha Nota Gobrax.','error');}finally{input.value='';}
 }
 function gobraxExcluirImportacao(id){
-  if(!authExigirPermissao('motoristas_gobrax_excluir','Sem permissão para excluir importações da Nota Gobrax.'))return;
+  if(!authExigirAcaoMotoristas('motoristas_gobrax_excluir','Sem permissão para excluir importações da Nota Gobrax.'))return;
   const imp=ignisEnsureGobraxState().find(x=>x.id===id);if(!imp)return;if(!confirm(`Excluir esta importação da Nota Gobrax${imp.arquivo?' ('+imp.arquivo+')':''}?`))return;
   state.gobraxImportacoes=state.gobraxImportacoes.filter(x=>x.id!==id);saveState({immediate:true,mode:'light'});gobraxAtualizarSeletor();renderGobrax();gobraxRenderHistorico();showToast('Importação Gobrax excluída.','success');
 }
