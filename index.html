@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<!-- IGNIS v36 · indicador de atualização mais visível em Motoristas PX -->
+<!-- IGNIS v45 · Geral Motoristas PX + Gobrax com KM da telemetria + identificação robusta de nomes -->
 <meta name="ignis-build" content="2026-08-27-mobile-fast-sync-v39">
 <title>Ignis — Gestão Inteligente de Frotas e Equipamentos</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff6b2c'/%3E%3Cpath d='M36 9c1 8-4 11-7 15-3 4-5 8-2 14 2-4 5-6 9-8-1 8 5 11 5 17 6-4 9-10 8-17-1-10-7-17-13-21Z' fill='none' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
@@ -2426,6 +2426,16 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     @media(max-width:1180px){.idt-toolbar-clean{grid-template-columns:1fr 1fr}.idt-toolbar-clean .mot-search{grid-column:1/-1}.idt-actions-clean{justify-content:stretch}.idt-actions-clean .btn{flex:1}.mot-periodbar{grid-template-columns:1fr 1fr}.mot-period-summary{grid-column:1/-1}.mot-toolbar{grid-template-columns:1fr 1fr}.mot-toolbar .mot-search{grid-column:1/-1}.mot-toolbar>.btn{width:100%}.idt-toolbar{grid-template-columns:1fr 1fr}.idt-toolbar .mot-search{grid-column:1/-1}.idt-toolbar>.btn{width:100%}.idt-kpis{grid-template-columns:1fr 1fr}}
     @media(max-width:900px){.mot-data-freshness{width:100%;justify-content:flex-start}.page-header .header-actions{flex-wrap:wrap}.idt-toolbar-clean{display:block}.mot-filterbar{align-items:stretch}.mot-state-tabs{width:100%}.mot-filter-search{min-width:100%}.mot-filter-meta{width:100%;flex:1}.idt-actions-clean{width:100%}.idt-summary-clean{overflow-x:auto;padding-bottom:2px}.idt-summary-main,.idt-summary-item{flex:0 0 auto}.mot-periodbar{grid-template-columns:1fr}.mot-period-dates,.mot-period-summary{grid-column:auto}.mot-toolbar>.btn{grid-column:1/-1}.mot-kpis{grid-template-columns:1fr 1fr}.mot-table-wrap{overflow:auto}.mot-table{min-width:1180px}.mot-detail-summary{grid-template-columns:1fr 1fr}.idt-toolbar{grid-template-columns:1fr}.idt-kpis{grid-template-columns:1fr 1fr}.idt-table{min-width:760px}}
     @media(max-width:520px){.mot-subtabs{width:100%}.mot-state-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.mot-state-btn{width:100%}.mot-period-dates{grid-template-columns:1fr}.mot-subtab{flex:1;padding:10px 12px}.mot-toolbar{grid-template-columns:1fr}.mot-toolbar .mot-search,.mot-toolbar>.btn{grid-column:auto}.mot-kpis,.idt-kpis{grid-template-columns:1fr 1fr}.mot-kpi{padding:13px}.mot-kpi-value{font-size:21px}.idt-modal-dates{grid-template-columns:1fr}}
+
+    /* v45 · Visão Geral Motoristas PX */
+    .mot-geral-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:14px}.mot-geral-toolbar .filter-input{max-width:620px}
+    .mot-geral-list{display:grid;gap:12px}.mot-geral-row{display:grid;grid-template-columns:minmax(190px,.9fr) repeat(3,minmax(235px,1fr));gap:10px;align-items:stretch}
+    .mot-geral-driver{border:1px solid var(--border);border-radius:14px;background:#111820;padding:15px 16px;display:flex;flex-direction:column;justify-content:center;min-height:126px}.mot-geral-driver strong{font-size:14px;color:#fff;line-height:1.35}.mot-geral-driver span{font-size:9px;color:var(--text3);margin-top:5px}
+    .mot-geral-card{appearance:none;text-align:left;border:1px solid var(--border);border-radius:14px;background:#101720;padding:13px 14px;min-height:126px;color:var(--text);cursor:pointer;transition:.16s ease;position:relative;overflow:hidden}.mot-geral-card:hover{border-color:rgba(233,95,50,.36);transform:translateY(-1px);background:#121a23}.mot-geral-card:disabled{cursor:default;opacity:.58;transform:none}.mot-geral-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.mot-geral-card-title{font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.08em;color:#9fb8d6}.mot-geral-card-hint{font-size:8px;color:var(--text3)}
+    .mot-geral-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.mot-geral-metrics.two{grid-template-columns:repeat(2,minmax(0,1fr))}.mot-geral-metric span{display:block;font-size:8px;text-transform:uppercase;letter-spacing:.055em;color:var(--text3);margin-bottom:4px}.mot-geral-metric strong{display:block;font:800 15px 'DM Mono',monospace;color:#fff;white-space:nowrap}.mot-geral-metric strong.ok{color:var(--green)}.mot-geral-metric strong.bad{color:var(--red)}.mot-geral-metric strong.warn{color:var(--yellow)}
+    .mot-geral-empty{font-size:10px;color:var(--text3);padding-top:8px}.mot-geral-legend{font-size:10px;color:var(--text3);margin:4px 0 14px}
+    @media(max-width:1250px){.mot-geral-row{grid-template-columns:1fr 1fr}.mot-geral-driver{grid-column:1/-1;min-height:auto}.mot-geral-card{min-height:118px}.mot-geral-card:last-child{grid-column:1/-1}}
+    @media(max-width:700px){.mot-geral-row{grid-template-columns:1fr}.mot-geral-driver,.mot-geral-card:last-child{grid-column:auto}.mot-geral-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.mot-geral-card{min-height:auto}.mot-geral-toolbar .filter-input{max-width:none;width:100%}}
   </style>
   <div id="page-motoristas" class="page">
     <div class="page-header">
@@ -2434,7 +2444,8 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
     </div>
 
     <div class="mot-subtabs">
-      <button class="mot-subtab active" id="mot-subtab-media" onclick="motoristasSetSubtab('media',this)">Média por Motorista</button>
+      <button class="mot-subtab active" id="mot-subtab-geral" onclick="motoristasSetSubtab('geral',this)">Geral</button>
+      <button class="mot-subtab" id="mot-subtab-media" onclick="motoristasSetSubtab('media',this)">Média por Motorista</button>
       <button class="mot-subtab" id="mot-subtab-idt" onclick="motoristasSetSubtab('idt',this)">IDT</button>
       <button class="mot-subtab" id="mot-subtab-gobrax" onclick="motoristasSetSubtab('gobrax',this)">Nota Gobrax</button>
     </div>
@@ -2448,7 +2459,13 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
       <div class="mot-period-summary" id="mot-period-summary"><strong>Todos os períodos com dados</strong>, mantendo retornos após 2 meses separados.</div>
     </div>
 
-    <div id="mot-panel-media">
+    <div id="mot-panel-geral">
+      <div class="mot-geral-toolbar"><input class="filter-input" id="mot-geral-busca" placeholder="Buscar motorista..." oninput="motoristasGeralDebouncedRender()"></div>
+      <div class="mot-geral-legend">Resumo integrado por motorista. Clique em <strong>Combustível</strong>, <strong>IDT</strong> ou <strong>Nota Gobrax</strong> para abrir o detalhamento completo daquela análise.</div>
+      <div id="mot-geral-content" class="mot-geral-list"></div>
+    </div>
+
+    <div id="mot-panel-media" style="display:none">
       <div class="mot-filterbar">
         <div class="mot-state-tabs" id="mot-status-tabs">
           <button class="mot-state-btn active" data-filter="todos" onclick="motoristasSetStatusFilter('todos')">Todos</button>
@@ -2524,13 +2541,13 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
         <div class="mot-filter-search"><input class="filter-input" id="gobrax-busca" placeholder="Buscar motorista, cavalo ou operacional..." oninput="gobraxDebouncedRender()"></div>
       </div>
       <div class="gobrax-kpis">
-        <div class="mot-kpi"><div class="mot-kpi-label">Motoristas avaliados</div><div class="mot-kpi-value" id="gobrax-kpi-motoristas">0</div><div class="mot-kpi-sub">com nota consolidada e KM localizado</div></div>
-        <div class="mot-kpi"><div class="mot-kpi-label">KM ponderado</div><div class="mot-kpi-value" id="gobrax-kpi-registros">0</div><div class="mot-kpi-sub">KM usados no cálculo das notas</div></div>
+        <div class="mot-kpi"><div class="mot-kpi-label">Motoristas avaliados</div><div class="mot-kpi-value" id="gobrax-kpi-motoristas">0</div><div class="mot-kpi-sub">com nota consolidada</div></div>
+        <div class="mot-kpi"><div class="mot-kpi-label">Avaliações válidas</div><div class="mot-kpi-value" id="gobrax-kpi-registros">0</div><div class="mot-kpi-sub">linhas usadas na ponderação</div></div>
         <div class="mot-kpi"><div class="mot-kpi-label">Dentro da meta</div><div class="mot-kpi-value" id="gobrax-kpi-meta">0</div><div class="mot-kpi-sub">motoristas com nota consolidada ≥ meta</div></div>
         <div class="mot-kpi"><div class="mot-kpi-label">Abaixo da meta</div><div class="mot-kpi-value" id="gobrax-kpi-abaixo">0</div><div class="mot-kpi-sub">motoristas com nota consolidada abaixo da meta</div></div>
       </div>
       <div id="gobrax-content"></div>
-      <div class="mot-page-note mot-page-note-compact"><strong>Nota consolidada IGNIS = Σ(Nota Gobrax × KM do motorista no período da avaliação) ÷ ΣKM com nota válida.</strong> Quando a mesma placa existe na base, ela tem prioridade; se não existir, o IGNIS usa o KM do motorista no mesmo intervalo e sinaliza o fallback. Nota 0 é tratada como sem avaliação. No período personalizado, entram apenas avaliações Gobrax totalmente contidas no intervalo para não fracionar uma nota de período.</div>
+      <div class="mot-page-note mot-page-note-compact"><strong>Nota consolidada = Σ(Nota Gobrax × quilometragem da telemetria) ÷ Σquilometragem válida.</strong> A quilometragem vem da própria planilha Gobrax e é usada somente internamente no cálculo; ela não é exibida na tela. Nota 0 e linhas “NÃO TEM GOBRAX” são tratadas como sem avaliação.</div>
     </div>
   </div>
 
@@ -4104,7 +4121,7 @@ async function loadState() {
       else if (activeId === 'comparativo') renderComparativo();
       else if (activeId === 'abastecimentos') renderAbastecimentos();
       else if (activeId === 'maquinas') renderMaquinas();
-      else if (activeId === 'motoristas' && typeof renderMotoristas==='function') { renderMotoristas(true); if(typeof _motSubtab!=='undefined'&&_motSubtab==='idt'&&typeof renderIDT==='function') renderIDT(); else if(typeof _motSubtab!=='undefined'&&_motSubtab==='gobrax'&&typeof renderGobrax==='function') renderGobrax(); }
+      else if (activeId === 'motoristas' && typeof renderMotoristas==='function') { renderMotoristas(true); if(typeof _motSubtab!=='undefined'&&_motSubtab==='geral'&&typeof renderMotoristasGeral==='function') renderMotoristasGeral(); else if(typeof _motSubtab!=='undefined'&&_motSubtab==='idt'&&typeof renderIDT==='function') renderIDT(); else if(typeof _motSubtab!=='undefined'&&_motSubtab==='gobrax'&&typeof renderGobrax==='function') renderGobrax(); }
       else if (activeId === 'pendencias' && typeof renderPendencias==='function') renderPendencias(true);
       else if (activeId === 'anomalias' && typeof renderAnomalias==='function') renderAnomalias(true);
       else if (activeId === 'fechamento' && typeof renderFechamento==='function') renderFechamento(true);
@@ -4219,7 +4236,7 @@ async function syncFromFirebase() {
           else if (activeId === 'comparativo') renderComparativo();
           else if (activeId === 'abastecimentos') renderAbastecimentos();
           else if (activeId === 'maquinas') renderMaquinas();
-          else if (activeId === 'motoristas' && typeof renderMotoristas==='function') { renderMotoristas(true); if(_motSubtab==='idt'&&typeof renderIDT==='function') renderIDT(); else if(_motSubtab==='gobrax'&&typeof renderGobrax==='function') renderGobrax(); }
+          else if (activeId === 'motoristas' && typeof renderMotoristas==='function') { renderMotoristas(true); if(_motSubtab==='geral'&&typeof renderMotoristasGeral==='function') renderMotoristasGeral(); else if(_motSubtab==='idt'&&typeof renderIDT==='function') renderIDT(); else if(_motSubtab==='gobrax'&&typeof renderGobrax==='function') renderGobrax(); }
           else if (activeId === 'pendencias' && typeof renderPendencias==='function') renderPendencias(true);
           else if (activeId === 'anomalias' && typeof renderAnomalias==='function') renderAnomalias(true);
           else if (activeId === 'fechamento' && typeof renderFechamento==='function') renderFechamento(true);
@@ -7442,6 +7459,50 @@ function ignisMotoristaNorm(v){
     .replace(/\s+/g,' ')
     .trim();
 }
+// v45 · Resolução tolerante de nomes entre Abastecimentos, IDT e Gobrax.
+// Mantém o nome canônico da lista acompanhada e aceita diferenças seguras como acentos,
+// conectivos (DA/DE/DO/DOS/DAS), pontuação, espaços e pequenos erros de digitação.
+function ignisMotoristaNomeBase(v){
+  return ignisMotoristaNorm(v).split(' ').filter(t=>t&&!['DA','DE','DO','DAS','DOS','E'].includes(t)).join(' ');
+}
+function ignisMotoristaEditSimilarity(a,b){
+  a=String(a||'');b=String(b||'');if(a===b)return 1;if(!a||!b)return 0;
+  const m=a.length,n=b.length,prev=Array.from({length:n+1},(_,i)=>i),cur=new Array(n+1);
+  for(let i=1;i<=m;i++){
+    cur[0]=i;
+    for(let j=1;j<=n;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    for(let j=0;j<=n;j++)prev[j]=cur[j];
+  }
+  return 1-prev[n]/Math.max(m,n);
+}
+function ignisMotoristaCatalogoResolucao(){
+  const by=new Map();
+  const add=(nome,matricula='',key='')=>{nome=String(nome||'').replace(/\s+/g,' ').trim();if(!nome)return;const k=ignisMotoristaNorm(key||nome);if(!k)return;const prev=by.get(k);if(!prev)by.set(k,{nome,matricula:String(matricula||''),key:k});else if(!prev.matricula&&matricula)prev.matricula=String(matricula);};
+  (Array.isArray(state?.motoristasMonitorados)?state.motoristasMonitorados:[]).forEach(x=>{if(typeof x==='string')add(x);else add(x?.nome,x?.matricula,x?.key);});
+  IGNIS_MOTORISTAS_INICIAIS.forEach(n=>add(n));
+  return [...by.values()];
+}
+function ignisMotoristaResolver(v){
+  let raw=String(v??'').replace(/\s+/g,' ').trim();
+  const pref=raw.match(/^([A-Z0-9_./]+)\s*-\s*(.+)$/i);if(pref)raw=pref[2].trim();
+  const norm=ignisMotoristaNorm(raw);if(!norm)return{key:'',nome:raw,matched:false,score:0,original:raw};
+  const cat=ignisMotoristaCatalogoResolucao();
+  let c=cat.find(x=>x.key===norm);if(c)return{...c,matched:true,score:1,original:raw};
+  const base=ignisMotoristaNomeBase(norm),compact=norm.replace(/\s/g,'');
+  const exactBase=cat.filter(x=>ignisMotoristaNomeBase(x.key)===base||x.key.replace(/\s/g,'')===compact);
+  if(exactBase.length===1)return{...exactBase[0],matched:true,score:.99,original:raw};
+  const toks=base.split(' ').filter(Boolean),first=toks[0]||'',last=toks[toks.length-1]||'';
+  const scored=cat.map(x=>{
+    const xb=ignisMotoristaNomeBase(x.key),xt=xb.split(' ').filter(Boolean),xf=xt[0]||'',xl=xt[xt.length-1]||'';
+    const setA=new Set(toks),setB=new Set(xt),inter=[...setA].filter(t=>setB.has(t)).length,union=new Set([...setA,...setB]).size||1;
+    const jac=inter/union,edit=ignisMotoristaEditSimilarity(base,xb),edge=(first&&last&&first===xf&&last===xl)?1:0;
+    return{x,score:edit*.58+jac*.32+edge*.10,edge,edit,jac};
+  }).sort((a,b)=>b.score-a.score);
+  const best=scored[0],second=scored[1];
+  if(best&&(best.score>=.90||best.edge&&best.score>=.82)&&(!second||best.score-second.score>=.035))return{...best.x,matched:true,score:best.score,original:raw};
+  return{key:norm,nome:raw,matricula:'',matched:false,score:best?.score||0,original:raw};
+}
+function ignisMotoristaKeyResolvida(v){const r=ignisMotoristaResolver(v);return r.matched?r.key:ignisMotoristaNorm(v);}
 function ignisParseMotorista(raw){
   let txt=String(raw||'').replace(/\s+/g,' ').trim();
   if(!txt||txt==='-')return{nome:'',matricula:'',key:''};
@@ -7469,7 +7530,7 @@ function ignisEnsureMotoristasState(){
 }
 function ignisMotoristaCatalogo(){
   const out=new Map();
-  (state.abastecimentos||[]).forEach(a=>(Array.isArray(a.motoristas)?a.motoristas:[]).forEach(m=>{const nome=String(m.nome||'').trim();const key=ignisMotoristaNorm(m.key||nome);if(!key||!nome)return;const prev=out.get(key);if(!prev||(!prev.matricula&&m.matricula))out.set(key,{nome,matricula:String(m.matricula||''),key});}));
+  (state.abastecimentos||[]).forEach(a=>(Array.isArray(a.motoristas)?a.motoristas:[]).forEach(m=>{const nome=String(m.nome||'').trim();if(!nome)return;const rr=ignisMotoristaResolver(nome),key=rr.matched?rr.key:ignisMotoristaNorm(m.key||nome);if(!key)return;const nomeCanon=rr.matched?rr.nome:nome,prev=out.get(key);if(!prev||(!prev.matricula&&m.matricula))out.set(key,{nome:nomeCanon,matricula:String(m.matricula||rr.matricula||''),key});}));
   ignisEnsureMotoristasState().forEach(m=>{if(!out.has(m.key))out.set(m.key,{...m});});
   return [...out.values()].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
 }
@@ -7537,7 +7598,7 @@ function motoristasColetarCiclos(){
   (state.abastecimentos||[]).forEach(a=>{
     const tipo=getTipoIgnis(a);if(tipo!=='pesada'&&tipo!=='leve')return;
     (Array.isArray(a.motoristas)?a.motoristas:[]).forEach(m=>{
-      const key=ignisMotoristaNorm(m.key||m.nome),base=porMotorista.get(key);if(!base)return;
+      const resolvido=ignisMotoristaResolver(m.nome||m.key),key=resolvido.matched?resolvido.key:ignisMotoristaNorm(m.key||m.nome),base=porMotorista.get(key);if(!base)return;
       if(m.matricula&&!base.matricula)base.matricula=String(m.matricula);
       const dias=Array.isArray(m.dias)?m.dias.map(d=>Array.isArray(d)?{data:d[0],km:d[1],litros:d[2],metaNum:d[3],metaLitros:d[4],registros:d[5],impactoR:d[6],litrosComPreco:d[7]}:d).filter(d=>d&&ignisMotoristaDataIso(d.data)):[];
       const pushOcc=(d,legado=false)=>{
@@ -7678,11 +7739,11 @@ function motoristasPeriodoModoChanged(){
   if(cfg.mode==='personalizado'&&(!cfg.ini||!cfg.fim)){
     const f=motoristasFaixaDisponivel(),ini=document.getElementById('mot-data-ini'),fim=document.getElementById('mot-data-fim');if(ini&&!ini.value)ini.value=f.ini;if(fim&&!fim.value)fim.value=f.fim;
   }
-  motoristasPeriodoAtualizarUI();if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='gobrax')renderGobrax();else renderMotoristas(false);
+  motoristasPeriodoAtualizarUI();if(_motSubtab==='geral')renderMotoristasGeral();else if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='gobrax')renderGobrax();else renderMotoristas(false);
 }
 function motoristasPeriodoDatasChanged(){
   const cfg=motoristasPeriodoConfig();if(cfg.ini&&cfg.fim&&cfg.ini>cfg.fim){const fim=document.getElementById('mot-data-fim');if(fim)fim.value=cfg.ini;}
-  motoristasPeriodoAtualizarUI();if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='gobrax')renderGobrax();else renderMotoristas(false);
+  motoristasPeriodoAtualizarUI();if(_motSubtab==='geral')renderMotoristasGeral();else if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='gobrax')renderGobrax();else renderMotoristas(false);
 }
 function motoristasRowsPeriodo(all=motoristasColetarCiclos()){
   const cfg=motoristasPeriodoConfig();let rows=all;
@@ -7773,7 +7834,8 @@ function renderMotoristas(force=false){
     return `<tr class="${has?'mot-driver-row':''}"${click}><td data-label="Motorista"><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Matrícula não informada')}</div></td><td data-label="Período" class="mot-number">${r.ciclo>0?ignisMotoristaPeriodoLabel(r.inicio,r.fim):'—'}</td><td data-label="KM" class="mot-number">${has?r.km.toLocaleString('pt-BR',{maximumFractionDigits:0}):'—'}</td><td data-label="Litros" class="mot-number">${r.litros>0?r.litros.toLocaleString('pt-BR',{maximumFractionDigits:2})+' L':'—'}</td><td data-label="Média ideal" class="mot-number">${r.meta>0?r.meta.toFixed(2)+' km/L':'—'}</td><td data-label="Média real" class="mot-number"><strong>${has?r.media.toFixed(2)+' km/L':'—'}</strong></td><td data-label="Eficiência" class="mot-number">${r.efic>0?r.efic.toFixed(1)+'%':'—'}</td><td data-label="Abastecimentos">${r.registros||'—'}</td><td data-label="Placas">${r.placas.size||'—'}</td>${podeFinanceiro?`<td data-label="Economia / desperdício" class="mot-number mot-financeiro-col">${fin}</td>`:''}<td data-label="Status"><span class="mot-status ${st.cls}">${st.label}</span></td></tr>`;
   }).join('');
   _markPageClean('motoristas');
-  if(_motSubtab==='idt')renderIDT();
+  if(_motSubtab==='geral')renderMotoristasGeral();
+  else if(_motSubtab==='idt')renderIDT();
   else if(_motSubtab==='gobrax')renderGobrax();
 }
 function motoristasAbrirGestao(){
@@ -7794,7 +7856,7 @@ function motoristasAbrirGestao(){
   const dias=document.getElementById('mot-inatividade-dias');if(dias)dias.value=ignisMotoristasDiasInatividade();
   motoristasRenderGestao();motoristasRenderSugestoes();ov.classList.add('open');setTimeout(()=>document.getElementById('mot-add-input')?.focus(),50);
 }
-function motoristasSalvarInatividadeDias(){const inp=document.getElementById('mot-inatividade-dias'),n=Math.floor(Number(inp?.value));if(!Number.isFinite(n)||n<1||n>365){showToast('Informe um período entre 1 e 365 dias.','error');if(inp)inp.value=ignisMotoristasDiasInatividade();return;}state.motoristasInatividadeDias=n;saveState({mode:'light'});if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='gobrax')renderGobrax();else renderMotoristas(false);showToast(`Motoristas passam para Desativo após mais de ${n} dia${n===1?'':'s'} sem abastecimento.`,'success');}
+function motoristasSalvarInatividadeDias(){const inp=document.getElementById('mot-inatividade-dias'),n=Math.floor(Number(inp?.value));if(!Number.isFinite(n)||n<1||n>365){showToast('Informe um período entre 1 e 365 dias.','error');if(inp)inp.value=ignisMotoristasDiasInatividade();return;}state.motoristasInatividadeDias=n;saveState({mode:'light'});if(_motSubtab==='geral')renderMotoristasGeral();else if(_motSubtab==='idt')renderIDT();else if(_motSubtab==='gobrax')renderGobrax();else renderMotoristas(false);showToast(`Motoristas passam para Desativo após mais de ${n} dia${n===1?'':'s'} sem abastecimento.`,'success');}
 
 function motoristasRenderGestao(){const el=document.getElementById('mot-manage-list');if(!el)return;const arr=ignisEnsureMotoristasState();el.innerHTML=arr.length?arr.map(m=>`<div class="mot-manage-row"><div class="mot-manage-copy"><div class="mot-manage-name">${pendEsc(m.nome)}</div><div class="mot-manage-meta">${pendEsc(m.matricula||'Nome acompanhado')}</div></div><button class="mot-remove" title="Retirar do acompanhamento" onclick="motoristasRemover('${m.key.replace(/'/g,"\\'")}')">×</button></div>`).join(''):'<div class="mot-empty">Nenhum motorista selecionado.</div>';}
 function motoristasRenderSugestoes(){const el=document.getElementById('mot-sugestoes');if(!el)return;const q=ignisMotoristaNorm(document.getElementById('mot-add-input')?.value||''),sel=new Set(ignisEnsureMotoristasState().map(m=>m.key));let cat=ignisMotoristaCatalogo().filter(m=>!sel.has(m.key));if(q)cat=cat.filter(m=>ignisMotoristaNorm(m.nome).includes(q)||ignisMotoristaNorm(m.matricula).includes(q));else cat=cat.slice(0,8);el.innerHTML=cat.slice(0,12).map(m=>`<button class="mot-suggestion" onclick="motoristasAdicionarCatalogo('${m.key.replace(/'/g,"\\'")}')"><span>${pendEsc(m.nome)}</span><small>${pendEsc(m.matricula||'detectado no relatório')}</small></button>`).join('');}
@@ -7814,7 +7876,7 @@ function motoristasAbrirDetalhe(key,ciclo){
 
 
 // ── MOTORISTAS PX · IDT · calendário compartilhado + permissões granulares v23 ──
-let _motSubtab='media', _idtRenderTimer=null;
+let _motSubtab='geral', _idtRenderTimer=null;
 function ignisEnsureIdtState(){
   if(!Number.isFinite(Number(state.idtMeta))||Number(state.idtMeta)<0)state.idtMeta=1.5;
   if(!Array.isArray(state.idtImportacoes))state.idtImportacoes=[];
@@ -7824,16 +7886,18 @@ function ignisEnsureIdtState(){
   return state.idtImportacoes;
 }
 function motoristasSetSubtab(tab,el){
-  _motSubtab=tab==='idt'?'idt':tab==='gobrax'?'gobrax':'media';
+  _motSubtab=tab==='geral'?'geral':tab==='idt'?'idt':tab==='gobrax'?'gobrax':'media';
   document.querySelectorAll('#page-motoristas .mot-subtab').forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
-  const media=document.getElementById('mot-panel-media'),idt=document.getElementById('mot-panel-idt'),gobrax=document.getElementById('mot-panel-gobrax'),periodbar=document.getElementById('mot-periodbar');
+  const geral=document.getElementById('mot-panel-geral'),media=document.getElementById('mot-panel-media'),idt=document.getElementById('mot-panel-idt'),gobrax=document.getElementById('mot-panel-gobrax'),periodbar=document.getElementById('mot-periodbar');
+  if(geral)geral.style.display=_motSubtab==='geral'?'':'none';
   if(media)media.style.display=_motSubtab==='media'?'':'none';
   if(idt)idt.style.display=_motSubtab==='idt'?'':'none';
   if(gobrax)gobrax.style.display=_motSubtab==='gobrax'?'':'none';
   if(periodbar)periodbar.style.display='grid';
   motoristasPeriodoAtualizarUI();authAplicarPermissoesMotoristas();
-  if(_motSubtab==='idt'){idtAtualizarSeletor();renderIDT();}
+  if(_motSubtab==='geral')renderMotoristasGeral();
+  else if(_motSubtab==='idt'){idtAtualizarSeletor();renderIDT();}
   else if(_motSubtab==='gobrax'){gobraxAtualizarSeletor();renderGobrax();}
   else renderMotoristas(false);
 }
@@ -7860,7 +7924,7 @@ function idtImportacoesAte(imp){
 function idtRegistroMap(imp){
   const map=new Map();
   (imp?.registros||[]).forEach(r=>{
-    const key=ignisMotoristaNorm(r.key||r.nome);if(!key)return;
+    const rr=ignisMotoristaResolver(r.nome||r.key),key=rr.matched?rr.key:ignisMotoristaNorm(r.key||r.nome);if(!key)return;
     const tipos=r.tipos&&typeof r.tipos==='object'?r.tipos:{};
     const vel=Number(tipos.velocidade),rpm=Number(tipos.rpm),ocioso=Number(tipos.ocioso);
     const temTipos=[vel,rpm,ocioso].some(Number.isFinite);
@@ -8090,6 +8154,39 @@ function idtExcluirImportacao(id){
   state.idtImportacoes=state.idtImportacoes.filter(x=>x.id!==id);saveState({immediate:true,mode:'light'});idtAtualizarSeletor();renderIDT();showToast('Importação IDT excluída.','success');
 }
 
+// ── MOTORISTAS PX · GERAL v45 ────────────────────────────────────────────────
+let _motGeralTimer=null;function motoristasGeralDebouncedRender(){clearTimeout(_motGeralTimer);_motGeralTimer=setTimeout(renderMotoristasGeral,100);}
+function motoristasGeralFuelMap(){const map=new Map();motoristasRowsPeriodo(motoristasColetarCiclos()).forEach(r=>{if(!(r.ciclo>0&&r.km>0&&r.litros>0))return;const prev=map.get(r.key);if(!prev||String(r.fim||r.inicio)>String(prev.fim||prev.inicio)||Number(r.ciclo)>Number(prev.ciclo))map.set(r.key,r);});return map;}
+function motoristasGeralIdtMap(){
+  const map=new Map(),imp=idtOrdenadas()[0]||null;if(!imp)return map;const cfg=motoristasPeriodoConfig(),snapshot=imp.periodos&&typeof imp.periodos==='object'?imp.periodos:{};
+  motoristasRowsPeriodo(motoristasColetarCiclos()).forEach(c=>{const snap=snapshot[c.key]||null,base=(c&&c.ciclo>0)?c:(cfg.mode==='personalizado'?c:(snap?{...c,...snap}:c)),ciclo=Number(base?.ciclo||0),det=idtDesviosAcumuladosAteDetalhado(imp,c.key,ciclo,cfg),desv=det?det.total:null,km=Number(base?.km)||0,idt=desv!==null&&km>0?desv/km*1000:null;if(idt!==null)map.set(c.key,{...c,desvios:desv,velocidade:det?.velocidade??null,rpm:det?.rpm??null,ocioso:det?.ocioso??null,km,idt,inicio:base?.inicio||'',fim:base?.fim||'',ciclo});});
+  return map;
+}
+function motoristasGeralGobraxMap(){const m=new Map();const b=gobraxConsolidar();b.rows.forEach(r=>m.set(r.key,r));return m;}
+function motoristasGeralAbrir(secao,key){
+  if(secao==='combustivel'){const r=motoristasGeralFuelMap().get(key);if(r)motoristasAbrirDetalhe(key,r.ciclo);return;}
+  if(secao==='idt'){idtAbrirDetalheMotorista(key);return;}
+  if(secao==='gobrax'){gobraxAbrirDetalhe(key);return;}
+}
+function renderMotoristasGeral(){
+  const box=document.getElementById('mot-geral-content');if(!box)return;ignisEnsureMotoristasState();motoristasAtualizarUltimaData();motoristasPeriodoAtualizarUI();authAplicarPermissoesMotoristas();
+  const q=ignisMotoristaNorm(document.getElementById('mot-geral-busca')?.value||'');const gLatest=gobraxOrdenadas()[0];if(gLatest)gobraxAtualizarSeletor(gLatest.id);const fuel=motoristasGeralFuelMap(),idt=motoristasGeralIdtMap(),gob=motoristasGeralGobraxMap(),metaIdt=Number(state.idtMeta)||1.5;
+  let drivers=ignisEnsureMotoristasState().filter(m=>!q||ignisMotoristaNorm(`${m.nome} ${m.matricula||''}`).includes(q));
+  if(!drivers.length){box.innerHTML='<div class="mot-empty">Nenhum motorista corresponde à busca.</div>';return;}
+  box.innerHTML=drivers.map(m=>{
+    const f=fuel.get(m.key),i=idt.get(m.key),g=gob.get(m.key),fst=f?motoristasStatus(f):null,ist=i?idtStatus(i,metaIdt):null,gst=g?g._status:null;
+    const fcard=f?`<button class="mot-geral-card" onclick="motoristasGeralAbrir('combustivel','${m.key.replace(/'/g,"\\'")}')"><div class="mot-geral-card-head"><span class="mot-geral-card-title">Combustível</span><span class="mot-status ${fst.cls}">${fst.label}</span></div><div class="mot-geral-metrics"><div class="mot-geral-metric"><span>KM</span><strong>${Math.round(f.km).toLocaleString('pt-BR')}</strong></div><div class="mot-geral-metric"><span>Média ideal</span><strong>${f.meta>0?f.meta.toFixed(2):'—'}</strong></div><div class="mot-geral-metric"><span>Média real</span><strong>${f.media>0?f.media.toFixed(2):'—'}</strong></div></div></button>`:`<button class="mot-geral-card" disabled><div class="mot-geral-card-head"><span class="mot-geral-card-title">Combustível</span></div><div class="mot-geral-empty">Sem dados no período</div></button>`;
+    const icard=i?`<button class="mot-geral-card" onclick="motoristasGeralAbrir('idt','${m.key.replace(/'/g,"\\'")}')"><div class="mot-geral-card-head"><span class="mot-geral-card-title">IDT</span><span class="mot-status ${ist.cls}">${ist.label}</span></div><div class="mot-geral-metrics"><div class="mot-geral-metric"><span>IDT</span><strong class="${i.idt<=metaIdt?'ok':'bad'}">${i.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-geral-metric"><span>Meta</span><strong>${metaIdt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-geral-metric"><span>Desvios</span><strong>${Number(i.desvios||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</strong></div></div></button>`:`<button class="mot-geral-card" disabled><div class="mot-geral-card-head"><span class="mot-geral-card-title">IDT</span></div><div class="mot-geral-empty">Sem dados no período</div></button>`;
+    const gcard=g&&Number(g.nota)>0?`<button class="mot-geral-card" onclick="motoristasGeralAbrir('gobrax','${m.key.replace(/'/g,"\\'")}')"><div class="mot-geral-card-head"><span class="mot-geral-card-title">Nota Gobrax</span><span class="mot-status ${gst.cls}">${gst.label}</span></div><div class="mot-geral-metrics two"><div class="mot-geral-metric"><span>Meta</span><strong>${Number.isFinite(Number(g.meta))?Number(g.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</strong></div><div class="mot-geral-metric"><span>Nota</span><strong class="${g.nota>=g.meta?'ok':'bad'}">${Number(g.nota).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div></div></button>`:`<button class="mot-geral-card" disabled><div class="mot-geral-card-head"><span class="mot-geral-card-title">Nota Gobrax</span></div><div class="mot-geral-empty">Sem nota consolidada</div></button>`;
+    return `<div class="mot-geral-row"><div class="mot-geral-driver"><strong>${pendEsc(m.nome)}</strong><span>${pendEsc(m.matricula||'Motorista acompanhado')}</span></div>${fcard}${icard}${gcard}</div>`;
+  }).join('');_markPageClean('motoristas');
+}
+function idtAbrirDetalheMotorista(key){
+  const map=motoristasGeralIdtMap(),r=map.get(key);if(!r)return;const meta=Number(state.idtMeta)||1.5,st=idtStatus(r,meta);
+  let ov=document.getElementById('idt-driver-detail-modal');if(!ov){ov=document.createElement('div');ov.id='idt-driver-detail-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:920px"><div id="idt-driver-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  const c=document.getElementById('idt-driver-detail-content');if(!c)return;c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(r.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">${pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim))}</div></div><button class="pend-close" onclick="closeModal('idt-driver-detail-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>IDT</span><strong>${r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-detail-card"><span>Meta IDT</span><strong>${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-detail-card"><span>Total de desvios</span><strong>${Number(r.desvios||0).toLocaleString('pt-BR')}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="gobrax-source-metrics" style="margin-top:16px"><div class="gobrax-source-metric"><span>Excesso de velocidade</span><strong>${Number(r.velocidade||0).toLocaleString('pt-BR')}</strong></div><div class="gobrax-source-metric"><span>Excesso de RPM</span><strong>${Number(r.rpm||0).toLocaleString('pt-BR')}</strong></div><div class="gobrax-source-metric"><span>Motor ocioso</span><strong>${Number(r.ocioso||0).toLocaleString('pt-BR')}</strong></div></div>`;ov.classList.add('open');
+}
+
 // ── MOTORISTAS PX · NOTA GOBRAX ──────────────────────────────────────────────
 let _gobraxRenderTimer=null;
 const GOBRAX_METRIC_DEFS={
@@ -8215,66 +8312,27 @@ function gobraxKmRegistro(r,kmIndex,pares=[]){
 function gobraxConsolidar(){
   gobraxAtualizarSeletor();const sel=document.getElementById('gobrax-importacao'),imp=ignisEnsureGobraxState().find(x=>x.id===sel?.value)||gobraxOrdenadas()[0]||null;
   if(!imp)return{imp:null,rows:[],fora:0,raw:[]};
-  const monitorados=new Map(ignisEnsureMotoristasState().map(m=>[m.key,m])),cfg=motoristasPeriodoConfig(),ciclos=motoristasColetarCiclos(),atividade=motoristasAtividadeMap(ciclos),kmIndex=gobraxKmIndex(ciclos);
-  const paresPorKey=new Map();(imp.registros||[]).forEach((x,i)=>{const k=ignisMotoristaNorm(x.key||x.nome);if(!k||!monitorados.has(k))return;let a=paresPorKey.get(k);if(!a)paresPorKey.set(k,a=[]);a.push({...x,_idx:Number(x._idx??i)});});
+  const monitorados=ignisEnsureMotoristasState(),monitoradosMap=new Map(monitorados.map(m=>[m.key,m])),cfg=motoristasPeriodoConfig(),atividade=motoristasAtividadeMap(motoristasColetarCiclos());
   const grupos=new Map();let fora=0;
   (imp.registros||[]).forEach((r,idx)=>{
-    const key=ignisMotoristaNorm(r.key||r.nome),m=monitorados.get(key);if(!m){fora++;return;}
+    const rr=ignisMotoristaResolver(r.nome||r.key),key=rr.matched?rr.key:ignisMotoristaNorm(r.key||r.nome),m=monitoradosMap.get(key);if(!m){fora++;return;}
     const dataIni=r.dataIni||r.dataFim||'',dataFim=r.dataFim||r.dataIni||'';
-    // A Nota Gobrax representa o período inteiro daquela linha. Não fracionamos uma nota
-    // se o usuário escolher um pedaço menor no calendário.
-    if(cfg.mode==='personalizado'&&cfg.ini&&cfg.fim){
-      if(!dataIni||!dataFim||dataIni<cfg.ini||dataFim>cfg.fim)return;
-    }
-    const kmInfo=gobraxKmRegistro({...r,_idx:Number(r._idx??idx)},kmIndex,paresPorKey.get(key)||[]),nota=Number(r.nota),meta=Number(r.meta),notaValida=Number.isFinite(nota)&&nota>0&&kmInfo.km>0;
-    const item={...r,_idx:Number(r._idx??idx),key,nome:m.nome||r.nome,matricula:m.matricula||'',_km:kmInfo.km,_kmAprox:kmInfo.aprox,_kmFonte:kmInfo.fonte,_kmPlacasBase:kmInfo.placasBase||[],_kmPeriodoDisponivel:Number(kmInfo.kmPeriodoDisponivel)||0,_notaValida:notaValida};
-    let g=grupos.get(key);
-    if(!g){
-      const a=atividade.get(key);
-      g={key,nome:item.nome,matricula:item.matricula,periodoIni:'',periodoFim:'',kmTotal:0,kmNota:0,kmSemNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,avaliacoesKmPeriodo:0,placas:new Map(),operacionais:new Set(),origens:[],_ativo:Boolean(a?.ativo)};
-      grupos.set(key,g);
-    }
-    if(dataIni&&(!g.periodoIni||dataIni<g.periodoIni))g.periodoIni=dataIni;
-    if(dataFim&&(!g.periodoFim||dataFim>g.periodoFim))g.periodoFim=dataFim;
-    g.kmTotal+=kmInfo.km;g.origens.push(item);if(item.operacional)g.operacionais.add(item.operacional);
-    const pkey=gobraxPlacaNorm(item.cavalo)||`SEMPLACA_${idx}`;
-    let p=g.placas.get(pkey);
-    if(!p){p={placa:item.cavalo||'—',inicio:'',fim:'',kmTotal:0,kmNota:0,pontos:0,metaPontos:0,metaKm:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesComKm:0,avaliacoesSemKm:0,avaliacoesKmPeriodo:0,operacionais:new Set(),origens:[]};g.placas.set(pkey,p);}
-    if(dataIni&&(!p.inicio||dataIni<p.inicio))p.inicio=dataIni;if(dataFim&&(!p.fim||dataFim>p.fim))p.fim=dataFim;
-    p.kmTotal+=kmInfo.km;p.origens.push(item);if(item.operacional)p.operacionais.add(item.operacional);
-    const temNota=Number.isFinite(nota)&&nota>0;
-    if(temNota){
-      g.notaRawPontos+=nota;g.notaRawCount++;g.avaliacoesValidas++;
-      p.notaRawPontos+=nota;p.notaRawCount++;p.avaliacoesValidas++;
-      if(Number.isFinite(meta)&&meta>0){g.metaRawPontos+=meta;g.metaRawCount++;p.metaRawPontos+=meta;p.metaRawCount++;}
-      if(kmInfo.km>0){g.avaliacoesComKm++;p.avaliacoesComKm++;if(kmInfo.fonte==='periodo'){g.avaliacoesKmPeriodo++;p.avaliacoesKmPeriodo++;}}
-      else{g.avaliacoesSemKm++;p.avaliacoesSemKm++;}
-    }
-    if(notaValida){
-      g.kmNota+=kmInfo.km;g.pontos+=nota*kmInfo.km;
-      p.kmNota+=kmInfo.km;p.pontos+=nota*kmInfo.km;
-      if(Number.isFinite(meta)&&meta>0){g.metaPontos+=meta*kmInfo.km;g.metaKm+=kmInfo.km;p.metaPontos+=meta*kmInfo.km;p.metaKm+=kmInfo.km;}
-    }else if(kmInfo.km>0&&!temNota)g.kmSemNota+=kmInfo.km;
+    if(cfg.mode==='personalizado'&&cfg.ini&&cfg.fim){if(!dataIni||!dataFim||dataIni<cfg.ini||dataFim>cfg.fim)return;}
+    const nota=Number(r.nota),meta=Number(r.meta),km=Number(r.kmTelemetria),temNota=Number.isFinite(nota)&&nota>0,temKm=Number.isFinite(km)&&km>0,notaValida=temNota&&temKm;
+    const item={...r,_idx:Number(r._idx??idx),key,nome:m.nome||rr.nome||r.nome,matricula:m.matricula||rr.matricula||'',_notaValida:notaValida,_nomeResolvido:rr.matched,_nomeScore:rr.score};
+    let g=grupos.get(key);if(!g){const a=atividade.get(key);g={key,nome:item.nome,matricula:item.matricula,periodoIni:'',periodoFim:'',pontos:0,peso:0,metaPontos:0,metaPeso:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesUsadas:0,avaliacoesSemPeso:0,placas:new Map(),operacionais:new Set(),origens:[],_ativo:Boolean(a?.ativo)};grupos.set(key,g);}
+    if(dataIni&&(!g.periodoIni||dataIni<g.periodoIni))g.periodoIni=dataIni;if(dataFim&&(!g.periodoFim||dataFim>g.periodoFim))g.periodoFim=dataFim;
+    g.origens.push(item);if(item.operacional)g.operacionais.add(item.operacional);
+    const pkey=gobraxPlacaNorm(item.cavalo)||`SEMPLACA_${idx}`;let p=g.placas.get(pkey);
+    if(!p){p={placa:item.cavalo||'—',inicio:'',fim:'',pontos:0,peso:0,metaPontos:0,metaPeso:0,notaRawPontos:0,notaRawCount:0,metaRawPontos:0,metaRawCount:0,avaliacoesValidas:0,avaliacoesUsadas:0,avaliacoesSemPeso:0,operacionais:new Set(),origens:[]};g.placas.set(pkey,p);}
+    if(dataIni&&(!p.inicio||dataIni<p.inicio))p.inicio=dataIni;if(dataFim&&(!p.fim||dataFim>p.fim))p.fim=dataFim;p.origens.push(item);if(item.operacional)p.operacionais.add(item.operacional);
+    if(temNota){g.notaRawPontos+=nota;g.notaRawCount++;g.avaliacoesValidas++;p.notaRawPontos+=nota;p.notaRawCount++;p.avaliacoesValidas++;if(Number.isFinite(meta)&&meta>0){g.metaRawPontos+=meta;g.metaRawCount++;p.metaRawPontos+=meta;p.metaRawCount++;}if(temKm){g.avaliacoesUsadas++;p.avaliacoesUsadas++;}else{g.avaliacoesSemPeso++;p.avaliacoesSemPeso++;}}
+    if(notaValida){g.peso+=km;g.pontos+=nota*km;p.peso+=km;p.pontos+=nota*km;if(Number.isFinite(meta)&&meta>0){g.metaPontos+=meta*km;g.metaPeso+=km;p.metaPontos+=meta*km;p.metaPeso+=km;}}
   });
   const rows=[...grupos.values()].map(g=>{
-    g.notaPonderada=g.kmNota>0?g.pontos/g.kmNota:null;
-    g.notaReferencia=g.notaRawCount>0?g.notaRawPontos/g.notaRawCount:null;
-    g.nota=g.notaPonderada;
-    g.meta=g.metaKm>0?g.metaPontos/g.metaKm:(g.metaRawCount>0?g.metaRawPontos/g.metaRawCount:null);
-    g.coberturaAvaliacoes=g.avaliacoesValidas>0?g.avaliacoesComKm/g.avaliacoesValidas*100:null;
-    g._status=gobraxStatus(g);
-    if(!(g.kmNota>0)&&g.notaRawCount>0)g._status={cls:'none',label:'Sem KM p/ ponderar'};
-    g.placas=[...g.placas.values()].map(p=>{
-      p.notaPonderada=p.kmNota>0?p.pontos/p.kmNota:null;
-      p.notaReferencia=p.notaRawCount>0?p.notaRawPontos/p.notaRawCount:null;
-      p.nota=p.notaPonderada;
-      p.notaExibida=p.notaPonderada??p.notaReferencia;
-      p.meta=p.metaKm>0?p.metaPontos/p.metaKm:(p.metaRawCount>0?p.metaRawPontos/p.metaRawCount:null);
-      p.coberturaAvaliacoes=p.avaliacoesValidas>0?p.avaliacoesComKm/p.avaliacoesValidas*100:null;
-      p._status=gobraxStatus({nota:p.notaExibida,meta:p.meta});
-      if(!(p.kmNota>0)&&p.notaRawCount>0)p._status={cls:'none',label:'Nota sem KM'};
-      return p;
-    }).sort((a,b)=>(Number(b.kmNota)||0)-(Number(a.kmNota)||0)||String(a.placa).localeCompare(String(b.placa),'pt-BR'));
+    g.notaPonderada=g.peso>0?g.pontos/g.peso:null;g.notaReferencia=g.notaRawCount>0?g.notaRawPontos/g.notaRawCount:null;g.nota=g.notaPonderada;
+    g.meta=g.metaPeso>0?g.metaPontos/g.metaPeso:(g.metaRawCount>0?g.metaRawPontos/g.metaRawCount:null);g._status=gobraxStatus(g);if(!(g.peso>0)&&g.notaRawCount>0)g._status={cls:'none',label:'Sem peso p/ consolidar'};
+    g.placas=[...g.placas.values()].map(p=>{p.notaPonderada=p.peso>0?p.pontos/p.peso:null;p.notaReferencia=p.notaRawCount>0?p.notaRawPontos/p.notaRawCount:null;p.nota=p.notaPonderada;p.notaExibida=p.notaPonderada??p.notaReferencia;p.meta=p.metaPeso>0?p.metaPontos/p.metaPeso:(p.metaRawCount>0?p.metaRawPontos/p.metaRawCount:null);p._status=gobraxStatus({nota:p.notaExibida,meta:p.meta});if(!(p.peso>0)&&p.notaRawCount>0)p._status={cls:'none',label:'Nota sem peso'};return p;}).sort((a,b)=>String(a.placa).localeCompare(String(b.placa),'pt-BR'));
     return g;
   });
   return{imp,rows,fora,raw:imp.registros||[]};
@@ -8295,7 +8353,7 @@ function gobraxRegistrosFiltrados(){
   });
   const rank=r=>r._status?.cls==='bad'?0:r._status?.cls==='ok'?1:2;
   rows.sort((a,b)=>ignisMotorSortCompare(a,b,_gobraxSort,(r,key)=>({
-    nome:ignisMotorSortText(r.nome),periodo:r.periodoIni||r.periodoFim||'',km:Number(r.kmNota)||0,
+    nome:ignisMotorSortText(r.nome),periodo:r.periodoIni||r.periodoFim||'',avaliacoes:Number(r.avaliacoesUsadas)||0,
     placas:r.placas.length,nota:Number.isFinite(Number(r.nota))?Number(r.nota):-Infinity,
     meta:Number.isFinite(Number(r.meta))?Number(r.meta):-Infinity,status:rank(r)
   }[key])));
@@ -8305,60 +8363,46 @@ function renderGobrax(){
   ignisEnsureGobraxState();motoristasPeriodoAtualizarUI();motoristasAtualizarStatusBotoes();gobraxAtualizarSeletor();authAplicarPermissoesMotoristas();
   const content=document.getElementById('gobrax-content');if(!content)return;const {imp,rows,fora}=gobraxRegistrosFiltrados();
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-  const avaliados=rows.filter(r=>Number(r.kmNota)>0&&Number(r.nota)>0),kmPond=avaliados.reduce((s,r)=>s+Number(r.kmNota||0),0),naMeta=avaliados.filter(r=>r._status?.cls==='ok').length,abaixo=avaliados.filter(r=>r._status?.cls==='bad').length;
-  set('gobrax-kpi-registros',Math.round(kmPond).toLocaleString('pt-BR'));set('gobrax-kpi-motoristas',avaliados.length);set('gobrax-kpi-meta',naMeta);set('gobrax-kpi-abaixo',abaixo);
+  const avaliados=rows.filter(r=>Number(r.peso)>0&&Number(r.nota)>0),avaliacoes=avaliados.reduce((s,r)=>s+Number(r.avaliacoesUsadas||0),0),naMeta=avaliados.filter(r=>r._status?.cls==='ok').length,abaixo=avaliados.filter(r=>r._status?.cls==='bad').length;
+  set('gobrax-kpi-registros',avaliacoes.toLocaleString('pt-BR'));set('gobrax-kpi-motoristas',avaliados.length);set('gobrax-kpi-meta',naMeta);set('gobrax-kpi-abaixo',abaixo);
   if(!imp){content.innerHTML='<div class="mot-empty" style="border:1px dashed var(--border);border-radius:14px">Nenhuma Nota Gobrax importada. Use “Importar Nota Gobrax” no topo.</div>';return;}
   const head=`<thead id="gobrax-table-head"><tr>
     <th><button class="mot-sort" data-key="nome" onclick="gobraxSetSort('nome')">Motorista <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort" data-key="periodo" onclick="gobraxSetSort('periodo')">Período consolidado <span class="mot-sort-arrow">↕</span></button></th>
-    <th><button class="mot-sort num" data-key="km" onclick="gobraxSetSort('km')">KM ponderado <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort num" data-key="placas" onclick="gobraxSetSort('placas')">Placas <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort num" data-key="nota" onclick="gobraxSetSort('nota')">Nota consolidada <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort num" data-key="meta" onclick="gobraxSetSort('meta')">Meta <span class="mot-sort-arrow">↕</span></button></th>
     <th><button class="mot-sort" data-key="status" onclick="gobraxSetSort('status')">Status <span class="mot-sort-arrow">↕</span></button></th>
   </tr></thead>`;
-  const body=rows.length?rows.map(r=>{
-    const cobertura=Number.isFinite(Number(r.coberturaAvaliacoes))?Number(r.coberturaAvaliacoes):null,band=gobraxBand('nota',r.nota,true);
-    return `<tr class="mot-driver-row" onclick="gobraxAbrirDetalhe('${String(r.key).replace(/'/g,"\\'")}')">
+  const body=rows.length?rows.map(r=>`<tr class="mot-driver-row" onclick="gobraxAbrirDetalhe('${String(r.key).replace(/'/g,"\\'")}')">
       <td data-label="Motorista"><div class="mot-name">${pendEsc(r.nome)}</div><div class="mot-matricula">${pendEsc(r.matricula||'Nome identificado')}</div></td>
       <td data-label="Período">${pendEsc(ignisMotoristaPeriodoLabel(r.periodoIni,r.periodoFim))}</td>
-      <td data-label="KM ponderado"><strong>${r.kmNota>0?Math.round(r.kmNota).toLocaleString('pt-BR')+' km':'—'}</strong>${r.kmSemNota>0?`<div class="gobrax-coverage warn">${Math.round(r.kmSemNota).toLocaleString('pt-BR')} km sem nota</div>`:''}</td>
-      <td data-label="Placas">${r.placas.filter(p=>p.kmTotal>0).length||r.placas.length}</td>
-      <td data-label="Nota consolidada">${Number.isFinite(Number(r.nota))?gobraxBandHtml('nota',r.nota,true):(Number.isFinite(Number(r.notaReferencia))?`${gobraxBandHtml('nota',r.notaReferencia,true)}<div class="gobrax-note-source">referência sem ponderação</div>`:'<span class="gobrax-band none">—</span>')}${Number.isFinite(cobertura)&&cobertura<99.999?`<div class="gobrax-coverage ${cobertura<80?'warn':''}">${r.avaliacoesComKm}/${r.avaliacoesValidas} avaliações com KM</div>`:''}</td>
+      <td data-label="Placas">${r.placas.length||'—'}</td>
+      <td data-label="Nota consolidada">${Number.isFinite(Number(r.nota))?gobraxBandHtml('nota',r.nota,true):(Number.isFinite(Number(r.notaReferencia))?`${gobraxBandHtml('nota',r.notaReferencia,true)}<div class="gobrax-note-source">referência sem ponderação</div>`:'<span class="gobrax-band none">—</span>')}${r.avaliacoesSemPeso>0?`<div class="gobrax-coverage warn">${r.avaliacoesSemPeso} avaliação(ões) sem peso válido</div>`:''}</td>
       <td data-label="Meta">${Number.isFinite(Number(r.meta))?Number(r.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</td>
       <td data-label="Status"><span class="mot-status ${r._status.cls}">${r._status.label}</span></td>
-    </tr>`;
-  }).join(''):'<tr><td colspan="7"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>';
-  content.innerHTML=`<div class="gobrax-import-meta"><span>Base selecionada:</span><strong>${pendEsc(imp.arquivo||'Nota Gobrax')}</strong><span>· importada ${pendEsc(imp.importedAt||'')}</span>${fora?`<span title="Nomes presentes no arquivo que não estão na lista de motoristas acompanhados">· ${fora} linha(s) fora da lista acompanhada</span>`:''}</div><div class="mot-table-wrap"><table class="mot-table">${head}<tbody>${body}</tbody></table></div>`;
+    </tr>`).join(''):'<tr><td colspan="6"><div class="mot-empty">Nenhum motorista corresponde aos filtros selecionados.</div></td></tr>';
+  content.innerHTML=`<div class="gobrax-import-meta"><span>Base selecionada:</span><strong>${pendEsc(imp.arquivo||'Nota Gobrax')}</strong><span>· importada ${pendEsc(imp.importedAt||'')}</span>${fora?`<span title="Nomes presentes no arquivo que não puderam ser associados com segurança à lista acompanhada">· ${fora} linha(s) sem associação segura</span>`:''}</div><div class="mot-table-wrap"><table class="mot-table">${head}<tbody>${body}</tbody></table></div>`;
   ignisMotorSortHeaderUpdate('gobrax-table-head',_gobraxSort);_markPageClean('motoristas');
+  if(_motSubtab==='geral')renderMotoristasGeral();
 }
 function gobraxAbrirDetalhe(key){
   const {imp,rows}=gobraxConsolidar();const r=rows.find(x=>x.key===key);if(!imp||!r)return;
   let ov=document.getElementById('gobrax-detail-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-detail-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal"><div id="gobrax-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('gobrax-detail-content');if(!c)return;
-  const cobertura=Number.isFinite(Number(r.coberturaAvaliacoes))?Number(r.coberturaAvaliacoes):null;
   const placasHtml=r.placas.length?r.placas.map(p=>{
-    const fontes=p.origens.map(o=>{
-      const scoreOk=Number(o.nota)>0;
-      const metricHtml=Object.entries(GOBRAX_METRIC_DEFS).filter(([k])=>k!=='nota').map(([k,d])=>`<div class="gobrax-source-metric"><span>${pendEsc(d.label)}</span>${gobraxBandHtml(k,o[d.campo],scoreOk)}</div>`).join('');
-      const kmFonte=o._kmFonte==='placa'?'KM da mesma placa':o._kmFonte==='periodo'?'KM do motorista no período':o._kmFonte==='ambiguo'?'KM do período ambíguo':'KM não localizado';
-      const placasBase=(o._kmPlacasBase||[]).filter(Boolean).join(', ');
-      const fonteBadge=o._km>0?`<div class="gobrax-km-source ${o._kmFonte==='periodo'?'periodo':'exato'}">${pendEsc(kmFonte)}${o._kmFonte==='periodo'&&placasBase?` · base: ${pendEsc(placasBase)}`:''}</div>`:o._kmFonte==='ambiguo'?`<div class="gobrax-km-source ambiguo">${Math.round(o._kmPeriodoDisponivel||0).toLocaleString('pt-BR')} km existem no intervalo, mas há avaliações Gobrax sobrepostas; não ponderado para evitar duplicidade</div>`:'';
-      return `<div class="gobrax-source-row"><div class="gobrax-source-head"><div><strong>${pendEsc(ignisMotoristaPeriodoLabel(o.dataIni,o.dataFim))}</strong>${o.operacional?` · ${pendEsc(o.operacional)}`:''}${fonteBadge}</div><div>${o._km>0?Math.round(o._km).toLocaleString('pt-BR')+' km':o._kmFonte==='ambiguo'?'KM não ponderado (sobreposição)':'KM não localizado'} · Nota Gobrax ${Number(o.nota)>0?Number(o.nota).toLocaleString('pt-BR',{maximumFractionDigits:1}):'Sem avaliação'}</div></div><div class="gobrax-source-metrics">${metricHtml}</div></div>`;
-    }).join('');
-    const notaPlaca=Number.isFinite(Number(p.notaPonderada))?p.notaPonderada:p.notaReferencia;
-    const semKm=!(p.kmNota>0)&&p.notaRawCount>0;
-    return `<details class="gobrax-plate"><summary><div><div class="gobrax-plate-title">${pendEsc(p.placa)}</div><div class="gobrax-plate-sub">${pendEsc([...p.operacionais].join(', ')||'Operacional não informado')}</div></div><div><div class="gobrax-plate-sub">Período</div><strong>${pendEsc(ignisMotoristaPeriodoLabel(p.inicio,p.fim))}</strong></div><div><div class="gobrax-plate-sub">KM ponderado</div><strong>${p.kmNota>0?Math.round(p.kmNota).toLocaleString('pt-BR')+' km':'—'}</strong>${semKm?'<div class="gobrax-km-missing">KM não localizado</div>':''}</div><div><div class="gobrax-plate-sub">${semKm?'Nota informada':'Nota ponderada'}</div>${Number.isFinite(Number(notaPlaca))?gobraxBandHtml('nota',notaPlaca,true):'<span class="gobrax-band none">—</span>'}${semKm?'<div class="gobrax-note-source">não entra na consolidação sem KM</div>':''}</div><div><span class="mot-status ${p._status.cls}">${p._status.label}</span></div></summary><div class="gobrax-source-list">${fontes||'<div class="mot-empty">Sem avaliações de origem.</div>'}</div></details>`;
+    const fontes=p.origens.map(o=>{const scoreOk=Number(o.nota)>0;const metricHtml=Object.entries(GOBRAX_METRIC_DEFS).filter(([k])=>k!=='nota').map(([k,d])=>`<div class="gobrax-source-metric"><span>${pendEsc(d.label)}</span>${gobraxBandHtml(k,o[d.campo],scoreOk)}</div>`).join('');return `<div class="gobrax-source-row"><div class="gobrax-source-head"><div><strong>${pendEsc(ignisMotoristaPeriodoLabel(o.dataIni,o.dataFim))}</strong>${o.operacional?` · ${pendEsc(o.operacional)}`:''}</div><div>Nota Gobrax ${Number(o.nota)>0?Number(o.nota).toLocaleString('pt-BR',{maximumFractionDigits:1}):'Sem avaliação'}</div></div><div class="gobrax-source-metrics">${metricHtml}</div></div>`;}).join('');
+    const notaPlaca=Number.isFinite(Number(p.notaPonderada))?p.notaPonderada:p.notaReferencia,semPeso=!(p.peso>0)&&p.notaRawCount>0;
+    return `<details class="gobrax-plate"><summary><div><div class="gobrax-plate-title">${pendEsc(p.placa)}</div><div class="gobrax-plate-sub">${pendEsc([...p.operacionais].join(', ')||'Operacional não informado')}</div></div><div><div class="gobrax-plate-sub">Período</div><strong>${pendEsc(ignisMotoristaPeriodoLabel(p.inicio,p.fim))}</strong></div><div><div class="gobrax-plate-sub">Nota</div>${Number.isFinite(Number(notaPlaca))?gobraxBandHtml('nota',notaPlaca,true):'<span class="gobrax-band none">—</span>'}${semPeso?'<div class="gobrax-note-source">sem quilometragem válida na planilha; fora da ponderação</div>':''}</div><div><div class="gobrax-plate-sub">Avaliações usadas</div><strong>${p.avaliacoesUsadas}/${p.avaliacoesValidas}</strong></div><div><span class="mot-status ${p._status.cls}">${p._status.label}</span></div></summary><div class="gobrax-source-list">${fontes||'<div class="mot-empty">Sem avaliações de origem.</div>'}</div></details>`;
   }).join(''):'<div class="mot-empty">Nenhuma placa encontrada para este motorista.</div>';
   c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(r.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">${pendEsc(ignisMotoristaPeriodoLabel(r.periodoIni,r.periodoFim))} · ${r.placas.length} placa(s)</div></div><button class="pend-close" onclick="closeModal('gobrax-detail-modal')">×</button></div>
     <div class="mot-detail-summary">
       <div class="mot-detail-card"><span>Nota consolidada</span><strong>${Number.isFinite(Number(r.nota))?gobraxBandHtml('nota',r.nota,true):'<span class="gobrax-band none">—</span>'}</strong></div>
-      <div class="mot-detail-card"><span>KM ponderado</span><strong>${r.kmNota>0?Math.round(r.kmNota).toLocaleString('pt-BR')+' km':'—'}</strong></div>
       <div class="mot-detail-card"><span>Meta Gobrax</span><strong>${Number.isFinite(Number(r.meta))?Number(r.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</strong></div>
-      <div class="mot-detail-card"><span>Avaliações com KM</span><strong>${r.avaliacoesComKm}/${r.avaliacoesValidas}</strong></div>
-      <div class="mot-detail-card"><span>Média bruta informativa</span><strong>${Number.isFinite(Number(r.notaReferencia))?gobraxBandHtml('nota',r.notaReferencia,true):'<span class="gobrax-band none">—</span>'}</strong></div>
+      <div class="mot-detail-card"><span>Avaliações utilizadas</span><strong>${r.avaliacoesUsadas}/${r.avaliacoesValidas}</strong></div>
+      <div class="mot-detail-card"><span>Placas avaliadas</span><strong>${r.placas.length}</strong></div>
     </div>
-    <div class="gobrax-formula-box ${r.avaliacoesSemKm>0?'warn':''}"><strong>Cálculo consolidado:</strong> Σ(Nota Gobrax × KM do motorista no período da avaliação) ÷ ΣKM com nota válida. A mesma placa tem prioridade quando existe na base. ${r.avaliacoesKmPeriodo>0?`${r.avaliacoesKmPeriodo} avaliação(ões) usaram <strong>KM do período</strong> porque a placa informada pela Gobrax não foi localizada nos abastecimentos daquele intervalo; elas entram no cálculo e ficam sinalizadas abaixo.`:''} ${r.avaliacoesSemKm>0?`${r.avaliacoesSemKm} avaliação(ões) ficaram sem KM ponderável. Quando não há KM da mesma placa, o IGNIS usa o KM do motorista no período somente se o intervalo não conflitar com outra avaliação Gobrax; sobreposições ficam sinalizadas e não são duplicadas.`:'Todas as avaliações com nota válida tiveram KM localizado no período.'} ${r.kmSemNota>0?`${Math.round(r.kmSemNota).toLocaleString('pt-BR')} km foram localizados em linhas sem nota válida e também ficaram fora da ponderação.`:''}</div>
+    <div class="gobrax-formula-box ${r.avaliacoesSemPeso>0?'warn':''}"><strong>Cálculo consolidado:</strong> média ponderada das Notas Gobrax pela quilometragem informada na própria planilha de telemetria. A quilometragem é usada somente internamente e não é exibida. ${r.avaliacoesSemPeso>0?`${r.avaliacoesSemPeso} avaliação(ões) têm nota, mas não possuem quilometragem numérica válida e ficam fora da ponderação.`:'Todas as avaliações com nota válida possuem peso de telemetria.'}</div>
     <div style="font-size:11px;font-weight:800;color:var(--text2);margin-top:14px">Nota por placa</div><div class="gobrax-plate-list">${placasHtml}</div>`;
   ov.classList.add('open');
 }
@@ -8401,7 +8445,7 @@ function gobraxRenderHistorico(){const box=document.getElementById('gobrax-histo
 function gobraxSelecionarImportacao(id){gobraxAtualizarSeletor(id);renderGobrax();gobraxRenderHistorico();closeModal('gobrax-history-modal');}
 function gobraxAbrirImportacao(){
   if(!authExigirPermissao('motoristas_gobrax_importar','Sem permissão para importar Nota Gobrax em Motoristas PX.'))return;
-  let ov=document.getElementById('gobrax-import-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-import-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Importar Nota Gobrax</div><div style="font-size:11px;color:var(--text3);margin-top:4px">O IGNIS identifica o motorista pelo nome e, depois da importação, cruza cada linha com o KM do motorista no mesmo período. A mesma placa tem prioridade; se ela não estiver na base, o IGNIS usa o KM do motorista naquele intervalo e sinaliza isso no detalhe.</div></div><button class="pend-close" onclick="closeModal('gobrax-import-modal')">×</button></div><input id="gobrax-file-input" type="file" accept=".xlsx,.xls" style="display:none" onchange="gobraxImportarArquivo(this)"><div class="idt-import-box" style="margin-top:18px" onclick="document.getElementById('gobrax-file-input').click()"><div class="idt-import-title">Selecionar planilha Nota Gobrax</div><div class="idt-import-sub">Padrão esperado: <strong>NOME</strong>, <strong>DATA INICIO</strong>, data final, <strong>OPERACIONAL</strong>, <strong>CAVALO</strong>, <strong>NOTA GERAL</strong>, <strong>META GOBRAX</strong> e os indicadores de condução.</div></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  let ov=document.getElementById('gobrax-import-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-import-modal';ov.className='modal-overlay';ov.innerHTML=`<div class="modal" style="max-width:650px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Importar Nota Gobrax</div><div style="font-size:11px;color:var(--text3);margin-top:4px">O IGNIS identifica o motorista pelo nome e usa a coluna KM RODADO da própria planilha somente como peso interno para consolidar a Nota Gobrax. A quilometragem não é exibida na tela.</div></div><button class="pend-close" onclick="closeModal('gobrax-import-modal')">×</button></div><input id="gobrax-file-input" type="file" accept=".xlsx,.xls" style="display:none" onchange="gobraxImportarArquivo(this)"><div class="idt-import-box" style="margin-top:18px" onclick="document.getElementById('gobrax-file-input').click()"><div class="idt-import-title">Selecionar planilha Nota Gobrax</div><div class="idt-import-sub">Padrão esperado: <strong>NOME</strong>, <strong>DATA INICIO</strong>, data final, <strong>KM RODADO</strong>, <strong>OPERACIONAL</strong>, <strong>CAVALO</strong>, <strong>NOTA GERAL</strong>, <strong>META GOBRAX</strong> e os indicadores de condução.</div></div></div>`;document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   ov.classList.add('open');
 }
 async function gobraxImportarArquivo(input){
@@ -8411,20 +8455,20 @@ async function gobraxImportarArquivo(input){
     for(const nomeAba of wb.SheetNames){const matriz=XLSX.utils.sheet_to_json(wb.Sheets[nomeAba],{header:1,defval:null,raw:true});for(let ri=0;ri<Math.min(15,matriz.length);ri++){const row=matriz[ri]||[];const heads=row.map(gobraxHeaderNorm);const idxNome=heads.findIndex(h=>h==='NOME'||h==='MOTORISTA');const idxNota=heads.findIndex(h=>h==='NOTAGERAL'||h==='NOTAGOBRAX');const idxMeta=heads.findIndex(h=>h==='METAGOBRAX'||h==='META');const idxIni=heads.findIndex(h=>h==='DATAINICIO'||h==='INICIO');if(idxNome>=0&&idxNota>=0&&idxMeta>=0&&idxIni>=0){achado={matriz,ri,heads,idxNome,idxNota,idxMeta,idxIni};break;}}if(achado)break;}
     if(!achado)throw new Error('Não encontrei o padrão da Nota Gobrax. Verifique as colunas NOME, DATA INICIO, NOTA GERAL e META GOBRAX.');
     const idx=(...names)=>{for(const n of names){const i=achado.heads.indexOf(n);if(i>=0)return i;}return-1;};
-    const cFim=idx('DATAFIM','FIM','DATAFINAL')>=0?idx('DATAFIM','FIM','DATAFINAL'):achado.idxIni+1,cOp=idx('OPERACIONAL'),cCav=idx('CAVALO'),cFaixa=idx('INICIODAFAIXAVERDE','INICIOFAIXAVERDE'),cEmb=idx('APROVEITAMENTODEEMBALO'),cPar=idx('MOTORLIGADOPARADO'),cAcima=idx('ACELERANDOACIMADOVERDE'),cPil=idx('PILOTOAUTOMATICO'),cVel=idx('EXCESSODEVELOCIDADE'),cPress=idx('PRESSAODOACELERADOR');
+    const cFim=idx('DATAFIM','FIM','DATAFINAL')>=0?idx('DATAFIM','FIM','DATAFINAL'):achado.idxIni+1,cKm=idx('KMRODADO','KM','QUILOMETRAGEM','DISTANCIAPERCORRIDA'),cOp=idx('OPERACIONAL'),cCav=idx('CAVALO'),cFaixa=idx('INICIODAFAIXAVERDE','INICIOFAIXAVERDE'),cEmb=idx('APROVEITAMENTODEEMBALO'),cPar=idx('MOTORLIGADOPARADO'),cAcima=idx('ACELERANDOACIMADOVERDE'),cPil=idx('PILOTOAUTOMATICO'),cVel=idx('EXCESSODEVELOCIDADE'),cPress=idx('PRESSAODOACELERADOR');if(cKm<0)throw new Error('A nova planilha da Nota Gobrax precisa conter a coluna KM RODADO.');
     const registros=[];
     for(let r=achado.ri+1;r<achado.matriz.length;r++){
       const row=achado.matriz[r]||[],nome=String(row[achado.idxNome]??'').replace(/\s+/g,' ').trim();if(!nome)continue;
       const dataIni=gobraxDataIso(row[achado.idxIni]),dataFim=gobraxDataIso(cFim>=0?row[cFim]:null)||dataIni,nota=gobraxNumero(row[achado.idxNota]),meta=gobraxNumero(row[achado.idxMeta]);
       if(!dataIni&&!Number.isFinite(nota)&&!Number.isFinite(meta))continue;
-      registros.push({_idx:registros.length,nome,key:ignisMotoristaNorm(nome),dataIni,dataFim,operacional:cOp>=0?String(row[cOp]??'').trim():'',cavalo:cCav>=0?String(row[cCav]??'').trim():'',nota,meta,faixaVerde:cFaixa>=0?gobraxNumero(row[cFaixa]):null,embalo:cEmb>=0?gobraxNumero(row[cEmb]):null,motorParado:cPar>=0?gobraxNumero(row[cPar]):null,acimaVerde:cAcima>=0?gobraxNumero(row[cAcima]):null,piloto:cPil>=0?gobraxNumero(row[cPil]):null,excessoVel:cVel>=0?gobraxNumero(row[cVel]):null,pressaoAcelerador:cPress>=0?gobraxNumero(row[cPress]):null});
+      const resolvido=ignisMotoristaResolver(nome),kmTelemetria=gobraxNumero(row[cKm]);registros.push({_idx:registros.length,nome,nomeOriginal:nome,key:resolvido.matched?resolvido.key:ignisMotoristaNorm(nome),nomeResolvido:!!resolvido.matched,dataIni,dataFim,kmTelemetria,operacional:cOp>=0?String(row[cOp]??'').trim():'',cavalo:cCav>=0?String(row[cCav]??'').trim():'',nota,meta,faixaVerde:cFaixa>=0?gobraxNumero(row[cFaixa]):null,embalo:cEmb>=0?gobraxNumero(row[cEmb]):null,motorParado:cPar>=0?gobraxNumero(row[cPar]):null,acimaVerde:cAcima>=0?gobraxNumero(row[cAcima]):null,piloto:cPil>=0?gobraxNumero(row[cPil]):null,excessoVel:cVel>=0?gobraxNumero(row[cVel]):null,pressaoAcelerador:cPress>=0?gobraxNumero(row[cPress]):null});
     }
     if(!registros.length)throw new Error('A planilha não possui registros válidos de Nota Gobrax.');
     const agora=new Date(),id=`gobrax_${Date.now()}`,imp={id,arquivo:file.name,importedAt:agora.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}),importedAtMs:Date.now(),registros};
     ignisEnsureGobraxState();state.gobraxImportacoes.push(imp);gobraxAtualizarSeletor(id);renderGobrax();
     const ok=await saveState({immediate:true,mode:'light'});if(!ok)throw new Error('A planilha foi lida, mas o Firebase não confirmou a Nota Gobrax. Tente salvar novamente quando a conexão estiver estável.');
     closeModal('gobrax-import-modal');
-    const mon=new Set(ignisEnsureMotoristasState().map(m=>m.key)),keys=new Set(registros.filter(r=>mon.has(r.key)).map(r=>r.key)),fora=registros.filter(r=>!mon.has(r.key)).length;
+    const mon=new Set(ignisEnsureMotoristasState().map(m=>m.key)),keys=new Set(registros.map(r=>ignisMotoristaResolver(r.nome)).filter(x=>x.matched&&mon.has(x.key)).map(x=>x.key)),fora=registros.filter(r=>{const x=ignisMotoristaResolver(r.nome);return !x.matched||!mon.has(x.key);}).length;
     showToast(`Nota Gobrax importada: ${registros.length} registro(s), ${keys.size} motorista(s) acompanhados${fora?` e ${fora} linha(s) fora da lista`:''}.`,'success');
   }catch(e){console.error('Gobrax import error',e);showToast(e?.message||'Não foi possível ler a planilha Nota Gobrax.','error');}finally{input.value='';}
 }
