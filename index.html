@@ -2506,8 +2506,9 @@ input[type="checkbox"]:indeterminate{background:rgba(233,95,50,.2);border-color:
           <button class="mot-state-btn inactive" data-filter="desativos" onclick="motoristasGeralSetActivityFilter('desativos')">Desativos</button>
         </div>
         <input class="filter-input" id="mot-geral-busca" placeholder="Buscar motorista..." oninput="motoristasGeralDebouncedRender()">
+        <button class="mot-geral-efic-config-btn" id="mot-geral-efic-config-btn" type="button" onclick="motoristasEficienciaAbrirConfig()" title="Configurar as faixas de cor da Eficiência Geral"><span>Faixas eficiência</span><strong id="mot-geral-efic-config-label">Verde ≥ 98%</strong></button>
       </div>
-      <div class="mot-geral-legend">Resumo integrado por motorista. Clique em <strong>Combustível</strong>, <strong>IDT</strong> ou <strong>Nota Gobrax</strong> para abrir o detalhamento completo daquela análise.</div>
+      <div class="mot-geral-legend">Resumo integrado por motorista. A <strong>Eficiência Geral</strong> usa as três eficiências com teto de 100% em cada componente. Clique em <strong>Combustível</strong>, <strong>IDT</strong> ou <strong>Nota Gobrax</strong> para abrir o detalhamento e ver a eficiência real daquela análise.</div>
       <div id="mot-geral-content" class="mot-geral-list"></div>
     </div>
 
@@ -4079,7 +4080,7 @@ async function idbLoad() {
 }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, motoristasInatividadeDias:5, idtMeta:1.5, idtImportacoes:[], gobraxImportacoes:[], gobraxFaixas:null };
+let state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:'', arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, motoristasInatividadeDias:5, motoristasEficienciaGeral:{verde:98,atencao:90}, idtMeta:1.5, idtImportacoes:[], gobraxImportacoes:[], gobraxFaixas:null };
 let selectedIds = new Set();
 let abastFiltrados = [];
 
@@ -8404,7 +8405,7 @@ function motoristasAbrirDetalhe(key,ciclo){
   const d=motoristasRowsPeriodo(motoristasColetarCiclos()).find(x=>x.key===key&&x.ciclo===Number(ciclo))||motoristasColetarCiclos().find(x=>x.key===key&&x.ciclo===Number(ciclo));if(!d)return;
   let ov=document.getElementById('mot-detalhe-modal');if(!ov){ov=document.createElement('div');ov.id='mot-detalhe-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:980px"><div id="mot-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('mot-detail-content'),st=motoristasStatus(d),det=[...d.detalhes].sort((a,b)=>String(b.inicio||b.fim).localeCompare(String(a.inicio||a.fim)));
-  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média ideal</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Média real</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média ideal</th><th>Média real</th>${podeFinanceiro?'<th class="mot-financeiro-col">Economia / desperdício</th>':''}</tr></thead><tbody>${det.length?det.map(x=>{const covMeta=x.litros>0?(Number(x.litrosComMeta)||0)/x.litros:0,covPreco=x.litros>0?(Number(x.litrosComPreco)||0)/x.litros:0,ok=!!x.financeiroExato&&covMeta>=0.999999&&covPreco>=0.999999&&Number(x.meta)>0;const vr=Number(x.impactoR)||0;const f=!ok?'—':(Math.abs(vr)<.005?'R$ 0,00':vr>0?`<span class="mot-money ok">${vr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(vr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td>${podeFinanceiro?`<td class="mot-financeiro-col">${f}</td>`:''}</tr>`}).join(''):`<tr><td colspan="${podeFinanceiro?8:7}" class="mot-empty">Sem dados nesse período.</td></tr>`}</tbody></table></div>`;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(d.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pendEsc(d.matricula||'')} · ${ignisMotoristaPeriodoLabel(d.inicio,d.fim)} · novo período após ${IGNIS_MOTORISTA_GAP_MESES} meses sem registros</div></div><button class="pend-close" onclick="closeModal('mot-detalhe-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>Média ideal</span><strong>${d.meta>0?d.meta.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Média real</span><strong>${d.media>0?d.media.toFixed(2)+' km/L':'—'}</strong></div><div class="mot-detail-card"><span>Eficiência real</span><strong>${d.efic>0?d.efic.toFixed(1)+'%':'—'}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="mot-detail-scroll"><table class="mot-detail-table"><thead><tr><th>Data / período</th><th>Operação</th><th>Placa</th><th>KM</th><th>Litros</th><th>Média ideal</th><th>Média real</th>${podeFinanceiro?'<th class="mot-financeiro-col">Economia / desperdício</th>':''}</tr></thead><tbody>${det.length?det.map(x=>{const covMeta=x.litros>0?(Number(x.litrosComMeta)||0)/x.litros:0,covPreco=x.litros>0?(Number(x.litrosComPreco)||0)/x.litros:0,ok=!!x.financeiroExato&&covMeta>=0.999999&&covPreco>=0.999999&&Number(x.meta)>0;const vr=Number(x.impactoR)||0;const f=!ok?'—':(Math.abs(vr)<.005?'R$ 0,00':vr>0?`<span class="mot-money ok">${vr.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`:`<span class="mot-money bad">${Math.abs(vr).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</span>`);return `<tr><td>${pendEsc(ignisMotoristaPeriodoLabel(x.inicio,x.fim))}<div class="mot-matricula">${pendEsc(x.periodo||'')}</div></td><td>${pendEsc(x.operacao)}</td><td><strong>${pendEsc(x.placa)}</strong></td><td>${Number(x.km||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</td><td>${Number(x.litros||0).toLocaleString('pt-BR',{maximumFractionDigits:2})}</td><td>${x.meta>0?x.meta.toFixed(2):'—'}</td><td>${x.media>0?x.media.toFixed(2):'—'}</td>${podeFinanceiro?`<td class="mot-financeiro-col">${f}</td>`:''}</tr>`}).join(''):`<tr><td colspan="${podeFinanceiro?8:7}" class="mot-empty">Sem dados nesse período.</td></tr>`}</tbody></table></div>`;
   ov.classList.add('open');
 }
 
@@ -8688,6 +8689,68 @@ function idtExcluirImportacao(id){
   state.idtImportacoes=state.idtImportacoes.filter(x=>x.id!==id);saveState({immediate:true,mode:'light'});idtAtualizarSeletor();renderIDT();showToast('Importação IDT excluída.','success');
 }
 
+// ── MOTORISTAS PX · EFICIÊNCIA GERAL ─────────────────────────────────────────
+function motoristasEficienciaConfig(){
+  let c=state.motoristasEficienciaGeral;
+  if(!c||typeof c!=='object'||Array.isArray(c))c={verde:98,atencao:90};
+  let verde=Number(c.verde),atencao=Number(c.atencao);
+  if(!Number.isFinite(verde)||verde<0||verde>100)verde=98;
+  if(!Number.isFinite(atencao)||atencao<0||atencao>100)atencao=90;
+  if(atencao>verde)atencao=Math.min(verde,90);
+  state.motoristasEficienciaGeral={verde,atencao};
+  return state.motoristasEficienciaGeral;
+}
+function motoristasEficienciaFuelRaw(f){
+  if(!f||!(Number(f.meta)>0)||!(Number(f.media)>0))return null;
+  const v=Number(f.efic);
+  if(Number.isFinite(v)&&v>=0)return v;
+  const calc=Number(f.media)/Number(f.meta)*100;return Number.isFinite(calc)?calc:null;
+}
+function motoristasEficienciaIdtRaw(i,meta){
+  if(!i||!(Number(i.km)>0)||!Number.isFinite(Number(i.idt))||!(Number(meta)>0))return null;
+  const idt=Number(i.idt);
+  if(idt===0)return 100; // zero desvios é desempenho máximo; evita divisão por zero.
+  const v=Number(meta)/idt*100;return Number.isFinite(v)&&v>=0?v:null;
+}
+function motoristasEficienciaGobraxRaw(g){
+  if(!g||!(Number(g.meta)>0)||!(Number(g.nota)>0))return null;
+  const v=Number(g.nota)/Number(g.meta)*100;return Number.isFinite(v)&&v>=0?v:null;
+}
+function motoristasEficienciaCap(v){return Number.isFinite(Number(v))?Math.max(0,Math.min(100,Number(v))):null;}
+function motoristasEficienciaGeralCalcular(f,i,g,metaIdt){
+  const fuel=motoristasEficienciaFuelRaw(f),idt=motoristasEficienciaIdtRaw(i,metaIdt),gobrax=motoristasEficienciaGobraxRaw(g);
+  const capped=[fuel,idt,gobrax].map(motoristasEficienciaCap);
+  const completo=capped.every(Number.isFinite);
+  return{fuel,idt,gobrax,capped,geral:completo?capped.reduce((s,v)=>s+v,0)/3:null,completo};
+}
+function motoristasEficienciaStatus(v){
+  if(!Number.isFinite(Number(v)))return{cls:'none',label:'Sem dados'};
+  const c=motoristasEficienciaConfig(),n=Number(v);
+  if(n>=c.verde)return{cls:'ok',label:'Dentro da meta'};
+  if(n>=c.atencao)return{cls:'warn',label:'Atenção'};
+  return{cls:'bad',label:'Abaixo da meta'};
+}
+function motoristasEficienciaAtualizarPainel(){
+  const c=motoristasEficienciaConfig(),el=document.getElementById('mot-geral-efic-config-label'),btn=document.getElementById('mot-geral-efic-config-btn');
+  if(el)el.textContent=`Verde ≥ ${c.verde.toLocaleString('pt-BR',{maximumFractionDigits:1})}%`;
+  if(btn){const master=window._authUser?.role==='adm';btn.title=master?`Configurar faixas: atenção ≥ ${c.atencao}% e verde ≥ ${c.verde}%`:`Faixas: atenção ≥ ${c.atencao}% e verde ≥ ${c.verde}% · somente ADM Master altera`;}
+}
+function motoristasEficienciaAbrirConfig(){
+  const master=window._authUser?.role==='adm';
+  if(!master){showToast('Somente o ADM Master pode alterar as faixas da Eficiência Geral.','info');return;}
+  const cfg=motoristasEficienciaConfig();let ov=document.getElementById('mot-efic-config-modal');
+  if(!ov){ov=document.createElement('div');ov.id='mot-efic-config-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal mot-efic-config-modal"><div id="mot-efic-config-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
+  const c=document.getElementById('mot-efic-config-content');if(!c)return;
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">Faixas · Eficiência Geral</div><div class="mot-efic-config-copy">A Eficiência Geral é a média de Combustível, IDT e Nota Gobrax. Para essa média, cada uma das três eficiências tem teto de 100%. As porcentagens reais continuam aparecendo nos detalhes de cada análise.</div></div><button class="pend-close" onclick="closeModal('mot-efic-config-modal')">×</button></div><div class="mot-efic-config-grid"><div class="mot-efic-config-field"><label>Atenção a partir de</label><input id="mot-efic-atencao" type="number" min="0" max="100" step="0.1" value="${cfg.atencao}"></div><div class="mot-efic-config-field"><label>Verde a partir de</label><input id="mot-efic-verde" type="number" min="0" max="100" step="0.1" value="${cfg.verde}"></div></div><div class="mot-efic-formula"><strong>Combustível:</strong> Média Real ÷ Média Ideal × 100<br><strong>IDT:</strong> Meta IDT ÷ IDT realizado × 100<br><strong>Gobrax:</strong> Nota ÷ Meta Gobrax × 100<br><strong>Eficiência Geral:</strong> (Combustível limitado a 100 + IDT limitado a 100 + Gobrax limitado a 100) ÷ 3</div><div class="modal-actions" style="margin-top:14px"><button class="btn btn-secondary" onclick="closeModal('mot-efic-config-modal')">Cancelar</button><button class="btn btn-primary" onclick="motoristasEficienciaSalvarConfig()">Salvar faixas</button></div>`;
+  ov.classList.add('open');
+}
+function motoristasEficienciaSalvarConfig(){
+  if(window._authUser?.role!=='adm')return;
+  const atencao=Number(document.getElementById('mot-efic-atencao')?.value),verde=Number(document.getElementById('mot-efic-verde')?.value);
+  if(!Number.isFinite(atencao)||!Number.isFinite(verde)||atencao<0||verde<0||atencao>100||verde>100||atencao>verde){showToast('Revise as faixas. Atenção deve ser menor ou igual ao início da faixa verde, entre 0% e 100%.','error');return;}
+  state.motoristasEficienciaGeral={atencao:Number(atencao.toFixed(1)),verde:Number(verde.toFixed(1))};saveState({immediate:true,mode:'light'});closeModal('mot-efic-config-modal');motoristasEficienciaAtualizarPainel();renderMotoristasGeral();showToast('Faixas da Eficiência Geral atualizadas.','success');
+}
+
 // ── MOTORISTAS PX · GERAL v45 ────────────────────────────────────────────────
 let _motGeralTimer=null;function motoristasGeralDebouncedRender(){clearTimeout(_motGeralTimer);_motGeralTimer=setTimeout(renderMotoristasGeral,100);}
 function motoristasGeralFuelMap(periodRows=null){const map=new Map();(periodRows||motoristasRowsPeriodo(motoristasColetarCiclos())).forEach(r=>{if(!(r.ciclo>0&&r.km>0&&r.litros>0))return;const prev=map.get(r.key);if(!prev||String(r.fim||r.inicio)>String(prev.fim||prev.inicio)||Number(r.ciclo)>Number(prev.ciclo))map.set(r.key,r);});return map;}
@@ -8713,7 +8776,7 @@ function motoristasGeralSetActivityFilter(v){
 }
 function renderMotoristasGeral(){
   const box=document.getElementById('mot-geral-content');if(!box)return;ignisEnsureMotoristasState();motoristasAtualizarUltimaData();motoristasPeriodoAtualizarUI();authAplicarPermissoesMotoristas();
-  motoristasGeralAtualizarActivityBotoes();
+  motoristasGeralAtualizarActivityBotoes();motoristasEficienciaAtualizarPainel();
   const q=ignisMotoristaNorm(document.getElementById('mot-geral-busca')?.value||'');const gLatest=gobraxOrdenadas()[0];if(gLatest)gobraxAtualizarSeletor(gLatest.id);
   // Uma única coleta dos ciclos alimenta Combustível, IDT, atividade e Gobrax nesta renderização.
   const ciclos=motoristasColetarCiclos(),atividade=motoristasAtividadeMap(ciclos),periodRows=motoristasRowsPeriodo(ciclos),fuel=motoristasGeralFuelMap(periodRows),idt=motoristasGeralIdtMap(periodRows),gob=motoristasGeralGobraxMap(ciclos),metaIdt=Number(state.idtMeta)||1.5;
@@ -8725,7 +8788,7 @@ function renderMotoristasGeral(){
     return true;
   });
   if(!drivers.length){box.innerHTML='<div class="mot-empty">Nenhum motorista corresponde à busca.</div>';return;}
-  const header=`<div class="mot-geral-grid-head"><div>Motorista</div><div>Combustível</div><div>IDT</div><div>Nota Gobrax</div></div>`;
+  const header=`<div class="mot-geral-grid-head"><div>Motorista</div><div>Combustível</div><div>IDT</div><div>Nota Gobrax</div><div>Eficiência Geral</div></div>`;
   const body=drivers.map(m=>{
     const f=fuel.get(m.key),i=idt.get(m.key),g=gob.get(m.key),fst=f?motoristasStatus(f):null,ist=i?idtStatus(i,metaIdt):null,gst=g?g._status:null;
     const safeKey=m.key.replace(/'/g,"\'");
@@ -8733,14 +8796,16 @@ function renderMotoristasGeral(){
     const icard=i?`<button class="mot-geral-card" data-section="IDT" aria-label="Abrir detalhes de IDT de ${pendEsc(m.nome)}" onclick="motoristasGeralAbrir('idt','${safeKey}')"><div class="mot-geral-card-head"><span class="mot-status ${ist.cls}">${ist.label}</span></div><div class="mot-geral-metrics"><div class="mot-geral-metric"><span>IDT</span><strong class="${i.idt<=metaIdt?'ok':'bad'}">${i.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-geral-metric"><span>Meta</span><strong>${metaIdt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-geral-metric"><span>Desvios</span><strong>${Number(i.desvios||0).toLocaleString('pt-BR',{maximumFractionDigits:0})}</strong></div></div></button>`:`<button class="mot-geral-card" data-section="IDT" disabled><div class="mot-geral-empty">Sem dados no período</div></button>`;
     const gband=g&&Number(g.nota)>0?gobraxBand('nota',g.nota,true):{cls:'none'};
     const gcard=g&&Number(g.nota)>0?`<button class="mot-geral-card" data-section="Nota Gobrax" aria-label="Abrir detalhes da Nota Gobrax de ${pendEsc(m.nome)}" onclick="motoristasGeralAbrir('gobrax','${safeKey}')"><div class="mot-geral-card-head"><span class="mot-status ${gst.cls}">${gst.label}</span></div><div class="mot-geral-metrics two"><div class="mot-geral-metric"><span>Meta</span><strong>${Number.isFinite(Number(g.meta))?Number(g.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</strong></div><div class="mot-geral-metric"><span>Nota</span><strong class="${gband.cls}">${Number(g.nota).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div></div></button>`:`<button class="mot-geral-card" data-section="Nota Gobrax" disabled><div class="mot-geral-empty">Sem nota consolidada</div></button>`;
-    return `<div class="mot-geral-row"><div class="mot-geral-driver"><strong>${pendEsc(m.nome)}</strong><span>${pendEsc(m.matricula||'Motorista acompanhado')}</span></div>${fcard}${icard}${gcard}</div>`;
+    const ef=motoristasEficienciaGeralCalcular(f,i,g,metaIdt),est=motoristasEficienciaStatus(ef.geral);
+    const ecard=ef.completo?`<div class="mot-geral-overall" title="Combustível: ${ef.fuel.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}% · IDT: ${ef.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}% · Gobrax: ${ef.gobrax.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%"><div><div class="mot-geral-overall-value ${est.cls}">${ef.geral.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}%</div><small>3 indicadores · teto 100%</small></div><span class="mot-status ${est.cls}">${est.label}</span></div>`:`<div class="mot-geral-overall empty">Sem dados dos 3 indicadores</div>`;
+    return `<div class="mot-geral-row"><div class="mot-geral-driver"><strong>${pendEsc(m.nome)}</strong><span>${pendEsc(m.matricula||'Motorista acompanhado')}</span></div>${fcard}${icard}${gcard}${ecard}</div>`;
   }).join('');
   box.innerHTML=header+body;_markPageClean('motoristas');
 }
 function idtAbrirDetalheMotorista(key){
-  const map=motoristasGeralIdtMap(),r=map.get(key);if(!r)return;const meta=Number(state.idtMeta)||1.5,st=idtStatus(r,meta);
+  const map=motoristasGeralIdtMap(),r=map.get(key);if(!r)return;const meta=Number(state.idtMeta)||1.5,st=idtStatus(r,meta),efRaw=motoristasEficienciaIdtRaw(r,meta);
   let ov=document.getElementById('idt-driver-detail-modal');if(!ov){ov=document.createElement('div');ov.id='idt-driver-detail-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal" style="max-width:920px"><div id="idt-driver-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
-  const c=document.getElementById('idt-driver-detail-content');if(!c)return;c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(r.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">${pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim))}</div></div><button class="pend-close" onclick="closeModal('idt-driver-detail-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>IDT</span><strong>${r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-detail-card"><span>Meta IDT</span><strong>${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-detail-card"><span>Total de desvios</span><strong>${Number(r.desvios||0).toLocaleString('pt-BR')}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="gobrax-source-metrics" style="margin-top:16px"><div class="gobrax-source-metric"><span>Excesso de velocidade</span><strong>${Number(r.velocidade||0).toLocaleString('pt-BR')}</strong></div><div class="gobrax-source-metric"><span>Excesso de RPM</span><strong>${Number(r.rpm||0).toLocaleString('pt-BR')}</strong></div><div class="gobrax-source-metric"><span>Motor ocioso</span><strong>${Number(r.ocioso||0).toLocaleString('pt-BR')}</strong></div></div>`;ov.classList.add('open');
+  const c=document.getElementById('idt-driver-detail-content');if(!c)return;c.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><div class="modal-title">${pendEsc(r.nome)}</div><div style="font-size:11px;color:var(--text3);margin-top:4px">${pendEsc(ignisMotoristaPeriodoLabel(r.inicio,r.fim))}</div></div><button class="pend-close" onclick="closeModal('idt-driver-detail-modal')">×</button></div><div class="mot-detail-summary"><div class="mot-detail-card"><span>IDT</span><strong>${r.idt.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-detail-card"><span>Meta IDT</span><strong>${meta.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})}</strong></div><div class="mot-detail-card"><span>Eficiência real</span><strong>${Number.isFinite(efRaw)?efRaw.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—'}</strong></div><div class="mot-detail-card"><span>Total de desvios</span><strong>${Number(r.desvios||0).toLocaleString('pt-BR')}</strong></div><div class="mot-detail-card"><span>Status</span><strong style="font-size:12px"><span class="mot-status ${st.cls}">${st.label}</span></strong></div></div><div class="gobrax-source-metrics" style="margin-top:16px"><div class="gobrax-source-metric"><span>Excesso de velocidade</span><strong>${Number(r.velocidade||0).toLocaleString('pt-BR')}</strong></div><div class="gobrax-source-metric"><span>Excesso de RPM</span><strong>${Number(r.rpm||0).toLocaleString('pt-BR')}</strong></div><div class="gobrax-source-metric"><span>Motor ocioso</span><strong>${Number(r.ocioso||0).toLocaleString('pt-BR')}</strong></div></div>`;ov.classList.add('open');
 }
 
 // ── MOTORISTAS PX · NOTA GOBRAX ──────────────────────────────────────────────
@@ -8946,6 +9011,7 @@ function gobraxAbrirDetalhe(key){
   const {imp,rows}=gobraxConsolidar();const r=rows.find(x=>x.key===key);if(!imp||!r)return;
   let ov=document.getElementById('gobrax-detail-modal');if(!ov){ov=document.createElement('div');ov.id='gobrax-detail-modal';ov.className='modal-overlay';ov.innerHTML='<div class="modal"><div id="gobrax-detail-content"></div></div>';document.body.appendChild(ov);ov.addEventListener('click',e=>{if(e.target===ov)e.currentTarget.classList.remove('open');});}
   const c=document.getElementById('gobrax-detail-content');if(!c)return;
+  const efRaw=motoristasEficienciaGobraxRaw(r);
   const placasHtml=r.placas.length?r.placas.map(p=>{
     const fontes=p.origens.map(o=>{const scoreOk=Number(o.nota)>0;const metricHtml=Object.entries(GOBRAX_METRIC_DEFS).filter(([k])=>k!=='nota').map(([k,d])=>`<div class="gobrax-source-metric"><span>${pendEsc(d.label)}</span>${gobraxBandHtml(k,o[d.campo],scoreOk)}</div>`).join('');return `<div class="gobrax-source-row"><div class="gobrax-source-head"><div><strong>${pendEsc(ignisMotoristaPeriodoLabel(o.dataIni,o.dataFim))}</strong>${o.operacional?` · ${pendEsc(o.operacional)}`:''}</div><div>Nota Gobrax ${Number(o.nota)>0?Number(o.nota).toLocaleString('pt-BR',{maximumFractionDigits:1}):'Sem avaliação'}</div></div><div class="gobrax-source-metrics">${metricHtml}</div></div>`;}).join('');
     const notaPlaca=Number.isFinite(Number(p.notaPonderada))?p.notaPonderada:p.notaReferencia,semPeso=!(p.peso>0)&&p.notaRawCount>0;
@@ -8955,6 +9021,7 @@ function gobraxAbrirDetalhe(key){
     <div class="mot-detail-summary">
       <div class="mot-detail-card"><span>Nota consolidada</span><strong>${Number.isFinite(Number(r.nota))?gobraxBandHtml('nota',r.nota,true):'<span class="gobrax-band none">—</span>'}</strong></div>
       <div class="mot-detail-card"><span>Meta Gobrax</span><strong>${Number.isFinite(Number(r.meta))?Number(r.meta).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—'}</strong></div>
+      <div class="mot-detail-card"><span>Eficiência real</span><strong>${Number.isFinite(efRaw)?efRaw.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—'}</strong></div>
       <div class="mot-detail-card"><span>Avaliações utilizadas</span><strong>${r.avaliacoesUsadas}/${r.avaliacoesValidas}</strong></div>
       <div class="mot-detail-card"><span>Placas avaliadas</span><strong>${r.placas.length}</strong></div>
     </div>
@@ -9759,7 +9826,7 @@ function limparTodosDados() {
 
   // Reseta estado em memória
   state = { maquinas:[], abastecimentos:[], semanas:{}, tab:'semanal', sheetsUrl:state.sheetsUrl,
-            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, motoristasInatividadeDias:5, idtMeta:1.5, idtImportacoes:[], gobraxImportacoes:[], gobraxFaixas:null };
+            arlaEgr:[], arlaMeses:[], arlaGrupos:[], arlaSegmentos:{}, placaSegmento:{}, dieselPrecos:{}, opConfigs:{}, metaRotaModelos:{}, medidorAnomalias:[], eficienciaAnomalias:[], eficienciaAnomaliaLimite:140, eficienciaAnomaliaLimiteBaixa:60, motoristasMonitorados:[], motoristasMonitoradosInicializados:false, motoristasInatividadeDias:5, motoristasEficienciaGeral:{verde:98,atencao:90}, idtMeta:1.5, idtImportacoes:[], gobraxImportacoes:[], gobraxFaixas:null };
   _periodosSelec = new Set();
   window._selectedOps = new Set();
   window._dashList = []; window._dashIsKmL = false;
@@ -15647,6 +15714,39 @@ input[type="date"].ignis-date-input:focus{border-color:rgba(240,106,61,.58)!impo
 @media(max-width:620px){.import-op-row{grid-template-columns:1fr 36px}.anom-op-visibility-row{grid-template-columns:1fr auto}.import-op-fuels{grid-column:1/-1;grid-row:2}.import-op-add{grid-template-columns:1fr}.import-ops-modal{width:96vw!important}}
 @media(max-width:1000px){.pend-kpis{grid-template-columns:repeat(2,1fr)}.pend-issue-grid,.pend-monitor-list{grid-template-columns:1fr}}
 @media(max-width:620px){.pend-header{flex-direction:column}.pend-header-actions{width:100%;justify-content:flex-start}.pend-anom-rules{order:1;flex-wrap:wrap}.pend-anom-rules-title{width:100%}.pend-anom-setting{order:initial}.pend-updated{margin-left:auto}.pend-kpis{grid-template-columns:1fr 1fr;gap:8px}.pend-kpi{padding:14px;min-height:96px}.pend-kpi-value{font-size:27px}.pend-section{padding:13px}.pend-issue{padding:13px}.pend-issue-grid{gap:8px}}
+
+
+/* IGNIS v57 · Eficiência Geral PX */
+#mot-panel-geral .mot-geral-efic-config-btn{height:38px;min-width:158px;padding:5px 11px;border:1px solid var(--border);border-radius:10px;background:#111820;color:var(--text2);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;cursor:pointer;font:inherit;white-space:nowrap}
+#mot-panel-geral .mot-geral-efic-config-btn:hover{border-color:rgba(233,95,50,.38);background:#151d26}
+#mot-panel-geral .mot-geral-efic-config-btn span{font-size:7px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:800}
+#mot-panel-geral .mot-geral-efic-config-btn strong{font-size:10px;color:#fff}
+#mot-panel-geral .mot-geral-overall{min-height:52px;padding:5px 9px;border-left:1px solid rgba(138,157,178,.16);border-right:1px solid rgba(138,157,178,.16);border-bottom:1px solid rgba(138,157,178,.11);background:#10171f;display:flex;align-items:center;justify-content:space-between;gap:8px}
+#mot-panel-geral .mot-geral-overall-value{font:850 16px 'DM Mono',monospace;line-height:1;color:#fff;white-space:nowrap}
+#mot-panel-geral .mot-geral-overall-value.ok{color:var(--green)}#mot-panel-geral .mot-geral-overall-value.warn{color:var(--yellow)}#mot-panel-geral .mot-geral-overall-value.bad{color:var(--red)}
+#mot-panel-geral .mot-geral-overall small{display:block;margin-top:3px;font-size:7.5px;color:var(--text3);line-height:1.15}
+#mot-panel-geral .mot-geral-overall .mot-status{padding:3px 6px;font-size:7.7px;white-space:nowrap}
+#mot-panel-geral .mot-geral-overall.empty{justify-content:center;color:var(--text3);font-size:8.8px}
+.mot-efic-config-modal{width:min(560px,92vw)!important}
+.mot-efic-config-copy{font-size:11px;color:var(--text3);line-height:1.55;margin:7px 0 16px}
+.mot-efic-config-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mot-efic-config-field{padding:12px;border:1px solid var(--border);border-radius:11px;background:#101720}
+.mot-efic-config-field label{display:block;font-size:8px;font-weight:850;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:7px}
+.mot-efic-config-field input{width:100%;height:38px;border:1px solid var(--border);border-radius:9px;background:#0f151d;color:#fff;padding:0 10px;font:800 14px 'DM Mono',monospace;outline:none}
+.mot-efic-formula{margin-top:12px;padding:11px 12px;border:1px solid rgba(233,95,50,.18);border-radius:10px;background:rgba(233,95,50,.055);font-size:10px;color:var(--text3);line-height:1.55}
+.mot-efic-formula strong{color:var(--text2)}
+#idt-driver-detail-modal .mot-detail-summary,#gobrax-detail-modal .mot-detail-summary{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+@media(min-width:901px){
+  #mot-panel-geral .mot-geral-grid-head,#mot-panel-geral .mot-geral-row{grid-template-columns:minmax(225px,.98fr) minmax(285px,1.16fr) minmax(260px,1.02fr) minmax(205px,.82fr) minmax(170px,.64fr)!important;min-width:1180px!important}
+  #mot-panel-geral .mot-geral-row:last-child .mot-geral-overall{border-bottom:1px solid rgba(138,157,178,.18);border-radius:0 0 12px 12px;padding-bottom:6px}
+}
+@media(max-width:900px){
+  #mot-panel-geral .mot-geral-efic-config-btn{width:100%;align-items:flex-start}
+  .mot-efic-config-grid{grid-template-columns:1fr}
+  #idt-driver-detail-modal .mot-detail-summary,#gobrax-detail-modal .mot-detail-summary{grid-template-columns:1fr 1fr!important}
+  #mot-panel-geral .mot-geral-overall{border:0;border-bottom:1px solid rgba(255,255,255,.045);border-radius:0;min-height:auto;padding:12px}
+  #mot-panel-geral .mot-geral-overall::before{content:'Eficiência Geral';display:block;margin-right:auto;font-size:9px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+}
 
 </style>
 <script id="ignis-custom-calendar-2026">
